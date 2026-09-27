@@ -12,13 +12,27 @@ from oddmap.disc import parse_chunks
 from oddmap.paths import CAM2RGBA, HERE
 
 OXIPNG = shutil.which("oxipng")
+OXIPNG_VERSION = "10.2.1"  # the release the committed images encode with: oxipng's bytes move between releases
+
+def oxipng_version(binary):
+    answer = subprocess.run([binary, "--version"], stdout=subprocess.PIPE, text=True, check=True).stdout
+    words = answer.split()  # "oxipng 10.2.1"
+    if len(words) != 2 or words[0] != "oxipng":
+        sys.exit(f"{binary} --version answered {answer.strip()!r}, not a release")
+    return words[1]
 
 def ensure_oxipng():
     global OXIPNG
     OXIPNG = shutil.which("oxipng")
     if not OXIPNG:
-        sys.exit("oxipng is required so rebuilds stay byte-identical to the committed images "
-                 "(brew install oxipng / cargo install oxipng)")
+        sys.exit(f"oxipng {OXIPNG_VERSION} is required so rebuilds stay byte-identical to the committed images "
+                 f"(brew install oxipng, or cargo install oxipng --version {OXIPNG_VERSION} --locked)")
+    version = oxipng_version(OXIPNG)
+    if version != OXIPNG_VERSION:
+        sys.exit(f"oxipng {version} is installed but the committed images encode with oxipng {OXIPNG_VERSION}, "
+                 f"and oxipng's bytes move between releases: install that release (cargo install oxipng "
+                 f"--version {OXIPNG_VERSION} --locked), or move OXIPNG_VERSION and re-encode the tree with "
+                 "--reencode-images in a commit of its own")
 
 def ensure_tools():
     ensure_oxipng()

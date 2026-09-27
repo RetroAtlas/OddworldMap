@@ -973,6 +973,63 @@ class PinnedRevision(unittest.TestCase):
         self.assertIn(DECOMP_COMMIT[:9], readme)
         self.assertIn(AO_COMMIT[:9], readme)
 
+    def test_the_readme_names_the_oxipng_pin(self):
+        self.assertIn(image.OXIPNG_VERSION, (HERE.parent / "README.md").read_text())
+
+
+class PinnedEncoder(unittest.TestCase):
+    """the builder encodes with one oxipng release, and the committed images reproduce at it"""
+
+    def setUp(self):
+        keep = mock.patch.object(image, "OXIPNG", image.OXIPNG)  # ensure_oxipng rebinds it, refusing or not
+        keep.start()
+        self.addCleanup(keep.stop)
+
+    def answering(self, version):
+        return mock.patch.object(image.subprocess, "run",
+                                 return_value=subprocess.CompletedProcess([], 0, f"oxipng {version}\n"))
+
+    def test_a_missing_oxipng_is_refused_naming_the_pin(self):
+        with mock.patch.object(image.shutil, "which", return_value=None), \
+             self.assertRaisesRegex(SystemExit, image.OXIPNG_VERSION.replace(".", r"\.")):
+            image.ensure_oxipng()
+
+    def test_a_release_off_the_pin_is_refused_naming_both(self):
+        pin = image.OXIPNG_VERSION.replace(".", r"\.")
+        with mock.patch.object(image.shutil, "which", return_value="/x/oxipng"), self.answering("10.1.1"), \
+             self.assertRaisesRegex(SystemExit, rf"oxipng 10\.1\.1 is installed but .* oxipng {pin}"):
+            image.ensure_oxipng()
+
+    def test_an_answer_naming_no_release_is_refused(self):
+        with mock.patch.object(image.shutil, "which", return_value="/x/oxipng"), \
+             mock.patch.object(image.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "")), \
+             self.assertRaisesRegex(SystemExit, "not a release"):
+            image.ensure_oxipng()
+
+    def test_the_pinned_release_passes(self):
+        with mock.patch.object(image.shutil, "which", return_value="/x/oxipng"), \
+             self.answering(image.OXIPNG_VERSION) as run:
+            image.ensure_oxipng()
+            self.assertEqual(image.OXIPNG, "/x/oxipng")
+        run.assert_called_once_with(["/x/oxipng", "--version"], stdout=subprocess.PIPE, text=True, check=True)
+
+    @unittest.skipUnless(shutil.which("oxipng"), "no oxipng on PATH")
+    def test_the_committed_artwork_reproduces_at_the_pin(self):
+        version = image.oxipng_version(shutil.which("oxipng"))
+        self.assertEqual(version, image.OXIPNG_VERSION,
+                         f"oxipng {version} is on PATH and the committed images encode with {image.OXIPNG_VERSION}: "
+                         f"install that release (brew upgrade oxipng, or cargo install oxipng --version "
+                         f"{image.OXIPNG_VERSION} --locked), or move OXIPNG_VERSION and re-encode the tree")
+        pngs = sorted((SITE / "cams").rglob("*.png"))
+        masks = [p for p in pngs if p.name.endswith("_fg.png")]
+        sample = masks + [p for p in pngs if not p.name.endswith("_fg.png")][::40]
+        with tempfile.TemporaryDirectory() as tmp:
+            moved = image.reencode_pngs([(p, Path(tmp) / f"{i}.png") for i, p in enumerate(sample)])
+        self.assertFalse(moved, f"{len(moved)} of {len(sample)} committed images do not reproduce at oxipng "
+                                f"{image.OXIPNG_VERSION}, so the tree encodes with another release: --reencode-images "
+                                f"it at the pin in a commit of its own, or move OXIPNG_VERSION to the release that "
+                                f"wrote it. First: " + ", ".join(p.relative_to(SITE).as_posix() for p in moved[:5]))
+
 
 if __name__ == "__main__":
     unittest.main()
