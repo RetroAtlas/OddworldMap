@@ -43,8 +43,8 @@ def write_png(path, w, h, rgba, keep_alpha=False):
            + chunk(b"IDAT", zlib.compress(scan, 6))
            + chunk(b"IEND", b""))
     Path(path).write_bytes(png)
-    # lossless recompression (~30% smaller); pixel data is unchanged by design
-    subprocess.run([OXIPNG, "-o", "2", "--strip", "safe", "-q", str(path)], check=True)
+    # lossless recompression (~30% smaller), forced so a file it cannot shrink is still its own bytes
+    subprocess.run([OXIPNG, "-o", "2", "--strip", "safe", "--force", "-q", str(path)], check=True)
 
 def read_png(data):
     """(w, h, RGBA8) of a PNG write_png emitted: any colour type oxipng reduces
