@@ -19,6 +19,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import zlib
 from pathlib import Path
 from unittest import mock
 
@@ -31,6 +32,17 @@ from decomp_checkout import needs_decomp, stale  # noqa: E402
 # the CLI has no test of its own and lint cannot resolve a cross-module import,
 # so loading it here is what catches a name it asks the package for and misses
 import build_map  # noqa: E402,F401
+
+
+def png(w, h, depth, ctype, lines, plte=None, trns=None, interlace=0):
+    """one PNG from filtered scanlines, each opening with its filter byte"""
+    def chunk(tag, data):
+        c = tag + data
+        return struct.pack(">I", len(data)) + c + struct.pack(">I", zlib.crc32(c))
+    head = chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, depth, ctype, 0, 0, interlace))
+    head += chunk(b"PLTE", plte) if plte is not None else b""
+    head += chunk(b"tRNS", trns) if trns is not None else b""
+    return b"\x89PNG\r\n\x1a\n" + head + chunk(b"IDAT", zlib.compress(b"".join(lines))) + chunk(b"IEND", b"")
 
 
 def chunk(tag, rid, payload, size=None):
@@ -247,6 +259,81 @@ class DecodeFg1(unittest.TestCase):
     def test_a_sub_stream_declared_past_the_buffer_reports_unclean(self):
         _, clean = self.decode(self.header(0xFFFD, x=40) + bytes(2))
         self.assertFalse(clean)
+
+
+class ReadPng(unittest.TestCase):
+    """every shape oxipng reduces write_png's RGBA8 to reads back as that RGBA8"""
+
+    def test_each_colour_type_and_depth_decodes(self):
+        R, G, B, W, T = b"\xff\0\0\xff", b"\0\xff\0\xff", b"\0\0\xff\xff", b"\xff\xff\xff\xff", bytes(4)
+        cases = [
+            (png(2, 1, 8, 3, [b"\0\0\1"], plte=b"\xff\0\0\0\0\0", trns=b"\xff\0"), R + T),
+            (png(3, 1, 2, 3, [b"\0" + bytes([0b00011000])], plte=b"\xff\0\0\0\xff\0\0\0\xff"), R + G + B),
+            (png(9, 1, 1, 0, [b"\0\xaa\x80"], trns=b"\0\0"), (W + T) * 4 + W),
+            (png(2, 1, 8, 0, [b"\0\0\xff"]), b"\0\0\0\xff" + W),
+            (png(2, 1, 8, 2, [b"\0\xff\0\0\0\0\xff"], trns=b"\0\xff\0\0\0\0"), b"\xff\0\0\0" + B),
+            (png(1, 1, 8, 4, [b"\0\x80\x40"]), b"\x80\x80\x80\x40"),
+            (png(1, 1, 8, 6, [b"\0" + G]), G),
+        ]
+        for data, rgba in cases:
+            w, h, got = image.read_png(data)
+            self.assertEqual((w * h * 4, got), (len(rgba), rgba), data[16:29].hex())
+
+    def test_each_filter_is_undone(self):
+        rows = [bytes((y * 37 + i * 53) & 255 for i in range(8)) for y in range(5)]  # two RGBA pixels a row
+
+        def paeth(a, b, c):
+            p = a + b - c
+            pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
+            return a if pa <= pb and pa <= pc else b if pb <= pc else c
+
+        def predicted(f, raw, prior, i):
+            a, b, c = (raw[i - 4] if i >= 4 else 0), prior[i], (prior[i - 4] if i >= 4 else 0)
+            return (0, a, b, (a + b) // 2, paeth(a, b, c))[f]
+
+        prior, lines = bytes(8), []
+        for f, raw in enumerate(rows):  # one filter type a row, applied as the spec defines it
+            lines.append(bytes([f]) + bytes((raw[i] - predicted(f, raw, prior, i)) & 255 for i in range(8)))
+            prior = raw
+        self.assertEqual(image.read_png(png(2, 5, 8, 6, lines)), (2, 5, b"".join(rows)))
+
+    def test_a_shape_write_png_never_emits_is_refused(self):
+        with self.assertRaisesRegex(ValueError, "depth 16"):
+            image.read_png(png(1, 1, 16, 0, [b"\0\0\0"]))
+        with self.assertRaisesRegex(ValueError, "interlace 1"):
+            image.read_png(png(1, 1, 8, 0, [b"\0\0"], interlace=1))
+        with self.assertRaisesRegex(ValueError, "not a PNG"):
+            image.read_png(b"GIF89a")
+
+
+class Reencode(unittest.TestCase):
+    """a PNG re-emitted from its own pixels is the PNG the installed oxipng writes again"""
+
+    RGBA = b"".join(bytes((x * 16, y * 60, 128, 255 if (x + y) % 3 else 0)) for y in range(4) for x in range(16))
+
+    @unittest.skipUnless(shutil.which("oxipng"), "no oxipng on PATH")
+    def test_a_written_png_re_emits_to_itself(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            mask, cam, dst = (Path(tmp) / n for n in ("a_fg.png", "a.png", "b.png"))
+            image.write_png(mask, 16, 4, self.RGBA, keep_alpha=True)
+            self.assertEqual(image.read_png(mask.read_bytes()), (16, 4, self.RGBA))
+            self.assertFalse(image.reencode_png(mask, dst))
+            self.assertEqual(dst.read_bytes(), mask.read_bytes())
+            image.write_png(cam, 16, 4, self.RGBA)  # opaque on the way in, whatever the alpha said
+            self.assertFalse(image.reencode_png(cam, dst))
+            self.assertEqual(dst.read_bytes(), cam.read_bytes())
+
+    @unittest.skipUnless(shutil.which("oxipng"), "no oxipng on PATH")
+    def test_bytes_another_encoder_wrote_move_and_are_reported(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ours, theirs = Path(tmp) / "a_fg.png", Path(tmp) / "b_fg.png"
+            image.write_png(ours, 16, 4, self.RGBA, keep_alpha=True)
+            with mock.patch.object(image.subprocess, "run"):  # the raw RGBA8 stands for another encoder's bytes
+                image.write_png(theirs, 16, 4, self.RGBA, keep_alpha=True)
+            self.assertNotEqual(theirs.read_bytes(), ours.read_bytes())
+            self.assertEqual(image.reencode_pngs([(ours, ours), (theirs, theirs)]), [theirs])
+            self.assertEqual(theirs.read_bytes(), ours.read_bytes())
+            self.assertEqual(image.reencode_pngs([]), [])
 
 
 class ObjectFields(unittest.TestCase):

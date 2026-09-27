@@ -28,7 +28,7 @@ from oddmap.emit import (print_build_summary, require_stampable, stamp_cache_nam
                          write_enum_labels, write_field_types, write_line_links,
                          write_relive_export)
 from oddmap.games import GAMES, game_setup
-from oddmap.image import decode_cam, ensure_tools
+from oddmap.image import decode_cam, ensure_oxipng, ensure_tools, reencode_pngs
 from oddmap.messages import write_messages
 from oddmap.paths import HERE, SITE
 from oddmap.tables import AE_LEVEL_DISPLAY, AO_R2_ZULAGS
@@ -47,6 +47,10 @@ def main():
                     help="regenerate the viewer sidecars field_types_{ao,ae}.json, "
                          "enum_labels_{ao,ae}.json and relive_export_{ao,ae}.json from the "
                          "committed caches (no disc needed) and exit")
+    ap.add_argument("--reencode-images", action="store_true",
+                    help="re-emit every PNG under --out/cams from its own pixels through the installed "
+                         "oxipng, restamp sw.js and exit (no disc needed): the committed pixels are the "
+                         "builder's own raw input, so this is the encoding half of a rebuild")
     args = ap.parse_args()
 
     if args.emit_field_data:
@@ -54,6 +58,21 @@ def main():
             write_field_types(gk, Path(args.out))
             write_enum_labels(gk, Path(args.out))
             write_relive_export(gk, Path(args.out))
+        return
+
+    if args.reencode_images:
+        ensure_oxipng()
+        out = Path(args.out)
+        sw_file = out / "sw.js"
+        if sw_file.exists():
+            require_stampable(sw_file)
+        pngs = sorted((out / "cams").rglob("*.png"))
+        if not pngs:
+            ap.error(f"no images under {out / 'cams'}")
+        moved = reencode_pngs([(p, p) for p in pngs])
+        print(f"re-encoded {len(pngs)} images, {len(moved)} moved")
+        if sw_file.exists():
+            print(f"CACHE_NAME -> {stamp_cache_name(sw_file, out / 'cams')}")
         return
 
     game = game_setup(args.game)

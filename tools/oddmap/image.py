@@ -5,6 +5,7 @@ import struct
 import subprocess
 import sys
 import zlib
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 from oddmap.disc import parse_chunks
@@ -12,12 +13,15 @@ from oddmap.paths import CAM2RGBA, HERE
 
 OXIPNG = shutil.which("oxipng")
 
-def ensure_tools():
+def ensure_oxipng():
     global OXIPNG
     OXIPNG = shutil.which("oxipng")
     if not OXIPNG:
         sys.exit("oxipng is required so rebuilds stay byte-identical to the committed images "
                  "(brew install oxipng / cargo install oxipng)")
+
+def ensure_tools():
+    ensure_oxipng()
     if CAM2RGBA.exists():
         return
     print("compiling cam2rgba...")
@@ -41,6 +45,95 @@ def write_png(path, w, h, rgba, keep_alpha=False):
     Path(path).write_bytes(png)
     # lossless recompression (~30% smaller); pixel data is unchanged by design
     subprocess.run([OXIPNG, "-o", "2", "--strip", "safe", "-q", str(path)], check=True)
+
+def read_png(data):
+    """(w, h, RGBA8) of a PNG write_png emitted: any colour type oxipng reduces
+    RGBA8 to, at 8 bits a sample or fewer, never interlaced"""
+    if data[:8] != b"\x89PNG\r\n\x1a\n":
+        raise ValueError("not a PNG")
+    idat, plte, trns, pos = [], b"", None, 8
+    while pos < len(data):
+        n, = struct.unpack_from(">I", data, pos)
+        tag, body, pos = data[pos+4:pos+8], data[pos+8:pos+8+n], pos + n + 12
+        if tag == b"IHDR":
+            w, h, depth, ctype, _, _, interlace = struct.unpack(">IIBBBBB", body)
+        elif tag == b"PLTE":
+            plte = body
+        elif tag == b"tRNS":
+            trns = body
+        elif tag == b"IDAT":
+            idat.append(body)
+        elif tag == b"IEND":
+            break
+    if interlace or depth > 8 or ctype not in (0, 2, 3, 4, 6):
+        raise ValueError(f"not a shape write_png emits: depth {depth}, colour type {ctype}, interlace {interlace}")
+    channels = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}[ctype]
+    stride = (w * channels * depth + 7) // 8
+    bpp = max(1, channels * depth // 8)
+    raw = zlib.decompress(b"".join(idat))
+    out, prev, top = bytearray(), bytearray(stride), (1 << depth) - 1
+    for y in range(h):
+        at = y * (stride + 1)
+        f, line = raw[at], bytearray(raw[at+1:at+1+stride])
+        if f == 1:
+            for i in range(bpp, stride):
+                line[i] = (line[i] + line[i-bpp]) & 255
+        elif f == 2:
+            for i in range(stride):
+                line[i] = (line[i] + prev[i]) & 255
+        elif f == 3:
+            for i in range(stride):
+                line[i] = (line[i] + ((line[i-bpp] if i >= bpp else 0) + prev[i]) // 2) & 255
+        elif f == 4:
+            for i in range(stride):
+                a, b, c = line[i-bpp] if i >= bpp else 0, prev[i], prev[i-bpp] if i >= bpp else 0
+                pa, pb, pc = abs(b - c), abs(a - c), abs(a + b - c - c)
+                line[i] = (line[i] + (a if pa <= pb and pa <= pc else b if pb <= pc else c)) & 255
+        elif f:
+            raise ValueError(f"filter {f}")
+        prev = line
+        if depth < 8:
+            samples = [(byte >> (8 - depth * (k + 1))) & top for byte in line for k in range(8 // depth)]
+            samples = samples[:w * channels]
+        else:
+            samples = line
+        if ctype == 3:
+            for i in samples:
+                out += plte[i*3:i*3+3]
+                out.append(trns[i] if trns and i < len(trns) else 255)
+        elif ctype == 0:
+            key = struct.unpack(">H", trns)[0] if trns else None
+            for g in samples:
+                v = g * 255 // top
+                out += bytes((v, v, v, 0 if g == key else 255))
+        elif ctype == 2:
+            key = struct.unpack(">HHH", trns) if trns else None
+            for i in range(0, len(samples), 3):
+                px = tuple(samples[i:i+3])
+                out += bytes(px) + (b"\0" if px == key else b"\xff")
+        elif ctype == 4:
+            for i in range(0, len(samples), 2):
+                g, a = samples[i:i+2]
+                out += bytes((g, g, g, a))
+        else:
+            out += samples
+    return w, h, bytes(out)
+
+def reencode_png(src, dst):
+    """write src's own pixels to dst through write_png; True where the bytes moved.
+    A cam decodes opaque, so keeping the alpha hands both kinds their raw input."""
+    data = Path(src).read_bytes()
+    w, h, rgba = read_png(data)
+    write_png(dst, w, h, rgba, keep_alpha=True)
+    return Path(dst).read_bytes() != data
+
+def reencode_pngs(pairs):
+    """re-emit every (src, dst) in parallel, returning the srcs whose bytes moved"""
+    if not pairs:
+        return []
+    with ProcessPoolExecutor() as pool:
+        moved = list(pool.map(reencode_png, *zip(*pairs), chunksize=8))
+    return [src for (src, _), m in zip(pairs, moved) if m]
 
 def decompress_4or5(data):
     """alive LZ variant: 0xxxxxxx = literals run, 1xxxxxyy yyyyyyyy = back-copy"""
