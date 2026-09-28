@@ -558,7 +558,7 @@ const addEnd = (m, id, t) => {
 // its hub ids are inputs and its own switch id the AND's output alone — the
 // gate rewrites that id every frame, so an external feed cannot hold it.
 // Edges dedupe by endpoint pair and an object never wires to itself.
-// Memoized by path identity (paths live as long as their dataset).
+// Memoized by path identity, a path object being replaced rather than written into.
 const wiringCache = new WeakMap();
 export function computeWiring(path, gameId) {
   let w = wiringCache.get(path);

@@ -5,7 +5,8 @@
 import { isDemoPath } from "./demo.js";
 import { getSettings } from "./settings.js";
 
-// path objects live as long as their dataset, so identity keys need no invalidation
+// held on the path object itself, so whatever stands a new object in for a path
+// has to carry its reveal across
 const revealed = new WeakSet();
 
 // the path in hand is always listed: a hidden path arrived at is revealed for the

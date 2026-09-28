@@ -4,7 +4,8 @@
 // setting's question, kept out so that asking this one imports nothing.
 // Importable in bare Node: no DOM.
 
-// path objects live as long as their dataset, so identity keys need no invalidation
+// a path object is replaced rather than written into, so an answer memoized on
+// one never goes stale
 const demo = new WeakMap();
 
 export function isDemoPath(P) {
