@@ -309,8 +309,9 @@ export function draw() {
 }
 
 // one frame of the map into any canvas: the live one at the view's zoom, or an
-// offscreen one sized to a whole path. The hover and navigation affordances are
-// the live view's alone — standing in an image they read as marks on the map
+// offscreen one sized to a whole path. The hover, navigation and selection
+// affordances are the live view's alone — standing in an image they read as
+// marks on the map
 export function paint(ctx, cam, w, h, dpr, transients = true) {
   const { path, show, ruler, route, sel } = state;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
