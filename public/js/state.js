@@ -1,6 +1,8 @@
-// Shared mutable viewer state and the world-to-draw coordinate transforms.
+// Shared mutable viewer state, and the world-to-draw transforms bound to the
+// live layout.
 
 import { GRID_UNIT } from "./config.js";
+import { drawX, drawY, worldX, worldY } from "./geometry.js";
 
 // Both games address cameras on a grid coarser than the screen (data.geometry):
 // a visW x visH window of world units sits inside the cell at winX/winY, world
@@ -48,22 +50,10 @@ export const isSpaced = () => spaced;
 // screen sits winX/winY inside its cell, so the cell starts that much earlier
 export const cellOrigin = () => (spaced ? [-GEO.winX, -GEO.winY] : [0, 0]);
 
-export function dX(wx) {
-  const c = Math.floor(wx / GEO.worldW);
-  return c * CELL_W + (wx - c * GEO.worldW - GEO.winX);
-}
-export function dY(wy) {
-  const c = Math.floor(wy / GEO.worldH);
-  return c * CELL_H + (wy - c * GEO.worldH - GEO.winY);
-}
-export function wX(dx) {
-  const c = Math.floor(dx / CELL_W);
-  return c * GEO.worldW + GEO.winX + (dx - c * CELL_W);
-}
-export function wY(dy) {
-  const c = Math.floor(dy / CELL_H);
-  return c * GEO.worldH + GEO.winY + (dy - c * CELL_H);
-}
+export const dX = (wx) => drawX(wx, LAYOUT);
+export const dY = (wy) => drawY(wy, LAYOUT);
+export const wX = (dx) => worldX(dx, LAYOUT);
+export const wY = (dy) => worldY(dy, LAYOUT);
 
 // position within its own screen, in grid squares (measured from the visible
 // window's corner, so both games read 0 at a screen's left/top edge)

@@ -20,6 +20,7 @@ import {
   HUB_FIELDS,
 } from "./config.js";
 import { isDemoPath } from "./demo.js";
+import { drawAt } from "./geometry.js";
 import { GEO, LAYOUT, state, CELL_W, CELL_H, dX, dY, wX, wY } from "./state.js";
 
 export function computeEntryPaths(data, geo = data.geometry) {
@@ -177,11 +178,6 @@ export function camCell(path, camId) {
 // grid cell containing a TLV's top-left corner (spans can cross cells)
 export const tlvCell = (t, path, geo) =>
   Math.floor(t.y1 / geo.worldH) * path.w + Math.floor(t.x1 / geo.worldW);
-
-const drawAt = (v, cell, win, pitch) => {
-  const c = Math.floor(v / cell);
-  return c * pitch + v - c * cell - win;
-};
 
 // the draw-space runs a world span lands on, one per window it reaches into.
 // The packing folds the slack out, so a span that crosses it whole comes back
