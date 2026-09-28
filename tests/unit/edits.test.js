@@ -9,7 +9,7 @@ import { createHash } from "node:crypto";
 
 import { state } from "../../public/js/state.js";
 import { setFieldTypes, setEnumLabels } from "../../public/js/fields.js";
-import { pathVisible, revealPath } from "../../public/js/demo.js";
+import { pathVisible, revealPath } from "../../public/js/pathvisible.js";
 import { deriveExtra } from "../../public/js/extra.js";
 import { exportPath, canonical } from "../../public/js/reliveexport.js";
 import {

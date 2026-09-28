@@ -8,7 +8,7 @@
 
 import { state } from "./state.js";
 import { deriveExtra } from "./extra.js";
-import { pathVisible, revealPath } from "./demo.js";
+import { pathVisible, revealPath } from "./pathvisible.js";
 import { invalidateEntry } from "./pathorder.js";
 import { valueMap } from "./fields.js";
 import { store } from "./settings.js";

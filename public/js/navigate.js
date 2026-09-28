@@ -35,7 +35,8 @@ import {
   resolveTarget,
 } from "./model.js";
 import { pathDisplayName, pathNickname } from "./annotations.js";
-import { isDemoPath, pathVisible, revealPath } from "./demo.js";
+import { isDemoPath } from "./demo.js";
+import { pathVisible, revealPath } from "./pathvisible.js";
 import { orderPaths } from "./pathorder.js";
 import { displayLabel, getSettings, rememberLocation } from "./settings.js";
 import { currentOf, pathEdited, pristineOf, takeReport } from "./edits.js";

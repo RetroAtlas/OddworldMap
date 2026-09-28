@@ -41,3 +41,7 @@ Verified in the browser: `]` from `MI P7` skips the hidden P8 and P9 to reach P1
 ## Shipped
 
 A "Show demo paths" setting, off by default. The screen list needs no filtering because it is scoped to the path in hand, which is always one that is shown.
+
+## Grown since filing
+
+**The rule became a leaf, 2026-09-28.** Once `levelWiring` asked it, `js/demo.js` carried `settings.js` into `model.js` and closed an import cycle, `settings.js` reading the permalink parser there. The listing half, `pathVisible` and `revealPath`, lives in `js/pathvisible.js` instead, so `isDemoPath` imports nothing and the second count above has lost its premise: reaching the rule from `annotations.js` would drag nothing in behind it. The first and third counts decide the question on their own, and the marker stays in the file.

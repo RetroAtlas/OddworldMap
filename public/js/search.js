@@ -7,7 +7,7 @@ import { parseQuery, queryTerms, matchesQuery, rankFor } from "./searchquery.js"
 import { matchPlaces } from "./placesearch.js";
 import { pendingGames } from "./data.js";
 import { searchInput, searchResults, scopeBar } from "./dom.js";
-import { pathVisible } from "./demo.js";
+import { pathVisible } from "./pathvisible.js";
 import { state } from "./state.js";
 import { fieldPrefsFor, getSettings } from "./settings.js";
 import { jumpToPlace, jumpToTlv } from "./navigate.js";

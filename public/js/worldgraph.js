@@ -3,7 +3,7 @@
 // order with its paths stacked in play order. Importable in bare Node: no DOM.
 
 import { GRAPH } from "./config.js";
-import { pathVisible } from "./demo.js";
+import { pathVisible } from "./pathvisible.js";
 import { pathIn, wayThrough } from "./model.js";
 import { levelOrder } from "./pathorder.js";
 

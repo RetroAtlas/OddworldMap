@@ -5,7 +5,7 @@
 // reports what it dropped. No DOM.
 
 import { tlvCell } from "./model.js";
-import { pathVisible } from "./demo.js";
+import { pathVisible } from "./pathvisible.js";
 
 // the cell an object's top-left corner falls in, never where it is drawn:
 // what a screen holds must not move with the pitch
