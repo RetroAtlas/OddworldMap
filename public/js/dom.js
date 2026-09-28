@@ -8,8 +8,9 @@ export const narrowMQ = window.matchMedia("(max-width: 720px)"); // keep in sync
 export const cssVar = (name) =>
   getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
+// cvCtx, not ctx: a painter missing its ctx parameter must fail lint, not draw on screen
 export const cv = $("cv"),
-  ctx = cv.getContext("2d");
+  cvCtx = cv.getContext("2d");
 export const tip = $("tip"),
   hud = $("hud");
 export const sidebar = $("sidebar"),
