@@ -27,7 +27,7 @@ export function worldGraph(data) {
   for (const L of data.levels)
     for (const P of L.paths)
       for (const t of P.tlvs) {
-        const d = wayThrough(t, L, P, data.geometry, data);
+        const d = wayThrough(t, data, L, P);
         if (!d || !pathIn(data, d.lv, d.pa)) continue;
         if (d.lv === L.short && d.pa === P.id) continue; // a ride inside one path
         const from = key(L.short, P.id),

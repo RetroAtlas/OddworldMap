@@ -278,7 +278,10 @@ cv.addEventListener("click", () => {
     // happens, and the next opens where it lands. Hand stones only show a
     // camera and loopbacks travel nowhere, so both stay plain waypoints
     const seam = hoverTlvs.find(
-      (t) => (t.extra || {}).view1_cam == null && !isLoopback(t) && followableDest(t),
+      (t) =>
+        (t.extra || {}).view1_cam == null &&
+        !isLoopback(t, state.data, state.lvl, state.path) &&
+        followableDest(t),
     );
     if (seam) {
       const d = followableDest(seam);
@@ -483,8 +486,9 @@ trapDialogKeys(() => shortcutsOverlay.classList.contains("open"), $("shortcuts")
 // guard is the level graph's, and a click is not the level graph — clicking a
 // stone follows it to the camera it shows.
 const shownDest = (t) => {
-  const d = destOf(t);
-  return d && destTrusted(d) ? d : null;
+  const { data, lvl, path } = state;
+  const d = destOf(t, data, lvl, path);
+  return d && destTrusted(d, data, lvl) ? d : null;
 };
 
 // a destination is followable only when its level AND path are on the map:
@@ -530,7 +534,7 @@ function updateHover() {
   // the destination resolves within the current path
   let partner = null;
   for (const t of hoverTlvs) {
-    const d = destOf(t);
+    const d = destOf(t, state.data, state.lvl, state.path);
     if (!d || d.lv !== state.lvl.short || d.pa !== state.path.id) continue;
     const tgt = resolveTarget(d, state.path, GEO);
     if (tgt) {
@@ -540,15 +544,12 @@ function updateHover() {
   }
   setHighlight(partner);
   // a hovered Slig (or its spawner) shades the pen its own bounds pair pens it into
-  setPatrol(
-    PENS.on
-      ? (hoverTlvs.map((t) => patrolZone(t, state.path, LAYOUT)).find(Boolean) ?? null)
-      : null,
-  );
+  const pen = (t) => patrolZone(t, state.path, LAYOUT, state.data.id);
+  setPatrol(PENS.on ? (hoverTlvs.map(pen).find(Boolean) ?? null) : null);
   // arrows overlay: spotlight the hovered object's own edges
   setConnFocus(state.show.conn ? (hoverTlvs.find((t) => shownDest(t)) ?? null) : null);
   // wiring overlay: the same, for the hovered object's own drawn wires
-  const wiring = state.show.wires ? computeWiring(state.path) : null;
+  const wiring = state.show.wires ? computeWiring(state.path, state.data.id) : null;
   const wireDrawn = (e) => markerShown(e.src) && markerShown(e.dst);
   setWireFocus(
     wiring
@@ -585,7 +586,7 @@ function updateHover() {
           let follow = "";
           if (state.edit) {
             follow = `<br><span class="f">click to select</span>`;
-          } else if (d && isLoopback(t)) {
+          } else if (d && isLoopback(t, state.data, state.lvl, state.path)) {
             follow = `<br><span class="f loop">⟳ loops back to itself</span>`;
           } else if (d && !followableDest(t)) {
             follow = `<br><span class="f loop">→ leads to ${esc(`${d.lv} P${d.pa}`)} — not on the map</span>`;
@@ -601,10 +602,10 @@ function updateHover() {
           let wireInfo = "";
           if (wiring) {
             const lines = [];
-            const remote = levelWiring(state.lvl);
+            const remote = levelWiring(state.lvl, state.data.id);
             const others = (paths) =>
               [...(paths ?? [])].filter((pa) => pa !== state.path.id).map((pa) => "P" + pa);
-            const ends = wireEnds(t);
+            const ends = wireEnds(t, state.data.id);
             const wired = (m, id) => (m.get(id) ?? []).filter((o) => o !== t);
             for (const id of ends.out) {
               const local = wired(wiring.cons, id);

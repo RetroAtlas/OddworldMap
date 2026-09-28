@@ -1,6 +1,7 @@
 // DOM-free interpretation of the decoded map data: TLV destinations,
 // entry-path analysis, view math and the permalink format. Kept importable in
-// bare Node for the unit tests.
+// bare Node for the unit tests, and handed the layout and the dataset, level
+// and path a call depends on rather than reading the live ones.
 
 import { clamp } from "./util.js";
 import {
@@ -21,9 +22,8 @@ import {
 } from "./config.js";
 import { isDemoPath } from "./demo.js";
 import { drawAt, drawX, drawY, worldX, worldY } from "./geometry.js";
-import { GEO, state } from "./state.js";
 
-export function computeEntryPaths(data, geo = data.geometry) {
+export function computeEntryPaths(data) {
   const entries = {};
   const add = (lv, pa) => (entries[lv] ??= new Set()).add(pa);
   for (const L of data.levels)
@@ -34,7 +34,7 @@ export function computeEntryPaths(data, geo = data.geometry) {
         // a dead destination must not badge a real path
         const arrival = (lv, pa, ca, tgt) => {
           if (!lv || lv === L.short || !pathIn(data, lv, pa)) return;
-          if (destTrusted({ lv, pa, ca, target: tgt }, L, data, geo)) add(lv, pa);
+          if (destTrusted({ lv, pa, ca, target: tgt }, data, L)) add(lv, pa);
         };
         arrival(e.to_level, e.to_path, e.to_cam, target);
         arrival(e.alt_level, e.alt_path, e.alt_cam, altTarget);
@@ -76,26 +76,26 @@ const unedited = (d, data) =>
   d.pa === 1 && d.ca === 1 && d.target.value === 0 && levelIn(data, d.lv)?.id === 1;
 
 // the object a destination pairs with, or null where nothing answers to it
-function targetAt(d, lvl = state.lvl, data = state.data, geo = GEO, path = null) {
+function targetAt(d, data, lvl, path = null) {
   if (!d || !d.target) return null;
   if (d.lv !== lvl.short && unedited(d, data)) return null;
   const P = path && d.lv === lvl.short && d.pa === path.id ? path : pathIn(data, d.lv, d.pa);
-  return P ? resolveTarget(d, P, geo) : null;
+  return P ? resolveTarget(d, P, data.geometry) : null;
 }
 
 // whether a destination's named partner is there to be found. Asked across
 // levels only: within one, resolveTarget is camera-bounded and misses pairings
 // that are merely unnumbered, so an unresolved partner is no evidence. A link
 // naming no partner has nothing to check and is trusted wherever it points.
-export function destTrusted(d, lvl = state.lvl, data = state.data, geo = GEO) {
+export function destTrusted(d, data, lvl) {
   if (!d || !d.target) return true;
   if (!pathIn(data, d.lv, d.pa)) return false;
-  return d.lv === lvl.short || targetAt(d, lvl, data, geo) != null;
+  return d.lv === lvl.short || targetAt(d, data, lvl) != null;
 }
 
 // where a door/portal/well leads: prefers a destination that lands on a partner
-// object, then one that differs from the current level+path
-export function destOf(t, lvl = state.lvl, path = state.path, geo = GEO, data = state.data) {
+// object, then one that differs from the level and path it stands on
+export function destOf(t, data, lvl, path) {
   const e = t.extra || {};
   // hand stones show other cameras rather than transitioning; follow the first
   // view. AO stones carry full level/path/camera triples; AE ones bare camera
@@ -117,20 +117,20 @@ export function destOf(t, lvl = state.lvl, path = state.path, geo = GEO, data = 
   // wins whichever side it sits on and whatever camera it names
   const lands = (d) => {
     if (!d || !lvl) return false;
-    const g = targetAt(d, lvl, data, geo, path);
+    const g = targetAt(d, data, lvl, path);
     return g != null && g !== t;
   };
   // failing that, a destination goes nowhere when it is untargeted and points
-  // at the current path, or is a well's bounce-back naming the well's own
-  // camera — a door pair or a well ride to another camera of the same path is
-  // a real transition
+  // at its own path, or is a well's bounce-back naming the well's own camera —
+  // a door pair or a well ride to another camera of the same path is a real
+  // transition
   const bounce = (d) =>
     lvl &&
     path &&
     d.lv === lvl.short &&
     d.pa === path.id &&
     (d.target != null && d.target.field === "well#"
-      ? camCell(path, d.ca) != null && camCell(path, d.ca) === tlvCell(t, path, geo)
+      ? camCell(path, d.ca) != null && camCell(path, d.ca) === tlvCell(t, path, data.geometry)
       : d.target == null);
   const differs = (d) => d && !bounce(d);
   if (lands(a)) return a;
@@ -146,10 +146,10 @@ export function destOf(t, lvl = state.lvl, path = state.path, geo = GEO, data = 
 // a hand stone's view names no partner, so destTrusted believes it wherever it
 // points — unguarded, a sight reads as a way through. Whether the path it names
 // is one the map holds stays the caller's question.
-export function wayThrough(t, lvl = state.lvl, path = state.path, geo = GEO, data = state.data) {
+export function wayThrough(t, data, lvl, path) {
   if ((t.extra || {}).view1_cam != null) return null;
-  const d = destOf(t, lvl, path, geo, data);
-  return d && destTrusted(d, lvl, data, geo) ? d : null;
+  const d = destOf(t, data, lvl, path);
+  return d && destTrusted(d, data, lvl) ? d : null;
 }
 
 // every artwork file a game ships, background and foreground alike: what a
@@ -418,6 +418,13 @@ export function snapTarget(pt, path, tol, layout, lines = false) {
   return best;
 }
 
+// a per-game table's entry: a game it does not name is a caller's mistake, never
+// a game with nothing in it
+function perGame(table, gameId) {
+  if (!Object.hasOwn(table, gameId)) throw new Error(`${gameId}: not a game this table names`);
+  return table[gameId];
+}
+
 // the pen a Slig or SligSpawner patrols: the x-span between the SligBound pair
 // sharing its id, which the engine scans for over a camera window (AO ±2 cells,
 // AE ±3 — Slig.cpp's bound loops) and reads by each bound's top-left x. Honoured
@@ -425,11 +432,11 @@ export function snapTarget(pt, path, tol, layout, lines = false) {
 // last-match-wins on duplicates is not worth imitating. Scrab bounds ship no
 // ids, so scrabs get no pen. Returns a draw-space rect, or null.
 const BOUND_WINDOW = { AO: 2, AE: 3 };
-export function patrolZone(t, path, layout, gameId = state.data?.id) {
+export function patrolZone(t, path, layout, gameId) {
+  const win = perGame(BOUND_WINDOW, gameId);
   if (t.name !== "Slig" && t.name !== "SligSpawner") return null;
   const id = t.fields?.slig_bound_persist_id;
   if (id == null) return null;
-  const win = BOUND_WINDOW[gameId] ?? 2;
   const cellOf = (o) => [Math.floor(o.x1 / layout.worldW), Math.floor(o.y1 / layout.worldH)];
   const [tc, tr] = cellOf(t);
   const near = (o) => {
@@ -482,15 +489,15 @@ export function resolveTarget(d, path, geo) {
 // a paired object (door, teleporter) whose destination names its own camera and
 // resolves back to the object itself; a dangling destination whose path-wide
 // fallback merely lands on it doesn't count
-export function isLoopback(t, lvl = state.lvl, path = state.path, geo = GEO, data = state.data) {
+export function isLoopback(t, data, lvl, path) {
   if (!lvl || !path) return false;
-  const d = destOf(t, lvl, path, geo, data);
+  const d = destOf(t, data, lvl, path);
   return !!(
     d &&
     d.lv === lvl.short &&
     d.pa === path.id &&
-    camCell(path, d.ca) === tlvCell(t, path, geo) &&
-    resolveTarget(d, path, geo) === t
+    camCell(path, d.ca) === tlvCell(t, path, data.geometry) &&
+    resolveTarget(d, path, data.geometry) === t
   );
 }
 
@@ -504,28 +511,23 @@ export function isLoopback(t, lvl = state.lvl, path = state.path, geo = GEO, dat
 // the grid yields nothing, and neither does one pointing at the source's own
 // camera — launcher wells and bounce-backs exit within their screen and must
 // not read as arrows.
-export function computeConnections(
-  lvl = state.lvl,
-  path = state.path,
-  geo = GEO,
-  data = state.data,
-) {
+export function computeConnections(data, lvl, path) {
   const edges = [];
   const stubs = [];
   const partner = new Map();
   for (const t of path.tlvs) {
-    const d = wayThrough(t, lvl, path, geo, data);
-    if (!d || isLoopback(t, lvl, path, geo, data)) continue;
+    const d = wayThrough(t, data, lvl, path);
+    if (!d || isLoopback(t, data, lvl, path)) continue;
     if (d.lv !== lvl.short || d.pa !== path.id) {
       stubs.push({ src: t, label: `${d.lv} P${d.pa}` });
       continue;
     }
-    const g = resolveTarget(d, path, geo);
+    const g = resolveTarget(d, path, data.geometry);
     if (g && g !== t) {
       partner.set(t, g);
     } else {
       const cell = camCell(path, d.ca);
-      if (cell != null && cell !== tlvCell(t, path, geo)) edges.push({ src: t, cell });
+      if (cell != null && cell !== tlvCell(t, path, data.geometry)) edges.push({ src: t, cell });
     }
   }
   // pairs whose partners resolve to each other merge into one two-way edge;
@@ -558,15 +560,16 @@ const addEnd = (m, id, t) => {
 // Edges dedupe by endpoint pair and an object never wires to itself.
 // Memoized by path identity (paths live as long as their dataset).
 const wiringCache = new WeakMap();
-export function computeWiring(path, gameId = state.data?.id) {
+export function computeWiring(path, gameId) {
   let w = wiringCache.get(path);
   if (w && w.gameId === gameId) return w;
-  const table = WIRES[gameId] ?? { out: {}, in: {} };
+  const table = perGame(WIRES, gameId),
+    isGate = perGame(DOOR_GATE, gameId);
   const prod = new Map();
   const cons = new Map();
   for (const t of path.tlvs) {
     const f = t.fields || {};
-    const gate = t.name === "Door" && DOOR_GATE[gameId]?.(t);
+    const gate = t.name === "Door" && isGate(t);
     if (gate) {
       addEnd(prod, f.switch_id, t);
       for (const k of HUB_FIELDS) addEnd(cons, f[k], t);
@@ -595,15 +598,15 @@ export function computeWiring(path, gameId = state.data?.id) {
 }
 
 // one object's wired fields: the ids it writes and the ids it answers to
-export function wireEnds(t, gameId = state.data?.id) {
-  const table = WIRES[gameId] ?? {};
+export function wireEnds(t, gameId) {
+  const table = perGame(WIRES, gameId);
   const f = t.fields || {};
   const ids = (keys) => (keys ?? []).map((k) => f[k]).filter(liveId);
-  if (t.name === "Door" && DOOR_GATE[gameId]?.(t))
+  if (t.name === "Door" && perGame(DOOR_GATE, gameId)(t))
     return { out: [...new Set(ids(["switch_id"]))], in: [...new Set(ids(HUB_FIELDS))] };
   return {
-    out: [...new Set(ids(table.out?.[t.name]))],
-    in: [...new Set(ids(table.in?.[t.name]))],
+    out: [...new Set(ids(table.out[t.name]))],
+    in: [...new Set(ids(table.in[t.name]))],
   };
 }
 
@@ -612,7 +615,7 @@ export function wireEnds(t, gameId = state.data?.id) {
 // path is heard in every other. Demo paths stay out: a note naming an
 // unreachable copy would send the reader somewhere nothing travels.
 const levelWiringCache = new WeakMap();
-export function levelWiring(lvl, gameId = state.data?.id) {
+export function levelWiring(lvl, gameId) {
   let w = levelWiringCache.get(lvl);
   if (w && w.gameId === gameId) return w;
   w = { gameId, prod: new Map(), cons: new Map() };

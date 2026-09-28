@@ -125,7 +125,6 @@ test("demo paths in the shipped data are exactly the attract-mode copies", () =>
   const found = {};
   for (const file of ["map_data_ao.json", "map_data_ae.json"]) {
     const data = load(file);
-    const geo = data.geometry;
     const entries = computeEntryPaths(data);
     const demo = [];
     for (const L of data.levels) {
@@ -141,8 +140,8 @@ test("demo paths in the shipped data are exactly the attract-mode copies", () =>
           continue;
         }
         for (const t of P.tlvs) {
-          const d = destOf(t, L, P, geo, data);
-          if (!d || !destTrusted(d, L, data, geo)) continue;
+          const d = destOf(t, data, L, P);
+          if (!d || !destTrusted(d, data, L)) continue;
           const dst = pathIn(data, d.lv, d.pa);
           assert.ok(
             !dst || !isDemoPath(dst),
@@ -193,14 +192,14 @@ test("the shipped data's dead and genuine off-level links are told apart", () =>
   const ae = load("map_data_ae.json");
   const sv6 = pathIn(ae, "SV", 6);
   const door = sv6.tlvs.find((t) => t.name === "Door" && t.x1 === 825 && t.y1 === 600);
-  const dead = destOf(door, { short: "SV" }, sv6, ae.geometry, ae);
+  const dead = destOf(door, ae, { short: "SV" }, sv6);
   assert.deepEqual(dead, {
     lv: "MI",
     pa: 6,
     ca: 24,
     target: { name: "Door", field: "door#", value: 2 },
   });
-  assert.equal(destTrusted(dead, { short: "SV" }, ae, ae.geometry), false);
+  assert.equal(destTrusted(dead, ae, { short: "SV" }), false);
 
   const ao = load("map_data_ao.json");
   const menu = [
@@ -209,7 +208,7 @@ test("the shipped data's dead and genuine off-level links are told apart", () =>
   ].map(([short, id]) => {
     const P = pathIn(ao, short, id);
     const t = P.tlvs.find((x) => x.name === "PathTransition" && x.extra.to_level === "S1");
-    return destTrusted(destOf(t, { short }, P, ao.geometry, ao), { short }, ao, ao.geometry);
+    return destTrusted(destOf(t, ao, { short }, P), ao, { short });
   });
   assert.deepEqual(menu, [true, true]);
 });
@@ -225,13 +224,8 @@ test("cross-level follows in the shipped data are exactly the level graph", () =
     for (const L of data.levels)
       for (const P of L.paths)
         for (const t of P.tlvs) {
-          const d = destOf(t, L, P, data.geometry, data);
-          if (
-            d &&
-            d.lv !== L.short &&
-            destTrusted(d, L, data, data.geometry) &&
-            pathIn(data, d.lv, d.pa)
-          )
+          const d = destOf(t, data, L, P);
+          if (d && d.lv !== L.short && destTrusted(d, data, L) && pathIn(data, d.lv, d.pa))
             seen.add(`${L.short} P${P.id} -> ${d.lv} P${d.pa}`);
         }
     found[data.id] = [...seen].sort();
@@ -247,7 +241,7 @@ test("the shipped data's express wells take the side the game uses", () => {
   const hub = ba2.tlvs.find((t) => t.x1 === 454 && t.y1 === 310);
   // the Barracks hub well: its unpointed side reads as the Mines' first screen,
   // its live side names well 1, four tiles away in the same room
-  assert.deepEqual(destOf(hub, { short: "BA" }, ba2, ae.geometry, ae), {
+  assert.deepEqual(destOf(hub, ae, { short: "BA" }, ba2), {
     lv: "BA",
     pa: 2,
     ca: 1,
@@ -256,16 +250,16 @@ test("the shipped data's express wells take the side the game uses", () => {
 
   const ne3 = pathIn(ae, "NE", 3);
   const both = ne3.tlvs.find((t) => t.x1 === 518 && t.y1 === 850);
-  const dead = destOf(both, { short: "NE" }, ne3, ae.geometry, ae);
+  const dead = destOf(both, ae, { short: "NE" }, ne3);
   assert.deepEqual(dead, { lv: "MI", pa: 1, ca: 1, target: { field: "well#", value: 0 } });
-  assert.equal(destTrusted(dead, { short: "NE" }, ae, ae.geometry), false);
+  assert.equal(destTrusted(dead, ae, { short: "NE" }), false);
 
   const ao = load("map_data_ao.json");
   const l1p6 = pathIn(ao, "L1", 6);
   const ride = l1p6.tlvs.find((t) => t.x1 === 2418 && t.y1 === 309);
-  const far = destOf(ride, { short: "L1" }, l1p6, ao.geometry, ao);
+  const far = destOf(ride, ao, { short: "L1" }, l1p6);
   assert.deepEqual(far, { lv: "F1", pa: 1, ca: 1, target: { field: "well#", value: 0 } });
-  assert.equal(destTrusted(far, { short: "L1" }, ao, ao.geometry), true);
+  assert.equal(destTrusted(far, ao, { short: "L1" }), true);
 });
 
 // destinations may dangle, but their level fields must be decoded shorts —
@@ -575,15 +569,12 @@ test("only travel BirdPortals carry a destination", () => {
 // strips their pairing).
 test("loopbacks in the shipped data are exactly the three known ones", () => {
   const found = [];
-  for (const [file, geometry] of [
-    ["map_data_ao.json", AO_GEOMETRY],
-    ["map_data_ae.json", AE_GEOMETRY],
-  ]) {
+  for (const file of ["map_data_ao.json", "map_data_ae.json"]) {
     const data = load(file);
     for (const L of data.levels)
       for (const P of L.paths)
         for (const t of P.tlvs)
-          if (isLoopback(t, L, P, geometry, data))
+          if (isLoopback(t, data, L, P))
             found.push(`${data.id} ${L.short} P${P.id} ${t.name} (${t.x1},${t.y1})`);
   }
   assert.deepEqual(found, [

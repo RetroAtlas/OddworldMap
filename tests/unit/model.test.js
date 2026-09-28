@@ -41,11 +41,11 @@ import {
   tlv,
 } from "./fixtures.js";
 
-// current level/path, with the dataset destOf looks a destination's partner up
-// in; the path holds no objects, so only destinations naming another path of
-// the dataset can land on one
+// the dataset destOf looks a destination's partner up in, with the level and
+// path it stands on. The dataset holds nothing but that path, and the path
+// holds no objects, so no destination can land on a partner here
 const HERE_PATH = path(15, [], [{ cell: 0, name: "XXP15C01" }], 1, 1);
-const HERE = [{ short: "R1" }, HERE_PATH, SYNTH_GEOMETRY, dataset([level("R1", HERE_PATH)])];
+const HERE = [dataset([level("R1", HERE_PATH)]), { short: "R1" }, HERE_PATH];
 
 // a TLV moved to world position (x, y); SYNTH_GEOMETRY cells are 400x200 units
 const at = (t, x, y) => ({ ...t, x1: x, y1: y, x2: x + 10, y2: y + 10 });
@@ -55,15 +55,17 @@ test("destOf: primary destination wins when it leads elsewhere", () => {
   assert.deepEqual(destOf(t, ...HERE), { lv: "R2", pa: 1, ca: 3, target: null });
 });
 
-// state.data is null until boot, so the default is reachable
-test("destOf: with no dataset a destination answers, it just corroborates nothing", () => {
+test("destOf: an uncorroborated destination still answers, and destTrusted refuses it", () => {
+  const [data, lvl] = HERE;
   const t = tlv("Door", { to_level: "R2", to_path: 1, to_cam: 3, "target_door#": 4 });
-  assert.deepEqual(destOf(t, { short: "R1" }, HERE_PATH, SYNTH_GEOMETRY), {
+  const d = destOf(t, ...HERE);
+  assert.deepEqual(d, {
     lv: "R2",
     pa: 1,
     ca: 3,
     target: { name: "Door", field: "door#", value: 4 },
   });
+  assert.equal(destTrusted(d, data, lvl), false);
 });
 
 test("destOf: self destination falls through to the alternate", () => {
@@ -131,7 +133,7 @@ test("destOf: a well's bounce-back yields to the ride, even within the path", ()
     20,
   ); // cell 0 -> C01: the primary names its own camera
   const P = path(15, [well], cams, 2, 1);
-  assert.deepEqual(destOf(well, { short: "R1" }, P, SYNTH_GEOMETRY), {
+  assert.deepEqual(destOf(well, dataset([level("R1", P)]), { short: "R1" }, P), {
     lv: "R1",
     pa: 15,
     ca: 2,
@@ -148,13 +150,14 @@ test("destOf: a launcher well (every state bounces) keeps no pairing", () => {
     20,
   );
   const P = path(15, [launcher], [{ cell: 0, name: "XXP15C01" }], 1, 1);
-  assert.deepEqual(destOf(launcher, { short: "R1" }, P, SYNTH_GEOMETRY), {
+  const D = dataset([level("R1", P)]);
+  assert.deepEqual(destOf(launcher, D, { short: "R1" }, P), {
     lv: "R1",
     pa: 15,
     ca: 1,
     target: null,
   });
-  assert.equal(isLoopback(launcher, { short: "R1" }, P, SYNTH_GEOMETRY), false);
+  assert.equal(isLoopback(launcher, D, { short: "R1" }, P), false);
 });
 
 test("destOf: an unpointed state yields to the one that names a partner", () => {
@@ -180,10 +183,12 @@ test("destOf: an unpointed state yields to the one that names a partner", () => 
     ...level("MI", path(1, [tlv("WellExpress", { "well#": 0 })], [{ cell: 0, name: "XXP01C01" }])),
     id: 1,
   };
-  assert.deepEqual(
-    destOf(well, { short: "R1" }, P, SYNTH_GEOMETRY, dataset([level("R1", P), mines])),
-    { lv: "R1", pa: 15, ca: 1, target: { field: "well#", value: 1 } },
-  );
+  assert.deepEqual(destOf(well, dataset([level("R1", P), mines]), { short: "R1" }, P), {
+    lv: "R1",
+    pa: 15,
+    ca: 1,
+    target: { field: "well#", value: 1 },
+  });
 });
 
 test("destOf: a cross-path well ride carries its arrival well id", () => {
@@ -219,23 +224,24 @@ test("destOf: hand stone views follow the first viewed camera", () => {
   // AE shape: bare camera ids, viewed within the stone's own path
   const ae = tlv("HandStone", { view1_cam: 50, view2_cam: 53 });
   const P = path(15, [], [{ cell: 0, name: "XXP15C50" }], 1, 1);
-  assert.deepEqual(destOf(ae, { short: "R1" }, P), { lv: "R1", pa: 15, ca: 50, target: null });
+  const D = dataset([level("R1", P)]);
+  assert.deepEqual(destOf(ae, D, { short: "R1" }, P), { lv: "R1", pa: 15, ca: 50, target: null });
   // AO shape: full level/path/camera triples
   const ao = tlv("HandStone", { view1_level: "F1", view1_path: 2, view1_cam: 5 });
   assert.deepEqual(destOf(ao, ...HERE), { lv: "F1", pa: 2, ca: 5, target: null });
   // a viewed camera the path no longer has, or no selection: nothing to follow
-  assert.equal(destOf(tlv("HandStone", { view1_cam: 4 }), { short: "R1" }, P), null);
-  assert.equal(destOf(ae, null, null), null);
+  assert.equal(destOf(tlv("HandStone", { view1_cam: 4 }), D, { short: "R1" }, P), null);
+  assert.equal(destOf(ae, D, null, null), null);
 });
 
 // the only thing holding this guard: no stone view survives the rest of the
 // gauntlet on either game's shipped data, so nothing in the sweeps would fail
 // if a caller dropped it
 test("wayThrough: a hand stone's view is not a way through", () => {
-  const [lvl, , geo, data] = HERE;
+  const [data, lvl] = HERE;
   const ao = tlv("HandStone", { view1_level: "F1", view1_path: 2, view1_cam: 5 });
   assert.deepEqual(destOf(ao, ...HERE), { lv: "F1", pa: 2, ca: 5, target: null });
-  assert.equal(destTrusted(destOf(ao, ...HERE), lvl, data, geo), true);
+  assert.equal(destTrusted(destOf(ao, ...HERE), data, lvl), true);
   assert.equal(wayThrough(ao, ...HERE), null);
   // a real transition comes back, and one the map cannot believe does not
   const go = tlv("PathTransition", { to_level: "R1", to_path: 15, to_cam: 1 });
@@ -576,7 +582,7 @@ test("isLoopback: a door whose destination resolves to itself", () => {
     20,
   );
   const P = path(15, [self], [{ cell: 0, name: "XXP15C01" }], 1, 1);
-  assert.equal(isLoopback(self, { short: "R1" }, P, SYNTH_GEOMETRY), true);
+  assert.equal(isLoopback(self, dataset([level("R1", P)]), { short: "R1" }, P), true);
 });
 
 test("isLoopback: paired doors and cross-path/same-cam neighbors are not loopbacks", () => {
@@ -621,8 +627,7 @@ test("isLoopback: paired doors and cross-path/same-cam neighbors are not loopbac
   );
   const P = path(15, [a, b, c, e, f, g], cams, 2, 1);
   const D = dataset([level("R1", P)]);
-  for (const t of [a, b, c, e, f, g])
-    assert.equal(isLoopback(t, { short: "R1" }, P, SYNTH_GEOMETRY, D), false);
+  for (const t of [a, b, c, e, f, g]) assert.equal(isLoopback(t, D, { short: "R1" }, P), false);
 });
 
 // a two-camera destination path holding one door, for the trust tests
@@ -642,15 +647,15 @@ const HOME = { short: "R1" };
 
 test("destTrusted: a link naming no partner is trusted wherever it points", () => {
   const d = { lv: "ZZ", pa: 1, ca: null, target: null };
-  assert.equal(destTrusted(d, HOME, trustData(1), SYNTH_GEOMETRY), true);
+  assert.equal(destTrusted(d, trustData(1), HOME), true);
 });
 
 test("destTrusted: a cross-level partner must be at the destination", () => {
   const d = { lv: "R2", pa: 1, ca: 2, target: { name: "Door", field: "door#", value: 7 } };
-  assert.equal(destTrusted(d, HOME, trustData(7), SYNTH_GEOMETRY), true);
-  assert.equal(destTrusted(d, HOME, trustData(3), SYNTH_GEOMETRY), false);
+  assert.equal(destTrusted(d, trustData(7), HOME), true);
+  assert.equal(destTrusted(d, trustData(3), HOME), false);
   const gone = { ...d, pa: 9 }; // a path the game never shipped
-  assert.equal(destTrusted(gone, HOME, trustData(7), SYNTH_GEOMETRY), false);
+  assert.equal(destTrusted(gone, trustData(7), HOME), false);
 });
 
 test("destTrusted: the address an unpointed side keeps corroborates nothing", () => {
@@ -661,18 +666,18 @@ test("destTrusted: the address an unpointed side keeps corroborates nothing", ()
   });
   const data = dataset([level("R1", path(15, [])), opener(1, "MI"), opener(2, "R2")]);
   const to = (lv) => ({ lv, pa: 1, ca: 1, target: { field: "well#", value: 0 } });
-  assert.equal(destTrusted(to("MI"), HOME, data, SYNTH_GEOMETRY), false);
+  assert.equal(destTrusted(to("MI"), data, HOME), false);
   // the same numbers are evidence once a field was set: Monsaic Lines rides to
   // Paramonia's first screen with an arrival well of 0
-  assert.equal(destTrusted(to("R2"), HOME, data, SYNTH_GEOMETRY), true);
+  assert.equal(destTrusted(to("R2"), data, HOME), true);
 });
 
 test("destTrusted: within a level the stated camera stands on its own", () => {
   // resolveTarget is camera-bounded, so an unresolved partner is no evidence
   const d = { lv: "R1", pa: 15, ca: 2, target: { name: "Door", field: "door#", value: 7 } };
-  assert.equal(destTrusted(d, HOME, trustData(1), SYNTH_GEOMETRY), true);
+  assert.equal(destTrusted(d, trustData(1), HOME), true);
   const gone = { ...d, pa: 9 };
-  assert.equal(destTrusted(gone, HOME, trustData(1), SYNTH_GEOMETRY), false);
+  assert.equal(destTrusted(gone, trustData(1), HOME), false);
 });
 
 test("computeEntryPaths: a dead destination marks no arrival", () => {
@@ -713,7 +718,7 @@ const CONN_CAMS = [
 ];
 const R1 = { short: "R1" };
 const conn = (P, ...elsewhere) =>
-  computeConnections(R1, P, SYNTH_GEOMETRY, dataset([level("R1", P), ...elsewhere]));
+  computeConnections(dataset([level("R1", P), ...elsewhere]), R1, P);
 
 test("computeConnections: a mutual door pair consolidates to one two-way edge", () => {
   const a = at(
@@ -1341,6 +1346,10 @@ test("patrolZone: the pen between the id-matched bound pair, window-bounded", ()
     1,
   );
   assert.equal(patrolZone(slig, P3, AO_GEOMETRY, "AO"), null);
+
+  // a game the window table does not name is refused, whatever the object asked about
+  assert.throws(() => patrolZone(slig, P, AO_GEOMETRY), /not a game this table names/);
+  assert.throws(() => patrolZone(tlv("Door"), P, AO_GEOMETRY, "XX"), /not a game this table names/);
 });
 
 test("a segment always names its path, so undo across a seam cannot rebind it", () => {

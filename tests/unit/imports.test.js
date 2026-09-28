@@ -60,10 +60,8 @@ test("pure modules import in bare Node", async () => {
   }
 });
 
-// A cycle between ES modules links and runs without complaint for as long as no
-// module reads an imported binding mid-evaluation, so nothing but the import
-// statements themselves says one has formed.
-test("the viewer's modules import one way", () => {
+// every viewer module, with the siblings its import statements name
+function importGraph() {
   const dir = new URL("../../public/js/", import.meta.url);
   const files = readdirSync(dir)
     .filter((f) => f.endsWith(".js"))
@@ -74,6 +72,15 @@ test("the viewer's modules import one way", () => {
     for (const s of specs) assert.ok(files.includes(s), `${f} imports ./${s}, which is not there`);
     deps.set(f, specs);
   }
+  return deps;
+}
+
+// A cycle between ES modules links and runs without complaint for as long as no
+// module reads an imported binding mid-evaluation, so nothing but the import
+// statements themselves says one has formed.
+test("the viewer's modules import one way", () => {
+  const deps = importGraph();
+  const files = [...deps.keys()];
 
   // the boot entry reaching every module is what shows the sweep read the whole graph
   const reached = new Set(["main.js"]);
@@ -99,4 +106,15 @@ test("the viewer's modules import one way", () => {
     done.add(f);
   };
   for (const f of files) if (!done.has(f)) walk(f, [f]);
+});
+
+// model.js is handed the layout and the dataset, level and path a call depends
+// on, so nothing it runs may reach the module holding the live ones
+test("model.js never reaches state.js", () => {
+  const deps = importGraph();
+  const from = new Map([["model.js", null]]);
+  for (const f of from.keys()) for (const d of deps.get(f)) if (!from.has(d)) from.set(d, f);
+  const trail = [];
+  for (let f = from.has("state.js") ? "state.js" : null; f; f = from.get(f)) trail.unshift(f);
+  assert.deepEqual(trail, [], `model.js reaches state.js: ${trail.join(" -> ")}`);
 });

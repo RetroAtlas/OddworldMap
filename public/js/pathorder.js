@@ -67,7 +67,7 @@ function transitions(data, level) {
     const here = [];
     let leaves = false;
     for (const t of P.tlvs) {
-      const d = wayThrough(t, level, P, data.geometry, data);
+      const d = wayThrough(t, data, level, P);
       if (!d || !pathIn(data, d.lv, d.pa)) continue;
       if (d.lv !== level.short) leaves = true;
       else if (d.pa !== P.id) here.push(d.pa);
@@ -211,7 +211,7 @@ export function levelEntry(data) {
     for (const P of L.paths)
       for (const t of P.tlvs) {
         if (t.name === "AbeStart") keep(start, L.short, P.id);
-        const d = wayThrough(t, L, P, data.geometry, data);
+        const d = wayThrough(t, data, L, P);
         if (!d || d.lv === L.short || !pathIn(data, d.lv, d.pa)) continue;
         keep(order.get(d.lv) > order.get(L.short) ? fwd : back, d.lv, d.pa);
       }

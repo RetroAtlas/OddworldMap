@@ -314,7 +314,7 @@ export function draw() {
 // affordances are the live view's alone — standing in an image they read as
 // marks on the map
 export function paint(ctx, cam, w, h, dpr, transients = true) {
-  const { path, show, ruler, route, sel } = state;
+  const { data, lvl, path, show, ruler, route, sel } = state;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = COLOR.mapBg;
   ctx.fillRect(0, 0, w, h);
@@ -324,10 +324,13 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   ctx.imageSmoothingEnabled = cam.z < 1;
   // back to front. A layer sets the fill, stroke and shadow colours, the line
   // width and the font before drawing with them, and may leave them changed;
-  // whatever else it changes it puts back
+  // whatever else it changes it puts back. The place and the geometry it draws
+  // from come off the frame, read once per paint
   const f = {
     ctx,
     cam,
+    data,
+    lvl,
     path,
     layout: LAYOUT,
     origin: cellOrigin(),
@@ -438,7 +441,7 @@ function paintPatrol({ ctx }, zone) {
 }
 
 function paintMarkers(f) {
-  const { ctx, cam, path, layout, showLabels } = f;
+  const { ctx, cam, data, path, layout, showLabels } = f;
   ctx.font = `${11 / cam.z}px sans-serif`;
   for (const t of path.tlvs) {
     if (!markerShown(t)) continue;
@@ -457,7 +460,7 @@ function paintMarkers(f) {
       y1 = box.y;
     const w = Math.max(box.w, 10),
       h = Math.max(box.h, 10);
-    const bg = onBackgroundPlane(state.data.id, t);
+    const bg = onBackgroundPlane(data.id, t);
     if (bg) ctx.globalAlpha = 0.5;
     ctx.strokeStyle = c.color;
     ctx.fillStyle = c.color + "26";
@@ -518,7 +521,7 @@ function paintMarkers(f) {
 // voice. Hovering a wired object spotlights its own wires and gives them
 // arrowheads at the consumer end; an edge hides with either endpoint. A wire
 // to a barrier post lands on the post's line, as the ruler's snap does.
-function paintWires({ ctx, cam, path, layout }, focus) {
+function paintWires({ ctx, cam, data, path, layout }, focus) {
   const centre = (t) => {
     const post = PENS.on && barrierDir(t) !== null;
     const [cx, cy] = markerCentre(t, layout);
@@ -526,7 +529,9 @@ function paintWires({ ctx, cam, path, layout }, focus) {
   };
   // the spotlight judges what is drawn: a hovered object whose wires are
   // all hidden must not dim the rest with nothing to show for it
-  const drawn = computeWiring(path).edges.filter((e) => markerShown(e.src) && markerShown(e.dst));
+  const drawn = computeWiring(path, data.id).edges.filter(
+    (e) => markerShown(e.src) && markerShown(e.dst),
+  );
   const focusActive = focus && drawn.some((e) => e.src === focus || e.dst === focus);
   ctx.strokeStyle = ctx.fillStyle = WIRE_COLOR;
   const dash = [2.5 / cam.z, 4.5 / cam.z];
@@ -556,9 +561,8 @@ function paintWires({ ctx, cam, path, layout }, focus) {
 // connection arrows: the path's circulation — curves between resolved
 // pairs (double-headed when mutual), dashed to a bare camera, and fixed
 // 45° labelled stubs for destinations on other paths
-function paintConnections({ ctx, cam, path, layout, showLabels }, focus) {
-  if (connCache.path !== path)
-    connCache = { path, edges: computeConnections(state.lvl, path, GEO) };
+function paintConnections({ ctx, cam, data, lvl, path, layout, showLabels }, focus) {
+  if (connCache.path !== path) connCache = { path, edges: computeConnections(data, lvl, path) };
   // focus only dims the rest when the hovered object actually has edges
   const focusActive = focus && connCache.edges.some((e) => e.src === focus || e.dst === focus);
   const headLen = 12 / cam.z;
@@ -676,11 +680,11 @@ function paintRuler({ ctx, cam }, ruler) {
 // per segment of this path — a seam (a followed door or well) breaks the
 // line, since the travel between the halves isn't walked. A ring marks the
 // route's start when it is on this path; per-leg lengths label each segment
-function paintRoute({ ctx, cam, path }, route) {
+function paintRoute({ ctx, cam, lvl, path }, route) {
   const col = `rgb(${COLOR.accentRgb})`;
   ctx.font = `${12 / cam.z}px sans-serif`;
   route.forEach((seg, si) => {
-    if (seg.lv !== state.lvl.short || seg.pa !== path.id) return;
+    if (seg.lv !== lvl.short || seg.pa !== path.id) return;
     const pts = seg.pts;
     ctx.strokeStyle = col;
     ctx.fillStyle = col;

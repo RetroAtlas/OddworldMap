@@ -67,6 +67,15 @@ test("wiring is memoized by path identity", () => {
   assert.equal(computeWiring(p, "AE"), computeWiring(p, "AE"));
 });
 
+test("a game the tables do not name is refused, never read as a game without wires", () => {
+  const p = path(tlv("Lever", { switch_id: 5 }), tlv("Door", { switch_id: 5 }));
+  for (const game of [undefined, "XX"]) {
+    assert.throws(() => computeWiring(p, game), /not a game this table names/);
+    assert.throws(() => wireEnds(p.tlvs[0], game), /not a game this table names/);
+    assert.throws(() => levelWiring({ paths: [p] }, game), /not a game this table names/);
+  }
+});
+
 test("level wiring skips demo paths", () => {
   const lvl = {
     paths: [

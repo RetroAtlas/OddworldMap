@@ -344,16 +344,15 @@ for (const [id, data] of GAMES) {
   });
 
   test(`${id}: no path is listed before everything that reaches it`, () => {
-    const geo = data.geometry;
     const early = [];
     for (const L of data.levels) {
       const into = new Map(L.paths.map((P) => [P.id, new Set()]));
       for (const P of L.paths)
         for (const t of P.tlvs) {
           if ((t.extra || {}).view1_cam != null) continue;
-          const d = destOf(t, L, P, geo, data);
+          const d = destOf(t, data, L, P);
           if (!d || d.lv !== L.short || d.pa === P.id) continue;
-          if (pathIn(data, d.lv, d.pa) && destTrusted(d, L, data, geo)) into.get(d.pa).add(P.id);
+          if (pathIn(data, d.lv, d.pa) && destTrusted(d, data, L)) into.get(d.pa).add(P.id);
         }
       const at = new Map(levelOrder(data, L).map((pid, i) => [pid, i]));
       for (const [pid, from] of into)
