@@ -15,7 +15,14 @@ import {
   pathIn,
 } from "../../public/js/model.js";
 import { EXPORT_MAX_DIM, EXPORT_MAX_PX } from "../../public/js/config.js";
-import { CELL_H, CELL_W, cellOrigin, setGeometry, setSpacing } from "../../public/js/state.js";
+import {
+  CELL_H,
+  CELL_W,
+  LAYOUT,
+  cellOrigin,
+  setGeometry,
+  setSpacing,
+} from "../../public/js/state.js";
 import { isDemoPath } from "../../public/js/demo.js";
 import { AO_GEOMETRY, AE_GEOMETRY, CROSS_LEVEL_FOLLOWS, pitches } from "./fixtures.js";
 
@@ -771,7 +778,7 @@ test("the export frame crops nothing the game renders", () => {
           const offY = (a, b) => out(a, b, oy, y2);
           const where = `${key} ${L.short} P${P.id}`;
           for (const t of P.tlvs) {
-            const b = drawBox(t);
+            const b = drawBox(t, LAYOUT);
             // measured at the minimum box size the render draws a marker at
             if (
               b.x + Math.max(b.w, 10) <= ox ||
@@ -780,12 +787,12 @@ test("the export frame crops nothing the game renders", () => {
               b.y >= y2
             )
               tally.markers++;
-            const { xs, ys } = screenRuns(t);
+            const { xs, ys } = screenRuns(t, LAYOUT);
             if (xs.some(([a, c]) => offX(a, c)) || ys.some(([a, c]) => offY(a, c)))
               cropped.push(`${where} ${t.name} (${t.x1},${t.y1}) covers screen outside the frame`);
           }
           for (const [x1, y1, xa, ya] of P.lines)
-            for (const r of lineRuns(x1, y1, xa, ya)) {
+            for (const r of lineRuns(x1, y1, xa, ya, LAYOUT)) {
               if (!offX(r.x1, r.x2) && !offY(r.y1, r.y2)) continue;
               if (r.on) cropped.push(`${where} (${x1},${y1})\u2013(${xa},${ya}) drawn outside it`);
               else tally.lines++;

@@ -20,8 +20,8 @@ import {
   HUB_FIELDS,
 } from "./config.js";
 import { isDemoPath } from "./demo.js";
-import { drawAt } from "./geometry.js";
-import { GEO, LAYOUT, state, CELL_W, CELL_H, dX, dY, wX, wY } from "./state.js";
+import { drawAt, drawX, drawY, worldX, worldY } from "./geometry.js";
+import { GEO, state } from "./state.js";
 
 export function computeEntryPaths(data, geo = data.geometry) {
   const entries = {};
@@ -199,9 +199,9 @@ function windowRuns(a, b, cell, win, vis, pitch) {
 // common case of nothing being drawn anywhere the object is not: a marker
 // inside one window, and equally one straddling windows, whose runs touch
 // because the slack between them takes no draw space at all.
-export function screenRuns(t, geo = LAYOUT) {
-  const xs = windowRuns(t.x1, t.x2, geo.worldW, geo.winX, geo.visW, geo.cellW),
-    ys = windowRuns(t.y1, t.y2, geo.worldH, geo.winY, geo.visH, geo.cellH);
+export function screenRuns(t, layout) {
+  const xs = windowRuns(t.x1, t.x2, layout.worldW, layout.winX, layout.visW, layout.cellW),
+    ys = windowRuns(t.y1, t.y2, layout.worldH, layout.winY, layout.visH, layout.cellH);
   const covers = (runs, a, b, cell, win, pitch) =>
     runs.reduce((n, [lo, hi]) => n + hi - lo, 0) ===
     drawAt(b, cell, win, pitch) - drawAt(a, cell, win, pitch);
@@ -211,8 +211,8 @@ export function screenRuns(t, geo = LAYOUT) {
     whole:
       !!xs.length &&
       !!ys.length &&
-      covers(xs, t.x1, t.x2, geo.worldW, geo.winX, geo.cellW) &&
-      covers(ys, t.y1, t.y2, geo.worldH, geo.winY, geo.cellH),
+      covers(xs, t.x1, t.x2, layout.worldW, layout.winX, layout.cellW) &&
+      covers(ys, t.y1, t.y2, layout.worldH, layout.winY, layout.cellH),
   };
 }
 
@@ -241,24 +241,24 @@ function drawSpan(a, b, cell, win, vis, pitch) {
 }
 
 // a marker's rect in draw space
-export function drawBox(t, geo = LAYOUT) {
-  const [x, w] = drawSpan(t.x1, t.x2, geo.worldW, geo.winX, geo.visW, geo.cellW),
-    [y, h] = drawSpan(t.y1, t.y2, geo.worldH, geo.winY, geo.visH, geo.cellH);
+export function drawBox(t, layout) {
+  const [x, w] = drawSpan(t.x1, t.x2, layout.worldW, layout.winX, layout.visW, layout.cellW),
+    [y, h] = drawSpan(t.y1, t.y2, layout.worldH, layout.winY, layout.visH, layout.cellH);
   return { x, y, w, h };
 }
 
-export function markerCentre(t, geo = LAYOUT) {
-  const b = drawBox(t, geo);
+export function markerCentre(t, layout) {
+  const b = drawBox(t, layout);
   return [b.x + b.w / 2, b.y + b.h / 2];
 }
 
 // of several markers one point hits, the smallest box: a zone covers the objects
 // inside it, and of two alike the one painted last is on top
-export function smallestMarker(ts, geo = LAYOUT) {
+export function smallestMarker(ts, layout) {
   let best = null,
     area = Infinity;
   for (const t of ts) {
-    const b = drawBox(t, geo);
+    const b = drawBox(t, layout);
     const a = Math.max(b.w, 10) * Math.max(b.h, 10);
     if (a <= area) [best, area] = [t, a];
   }
@@ -287,29 +287,29 @@ function windowCuts(cuts, a, b, cell, win, vis) {
 // piece in the slack takes the frame of the screen it touches: the slack
 // straddles a cell boundary in AO, so framing each end by its own cell would
 // run the piece backwards.
-export function lineRuns(x1, y1, x2, y2, geo = LAYOUT) {
+export function lineRuns(x1, y1, x2, y2, layout) {
   const cuts = new Set([0, 1]);
-  windowCuts(cuts, x1, x2, geo.worldW, geo.winX, geo.visW);
-  windowCuts(cuts, y1, y2, geo.worldH, geo.winY, geo.visH);
+  windowCuts(cuts, x1, x2, layout.worldW, layout.winX, layout.visW);
+  windowCuts(cuts, y1, y2, layout.worldH, layout.winY, layout.visH);
   const at = (t) => [x1 + t * (x2 - x1), y1 + t * (y2 - y1)];
   const ts = [...cuts].sort((p, q) => p - q);
   const spans = [];
   for (let i = 0; i + 1 < ts.length; i++) {
     const mid = at((ts[i] + ts[i + 1]) / 2);
-    const onX = inWindow(mid[0], geo.worldW, geo.winX, geo.visW),
-      onY = inWindow(mid[1], geo.worldH, geo.winY, geo.visH);
+    const onX = inWindow(mid[0], layout.worldW, layout.winX, layout.visW),
+      onY = inWindow(mid[1], layout.worldH, layout.winY, layout.visH);
     spans.push({ a: at(ts[i]), b: at(ts[i + 1]), mid, onX, onY, on: onX && onY });
   }
   // draw space the packing allots the slack between two windows, per axis
-  const slackX = geo.cellW - geo.visW,
-    slackY = geo.cellH - geo.visH;
+  const slackX = layout.cellW - layout.visW,
+    slackY = layout.cellH - layout.visH;
   // one cell frames a whole piece, so both ends answer to the same translation
   const frame = ([wx, wy], [fx, fy]) => {
-    const cx = Math.floor(fx / geo.worldW),
-      cy = Math.floor(fy / geo.worldH);
+    const cx = Math.floor(fx / layout.worldW),
+      cy = Math.floor(fy / layout.worldH);
     return [
-      cx * geo.cellW + wx - cx * geo.worldW - geo.winX,
-      cy * geo.cellH + wy - cy * geo.worldH - geo.winY,
+      cx * layout.cellW + wx - cx * layout.worldW - layout.winX,
+      cy * layout.cellH + wy - cy * layout.worldH - layout.winY,
     ];
   };
   const out = [];
@@ -337,35 +337,35 @@ export function lineRuns(x1, y1, x2, y2, geo = LAYOUT) {
 // drawn over a neighbour's artwork and the screen it is listed under is not
 // one it is on. A marker that merely reaches into the slack says so by the
 // part of it that draws dotted, and is not one of these.
-export const offScreen = (t, geo = LAYOUT) => {
+export const offScreen = (t, geo) => {
   const { xs, ys } = screenRuns(t, geo);
   return !xs.length || !ys.length;
 };
 
 // grid cell under a draw-space point, or null outside the path's grid —
 // the margins must not fold into a neighbouring row's edge cell
-export function cellAt(x, y, path) {
-  const col = Math.floor(x / CELL_W),
-    row = Math.floor(y / CELL_H);
+export function cellAt(x, y, path, layout) {
+  const col = Math.floor(x / layout.cellW),
+    row = Math.floor(y / layout.cellH);
   if (col < 0 || col >= path.w || row < 0 || row >= path.h) return null;
   // a screen is its window, so the slack around one belongs to no cell. Packed
   // there is none of it to land in and this never fires
-  if (x - col * CELL_W >= GEO.visW || y - row * CELL_H >= GEO.visH) return null;
+  if (x - col * layout.cellW >= layout.visW || y - row * layout.cellH >= layout.visH) return null;
   return row * path.w + col;
 }
 
 // the draw-space centre of a cell's screen — the window inside it, never the
 // cell around it, which spaced apart is a different point
-export const cellCentre = (cell, path) => [
-  (cell % path.w) * CELL_W + GEO.visW / 2,
-  Math.floor(cell / path.w) * CELL_H + GEO.visH / 2,
+export const cellCentre = (cell, path, layout) => [
+  (cell % path.w) * layout.cellW + layout.visW / 2,
+  Math.floor(cell / path.w) * layout.cellH + layout.visH / 2,
 ];
 
 // a whole path as one image: scale 1 for every path either game packs, less
 // where the spaced pitch blows one past the budget
-export function pathImage(path, geo = LAYOUT, maxPx = EXPORT_MAX_PX, maxDim = EXPORT_MAX_DIM) {
-  const w = path.w * geo.cellW,
-    h = path.h * geo.cellH;
+export function pathImage(path, layout, maxPx = EXPORT_MAX_PX, maxDim = EXPORT_MAX_DIM) {
+  const w = path.w * layout.cellW,
+    h = path.h * layout.cellH;
   const scale = Math.min(1, maxDim / w, maxDim / h, Math.sqrt(maxPx / (w * h)));
   return { w: Math.floor(w * scale), h: Math.floor(h * scale), scale };
 }
@@ -373,11 +373,11 @@ export function pathImage(path, geo = LAYOUT, maxPx = EXPORT_MAX_PX, maxDim = EX
 // the camera whose screen centre is nearest a draw-space point. A path's grid is
 // mostly empty — the view's centre sits over no camera at all on half the paths
 // in either game — so a point that was not aimed needs a nearest, not a hit
-export function nearestCam(x, y, path) {
+export function nearestCam(x, y, path, layout) {
   let best = null,
     bd = Infinity;
   for (const c of path.cams) {
-    const [cx, cy] = cellCentre(c.cell, path);
+    const [cx, cy] = cellCentre(c.cell, path, layout);
     const d = (cx - x) ** 2 + (cy - y) ** 2;
     if (d < bd) {
       bd = d;
@@ -389,7 +389,7 @@ export function nearestCam(x, y, path) {
 
 // nearest snappable point within tol draw units of pt — a shown object's
 // center, or a collision-line endpoint when those are drawn — or null
-export function snapTarget(pt, path, tol, lines = false) {
+export function snapTarget(pt, path, tol, layout, lines = false) {
   let best = null,
     bd = tol * tol;
   const consider = (x, y) => {
@@ -403,14 +403,14 @@ export function snapTarget(pt, path, tol, lines = false) {
     if (!markerShown(t)) continue;
     // a barrier drawn as a post snaps on its boundary line, not the stamp's middle
     const post = PENS.on && t.name in BARRIERS;
-    const [cx, cy] = markerCentre(t);
-    consider(post ? dX(t.x1) : cx, cy);
+    const [cx, cy] = markerCentre(t, layout);
+    consider(post ? drawX(t.x1, layout) : cx, cy);
   }
   if (lines)
     for (const [x1, y1, x2, y2] of path.lines) {
       // an end lying in the slack is drawn against the screen its line reaches,
       // so the polyline's own ends are the only ones there to snap to
-      const rs = lineRuns(x1, y1, x2, y2);
+      const rs = lineRuns(x1, y1, x2, y2, layout);
       if (!rs.length) continue;
       consider(rs[0].x1, rs[0].y1);
       consider(rs.at(-1).x2, rs.at(-1).y2);
@@ -425,12 +425,12 @@ export function snapTarget(pt, path, tol, lines = false) {
 // last-match-wins on duplicates is not worth imitating. Scrab bounds ship no
 // ids, so scrabs get no pen. Returns a draw-space rect, or null.
 const BOUND_WINDOW = { AO: 2, AE: 3 };
-export function patrolZone(t, path, geo = GEO, gameId = state.data?.id) {
+export function patrolZone(t, path, layout, gameId = state.data?.id) {
   if (t.name !== "Slig" && t.name !== "SligSpawner") return null;
   const id = t.fields?.slig_bound_persist_id;
   if (id == null) return null;
   const win = BOUND_WINDOW[gameId] ?? 2;
-  const cellOf = (o) => [Math.floor(o.x1 / geo.worldW), Math.floor(o.y1 / geo.worldH)];
+  const cellOf = (o) => [Math.floor(o.x1 / layout.worldW), Math.floor(o.y1 / layout.worldH)];
   const [tc, tr] = cellOf(t);
   const near = (o) => {
     const [c, r] = cellOf(o);
@@ -445,10 +445,10 @@ export function patrolZone(t, path, geo = GEO, gameId = state.data?.id) {
   if (L.length !== 1 || R.length !== 1) return null;
   if (R[0].x1 <= L[0].x1) return null; // an inside-out pen is data noise, not a zone
   return {
-    x1: dX(L[0].x1),
-    x2: dX(R[0].x1),
-    y1: dY(Math.min(L[0].y1, R[0].y1, t.y1)),
-    y2: dY(Math.max(L[0].y2, R[0].y2, t.y2)),
+    x1: drawX(L[0].x1, layout),
+    x2: drawX(R[0].x1, layout),
+    y1: drawY(Math.min(L[0].y1, R[0].y1, t.y1), layout),
+    y2: drawY(Math.max(L[0].y2, R[0].y2, t.y2), layout),
   };
 }
 
@@ -652,9 +652,9 @@ export const centerCam = (v, cw, ch) => ({
 
 // zoom for jumping to a point: a few screens across, within the focus clamp.
 // Screens rather than cells, so it holds still when the pitch around them moves
-export const focusZoom = (cw, ch) =>
+export const focusZoom = (cw, ch, geo) =>
   clamp(
-    Math.min(cw / (FOCUS_SCREENS * GEO.visW), ch / (FOCUS_SCREENS * GEO.visH)),
+    Math.min(cw / (FOCUS_SCREENS * geo.visW), ch / (FOCUS_SCREENS * geo.visH)),
     FOCUS_ZOOM_MIN,
     FOCUS_ZOOM_MAX,
   );
@@ -673,13 +673,13 @@ export const focusZoom = (cw, ch) =>
 // slide under a link, while a world point names a place in the game.
 const GRAPH_TOKEN = "graph";
 
-export function formatHash(gameId, levelShort, pathId, view, obj, route, graph) {
-  let h = `#${gameId}/${levelShort}/${pathId}/${Math.round(wX(view.x))}/${Math.round(wY(view.y))}/${view.z.toFixed(2)}`;
+export function formatHash(layout, gameId, levelShort, pathId, view, obj, route, graph) {
+  let h = `#${gameId}/${levelShort}/${pathId}/${Math.round(worldX(view.x, layout))}/${Math.round(worldY(view.y, layout))}/${view.z.toFixed(2)}`;
   if (obj) h += `/${obj.name}@${obj.x1},${obj.y1}`;
   if (graph) h += `/${GRAPH_TOKEN}`;
   const count = route?.reduce((n, s) => n + s.pts.length, 0);
   if (count) {
-    const pair = (p) => `${Math.round(wX(p.x))},${Math.round(wY(p.y))}`;
+    const pair = (p) => `${Math.round(worldX(p.x, layout))},${Math.round(worldY(p.y, layout))}`;
     const body = route.map((s) => [`s${s.lv}.${s.pa}`, ...s.pts.map(pair)].join(";")).join(";");
     h += `/route=n${count};${body};end`;
   }
@@ -774,12 +774,12 @@ export function parseHash(hash) {
   };
 }
 
-// a parsed permalink's view and route in draw space. The conversion needs the
-// link's own geometry, which is not live while parseHash is reading the text:
+// a parsed permalink's view and route in draw space. The layout has to be the
+// link's own game's, which parseHash cannot know while it reads the text:
 // applyHash has yet to select the game, and sanitizeLocationHash runs at boot
 // with no geometry at all.
-export function hashToDraw(p) {
-  const at = (x, y) => ({ x: dX(x), y: dY(y) });
+export function hashToDraw(p, layout) {
+  const at = (x, y) => ({ x: drawX(x, layout), y: drawY(y, layout) });
   return {
     view: p.view && { ...at(p.view.x, p.view.y), z: p.view.z },
     route: p.route?.map((s) => ({ ...s, pts: s.pts.map((q) => at(q.x, q.y)) })) ?? null,

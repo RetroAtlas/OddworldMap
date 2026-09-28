@@ -9,6 +9,7 @@ import { toast } from "./toast.js";
 import {
   state,
   GEO,
+  LAYOUT,
   CELL_W,
   CELL_H,
   cellOrigin,
@@ -243,7 +244,10 @@ function centerOn(fx, fy, z) {
       requestAnimationFrame(attempt);
       return;
     }
-    Object.assign(state.cam, centerCam({ x: fx, y: fy, z: z ?? focusZoom(cw, ch) }, cw, ch));
+    Object.assign(
+      state.cam,
+      centerCam({ x: fx, y: fy, z: z ?? focusZoom(cw, ch, LAYOUT) }, cw, ch),
+    );
     draw();
   };
   attempt();
@@ -268,9 +272,17 @@ function focusOn(fx, fy) {
 // permalink to one object: the focused view plus the object identity, so
 // opening the link can highlight it
 export function objectHash(t) {
-  const [fx, fy] = markerCentre(t);
-  const v = { x: fx, y: fy, z: focusZoom(cv.clientWidth, cv.clientHeight) };
-  return formatHash(state.data.id, state.lvl.short, state.path.id, v, pristineOf(t), state.route);
+  const [fx, fy] = markerCentre(t, LAYOUT);
+  const v = { x: fx, y: fy, z: focusZoom(cv.clientWidth, cv.clientHeight, LAYOUT) };
+  return formatHash(
+    LAYOUT,
+    state.data.id,
+    state.lvl.short,
+    state.path.id,
+    v,
+    pristineOf(t),
+    state.route,
+  );
 }
 
 // ---- follow (click a door/portal/well to jump to its destination) -----
@@ -288,10 +300,10 @@ export function navigateToDest(d) {
     fy = null;
   const tgt = resolveTarget(d, state.path, GEO);
   if (tgt) {
-    [fx, fy] = markerCentre(tgt);
+    [fx, fy] = markerCentre(tgt, LAYOUT);
   }
   const cell = camCell(state.path, d.ca);
-  if (fx == null && cell != null) [fx, fy] = cellCentre(cell, state.path);
+  if (fx == null && cell != null) [fx, fy] = cellCentre(cell, state.path, LAYOUT);
   if (fx == null) return; // path-level target: selectPath already fit the view
   focusOn(fx, fy);
 }
@@ -302,7 +314,7 @@ export function jumpToTlv(G, L, P, t) {
   if (state.data !== G) selectGame(G, true);
   if (state.lvl?.short !== L.short) setLevel(L);
   if (state.path?.id !== P.id) selectPathById(P.id);
-  focusOn(...markerCentre(currentOf(t, state.path) ?? t));
+  focusOn(...markerCentre(currentOf(t, state.path) ?? t, LAYOUT));
 }
 
 // a whole place: one path, a level (which opens on the first path it lists),
@@ -319,7 +331,7 @@ export function jumpToPlace(G, lv, pa, cam) {
   selectPathById(pa);
   if (cam == null) return;
   const cell = camCell(state.path, cam);
-  if (cell != null) focusOn(...cellCentre(cell, state.path));
+  if (cell != null) focusOn(...cellCentre(cell, state.path, LAYOUT));
 }
 
 // an edit stands a rebuilt level in the dataset: the entry set is game-wide,
@@ -377,6 +389,7 @@ const inEmbed = () => document.body.classList.contains("embed");
 export function viewHash() {
   const v = camCenter(state.cam, cv.clientWidth, cv.clientHeight);
   return formatHash(
+    LAYOUT,
     state.data.id,
     state.lvl.short,
     state.path.id,
@@ -453,13 +466,13 @@ export async function applyHash() {
   }
   // the geometry is the link's own from here, which is what world coordinates
   // in it are waiting on
-  const { view, route } = hashToDraw(p);
+  const { view, route } = hashToDraw(p, LAYOUT);
   if (view) centerOn(view.x, view.y, clamp(view.z, ZOOM_MIN, ZOOM_MAX));
   applyingHash = false;
   if (p.obj) {
     // a link to a specific object: center it and hold a marker on it
     const t = findTlv(state.path.tlvs, p.obj);
-    const c = t && markerCentre(t);
+    const c = t && markerCentre(t, LAYOUT);
     const fx = c ? c[0] : (view?.x ?? dX(p.obj.x1)),
       fy = c ? c[1] : (view?.y ?? dY(p.obj.y1));
     centerOn(fx, fy, null); // re-derives the focus zoom for this viewport

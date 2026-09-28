@@ -58,7 +58,7 @@ test("clicking a door follows it to the level and path it names", async ({ page 
     const t = st.state.path.tlvs.find(
       (t) => t.name === d.name && t.x1 === d.world[0] && t.y1 === d.world[1],
     );
-    const [cx, cy] = model.markerCentre(t);
+    const [cx, cy] = model.markerCentre(t, st.LAYOUT);
     const r = document.getElementById("cv").getBoundingClientRect();
     const { cam } = st.state;
     return { x: r.left + (cx - cam.x) * cam.z, y: r.top + (cy - cam.y) * cam.z };

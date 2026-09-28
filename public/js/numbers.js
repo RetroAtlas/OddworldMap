@@ -4,7 +4,7 @@
 
 import { $, cv, narrowMQ } from "./dom.js";
 import { esc } from "./util.js";
-import { state } from "./state.js";
+import { LAYOUT, state } from "./state.js";
 import { camCenter, cellAt } from "./model.js";
 import { census } from "./census.js";
 import { toggleMenu } from "./interaction.js";
@@ -31,7 +31,7 @@ function typeNames(G) {
 // the screen tier follows the view's center, not the pointer
 function centerCell() {
   const c = camCenter(state.cam, cv.clientWidth, cv.clientHeight);
-  return cellAt(c.x, c.y, state.path);
+  return cellAt(c.x, c.y, state.path, LAYOUT);
 }
 
 let lastCell = null;

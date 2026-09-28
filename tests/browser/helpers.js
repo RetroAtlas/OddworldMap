@@ -113,7 +113,7 @@ export async function probeAnchor(page, anchor) {
           t.y2 === b.world[3],
       );
       if (!t) return { name: b.name, found: false, rel: null };
-      const d = model.drawBox(t);
+      const d = model.drawBox(t, st.LAYOUT);
       return { name: b.name, found: true, rel: [d.x - ox, d.y - oy, d.w, d.h] };
     });
     const lines = a.lines.map((l) => {
@@ -122,7 +122,7 @@ export async function probeAnchor(page, anchor) {
           r[0] === l.world[0] && r[1] === l.world[1] && r[2] === l.world[2] && r[3] === l.world[3],
       );
       if (!raw) return { found: false, pieces: 0, on: false, rel: null };
-      const runs = model.lineRuns(raw[0], raw[1], raw[2], raw[3]);
+      const runs = model.lineRuns(raw[0], raw[1], raw[2], raw[3], st.LAYOUT);
       const r = runs[0];
       return {
         found: true,
@@ -162,12 +162,12 @@ export async function probeAnchor(page, anchor) {
     const obstacles = state.path.tlvs
       .filter((t) => config.markerShown(t))
       .map((t) => {
-        const d = model.drawBox(t);
+        const d = model.drawBox(t, st.LAYOUT);
         return [d.x - ox - 32, d.y - oy - 32, d.x + d.w - ox + 32, d.y + d.h - oy + 32];
       });
     if (state.show.coll)
       for (const [x1, y1, x2, y2] of state.path.lines)
-        for (const r of model.lineRuns(x1, y1, x2, y2))
+        for (const r of model.lineRuns(x1, y1, x2, y2, st.LAYOUT))
           obstacles.push([
             Math.min(r.x1, r.x2) - ox - 6,
             Math.min(r.y1, r.y2) - oy - 6,

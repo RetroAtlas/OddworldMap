@@ -28,7 +28,7 @@ import {
   narrowMQ,
 } from "./dom.js";
 import { toast } from "./toast.js";
-import { state, GEO, wX, wY, gX, gY } from "./state.js";
+import { state, GEO, LAYOUT, wX, wY, gX, gY } from "./state.js";
 import {
   draw,
   scheduleDraw,
@@ -283,7 +283,7 @@ cv.addEventListener("click", () => {
     if (seam) {
       const d = followableDest(seam);
       flushHash(); // the entry left behind keeps the route as plotted so far
-      const [sx, sy] = markerCentre(seam);
+      const [sx, sy] = markerCentre(seam, LAYOUT);
       routeSeam({ x: sx, y: sy }, d);
       navigateToDest(d);
       routeArrive(d);
@@ -292,7 +292,7 @@ cv.addEventListener("click", () => {
   }
   updateHover(); // taps arrive without a preceding hover move
   if (state.edit) {
-    selectObject(smallestMarker(hoverTlvs));
+    selectObject(smallestMarker(hoverTlvs, LAYOUT));
     return;
   }
   for (const t of hoverTlvs) {
@@ -378,7 +378,7 @@ function drawAtMouse() {
 // or a collision endpoint while those are drawn — within a few screen pixels
 function snapAtMouse() {
   const pt = drawAtMouse();
-  return snapTarget(pt, state.path, 8 / state.cam.z, state.show.coll) ?? pt;
+  return snapTarget(pt, state.path, 8 / state.cam.z, LAYOUT, state.show.coll) ?? pt;
 }
 
 // ---- keyboard: arrows pan, + / - zoom about the canvas center, [ / ] cycle
@@ -513,13 +513,15 @@ function updateHover() {
     // ground it may never cover
     hoverLines = state.path.lines
       .filter(([x1, y1, x2, y2]) =>
-        lineRuns(x1, y1, x2, y2).some((r) => segDist(pt.x, pt.y, r.x1, r.y1, r.x2, r.y2) <= tol),
+        lineRuns(x1, y1, x2, y2, LAYOUT).some(
+          (r) => segDist(pt.x, pt.y, r.x1, r.y1, r.x2, r.y2) <= tol,
+        ),
       )
       .slice(0, 4);
   }
   hoverTlvs = state.path.tlvs.filter((t) => {
     if (!markerShown(t)) return false;
-    const { x, y, w, h } = drawBox(t);
+    const { x, y, w, h } = drawBox(t, LAYOUT);
     const x2 = x + Math.max(w, 10),
       y2 = y + Math.max(h, 10);
     return pt.x >= x - 4 && pt.x <= x2 + 4 && pt.y >= y - 4 && pt.y <= y2 + 4;
@@ -539,7 +541,9 @@ function updateHover() {
   setHighlight(partner);
   // a hovered Slig (or its spawner) shades the pen its own bounds pair pens it into
   setPatrol(
-    PENS.on ? (hoverTlvs.map((t) => patrolZone(t, state.path)).find(Boolean) ?? null) : null,
+    PENS.on
+      ? (hoverTlvs.map((t) => patrolZone(t, state.path, LAYOUT)).find(Boolean) ?? null)
+      : null,
   );
   // arrows overlay: spotlight the hovered object's own edges
   setConnFocus(state.show.conn ? (hoverTlvs.find((t) => shownDest(t)) ?? null) : null);
@@ -631,7 +635,9 @@ function updateHover() {
           }
           return (
             `<div><span class="t">${esc(t.name)}</span> <span class="e">(${t.x1},${t.y1})–(${t.x2},${t.y2})</span>` +
-            (offScreen(t) ? `<br><span class="e offscreen">${esc(OFFSCREEN_NOTE)}</span>` : "") +
+            (offScreen(t, LAYOUT)
+              ? `<br><span class="e offscreen">${esc(OFFSCREEN_NOTE)}</span>`
+              : "") +
             (edited.length
               ? `<br><span class="e edited">${esc(`${EDITED_NOTE}: ${edited.join(", ")}`)}</span>`
               : "") +

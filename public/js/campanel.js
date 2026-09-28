@@ -8,7 +8,7 @@ import { fieldEntries, fieldHelp } from "./fields.js";
 import { DARK_NOTE, objectMessages } from "./messages.js";
 import { CATS, EDITED_NOTE, OFFSCREEN_NOTE, catOf } from "./config.js";
 import { $, narrowMQ } from "./dom.js";
-import { GEO, state } from "./state.js";
+import { GEO, LAYOUT, state } from "./state.js";
 import { cellAt, nearestCam, offScreen, tlvCell } from "./model.js";
 import { setHighlight } from "./render.js";
 import { fieldPrefsFor, getSettings } from "./settings.js";
@@ -53,7 +53,7 @@ export function openCamPanel(x, y, focus = null) {
   const { path } = state;
   if (!path) return;
   const camAt = (cell) => (cell != null && path.cams.find((c) => c.cell === cell)) || null;
-  const cam = (focus && camAt(tlvCell(focus, path, GEO))) || camAt(cellAt(x, y, path));
+  const cam = (focus && camAt(tlvCell(focus, path, GEO))) || camAt(cellAt(x, y, path, LAYOUT));
   if (!cam) {
     closeCamPanel();
     return;
@@ -66,7 +66,7 @@ export function openCamPanel(x, y, focus = null) {
 export function openCamPanelNear(x, y) {
   const { path } = state;
   if (!path) return false;
-  const cam = nearestCam(x, y, path);
+  const cam = nearestCam(x, y, path, LAYOUT);
   if (!cam) return false;
   list(cam, null);
   return true;
@@ -107,7 +107,7 @@ function list(cam, focus) {
             : `<span class="e">${kv}</span>`;
         })
         .join(" ");
-      const off = offScreen(t)
+      const off = offScreen(t, LAYOUT)
         ? ` <span class="e">· <span class="gloss" data-tip="${esc(OFFSCREEN_NOTE)}">offscreen</span></span>`
         : "";
       const changed = Object.keys(editedFields(t)).sort();

@@ -1,4 +1,4 @@
-import { test, beforeEach } from "node:test";
+import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   camCell,
@@ -30,7 +30,6 @@ import {
   zoomAt,
 } from "../../public/js/model.js";
 import { ZOOM_MIN, ZOOM_MAX, MAX_ROUTE_PTS } from "../../public/js/config.js";
-import { setGeometry } from "../../public/js/state.js";
 import {
   AO_GEOMETRY,
   AE_GEOMETRY,
@@ -47,11 +46,6 @@ import {
 // the dataset can land on one
 const HERE_PATH = path(15, [], [{ cell: 0, name: "XXP15C01" }], 1, 1);
 const HERE = [{ short: "R1" }, HERE_PATH, SYNTH_GEOMETRY, dataset([level("R1", HERE_PATH)])];
-
-// AO is the file's baseline geometry: its window offset and cell margins put
-// draw space and world space far enough apart that a missing conversion shows.
-// A test wanting another sets it and needs no restore.
-beforeEach(() => setGeometry(AO_GEOMETRY));
 
 // a TLV moved to world position (x, y); SYNTH_GEOMETRY cells are 400x200 units
 const at = (t, x, y) => ({ ...t, x1: x, y1: y, x2: x + 10, y2: y + 10 });
@@ -319,39 +313,39 @@ test("camCell: zero-padded C## suffix lookup, null for unknown or missing ids", 
 });
 
 test("cellAt: draw-space point to grid cell, null anywhere outside the grid", () => {
-  setGeometry(SYNTH_GEOMETRY); // 300x150 draw cells
   const P = path(1, [], [], 3, 2);
-  assert.equal(cellAt(0, 0, P), 0);
-  assert.equal(cellAt(750, 20, P), 2); // row 0, col 2
-  assert.equal(cellAt(450, 200, P), 4); // row 1, col 1
+  const cell = (x, y) => cellAt(x, y, P, SYNTH_GEOMETRY); // 300x150 draw cells
+  assert.equal(cell(0, 0), 0);
+  assert.equal(cell(750, 20), 2); // row 0, col 2
+  assert.equal(cell(450, 200), 4); // row 1, col 1
   // the margins must not fold into a neighbouring row's edge cell:
   // col -1 is not "last cell of the row above", col w is not "first of the next"
-  assert.equal(cellAt(-1, 200, P), null);
-  assert.equal(cellAt(910, 20, P), null);
-  assert.equal(cellAt(450, -5, P), null);
-  assert.equal(cellAt(450, 301, P), null);
+  assert.equal(cell(-1, 200), null);
+  assert.equal(cell(910, 20), null);
+  assert.equal(cell(450, -5), null);
+  assert.equal(cell(450, 301), null);
 });
 
 test("cellCentre: the middle of a cell's window, not of the cell", () => {
-  setGeometry(SYNTH_GEOMETRY); // 300x150 cells showing a 200x100 window at +40/+20
   const P = path(1, [], [], 3, 2);
-  assert.deepEqual(cellCentre(0, P), [100, 50]);
-  assert.deepEqual(cellCentre(4, P), [400, 200]); // row 1, col 1
+  // 300x150 cells showing a 200x100 window at +40/+20
+  assert.deepEqual(cellCentre(0, P, SYNTH_GEOMETRY), [100, 50]);
+  assert.deepEqual(cellCentre(4, P, SYNTH_GEOMETRY), [400, 200]); // row 1, col 1
 });
 
 test("nearestCam: the screen nearest a point the keyboard did not aim", () => {
-  setGeometry(SYNTH_GEOMETRY);
   const cam = (cell) => ({ cell, name: `C0${cell}` });
   const P = path(1, [], [cam(0), cam(2), cam(5)], 3, 2);
+  const near = (x, y, p = P) => nearestCam(x, y, p, SYNTH_GEOMETRY);
   // a point inside a camera's own cell picks it
-  assert.equal(nearestCam(110, 60, P).cell, 0);
+  assert.equal(near(110, 60).cell, 0);
   // and a point over an empty cell still answers, with the screen it is closest to
-  assert.equal(nearestCam(400, 200, P).cell, 5); // cell 4 holds none; 5 is next door
-  assert.equal(nearestCam(100, 200, P).cell, 0); // cell 3 holds none; 0 is above it
+  assert.equal(near(400, 200).cell, 5); // cell 4 holds none; 5 is next door
+  assert.equal(near(100, 200).cell, 0); // cell 3 holds none; 0 is above it
   // far outside the grid altogether
-  assert.equal(nearestCam(-9000, -9000, P).cell, 0);
-  assert.equal(nearestCam(9000, 9000, P).cell, 5);
-  assert.equal(nearestCam(0, 0, path(1, [], [], 3, 2)), null);
+  assert.equal(near(-9000, -9000).cell, 0);
+  assert.equal(near(9000, 9000).cell, 5);
+  assert.equal(near(0, 0, path(1, [], [], 3, 2)), null);
 });
 
 // AO's window is 368x240 at +256/+120 of a 1024x480 cell, so 656x240 of slack
@@ -508,7 +502,6 @@ test("offScreen: no part of the marker is on any screen", () => {
   // an anchor in the slack whose span reaches its window is drawn, not lost
   assert.equal(offScreen(box(250, 200, 50, 20), AO_GEOMETRY), false);
   assert.equal(offScreen({ x1: 0, y1: 0, x2: 10, y2: 10 }, AE_GEOMETRY), false);
-  assert.equal(offScreen(box(700, 200)), true); // the live geometry by default
 });
 
 test("resolveTarget: matches inside the destination camera before anything else", () => {
@@ -853,12 +846,12 @@ test("zoomAt keeps the world point under the anchor fixed", () => {
 
 test("the focus zoom fits a few screens and clamps at both ends", () => {
   // screens, not cells: the 200x100 window, so FOCUS_SCREENS 2.6 -> 520x260
-  setGeometry(SYNTH_GEOMETRY);
-  assert.equal(focusZoom(1040, 520), 1.6); // large canvas: clamps at FOCUS_ZOOM_MAX
-  assert.equal(focusZoom(260, 130), 0.5); // small canvas: clamps at FOCUS_ZOOM_MIN
-  assert.equal(focusZoom(520, 260), 1); // in between: exactly FOCUS_SCREENS across
+  const zoom = (cw, ch) => focusZoom(cw, ch, SYNTH_GEOMETRY);
+  assert.equal(zoom(1040, 520), 1.6); // large canvas: clamps at FOCUS_ZOOM_MAX
+  assert.equal(zoom(260, 130), 0.5); // small canvas: clamps at FOCUS_ZOOM_MIN
+  assert.equal(zoom(520, 260), 1); // in between: exactly FOCUS_SCREENS across
   // a jump to a point puts it at the middle of the canvas whichever zoom won
-  assert.deepEqual(centerCam({ x: 500, y: 300, z: focusZoom(260, 130) }, 260, 130), {
+  assert.deepEqual(centerCam({ x: 500, y: 300, z: zoom(260, 130) }, 260, 130), {
     x: 240,
     y: 170,
     z: 0.5,
@@ -876,17 +869,20 @@ test("camCenter and centerCam invert each other", () => {
   assert.deepEqual(centerCam(camCenter(cam, 800, 600), 800, 600), cam);
 });
 
-// a link read the way applyHash reads one: parsed, then resolved to draw space
+// a link read the way applyHash reads one: parsed, then resolved to draw space.
+// The links here are written and read in AO's geometry, whose window offset and
+// cell margins put draw space and world space far enough apart that a missing
+// conversion shows
 const readHash = (h) => {
   const p = parseHash(h);
-  return p && { ...p, ...hashToDraw(p) };
+  return p && { ...p, ...hashToDraw(p, AO_GEOMETRY) };
 };
 
 test("a permalinked center survives a change of viewport, a corner would not", () => {
   const desktop = [1512, 900],
     phone = [390, 700];
   const cam = { x: 0, y: 0, z: 1.29 }; // whatever the sender was looking at
-  const link = formatHash("AO", "R2", 1, camCenter(cam, ...desktop));
+  const link = formatHash(AO_GEOMETRY, "AO", "R2", 1, camCenter(cam, ...desktop));
   assert.equal(link, "#AO/R2/1/1498/709/1.29"); // the middle of the sender's window
   // holding that center costs the recipient a different corner, by half the
   // difference in window size — more than a 368-unit cell horizontally, which
@@ -898,7 +894,10 @@ test("a permalinked center survives a change of viewport, a corner would not", (
 
 test("formatHash writes world coordinates, rounded, and zoom to two decimals", () => {
   // draw (177.4, 54.6) sits in cell 0, whose window starts at world (256, 120)
-  assert.equal(formatHash("AO", "R2", 1, { x: 177.4, y: 54.6, z: 2.234 }), "#AO/R2/1/433/175/2.23");
+  assert.equal(
+    formatHash(AO_GEOMETRY, "AO", "R2", 1, { x: 177.4, y: 54.6, z: 2.234 }),
+    "#AO/R2/1/433/175/2.23",
+  );
 });
 
 test("an unreadable or non-positive zoom drops the whole view", () => {
@@ -909,7 +908,7 @@ test("an unreadable or non-positive zoom drops the whole view", () => {
 });
 
 test("parseHash round-trips a formatted hash (against the rounded values)", () => {
-  const p = parseHash(formatHash("AO", "R2", 1, { x: 177.4, y: 54.6, z: 2.234 }));
+  const p = parseHash(formatHash(AO_GEOMETRY, "AO", "R2", 1, { x: 177.4, y: 54.6, z: 2.234 }));
   assert.deepEqual(p, {
     game: "AO",
     level: "R2",
@@ -921,13 +920,22 @@ test("parseHash round-trips a formatted hash (against the rounded values)", () =
     graph: false,
   });
   // the world point the link names, back in the space the renderer works in
-  assert.deepEqual(hashToDraw(p).view, { x: 177, y: 55, z: 2.23 });
+  assert.deepEqual(hashToDraw(p, AO_GEOMETRY).view, { x: 177, y: 55, z: 2.23 });
 });
 
 // deliberately a bare word at the tail, where an older viewer's parse ignores it
 // and opens the map at the view the link names
 test("the world graph rides the hash as a token of its own", () => {
-  const h = formatHash("AO", "R2", 1, { x: 177.4, y: 54.6, z: 2.234 }, null, null, true);
+  const h = formatHash(
+    AO_GEOMETRY,
+    "AO",
+    "R2",
+    1,
+    { x: 177.4, y: 54.6, z: 2.234 },
+    null,
+    null,
+    true,
+  );
   assert.equal(h, "#AO/R2/1/433/175/2.23/graph");
   assert.equal(parseHash(h).graph, true);
   assert.equal(parseHash("#AO/R2/1/433/175/2.23").graph, false);
@@ -935,6 +943,7 @@ test("the world graph rides the hash as a token of its own", () => {
 
 test("permalinks can carry an object, identified by name and origin", () => {
   const h = formatHash(
+    AO_GEOMETRY,
     "AO",
     "R1",
     18,
@@ -1011,7 +1020,7 @@ test("permalinks can carry a route of waypoints, rounded like the view", () => {
       ],
     },
   ];
-  const h = formatHash("AO", "R2", 1, { x: 177.4, y: 54.6, z: 2.234 }, null, route);
+  const h = formatHash(AO_GEOMETRY, "AO", "R2", 1, { x: 177.4, y: 54.6, z: 2.234 }, null, route);
   assert.equal(h, "#AO/R2/1/433/175/2.23/route=n2;sR2.1;266,142;-430,160;end");
   assert.deepEqual(readHash(h).route, [
     {
@@ -1024,13 +1033,16 @@ test("permalinks can carry a route of waypoints, rounded like the view", () => {
     },
   ]);
   assert.equal(parseHash(h).routeLost, 0);
-  assert.equal(formatHash("AO", "R2", 1, { x: 0, y: 0, z: 1 }, null, []), "#AO/R2/1/256/120/1.00");
+  assert.equal(
+    formatHash(AO_GEOMETRY, "AO", "R2", 1, { x: 0, y: 0, z: 1 }, null, []),
+    "#AO/R2/1/256/120/1.00",
+  );
 });
 
 test("object and route segments coexist, matched by shape in either order", () => {
   const obj = { name: "Door", x1: 8746, y1: 1232 };
   const one = [{ lv: "R1", pa: 18, pts: [{ x: 1, y: 2 }] }];
-  const h = formatHash("AO", "R1", 18, { x: 0, y: 0, z: 1 }, obj, one);
+  const h = formatHash(AO_GEOMETRY, "AO", "R1", 18, { x: 0, y: 0, z: 1 }, obj, one);
   assert.equal(h, "#AO/R1/18/256/120/1.00/Door@8746,1232/route=n1;sR1.18;257,122;end");
   assert.deepEqual(parseHash(h).obj, obj);
   assert.deepEqual(readHash(h).route, one);
@@ -1115,7 +1127,7 @@ test("every prefix of a route link parses as a prefix of the route, or as none",
       .split(";")
       .map((p) => ({ x: +p.split(",")[0], y: +p.split(",")[1] }));
   const route = [{ lv: "R6", pa: 6, pts }];
-  const full = formatHash("AO", "R6", 6, { x: -120, y: 226, z: 1.29 }, null, route);
+  const full = formatHash(AO_GEOMETRY, "AO", "R6", 6, { x: -120, y: 226, z: 1.29 }, null, route);
   assert.deepEqual(readHash(full).route, route);
   assert.equal(parseHash(full).routeLost, 0);
   for (let cut = full.indexOf("route=") + 6; cut < full.length; cut++) {
@@ -1144,10 +1156,10 @@ test("a multi-path route round-trips, and a seam can stand empty", () => {
     { lv: "R1", pa: 16, pts: [{ x: 5, y: 6 }] },
     { lv: "BA", pa: 2, pts: [] },
   ];
-  const h = formatHash("AE", "R1", 16, { x: 0, y: 0, z: 1 }, null, route);
+  const h = formatHash(AO_GEOMETRY, "AO", "R1", 16, { x: 0, y: 0, z: 1 }, null, route);
   assert.equal(
     h,
-    "#AE/R1/16/256/120/1.00/route=n3;sR1.15;257,122;259,124;sR1.16;261,126;sBA.2;end",
+    "#AO/R1/16/256/120/1.00/route=n3;sR1.15;257,122;259,124;sR1.16;261,126;sBA.2;end",
   );
   assert.deepEqual(readHash(h).route, route);
   assert.equal(parseHash(h).routeLost, 0);
@@ -1216,7 +1228,7 @@ test("every prefix of a multi-path route link parses as a prefix of it, or as no
     },
   ];
   const total = 7;
-  const full = formatHash("AO", "BA", 2, { x: -120, y: 226, z: 1.29 }, null, route);
+  const full = formatHash(AO_GEOMETRY, "AO", "BA", 2, { x: -120, y: 226, z: 1.29 }, null, route);
   assert.deepEqual(readHash(full).route, route);
   for (let cut = full.indexOf("route=") + 6; cut < full.length; cut++) {
     const { route: got, routeLost: lost } = readHash(full.slice(0, cut));
@@ -1240,32 +1252,30 @@ test("every prefix of a multi-path route link parses as a prefix of it, or as no
 });
 
 test("snapTarget: shown objects' centers and collision ends, within tolerance", () => {
-  setGeometry(AO_GEOMETRY);
   const door = { ...tlv("Door"), x1: 256 + 100, y1: 120 + 50, x2: 256 + 110, y2: 120 + 60 };
   const honey = { ...tlv("Honey"), x1: 256 + 200, y1: 120 + 50, x2: 256 + 210, y2: 120 + 60 };
   const P = path(1, [door, honey]);
   P.lines = [[256, 120, 256 + 50, 120, 0]]; // draw-space (0,0)→(50,0)
-  assert.deepEqual(snapTarget({ x: 100, y: 52 }, P, 8), { x: 105, y: 55 }); // the door's center
-  assert.equal(snapTarget({ x: 96, y: 55 }, P, 8), null); // a pixel past the radius
-  assert.equal(snapTarget({ x: 205, y: 55 }, P, 8), null); // Honey's category is off
-  assert.equal(snapTarget({ x: 2, y: 2 }, P, 8), null); // lines not drawn, ends inert
-  assert.deepEqual(snapTarget({ x: 2, y: 2 }, P, 8, true), { x: 0, y: 0 });
-  assert.deepEqual(snapTarget({ x: 48, y: 3 }, P, 8, true), { x: 50, y: 0 }); // nearer end wins
+  const snap = (pt, lines) => snapTarget(pt, P, 8, AO_GEOMETRY, lines);
+  assert.deepEqual(snap({ x: 100, y: 52 }), { x: 105, y: 55 }); // the door's center
+  assert.equal(snap({ x: 96, y: 55 }), null); // a pixel past the radius
+  assert.equal(snap({ x: 205, y: 55 }), null); // Honey's category is off
+  assert.equal(snap({ x: 2, y: 2 }), null); // lines not drawn, ends inert
+  assert.deepEqual(snap({ x: 2, y: 2 }, true), { x: 0, y: 0 });
+  assert.deepEqual(snap({ x: 48, y: 3 }, true), { x: 50, y: 0 }); // nearer end wins
 });
 
 test("snapTarget: a line's end in the slack snaps where the line is drawn", () => {
-  setGeometry(AO_GEOMETRY);
   // running off the window's right edge and into the slack, which straddles a
   // cell boundary: the end is drawn at 844, hanging off the screen it left,
   // while the transform alone would put it at 188, back over that screen
   const P = path(1, []);
   P.lines = [[500, 200, 1100, 200, 0]];
-  assert.deepEqual(snapTarget({ x: 844, y: 80 }, P, 8, true), { x: 844, y: 80 });
-  assert.equal(snapTarget({ x: 188, y: 80 }, P, 8, true), null);
+  assert.deepEqual(snapTarget({ x: 844, y: 80 }, P, 8, AO_GEOMETRY, true), { x: 844, y: 80 });
+  assert.equal(snapTarget({ x: 188, y: 80 }, P, 8, AO_GEOMETRY, true), null);
 });
 
 test("patrolZone: the pen between the id-matched bound pair, window-bounded", () => {
-  setGeometry(AO_GEOMETRY);
   const at = (name, cellX, off, fields) => ({
     ...tlv(name),
     x1: cellX * 1024 + 256 + off,
@@ -1289,6 +1299,10 @@ test("patrolZone: the pen between the id-matched bound pair, window-bounded", ()
     1,
   );
   assert.deepEqual(patrolZone(slig, P, AO_GEOMETRY, "AO"), { x1: 40, x2: 936, y1: 50, y2: 74 });
+  // drawn in the layout it is handed: spaced, the slack at the two cell
+  // boundaries the pen crosses is canvas, and the pen is wider by both
+  const [, spaced] = pitches(AO_GEOMETRY);
+  assert.deepEqual(patrolZone(slig, P, spaced, "AO"), { x1: 40, x2: 2248, y1: 50, y2: 74 });
   // AE's wider window lets the far bound in — and two Rights answering is no pen
   assert.equal(patrolZone(slig, P, AO_GEOMETRY, "AE"), null);
 
@@ -1332,7 +1346,7 @@ test("patrolZone: the pen between the id-matched bound pair, window-bounded", ()
 test("a segment always names its path, so undo across a seam cannot rebind it", () => {
   // undo across a seam leaves exactly this: the route on R1 P15, you on P16
   const route = [{ lv: "R1", pa: 15, pts: [{ x: 1, y: 2 }] }];
-  const h = formatHash("AO", "R1", 16, { x: 0, y: 0, z: 1 }, null, route);
+  const h = formatHash(AO_GEOMETRY, "AO", "R1", 16, { x: 0, y: 0, z: 1 }, null, route);
   assert.equal(h, "#AO/R1/16/256/120/1.00/route=n1;sR1.15;257,122;end");
   assert.deepEqual(readHash(h).route, route);
 });

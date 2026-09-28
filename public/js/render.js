@@ -16,7 +16,8 @@ import {
 } from "./config.js";
 import { $, cv, cvCtx, cssVar } from "./dom.js";
 import { editedFields } from "./edits.js";
-import { state, GEO, CELL_W, CELL_H, cellOrigin, dX, dY, worldLen } from "./state.js";
+import { drawX, drawY } from "./geometry.js";
+import { state, GEO, LAYOUT, CELL_W, CELL_H, cellOrigin, worldLen } from "./state.js";
 import {
   camCenter,
   cellCentre,
@@ -261,14 +262,14 @@ new ResizeObserver(resize).observe($("main")); // the sidebar slide resizes the 
 // extended past the stamp so it reads at any zoom, with a solid foot pointing
 // into the pen where the type claims a side. It dots like a marker box when it
 // stands in the slack between windows
-function drawBarrier(ctx, t, dir, z) {
-  const cx = dX(t.x1);
-  const box = drawBox(t);
+function drawBarrier({ ctx, cam, layout }, t, dir) {
+  const cx = drawX(t.x1, layout);
+  const box = drawBox(t, layout);
   const y1 = box.y - 26,
     y2 = box.y + box.h + 6;
   ctx.strokeStyle = ENEMY_CAT.color;
-  ctx.lineWidth = 2 / z;
-  ctx.setLineDash(offScreen(t) ? [2 / z, 3 / z] : [5 / z, 4 / z]);
+  ctx.lineWidth = 2 / cam.z;
+  ctx.setLineDash(offScreen(t, layout) ? [2 / cam.z, 3 / cam.z] : [5 / cam.z, 4 / cam.z]);
   ctx.beginPath();
   ctx.moveTo(cx, y1);
   ctx.lineTo(cx, y2);
@@ -324,7 +325,14 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   // back to front. A layer sets the fill, stroke and shadow colours, the line
   // width and the font before drawing with them, and may leave them changed;
   // whatever else it changes it puts back
-  const f = { ctx, cam, path, showLabels: show.labels && cam.z > 0.45 };
+  const f = {
+    ctx,
+    cam,
+    path,
+    layout: LAYOUT,
+    origin: cellOrigin(),
+    showLabels: show.labels && cam.z > 0.45,
+  };
   paintScreens(f, show.dim);
   if (show.fg) paintMasks(f);
   if (show.grid) paintGrid(f);
@@ -341,65 +349,65 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   ctx.restore();
 }
 
-function paintScreens({ ctx, path }, dim) {
+function paintScreens({ ctx, path, layout }, dim) {
   for (const c of path.cams) {
-    const cx = (c.cell % path.w) * CELL_W,
-      cy = Math.floor(c.cell / path.w) * CELL_H;
+    const cx = (c.cell % path.w) * layout.cellW,
+      cy = Math.floor(c.cell / path.w) * layout.cellH;
     // a screen is its window, never the whole cell: (cx, cy) is where the
     // transform puts the window's corner at either pitch, so the slack stays bare
     if (c.png) {
       const im = img(c.png);
       if (im.complete && im.naturalWidth) {
         ctx.globalAlpha = dim ? 0.35 : 1;
-        ctx.drawImage(im, 0, 0, GEO.visW, GEO.visH, cx, cy, GEO.visW, GEO.visH);
+        ctx.drawImage(im, 0, 0, layout.visW, layout.visH, cx, cy, layout.visW, layout.visH);
         ctx.globalAlpha = 1;
       }
     } else {
       ctx.fillStyle = COLOR.cellEmpty;
-      ctx.fillRect(cx, cy, GEO.visW, GEO.visH);
+      ctx.fillRect(cx, cy, layout.visW, layout.visH);
     }
   }
 }
 
 // foreground occlusion masks, tinted so they stand out from the identical background art
-function paintMasks({ ctx, path }) {
+function paintMasks({ ctx, path, layout }) {
   for (const c of path.cams) {
     if (!c.fg) continue;
     const t = tintedImg(c.fg);
     if (!t) continue;
-    const cx = (c.cell % path.w) * CELL_W,
-      cy = Math.floor(c.cell / path.w) * CELL_H;
+    const cx = (c.cell % path.w) * layout.cellW,
+      cy = Math.floor(c.cell / path.w) * layout.cellH;
     ctx.globalAlpha = 0.6;
-    ctx.drawImage(t, cx, cy, GEO.visW, GEO.visH);
+    ctx.drawImage(t, cx, cy, layout.visW, layout.visH);
     ctx.globalAlpha = 1;
   }
 }
 
-function paintGrid({ ctx, cam, path }) {
+function paintGrid({ ctx, cam, path, layout, origin }) {
   ctx.strokeStyle = "rgba(255,255,255,.18)";
   ctx.lineWidth = 1.5 / cam.z;
   // the grid marks the cell, not the screen inside it
-  const [ox, oy] = cellOrigin();
+  const [ox, oy] = origin;
   for (let gx = 0; gx <= path.w; gx++) {
     ctx.beginPath();
-    ctx.moveTo(ox + gx * CELL_W, oy);
-    ctx.lineTo(ox + gx * CELL_W, oy + path.h * CELL_H);
+    ctx.moveTo(ox + gx * layout.cellW, oy);
+    ctx.lineTo(ox + gx * layout.cellW, oy + path.h * layout.cellH);
     ctx.stroke();
   }
   for (let gy = 0; gy <= path.h; gy++) {
     ctx.beginPath();
-    ctx.moveTo(ox, oy + gy * CELL_H);
-    ctx.lineTo(ox + path.w * CELL_W, oy + gy * CELL_H);
+    ctx.moveTo(ox, oy + gy * layout.cellH);
+    ctx.lineTo(ox + path.w * layout.cellW, oy + gy * layout.cellH);
     ctx.stroke();
   }
-  if (GEO.visW * cam.z > 90) {
+  if (layout.visW * cam.z > 90) {
     ctx.fillStyle = "rgba(255,255,255,.8)";
     ctx.font = `${12 / cam.z}px sans-serif`;
     ctx.shadowColor = "rgba(0,0,0,.9)";
     ctx.shadowBlur = 3 / cam.z;
     for (const c of path.cams) {
-      const cx = (c.cell % path.w) * CELL_W,
-        cy = Math.floor(c.cell / path.w) * CELL_H;
+      const cx = (c.cell % path.w) * layout.cellW,
+        cy = Math.floor(c.cell / path.w) * layout.cellH;
       ctx.fillText(c.name, cx + 10, cy + 18 / cam.z);
     }
     ctx.shadowBlur = 0;
@@ -407,13 +415,13 @@ function paintGrid({ ctx, cam, path }) {
 }
 
 // collision lines, dotted over the slack the packing folded away, as markers are
-function paintLines({ ctx, cam, path }) {
+function paintLines({ ctx, cam, path, layout }) {
   ctx.lineWidth = 2.5 / cam.z;
   const bg = [8 / cam.z, 6 / cam.z],
     slack = [2 / cam.z, 3 / cam.z];
   for (const [x1, y1, x2, y2, t] of path.lines) {
     ctx.strokeStyle = LINE_COLORS[t] || "#999";
-    for (const r of lineRuns(x1, y1, x2, y2)) {
+    for (const r of lineRuns(x1, y1, x2, y2, layout)) {
       ctx.setLineDash(r.on ? (t >= 4 ? bg : []) : slack);
       ctx.beginPath();
       ctx.moveTo(r.x1, r.y1);
@@ -429,21 +437,22 @@ function paintPatrol({ ctx }, zone) {
   ctx.fillRect(zone.x1, zone.y1 - 8, zone.x2 - zone.x1, zone.y2 - zone.y1 + 16);
 }
 
-function paintMarkers({ ctx, cam, path, showLabels }) {
+function paintMarkers(f) {
+  const { ctx, cam, path, layout, showLabels } = f;
   ctx.font = `${11 / cam.z}px sans-serif`;
   for (const t of path.tlvs) {
     if (!markerShown(t)) continue;
     const dir = PENS.on ? barrierDir(t) : null; // pens off: barriers are plain meta boxes
     if (dir !== null) {
-      drawBarrier(ctx, t, dir, cam.z);
+      drawBarrier(f, t, dir);
       if (showLabels) {
         ctx.fillStyle = ENEMY_CAT.color;
-        ctx.fillText(t.name, dX(t.x1), dY(t.y1) - 3 / cam.z);
+        ctx.fillText(t.name, drawX(t.x1, layout), drawY(t.y1, layout) - 3 / cam.z);
       }
       continue;
     }
     const c = catOf(t);
-    const box = drawBox(t);
+    const box = drawBox(t, layout);
     const x1 = box.x,
       y1 = box.y;
     const w = Math.max(box.w, 10),
@@ -464,7 +473,7 @@ function paintMarkers({ ctx, cam, path, showLabels }) {
       ctx.setLineDash([2 / cam.z, 3 / cam.z]);
       ctx.strokeRect(x1, y1, w, h);
     };
-    const runs = screenRuns(t);
+    const runs = screenRuns(t, layout);
     if (runs.whole) onScreen();
     else if (!runs.xs.length || !runs.ys.length) inSlack();
     else {
@@ -509,11 +518,11 @@ function paintMarkers({ ctx, cam, path, showLabels }) {
 // voice. Hovering a wired object spotlights its own wires and gives them
 // arrowheads at the consumer end; an edge hides with either endpoint. A wire
 // to a barrier post lands on the post's line, as the ruler's snap does.
-function paintWires({ ctx, cam, path }, focus) {
+function paintWires({ ctx, cam, path, layout }, focus) {
   const centre = (t) => {
     const post = PENS.on && barrierDir(t) !== null;
-    const [cx, cy] = markerCentre(t);
-    return [post ? dX(t.x1) : cx, cy];
+    const [cx, cy] = markerCentre(t, layout);
+    return [post ? drawX(t.x1, layout) : cx, cy];
   };
   // the spotlight judges what is drawn: a hovered object whose wires are
   // all hidden must not dim the rest with nothing to show for it
@@ -547,7 +556,7 @@ function paintWires({ ctx, cam, path }, focus) {
 // connection arrows: the path's circulation — curves between resolved
 // pairs (double-headed when mutual), dashed to a bare camera, and fixed
 // 45° labelled stubs for destinations on other paths
-function paintConnections({ ctx, cam, path, showLabels }, focus) {
+function paintConnections({ ctx, cam, path, layout, showLabels }, focus) {
   if (connCache.path !== path)
     connCache = { path, edges: computeConnections(state.lvl, path, GEO) };
   // focus only dims the rest when the hovered object actually has edges
@@ -562,7 +571,7 @@ function paintConnections({ ctx, cam, path, showLabels }, focus) {
     ctx.globalAlpha = focusActive ? (focused ? 0.95 : 0.15) : 0.65;
     ctx.lineWidth = (focused ? 3 : 2) / cam.z;
     ctx.strokeStyle = ctx.fillStyle = CONN_COLORS[e.src.name] || "#ffffff";
-    const [sx, sy] = markerCentre(e.src);
+    const [sx, sy] = markerCentre(e.src, layout);
     if (e.label !== undefined) {
       // off-path stub: a constant diagonal reads as "leaves this path"
       // without pretending to know the direction
@@ -581,7 +590,7 @@ function paintConnections({ ctx, cam, path, showLabels }, focus) {
       }
       continue;
     }
-    const [tx, ty] = e.dst ? markerCentre(e.dst) : cellCentre(e.cell, path);
+    const [tx, ty] = e.dst ? markerCentre(e.dst, layout) : cellCentre(e.cell, path, layout);
     const dx = tx - sx,
       dy = ty - sy;
     const len = Math.hypot(dx, dy);
@@ -604,10 +613,10 @@ function paintConnections({ ctx, cam, path, showLabels }, focus) {
   ctx.globalAlpha = 1;
 }
 
-function paintHighlight({ ctx, cam }, t) {
+function paintHighlight({ ctx, cam, layout }, t) {
   // drawn even when the object's category is toggled off: the outline is
   // what locates a listed object whose marker is hidden
-  const box = drawBox(t);
+  const box = drawBox(t, layout);
   const x1 = box.x,
     y1 = box.y;
   const w = Math.max(box.w, 10),
@@ -620,9 +629,9 @@ function paintHighlight({ ctx, cam }, t) {
   ctx.setLineDash([]);
 }
 
-function paintSelection({ ctx, cam }, t) {
+function paintSelection({ ctx, cam, layout }, t) {
   // the object being edited, outlined whether or not its category is on
-  const box = drawBox(t);
+  const box = drawBox(t, layout);
   const w = Math.max(box.w, 10),
     h = Math.max(box.h, 10);
   const pad = 5 / cam.z;

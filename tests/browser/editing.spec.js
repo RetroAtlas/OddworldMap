@@ -51,11 +51,12 @@ const aimAtDoor = (page) =>
   page.evaluate(async () => {
     const st = window.__st;
     const render = await import(new URL("js/render.js", location.href).href);
+    const stateModule = await import(new URL("js/state.js", location.href).href);
     window.__nav.flushHash();
     while (location.hash !== window.__applied)
       await new Promise((r) => window.addEventListener("hashchange", r, { once: true }));
     const t = st.path.tlvs.find((o) => o.name === "Door" && o.fields);
-    const [cx, cy] = window.__model.markerCentre(t);
+    const [cx, cy] = window.__model.markerCentre(t, stateModule.LAYOUT);
     const cv = document.getElementById("cv");
     Object.assign(
       st.cam,
