@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { trackErrors, seedView, settle, probeAnchor } from "./helpers.js";
 
-// The alignment and scale anchors from CLAUDE.md, as pinned numbers. Every value
+// The alignment and scale anchors from docs/viewer-geometry.md, as pinned numbers. Every value
 // here is a literal, verified once by eye against the artwork at the named
 // permalink and then frozen — never regenerate them from model.js, which is what
 // they test. `rel` is where the marker draws inside its screen's 368x240 window,
