@@ -34,7 +34,7 @@ TRAILER_RE = re.compile(r"^(Co-authored-by|Signed-off-by|Reviewed-by|Change-Id):
 # internal commits that should not reach players
 NOISE_PREFIXES = ("Builder:", "cam2rgba:", "README:", "CI:", "changelog.py:", "ogcard:", "og-image:")
 NOISE_LEADING = {"Extract", "Move", "Rename", "Bump"}
-NOISE_CONTAINS = ("refactor", "eslint", "unit test", "test suite", "claude.md",
+NOISE_CONTAINS = ("refactor", "eslint", "unit test", "test suite", "claude.md", "docs/",
                   "license", "static.yml", "ci.yml")
 
 def is_noise(subject):

@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for AI agents working in this repo. User-facing docs (controls, rebuild instructions, format overview) live in [README.md](README.md) — read that first; this file covers what is not obvious from the code and the traps that cost hours to find.
+Guidance for AI agents working in this repo. User-facing docs (controls, rebuild instructions, format overview) live in [README.md](README.md) — read that first. This file holds what every session needs; what is not obvious from one area's code, and the traps there that cost hours to find, live in that area's topic doc under [docs/](docs/), indexed below.
 
 ## Topic docs
 
@@ -58,7 +58,7 @@ One file per area, read when the work reaches it rather than loaded with this on
 - Everything committed reads as its final state, written once — code comments, docs, backlog items, commit messages and the shape of history alike. A follow-up that reshapes something still unpushed folds into the commit that introduced it, message rewritten to describe only what ships, rather than landing as an add-then-amend pair; narration of rounds, actors and supersessions belongs in no committed text. The test: would it read the same if one author had written it in one sitting?
 - A fixup commit names the commit that introduced the text it corrects, and may sit anywhere on the branch: `--autosquash` reorders it into place. Retargeting it at a nearer commit to dodge a conflict is the one move to refuse, since that folds a correction into a commit which never carried the text. A fixup hoisted past later commits that touched the same lines can conflict, and resolving that is ordinary work rather than a reason to reshape the branch. After any history rewrite, diff the old head against the new (only the intended change may appear) and dry-run the autosquash on a throwaway branch before handing the branch over.
 - Prose files (README, docs, this file) are never manually line-wrapped — let lines run long.
-- A user-facing change ships its docs in the same commit — update the relevant README.md / CLAUDE.md, and add its `changelog.json` entry. Documenting the change is part of the same concern, not a follow-up commit.
+- A user-facing change ships its docs in the same commit — update the relevant README.md and the `docs/` file for its area (CLAUDE.md only for what every session needs), and add its `changelog.json` entry. Documenting the change is part of the same concern, not a follow-up commit.
 - Changelog entries are curated, not generated: draft with `tools/changelog.py`, then rewrite into a player-facing headline + detail. The feed is a date-stamped journal of the site, not a highlights reel — any user-visible change, however small, is welcome on it; what stays out is internal work players can't perceive (refactors, tooling, CI).
 - No game owns unsuffixed defaults: everything game-specific carries `ao`/`ae` in its name (files, JS globals, env vars, URL hashes). Do not reintroduce unsuffixed names for AO just because it came first.
 - Generated JSON is pretty-printed (`indent=1`) so history stays diffable; keep the format stable.
