@@ -11,6 +11,8 @@
   - A page's screen is its entry path's first stored camera, unless the emitter's `SCREEN_OVERRIDES` table pins another as the level's face; a pin naming a level or screen the data doesn't hold, a pin on the default pick, or a page screen without artwork all fail the emit rather than standing stale.
   - The pages are content, not redirects: a crawler indexes a redirect's destination with the `#` fragment dropped, so a redirecting stub would collapse into the homepage.
   - They live nested under `levels/` on purpose — an HTML page reaches the worker's shell rule only at the site root, and nothing else that rule matches (the `js/`/`css/` trees, the named icons) lives here — so no level page can enter or displace the shell cache, and the pages stay out of the offline story entirely.
+- Static site files that are not the viewer or its data (all in `public/`): `favicon.svg` (source of truth for the icon; `favicon-96.png` and `apple-touch-icon.png` are rasterized from it), `og-image.png` (1200×630 social card, rendered by `tools/ogcard.swift` — edit the script and rerun it, don't touch the PNG directly), `404.html` (the not-found page — self-contained, every URL on it root-absolute, since Pages serves it at whatever missing address was asked), `site.webmanifest`, `robots.txt`, `CNAME` (oddworldmap.com).
+  - Regenerate the icon PNGs from the SVG if the icon changes (a CoreGraphics Swift script was used; any SVG rasterizer works).
 
 ## `python3 tools/build_map.py`
 
