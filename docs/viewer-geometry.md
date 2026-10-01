@@ -1,5 +1,7 @@
 # Viewer: geometry, rendering and interaction
 
+A camera's cell, its 368×240 window and the slack between windows are defined in [docs/format-gotchas.md](format-gotchas.md), and drawing code reads them off `geometry` and `LAYOUT`, never from per-game literals. Display against Settings is [docs/viewer-boot.md](viewer-boot.md)'s taxonomy.
+
 ## The canvas, the minimap and the export controls
 
 - `#cv`'s `touch-action` is conditional on purpose: `none` normally, `pinch-zoom` while `body.page-zoomed` is set (`js/interaction.js` watches `visualViewport.scale`, and skips both its own pinch and a touch pointer's `setPointerCapture` in that state — capture would keep the gesture from reaching the browser, while a mouse keeps its capture or a drag released off the canvas never ends).
