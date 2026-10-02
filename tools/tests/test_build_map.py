@@ -1042,8 +1042,8 @@ class PinnedEncoder(unittest.TestCase):
                          f"install that release (brew upgrade oxipng, or cargo install oxipng --version "
                          f"{image.OXIPNG_VERSION} --locked), or move OXIPNG_VERSION and re-encode the tree")
         pngs = sorted((SITE / "cams").rglob("*.png"))
-        masks = [p for p in pngs if p.name.endswith("_fg.png")]
-        sample = masks + [p for p in pngs if not p.name.endswith("_fg.png")][::40]
+        few = [p for p in pngs if p.name.endswith("_fg.png") or p.parent.name == "sprites"]
+        sample = few + [p for p in pngs if p not in few][::40]
         with tempfile.TemporaryDirectory() as tmp:
             moved = image.reencode_pngs([(p, Path(tmp) / f"{i}.png") for i, p in enumerate(sample)])
         self.assertFalse(moved, f"{len(moved)} of {len(sample)} committed images do not reproduce at oxipng "
