@@ -54,7 +54,9 @@ test("pure modules import in bare Node", async () => {
     "reliveexport",
     "extra",
     "edits",
+    "collide",
     "sprites",
+    "brains",
     "motion",
   ]) {
     const m = await import(`../../public/js/${mod}.js`);

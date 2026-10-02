@@ -7,7 +7,7 @@ import {
   resolveRecord,
   setMotionRunning,
 } from "../../public/js/motion.js";
-import { raycastDown, snapX } from "../../public/js/sprites.js";
+import { raycastDown, snapX } from "../../public/js/collide.js";
 
 const anim = (n, fps, loop, loopStart = 0) => ({
   fps,
