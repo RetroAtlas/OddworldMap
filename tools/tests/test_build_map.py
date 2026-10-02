@@ -809,11 +809,32 @@ class Sidecars(unittest.TestCase):
         game = games.GAMES["AO"]
         cached = json.loads((HERE / "data" / game["links_file"]).read_text())
         with tempfile.TemporaryDirectory() as tmp, contextlib.redirect_stdout(io.StringIO()):
-            written = emit.write_line_links("AO", {"R1": cached["paths"]["R1"]},
-                                            Path(tmp) / game["links_file"], merge=False)
+            dst = Path(tmp) / game["links_file"]
+            emit.write_line_links("AO", {"R1": cached["paths"]["R1"]}, dst, merge=False)
             side = json.loads(emit.write_relive_export("AO", Path(tmp), Path(tmp)).read_text())
-            self.assertEqual(side["links"], json.loads(written.read_text()))
+            self.assertEqual(side["links"], json.loads(dst.read_text()))
         self.assertNotEqual(side["links"], cached)
+
+    def test_a_subset_build_hands_the_sprites_the_merged_links(self):
+        """a --levels build merges its links into the table on disk and the sidecar is
+        written from that table, so the other levels' links survive the rerun"""
+        game = games.GAMES["AO"]
+        cached = json.loads((HERE / "data" / game["links_file"]).read_text())["paths"]
+        calls = []
+        with tempfile.TemporaryDirectory() as tmp, contextlib.redirect_stdout(io.StringIO()), \
+                mock.patch.object(build_map, "write_sprites", side_effect=lambda *a, **k: calls.append((a, k))):
+            dst = Path(tmp) / game["links_file"]
+            emit.write_line_links("AO", {"R1": cached["R1"], "E1": cached["E1"]}, dst, merge=False)
+            merged = build_map.write_sprite_data("AO", [], Path(tmp), "cams/ao/sprites", None,
+                                                 {"R1": cached["R1"]}, dst, True)
+            self.assertEqual(set(merged), {"R1", "E1"})
+            self.assertEqual(set(json.loads(dst.read_text())["paths"]), {"R1", "E1"})
+            self.assertEqual(len(calls), 1)
+            args, kwargs = calls[0]
+            self.assertEqual(set(kwargs["links"] if "links" in kwargs else args[5]), {"R1", "E1"})
+            alone = build_map.write_sprite_data("AO", [], Path(tmp), "cams/ao/sprites", None,
+                                                {"R1": cached["R1"]}, Path(tmp) / "fresh.json", False)
+            self.assertEqual(set(alone), {"R1"})
 
     def test_a_stale_field_type_override_fails_the_emit(self):
         stale = {("AO", "Door", "no_such_field"): (None, "Choice_short")}

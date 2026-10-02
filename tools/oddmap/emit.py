@@ -94,8 +94,9 @@ def write_line_links(game_key, links, dst, merge):
     """the words trailing each collision line's coordinates and type, per level and
     path. Read off the disc like the messages and kept out of the map data, which
     first paint waits for: the exporter needs them to write a lossless document and
-    no viewer surface draws them, so they reach the page only through the export
-    sidecar, fetched on the first export press. A subset build merges, as the map
+    no viewer surface draws them, so they reach the page through the export
+    sidecar, fetched on the first export press, and, as each line's previous and
+    next alone, through the sprite sidecar. A subset build merges, as the map
     data does."""
     columns = [name for name, _off, _code in game_setup(game_key)["line_links"]]
     if merge and dst.exists():
@@ -107,7 +108,7 @@ def write_line_links(game_key, links, dst, merge):
                                "paths": {k: links[k] for k in sorted(links)}}, indent=1))
     rows = sum(len(rows) for paths in links.values() for rows in paths.values())
     print(f"collision links -> {dst} ({rows} lines)")
-    return dst
+    return links
 
 def write_enum_labels(game_key, out):
     """the viewer's enum-value labels sidecar for one game: {type: {value: label}}.

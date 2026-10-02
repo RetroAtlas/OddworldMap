@@ -4,6 +4,7 @@
 
 - No disc image is needed, and the sidecar reproducibility tests run from the committed caches; only the tests that probe the checkout itself (the member-type parser pair and the four cache freshness checks) skip, and only where no checkout is configured or found — `$ODDWORLD_DECOMP` naming a path that holds none fails them instead, a named location being an assertion rather than a hint — and the tests that encode through oxipng skip where none is on PATH, which is every CI run. CI clones the pinned revision into `$ODDWORLD_DECOMP`, reading `DECOMP_COMMIT` and `AO_COMMIT` off `paths.py` and fetching both by SHA, which is what makes the six run in CI; a clone step gone missing fails them rather than skipping, the variable being set either way.
 - A parser reached only through a nested helper (AE's `positional_rows`, the enum body loop) can't be tested until it's hoisted.
+- `test_sprites.py` pins each sprite codec against a frame lifted off a disc (`fixtures/sprite_frames.json`, with the sha1 of the rows it decodes to), the animation-table walk over a synthetic chunk, the texel alpha states, the packer, the shape of the curated animation list and the random-table search over a synthetic executable; the atlases themselves reproduce only on a disc machine, like the cameras.
 
 ## `npm run test:browser`
 

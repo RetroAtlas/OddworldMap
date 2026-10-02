@@ -1,0 +1,2740 @@
+{
+ "AE_FallingRock_Falling": {
+  "ae": {
+   "file": "FALLROCK.BAN",
+   "rid": 2007,
+   "anim": 0
+  }
+ },
+ "AE_Rope": {
+  "ae": {
+   "file": "ROPES.BAN",
+   "rid": 1000,
+   "anim": 0
+  }
+ },
+ "AE_Rope@NECROPE": {
+  "ae": {
+   "file": "NECROPE.BAN",
+   "rid": 1000,
+   "anim": 0
+  }
+ },
+ "AO_FallingRock_Falling": {
+  "ao": {
+   "file": "F2ROCK.BAN",
+   "rid": 2007,
+   "anim": 0
+  }
+ },
+ "Background_Glukkon_Idle@GlukAqua": {
+  "ao": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 0,
+   "pal": [
+    "GLUKKON.BND",
+    828
+   ]
+  }
+ },
+ "Background_Glukkon_Idle@GlukBlue": {
+  "ao": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 0,
+   "pal": [
+    "GLUKKON.BND",
+    827
+   ]
+  }
+ },
+ "Background_Glukkon_Idle@GlukGreen": {
+  "ao": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 0,
+   "pal": [
+    "GLUKKON.BND",
+    826
+   ]
+  }
+ },
+ "Background_Glukkon_Idle@GlukRed": {
+  "ao": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 0,
+   "pal": [
+    "GLUKKON.BND",
+    825
+   ]
+  }
+ },
+ "Background_Glukkon_KillHim1@GlukAqua": {
+  "ao": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 1,
+   "pal": [
+    "GLUKKON.BND",
+    828
+   ]
+  }
+ },
+ "Background_Glukkon_KillHim1@GlukBlue": {
+  "ao": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 1,
+   "pal": [
+    "GLUKKON.BND",
+    827
+   ]
+  }
+ },
+ "Background_Glukkon_KillHim1@GlukGreen": {
+  "ao": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 1,
+   "pal": [
+    "GLUKKON.BND",
+    826
+   ]
+  }
+ },
+ "Background_Glukkon_KillHim1@GlukRed": {
+  "ao": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 1,
+   "pal": [
+    "GLUKKON.BND",
+    825
+   ]
+  }
+ },
+ "Background_Glukkon_KillHim2@GlukAqua": {
+  "ao": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 2,
+   "pal": [
+    "GLUKKON.BND",
+    828
+   ]
+  }
+ },
+ "Background_Glukkon_KillHim2@GlukBlue": {
+  "ao": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 2,
+   "pal": [
+    "GLUKKON.BND",
+    827
+   ]
+  }
+ },
+ "Background_Glukkon_KillHim2@GlukGreen": {
+  "ao": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 2,
+   "pal": [
+    "GLUKKON.BND",
+    826
+   ]
+  }
+ },
+ "Background_Glukkon_KillHim2@GlukRed": {
+  "ao": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 2,
+   "pal": [
+    "GLUKKON.BND",
+    825
+   ]
+  }
+ },
+ "Bat": {
+  "ao": {
+   "file": "BATBASIC.BAN",
+   "rid": 63,
+   "anim": 0
+  }
+ },
+ "Bat_Flying": {
+  "ao": {
+   "file": "BATBASIC.BAN",
+   "rid": 63,
+   "anim": 2
+  }
+ },
+ "Bat_Unknown": {
+  "ao": {
+   "file": "BATBASIC.BAN",
+   "rid": 63,
+   "anim": 1
+  }
+ },
+ "BellHammer_Idle": {
+  "ao": {
+   "bg": 1019,
+   "anim": 0
+  }
+ },
+ "BigChime": {
+  "ao": {
+   "file": "CHIMES.BAN",
+   "rid": 2005,
+   "anim": 0
+  }
+ },
+ "Bomb_Flash": {
+  "ao": {
+   "file": "BOMB.BND",
+   "rid": 1011,
+   "anim": 1
+  },
+  "ae": {
+   "file": "BOMB.BND",
+   "rid": 1011,
+   "anim": 1
+  }
+ },
+ "Bomb_RedGreenTick": {
+  "ao": {
+   "file": "BOMB.BND",
+   "rid": 1011,
+   "anim": 0
+  },
+  "ae": {
+   "file": "BOMB.BND",
+   "rid": 1011,
+   "anim": 0
+  }
+ },
+ "Bomb_RedGreenTick@GreenFlash": {
+  "ao": {
+   "file": "BOMB.BND",
+   "rid": 1011,
+   "anim": 0,
+   "pal": [
+    "UXB.BND",
+    1006
+   ]
+  },
+  "ae": {
+   "file": "BOMB.BND",
+   "rid": 1011,
+   "anim": 0,
+   "pal": [
+    "UXB.BND",
+    1006
+   ]
+  }
+ },
+ "BoneBag_Idle": {
+  "ae": {
+   "file": "BONEBAG.BAN",
+   "rid": 590,
+   "anim": 1
+  }
+ },
+ "BoomMachine_Button_On": {
+  "ao": {
+   "file": "GMACHINE.BND",
+   "rid": 6008,
+   "anim": 0
+  },
+  "ae": {
+   "file": "GMACHINE.BND",
+   "rid": 6008,
+   "anim": 0
+  }
+ },
+ "BoomMachine_Pipe_Idle": {
+  "ao": {
+   "file": "GMACHINE.BND",
+   "rid": 6009,
+   "anim": 1
+  },
+  "ae": {
+   "file": "GMACHINE.BND",
+   "rid": 6009,
+   "anim": 1
+  }
+ },
+ "BrewMachine_Button": {
+  "ae": {
+   "file": "BREWBTN.BAN",
+   "rid": 6016,
+   "anim": 0
+  }
+ },
+ "ChantOrb_Particle": {
+  "ao": {
+   "file": "OMMFLARE.BAN",
+   "rid": 312,
+   "anim": 0
+  }
+ },
+ "Chime_Ball": {
+  "ao": {
+   "file": "F2CHMBAL.BAN",
+   "rid": 2024,
+   "anim": 0
+  }
+ },
+ "CrawlingSligButton": {
+  "ae": {
+   "file": "CSLGBUTN.BAN",
+   "rid": 1057,
+   "anim": 0
+  }
+ },
+ "CrawlingSligLocker_Closed": {
+  "ae": {
+   "file": "LOCKER.BAN",
+   "rid": 448,
+   "anim": 0
+  }
+ },
+ "CrawlingSlig_Idle": {
+  "ae": {
+   "file": "CRAWLSLG.BND",
+   "rid": 449,
+   "anim": 2
+  }
+ },
+ "CrawlingSlig_Snoozing": {
+  "ae": {
+   "file": "CRAWLSLG.BND",
+   "rid": 449,
+   "anim": 9
+  }
+ },
+ "Desert_TrapDoor_Closed": {
+  "ao": {
+   "file": "D2TRAP.BAN",
+   "rid": 1004,
+   "anim": 0
+  }
+ },
+ "Desert_TrapDoor_Open": {
+  "ao": {
+   "file": "D2TRAP.BAN",
+   "rid": 1004,
+   "anim": 1
+  }
+ },
+ "Door_BarracksMetal_Closed": {
+  "ae": {
+   "file": "SHDOOR.BAN",
+   "rid": 2012,
+   "anim": 0
+  }
+ },
+ "Door_Barracks_Closed": {
+  "ae": {
+   "file": "BADOOR.BAN",
+   "rid": 2012,
+   "anim": 0
+  }
+ },
+ "Door_Bonewerkz_Closed": {
+  "ae": {
+   "file": "BWDOOR.BAN",
+   "rid": 2012,
+   "anim": 0
+  }
+ },
+ "Door_Brewery_Closed": {
+  "ae": {
+   "file": "BRDOOR.BAN",
+   "rid": 2012,
+   "anim": 0
+  }
+ },
+ "Door_Desert_Closed": {
+  "ao": {
+   "file": "DDOOR.BND",
+   "rid": 2012,
+   "anim": 1
+  }
+ },
+ "Door_Feeco_Closed": {
+  "ae": {
+   "file": "FDDOOR.BAN",
+   "rid": 2012,
+   "anim": 0
+  }
+ },
+ "Door_Forest_Closed": {
+  "ao": {
+   "file": "FDOOR.BND",
+   "rid": 2012,
+   "anim": 1
+  }
+ },
+ "Door_Lines_Closed": {
+  "ao": {
+   "file": "LDOOR.BND",
+   "rid": 2012,
+   "anim": 1
+  }
+ },
+ "Door_Lock_Idle": {
+  "ae": {
+   "file": "DOORLOCK.BAN",
+   "rid": 374,
+   "anim": 1
+  }
+ },
+ "Door_Mines_Closed": {
+  "ae": {
+   "file": "DOOR.BAN",
+   "rid": 2012,
+   "anim": 0
+  }
+ },
+ "Door_RuptureFarms_Closed": {
+  "ao": {
+   "file": "RDOOR.BND",
+   "rid": 2012,
+   "anim": 1
+  }
+ },
+ "Door_Temple_Closed": {
+  "ae": {
+   "file": "SVZDOOR.BAN",
+   "rid": 2012,
+   "anim": 0
+  }
+ },
+ "Dove_Flying": {
+  "ao": {
+   "file": "DOVBASIC.BAN",
+   "rid": 60,
+   "anim": 0
+  },
+  "ae": {
+   "file": "DOVBASIC.BAN",
+   "rid": 60,
+   "anim": 0
+  }
+ },
+ "Dove_Idle": {
+  "ao": {
+   "file": "DOVBASIC.BAN",
+   "rid": 60,
+   "anim": 1
+  },
+  "ae": {
+   "file": "DOVBASIC.BAN",
+   "rid": 60,
+   "anim": 1
+  }
+ },
+ "Drill_Horizontal_Off": {
+  "ae": {
+   "file": "DRILL.BAN",
+   "rid": 6004,
+   "anim": 3
+  }
+ },
+ "Drill_Horizontal_On": {
+  "ae": {
+   "file": "DRILL.BAN",
+   "rid": 6004,
+   "anim": 2
+  }
+ },
+ "Drill_Vertical_Off": {
+  "ae": {
+   "file": "DRILL.BAN",
+   "rid": 6004,
+   "anim": 0
+  }
+ },
+ "Drill_Vertical_On": {
+  "ae": {
+   "file": "DRILL.BAN",
+   "rid": 6004,
+   "anim": 1
+  }
+ },
+ "Electric_Wall": {
+  "ao": {
+   "file": "ELECWALL.BAN",
+   "rid": 6000,
+   "anim": 0
+  },
+  "ae": {
+   "file": "ELECWALL.BAN",
+   "rid": 6000,
+   "anim": 0
+  }
+ },
+ "FallingCrate_Falling": {
+  "ae": {
+   "file": "FALLBONZ.BAN",
+   "rid": 2007,
+   "anim": 0
+  }
+ },
+ "FallingMeat_Falling": {
+  "ao": {
+   "file": "R1BARREL.BAN",
+   "rid": 2007,
+   "anim": 0
+  }
+ },
+ "FinalTestDoor_Desert_Closed": {
+  "ao": {
+   "file": "DDOOR.BND",
+   "rid": 2018,
+   "anim": 1
+  }
+ },
+ "FinalTestDoor_Forest_Closed": {
+  "ao": {
+   "file": "FDOOR.BND",
+   "rid": 2018,
+   "anim": 1
+  }
+ },
+ "Fleech_Crawl": {
+  "ae": {
+   "file": "FLEECH.BAN",
+   "rid": 900,
+   "anim": 1
+  }
+ },
+ "Fleech_Idle": {
+  "ae": {
+   "file": "FLEECH.BAN",
+   "rid": 900,
+   "anim": 0
+  }
+ },
+ "Fleech_Knockback": {
+  "ae": {
+   "file": "FLEECH.BAN",
+   "rid": 900,
+   "anim": 7
+  }
+ },
+ "Fleech_PatrolCry": {
+  "ae": {
+   "file": "FLEECH.BAN",
+   "rid": 900,
+   "anim": 2
+  }
+ },
+ "Fleech_Sleeping": {
+  "ae": {
+   "file": "FLEECH.BAN",
+   "rid": 900,
+   "anim": 3
+  }
+ },
+ "Fleech_SleepingWithTongue": {
+  "ae": {
+   "file": "FLEECH.BAN",
+   "rid": 900,
+   "anim": 18
+  }
+ },
+ "Fleech_StopMidCrawlCycle": {
+  "ae": {
+   "file": "FLEECH.BAN",
+   "rid": 900,
+   "anim": 9
+  }
+ },
+ "FlintGlow": {
+  "ao": {
+   "file": "FLNTGLOW.BAN",
+   "rid": 6028,
+   "anim": 0
+  }
+ },
+ "FlintLock_Gourd": {
+  "ao": {
+   "file": "GOURD.BAN",
+   "rid": 2028,
+   "anim": 0
+  }
+ },
+ "FlintLock_Hammers_Disabled": {
+  "ao": {
+   "file": "F2FLINT.BAN",
+   "rid": 2017,
+   "anim": 0
+  }
+ },
+ "FlyingSlig_BeginDownMovement": {
+  "ae": {
+   "file": "FLYSLIG.BND",
+   "rid": 450,
+   "anim": 13
+  }
+ },
+ "FlyingSlig_EndDownMovement": {
+  "ae": {
+   "file": "FLYSLIG.BND",
+   "rid": 450,
+   "anim": 14
+  }
+ },
+ "FlyingSlig_EndUpMovement": {
+  "ae": {
+   "file": "FLYSLIG.BND",
+   "rid": 450,
+   "anim": 17
+  }
+ },
+ "FlyingSlig_HorizontalToUpMovement": {
+  "ae": {
+   "file": "FLYSLIG.BND",
+   "rid": 450,
+   "anim": 11
+  }
+ },
+ "FlyingSlig_Idle": {
+  "ae": {
+   "file": "FLYSLIG.BND",
+   "rid": 450,
+   "anim": 0
+  }
+ },
+ "FlyingSlig_IdleToHorizontal": {
+  "ae": {
+   "file": "FLYSLIG.BND",
+   "rid": 450,
+   "anim": 5
+  }
+ },
+ "FlyingSlig_IdleTurnAround": {
+  "ae": {
+   "file": "FLYSLIG.BND",
+   "rid": 450,
+   "anim": 7
+  }
+ },
+ "FlyingSlig_MoveDown": {
+  "ae": {
+   "file": "FLYSLIG.BND",
+   "rid": 450,
+   "anim": 3
+  }
+ },
+ "FlyingSlig_MoveDownToHorizontal": {
+  "ae": {
+   "file": "FLYSLIG.BND",
+   "rid": 450,
+   "anim": 15
+  }
+ },
+ "FlyingSlig_MoveDownTurnAround": {
+  "ae": {
+   "file": "FLYSLIG.BND",
+   "rid": 450,
+   "anim": 23
+  }
+ },
+ "FlyingSlig_MoveHorizontal": {
+  "ae": {
+   "file": "FLYSLIG.BND",
+   "rid": 450,
+   "anim": 1
+  }
+ },
+ "FlyingSlig_MoveHorizontalEnd": {
+  "ae": {
+   "file": "FLYSLIG.BND",
+   "rid": 450,
+   "anim": 6
+  }
+ },
+ "FlyingSlig_MoveHorizontalToDown": {
+  "ae": {
+   "file": "FLYSLIG.BND",
+   "rid": 450,
+   "anim": 10
+  }
+ },
+ "FlyingSlig_MoveUp": {
+  "ae": {
+   "file": "FLYSLIG.BND",
+   "rid": 450,
+   "anim": 4
+  }
+ },
+ "FlyingSlig_MoveUpToHorizontal": {
+  "ae": {
+   "file": "FLYSLIG.BND",
+   "rid": 450,
+   "anim": 18
+  }
+ },
+ "FlyingSlig_MoveUpTurnAround": {
+  "ae": {
+   "file": "FLYSLIG.BND",
+   "rid": 450,
+   "anim": 24
+  }
+ },
+ "FlyingSlig_TurnQuick": {
+  "ae": {
+   "file": "FLYSLIG.BND",
+   "rid": 450,
+   "anim": 2
+  }
+ },
+ "Foot_Switch_Bonewerkz_Idle": {
+  "ae": {
+   "file": "BWTRIGGR.BAN",
+   "rid": 2010,
+   "anim": 0
+  }
+ },
+ "Foot_Switch_Industrial_Idle": {
+  "ae": {
+   "file": "TRIGGER.BAN",
+   "rid": 2010,
+   "anim": 0
+  }
+ },
+ "Foot_Switch_Temple": {
+  "ao": {
+   "file": "TRIGGER.BAN",
+   "rid": 2010,
+   "anim": 0
+  }
+ },
+ "Foot_Switch_Vault_Idle": {
+  "ae": {
+   "file": "VLTTRIGR.BAN",
+   "rid": 2010,
+   "anim": 0
+  }
+ },
+ "Glukkon_Aslik_BeginWalk": {
+  "ae": {
+   "file": "ASLIK.BND",
+   "rid": 802,
+   "anim": 14
+  }
+ },
+ "Glukkon_Aslik_EndSingleStep": {
+  "ae": {
+   "file": "ASLIK.BND",
+   "rid": 802,
+   "anim": 23
+  }
+ },
+ "Glukkon_Aslik_EndWalk": {
+  "ae": {
+   "file": "ASLIK.BND",
+   "rid": 802,
+   "anim": 15
+  }
+ },
+ "Glukkon_Aslik_Idle": {
+  "ae": {
+   "file": "ASLIK.BND",
+   "rid": 802,
+   "anim": 0
+  }
+ },
+ "Glukkon_Aslik_LongLaugh": {
+  "ae": {
+   "file": "ASLIK.BND",
+   "rid": 802,
+   "anim": 10
+  }
+ },
+ "Glukkon_Aslik_Speak1": {
+  "ae": {
+   "file": "ASLIK.BND",
+   "rid": 802,
+   "anim": 12
+  }
+ },
+ "Glukkon_Aslik_Turn": {
+  "ae": {
+   "file": "ASLIK.BND",
+   "rid": 802,
+   "anim": 2
+  }
+ },
+ "Glukkon_Aslik_Walk": {
+  "ae": {
+   "file": "ASLIK.BND",
+   "rid": 802,
+   "anim": 1
+  }
+ },
+ "Glukkon_Dripik_BeginWalk": {
+  "ae": {
+   "file": "DRIPIK.BND",
+   "rid": 804,
+   "anim": 14
+  }
+ },
+ "Glukkon_Dripik_EndSingleStep": {
+  "ae": {
+   "file": "DRIPIK.BND",
+   "rid": 804,
+   "anim": 23
+  }
+ },
+ "Glukkon_Dripik_EndWalk": {
+  "ae": {
+   "file": "DRIPIK.BND",
+   "rid": 804,
+   "anim": 15
+  }
+ },
+ "Glukkon_Dripik_Idle": {
+  "ae": {
+   "file": "DRIPIK.BND",
+   "rid": 804,
+   "anim": 0
+  }
+ },
+ "Glukkon_Dripik_LongLaugh": {
+  "ae": {
+   "file": "DRIPIK.BND",
+   "rid": 804,
+   "anim": 10
+  }
+ },
+ "Glukkon_Dripik_Speak1": {
+  "ae": {
+   "file": "DRIPIK.BND",
+   "rid": 804,
+   "anim": 12
+  }
+ },
+ "Glukkon_Dripik_Turn": {
+  "ae": {
+   "file": "DRIPIK.BND",
+   "rid": 804,
+   "anim": 2
+  }
+ },
+ "Glukkon_Dripik_Walk": {
+  "ae": {
+   "file": "DRIPIK.BND",
+   "rid": 804,
+   "anim": 1
+  }
+ },
+ "Glukkon_Normal_BeginWalk": {
+  "ae": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 14
+  }
+ },
+ "Glukkon_Normal_EndSingleStep": {
+  "ae": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 23
+  }
+ },
+ "Glukkon_Normal_EndWalk": {
+  "ae": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 15
+  }
+ },
+ "Glukkon_Normal_Idle": {
+  "ae": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 0
+  }
+ },
+ "Glukkon_Normal_LongLaugh": {
+  "ae": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 10
+  }
+ },
+ "Glukkon_Normal_Speak1": {
+  "ae": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 12
+  }
+ },
+ "Glukkon_Normal_Turn": {
+  "ae": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 2
+  }
+ },
+ "Glukkon_Normal_Walk": {
+  "ae": {
+   "file": "GLUKKON.BND",
+   "rid": 800,
+   "anim": 1
+  }
+ },
+ "Glukkon_Phleg_BeginWalk": {
+  "ae": {
+   "file": "PHLEG.BND",
+   "rid": 806,
+   "anim": 14
+  }
+ },
+ "Glukkon_Phleg_EndSingleStep": {
+  "ae": {
+   "file": "PHLEG.BND",
+   "rid": 806,
+   "anim": 23
+  }
+ },
+ "Glukkon_Phleg_EndWalk": {
+  "ae": {
+   "file": "PHLEG.BND",
+   "rid": 806,
+   "anim": 15
+  }
+ },
+ "Glukkon_Phleg_Idle": {
+  "ae": {
+   "file": "PHLEG.BND",
+   "rid": 806,
+   "anim": 0
+  }
+ },
+ "Glukkon_Phleg_LongLaugh": {
+  "ae": {
+   "file": "PHLEG.BND",
+   "rid": 806,
+   "anim": 10
+  }
+ },
+ "Glukkon_Phleg_Speak1": {
+  "ae": {
+   "file": "PHLEG.BND",
+   "rid": 806,
+   "anim": 12
+  }
+ },
+ "Glukkon_Phleg_Turn": {
+  "ae": {
+   "file": "PHLEG.BND",
+   "rid": 806,
+   "anim": 2
+  }
+ },
+ "Glukkon_Phleg_Walk": {
+  "ae": {
+   "file": "PHLEG.BND",
+   "rid": 806,
+   "anim": 1
+  }
+ },
+ "GoldGlow": {
+  "ao": {
+   "file": "GOLDGLOW.BAN",
+   "rid": 6011,
+   "anim": 0
+  }
+ },
+ "GreenGlow": {
+  "ao": {
+   "file": "GRENGLOW.BAN",
+   "rid": 6010,
+   "anim": 0
+  }
+ },
+ "Greeter_Moving": {
+  "ae": {
+   "file": "GREETER.BAN",
+   "rid": 307,
+   "anim": 0
+  }
+ },
+ "Greeter_Speak": {
+  "ae": {
+   "file": "GREETER.BAN",
+   "rid": 307,
+   "anim": 2
+  }
+ },
+ "Greeter_Turn": {
+  "ae": {
+   "file": "GREETER.BAN",
+   "rid": 307,
+   "anim": 1
+  }
+ },
+ "HintFly": {
+  "ao": {
+   "file": "HINTFLY.BAN",
+   "rid": 62,
+   "anim": 0
+  }
+ },
+ "Honey": {
+  "ao": {
+   "file": "HONEY.BAN",
+   "rid": 337,
+   "anim": 1
+  }
+ },
+ "HoneySack_Hanging": {
+  "ao": {
+   "file": "HIVE.BND",
+   "rid": 1013,
+   "anim": 1
+  }
+ },
+ "HubDoor_Desert_Closed": {
+  "ao": {
+   "file": "DDOOR.BND",
+   "rid": 2019,
+   "anim": 1
+  }
+ },
+ "HubDoor_Forest_Closed": {
+  "ao": {
+   "file": "FDOOR.BND",
+   "rid": 2019,
+   "anim": 1
+  }
+ },
+ "Lever_Idle": {
+  "ao": {
+   "file": "SWITCH1.BAN",
+   "rid": 1009,
+   "anim": 0
+  },
+  "ae": {
+   "file": "SWITCH1.BAN",
+   "rid": 1009,
+   "anim": 0
+  }
+ },
+ "LiftBottomWheel_Desert": {
+  "ao": {
+   "file": "D1LIFT.BND",
+   "rid": 1001,
+   "anim": 1
+  }
+ },
+ "LiftBottomWheel_Forest": {
+  "ao": {
+   "file": "FLIFT.BND",
+   "rid": 1001,
+   "anim": 1
+  }
+ },
+ "LiftBottomWheel_Lines": {
+  "ao": {
+   "file": "LLIFT.BND",
+   "rid": 1001,
+   "anim": 1
+  }
+ },
+ "LiftBottomWheel_Mines": {
+  "ae": {
+   "file": "MILIFT.BND",
+   "rid": 1001,
+   "anim": 1
+  }
+ },
+ "LiftBottomWheel_Necrum": {
+  "ae": {
+   "file": "NELIFT.BND",
+   "rid": 1001,
+   "anim": 0
+  }
+ },
+ "LiftBottomWheel_RuptureFarms": {
+  "ao": {
+   "file": "RLIFT.BND",
+   "rid": 1001,
+   "anim": 2
+  }
+ },
+ "LiftPlatform_Desert": {
+  "ao": {
+   "file": "D1LIFT.BND",
+   "rid": 1032,
+   "anim": 0
+  }
+ },
+ "LiftPlatform_Desert2": {
+  "ao": {
+   "file": "D2LIFT.BND",
+   "rid": 1032,
+   "anim": 0
+  }
+ },
+ "LiftPlatform_Forest": {
+  "ao": {
+   "file": "FLIFT.BND",
+   "rid": 1032,
+   "anim": 0
+  }
+ },
+ "LiftPlatform_Lines": {
+  "ao": {
+   "file": "LLIFT.BND",
+   "rid": 1032,
+   "anim": 0
+  }
+ },
+ "LiftPlatform_Mines": {
+  "ae": {
+   "file": "MILIFT.BND",
+   "rid": 1032,
+   "anim": 0
+  }
+ },
+ "LiftPlatform_Necrum": {
+  "ae": {
+   "file": "NELIFT.BND",
+   "rid": 1032,
+   "anim": 0
+  }
+ },
+ "LiftPlatform_RuptureFarms": {
+  "ao": {
+   "file": "RLIFT.BND",
+   "rid": 1032,
+   "anim": 0
+  }
+ },
+ "LiftTopWheel_Desert": {
+  "ao": {
+   "file": "D1LIFT.BND",
+   "rid": 1001,
+   "anim": 2
+  }
+ },
+ "LiftTopWheel_Forest": {
+  "ao": {
+   "file": "FLIFT.BND",
+   "rid": 1001,
+   "anim": 2
+  }
+ },
+ "LiftTopWheel_Mines": {
+  "ae": {
+   "file": "MILIFT.BND",
+   "rid": 1001,
+   "anim": 2
+  }
+ },
+ "LiftTopWheel_Necrum": {
+  "ae": {
+   "file": "NELIFT.BND",
+   "rid": 1001,
+   "anim": 2
+  }
+ },
+ "LiftTopWheel_RuptureFarms": {
+  "ao": {
+   "file": "RLIFT.BND",
+   "rid": 1001,
+   "anim": 3
+  }
+ },
+ "Lines_Lever_Idle": {
+  "ao": {
+   "file": "L1SWITCH.BAN",
+   "rid": 1009,
+   "anim": 0
+  }
+ },
+ "Lines_TrapDoor_Closed": {
+  "ao": {
+   "file": "P6C1TRAP.BAN",
+   "rid": 1004,
+   "anim": 0
+  }
+ },
+ "Lines_TrapDoor_Open": {
+  "ao": {
+   "file": "P6C1TRAP.BAN",
+   "rid": 1004,
+   "anim": 1
+  }
+ },
+ "MeatSack_Idle": {
+  "ao": {
+   "file": "D2ELUM.BAN",
+   "rid": 4002,
+   "anim": 0
+  },
+  "ae": {
+   "file": "MEATSACK.BAN",
+   "rid": 4002,
+   "anim": 0
+  }
+ },
+ "MeatSawMotor": {
+  "ao": {
+   "file": "R1METSAW.BAN",
+   "rid": 6003,
+   "anim": 2
+  }
+ },
+ "MeatSaw_Idle": {
+  "ao": {
+   "file": "R1METSAW.BAN",
+   "rid": 6003,
+   "anim": 0
+  }
+ },
+ "MeatSaw_Moving": {
+  "ao": {
+   "file": "R1METSAW.BAN",
+   "rid": 6003,
+   "anim": 1
+  }
+ },
+ "MediumChime": {
+  "ao": {
+   "file": "CHIMES.BAN",
+   "rid": 2005,
+   "anim": 4
+  }
+ },
+ "Mine": {
+  "ao": {
+   "file": "MINE.BND",
+   "rid": 1036,
+   "anim": 0
+  },
+  "ae": {
+   "file": "MINE.BND",
+   "rid": 1036,
+   "anim": 0
+  }
+ },
+ "Mine_Car_Open": {
+  "ae": {
+   "file": "BAYROLL.BAN",
+   "rid": 6013,
+   "anim": 1
+  }
+ },
+ "Mine_Car_Tread_Idle": {
+  "ae": {
+   "file": "BAYROLL.BAN",
+   "rid": 6013,
+   "anim": 2
+  }
+ },
+ "Mine_Flash": {
+  "ao": {
+   "file": "MINEFLSH.BAN",
+   "rid": 1040,
+   "anim": 0
+  },
+  "ae": {
+   "file": "MINE.BND",
+   "rid": 1040,
+   "anim": 0
+  }
+ },
+ "MotionDetector_Flare": {
+  "ao": {
+   "file": "MFLARE.BAN",
+   "rid": 6002,
+   "anim": 0
+  },
+  "ae": {
+   "file": "MFLARE.BAN",
+   "rid": 6002,
+   "anim": 0
+  }
+ },
+ "MotionDetector_Laser": {
+  "ao": {
+   "file": "MOTION.BAN",
+   "rid": 6001,
+   "anim": 0
+  },
+  "ae": {
+   "file": "MOTION.BAN",
+   "rid": 6001,
+   "anim": 0
+  }
+ },
+ "MovingBomb": {
+  "ao": {
+   "file": "D1MBOMB.BAN",
+   "rid": 3006,
+   "anim": 0
+  },
+  "ae": {
+   "file": "MOVEBOMB.BAN",
+   "rid": 3006,
+   "anim": 0
+  }
+ },
+ "Mudokon_Chisel": {
+  "ae": {
+   "file": "MUDCHSL.BAN",
+   "rid": 511,
+   "anim": 0
+  }
+ },
+ "Mudokon_Chisel@BlindMud": {
+  "ae": {
+   "file": "MUDCHSL.BAN",
+   "rid": 511,
+   "anim": 0,
+   "pal": [
+    "MUDPAL.BND",
+    533
+   ]
+  }
+ },
+ "Mudokon_CrouchChant": {
+  "ao": {
+   "file": "MUDLOTUS.BND",
+   "rid": 516,
+   "anim": 2
+  }
+ },
+ "Mudokon_CrouchIdle": {
+  "ao": {
+   "file": "ABEBSIC.BAN",
+   "rid": 10,
+   "anim": 11
+  },
+  "ae": {
+   "file": "ABEBSIC.BAN",
+   "rid": 10,
+   "anim": 11
+  }
+ },
+ "Mudokon_CrouchIdle@BlindMud": {
+  "ae": {
+   "file": "ABEBSIC.BAN",
+   "rid": 10,
+   "anim": 11,
+   "pal": [
+    "MUDPAL.BND",
+    533
+   ]
+  }
+ },
+ "Mudokon_CrouchScrub": {
+  "ao": {
+   "file": "MUDSCRUB.BAN",
+   "rid": 510,
+   "anim": 0
+  },
+  "ae": {
+   "file": "MUDSCRUB.BAN",
+   "rid": 510,
+   "anim": 0
+  }
+ },
+ "Mudokon_CrouchScrub@BlindMud": {
+  "ae": {
+   "file": "MUDSCRUB.BAN",
+   "rid": 510,
+   "anim": 0,
+   "pal": [
+    "MUDPAL.BND",
+    533
+   ]
+  }
+ },
+ "Mudokon_CrouchToStand": {
+  "ae": {
+   "file": "ABEBSIC.BAN",
+   "rid": 10,
+   "anim": 10
+  }
+ },
+ "Mudokon_CrouchTurn": {
+  "ao": {
+   "file": "ABEBSIC.BAN",
+   "rid": 10,
+   "anim": 24
+  },
+  "ae": {
+   "file": "ABEBSIC.BAN",
+   "rid": 10,
+   "anim": 23
+  }
+ },
+ "Mudokon_CrouchTurn@BlindMud": {
+  "ae": {
+   "file": "ABEBSIC.BAN",
+   "rid": 10,
+   "anim": 23,
+   "pal": [
+    "MUDPAL.BND",
+    533
+   ]
+  }
+ },
+ "Mudokon_Idle": {
+  "ao": {
+   "file": "ABEBSIC1.BAN",
+   "rid": 55,
+   "anim": 4
+  },
+  "ae": {
+   "file": "ABEBSIC1.BAN",
+   "rid": 55,
+   "anim": 4
+  }
+ },
+ "Mudokon_StandScrubLoop": {
+  "ao": {
+   "file": "MUDCHSL.BAN",
+   "rid": 511,
+   "anim": 0
+  }
+ },
+ "Mudokon_StandScrubLoopToPause": {
+  "ao": {
+   "file": "MUDCHSL.BAN",
+   "rid": 511,
+   "anim": 3
+  }
+ },
+ "Mudokon_StandScrubPause": {
+  "ao": {
+   "file": "MUDCHSL.BAN",
+   "rid": 511,
+   "anim": 5
+  }
+ },
+ "Mudokon_StandScrubPauseToLoop": {
+  "ao": {
+   "file": "MUDCHSL.BAN",
+   "rid": 511,
+   "anim": 4
+  }
+ },
+ "Mudokon_StartChisel": {
+  "ae": {
+   "file": "MUDCHSL.BAN",
+   "rid": 511,
+   "anim": 1
+  }
+ },
+ "Mudokon_StartChisel@BlindMud": {
+  "ae": {
+   "file": "MUDCHSL.BAN",
+   "rid": 511,
+   "anim": 1,
+   "pal": [
+    "MUDPAL.BND",
+    533
+   ]
+  }
+ },
+ "Mudokon_StopChisel": {
+  "ae": {
+   "file": "MUDCHSL.BAN",
+   "rid": 511,
+   "anim": 2
+  }
+ },
+ "Mudokon_StopChisel@BlindMud": {
+  "ae": {
+   "file": "MUDCHSL.BAN",
+   "rid": 511,
+   "anim": 2,
+   "pal": [
+    "MUDPAL.BND",
+    533
+   ]
+  }
+ },
+ "ParamiteWeb": {
+  "ae": {
+   "file": "WEB.BAN",
+   "rid": 2034,
+   "anim": 0
+  }
+ },
+ "Paramite_GameSpeakBegin": {
+  "ao": {
+   "file": "PARAMITE.BND",
+   "rid": 605,
+   "anim": 0
+  },
+  "ae": {
+   "file": "PARAMITE.BND",
+   "rid": 605,
+   "anim": 0
+  }
+ },
+ "Paramite_GameSpeakEnd": {
+  "ao": {
+   "file": "PARAMITE.BND",
+   "rid": 605,
+   "anim": 4
+  },
+  "ae": {
+   "file": "PARAMITE.BND",
+   "rid": 605,
+   "anim": 4
+  }
+ },
+ "Paramite_Idle": {
+  "ao": {
+   "file": "PARAMITE.BND",
+   "rid": 600,
+   "anim": 3
+  },
+  "ae": {
+   "file": "PARAMITE.BND",
+   "rid": 600,
+   "anim": 3
+  }
+ },
+ "Paramite_PreHiss": {
+  "ao": {
+   "file": "PARAMITE.BND",
+   "rid": 605,
+   "anim": 1
+  },
+  "ae": {
+   "file": "PARAMITE.BND",
+   "rid": 605,
+   "anim": 1
+  }
+ },
+ "Paramite_Turn": {
+  "ao": {
+   "file": "PARAMITE.BND",
+   "rid": 600,
+   "anim": 6
+  },
+  "ae": {
+   "file": "PARAMITE.BND",
+   "rid": 600,
+   "anim": 5
+  }
+ },
+ "PullRingRope_Idle": {
+  "ae": {
+   "file": "PULLRING.BAN",
+   "rid": 1014,
+   "anim": 0
+  }
+ },
+ "Pullring_Desert_Idle": {
+  "ao": {
+   "file": "PULLRING.BAN",
+   "rid": 1014,
+   "anim": 0
+  }
+ },
+ "Pullring_Farms_Idle": {
+  "ao": {
+   "file": "R1PULRNG.BAN",
+   "rid": 1014,
+   "anim": 0
+  }
+ },
+ "R1_TrapDoor_Closed": {
+  "ao": {
+   "file": "R1TRAP.BAN",
+   "rid": 1004,
+   "anim": 0
+  }
+ },
+ "R1_TrapDoor_Open": {
+  "ao": {
+   "file": "R1TRAP.BAN",
+   "rid": 1004,
+   "anim": 1
+  }
+ },
+ "RedDoorLight": {
+  "ao": {
+   "file": "HUBRED.BAN",
+   "rid": 6032,
+   "anim": 1
+  }
+ },
+ "RedHubLight": {
+  "ao": {
+   "file": "HUBRED.BAN",
+   "rid": 6032,
+   "anim": 0
+  }
+ },
+ "RockSack_Idle": {
+  "ao": {
+   "bg": 1002,
+   "anim": 1
+  },
+  "ae": {
+   "file": "ROCKBAG.BAN",
+   "rid": 1002,
+   "anim": 1
+  }
+ },
+ "RockSack_Idle@BlueRockSack": {
+  "ao": {
+   "bg": 1002,
+   "anim": 1,
+   "pal": [
+    "E1BAG.BAN",
+    1002
+   ]
+  }
+ },
+ "Rope_Lines": {
+  "ao": {
+   "file": "ROPES.BAN",
+   "rid": 1000,
+   "anim": 0
+  }
+ },
+ "Rope_R1": {
+  "ao": {
+   "file": "R1ROPES.BAN",
+   "rid": 1000,
+   "anim": 0
+  }
+ },
+ "RuptureFarms_Lever_Idle": {
+  "ao": {
+   "file": "R1SWITCH.BAN",
+   "rid": 1009,
+   "anim": 0
+  }
+ },
+ "Scrab_HowlBegin": {
+  "ao": {
+   "file": "SCRAB.BND",
+   "rid": 705,
+   "anim": 0
+  },
+  "ae": {
+   "file": "SCRAB.BND",
+   "rid": 705,
+   "anim": 0
+  }
+ },
+ "Scrab_HowlEnd": {
+  "ao": {
+   "file": "SCRAB.BND",
+   "rid": 705,
+   "anim": 1
+  },
+  "ae": {
+   "file": "SCRAB.BND",
+   "rid": 705,
+   "anim": 1
+  }
+ },
+ "Scrab_Idle": {
+  "ao": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 1
+  },
+  "ae": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 1
+  }
+ },
+ "Scrab_JumpAndRunToFall": {
+  "ae": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 11
+  }
+ },
+ "Scrab_Run": {
+  "ao": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 2
+  },
+  "ae": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 2
+  }
+ },
+ "Scrab_RunToStand": {
+  "ao": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 4
+  },
+  "ae": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 4
+  }
+ },
+ "Scrab_Shriek": {
+  "ae": {
+   "file": "SCRAB.BND",
+   "rid": 709,
+   "anim": 0
+  }
+ },
+ "Scrab_StandToRun": {
+  "ao": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 9
+  },
+  "ae": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 9
+  }
+ },
+ "Scrab_StandToWalk": {
+  "ao": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 8
+  },
+  "ae": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 8
+  }
+ },
+ "Scrab_Turn": {
+  "ao": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 3
+  },
+  "ae": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 3
+  }
+ },
+ "Scrab_Walk": {
+  "ao": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 0
+  },
+  "ae": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 0
+  }
+ },
+ "Scrab_WalkToStand": {
+  "ao": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 10
+  },
+  "ae": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 10
+  }
+ },
+ "Security_Claw_Lower_Idle": {
+  "ao": {
+   "file": "F2EYEORB.BAN",
+   "rid": 2008,
+   "anim": 1
+  }
+ },
+ "Security_Claw_Upper_Rotating": {
+  "ao": {
+   "file": "F2EYEORB.BAN",
+   "rid": 2008,
+   "anim": 2
+  }
+ },
+ "Security_Orb": {
+  "ao": {
+   "file": "F2MAMORB.BAN",
+   "rid": 2006,
+   "anim": 0
+  },
+  "ae": {
+   "file": "MAIMORB.BAN",
+   "rid": 2006,
+   "anim": 0
+  }
+ },
+ "Slam_Door_Industrial_Closed": {
+  "ae": {
+   "file": "SLAM.BAN",
+   "rid": 2020,
+   "anim": 3
+  }
+ },
+ "Slam_Door_Vault_Closed": {
+  "ae": {
+   "file": "SLAMVLTS.BAN",
+   "rid": 2020,
+   "anim": 1
+  }
+ },
+ "SlapLock_Initiate": {
+  "ae": {
+   "file": "GHOSTTRP.BAN",
+   "rid": 1053,
+   "anim": 2
+  }
+ },
+ "Slig_Idle": {
+  "ao": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 2
+  },
+  "ae": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 2
+  }
+ },
+ "Slig_Idle@StockYardsSlig": {
+  "ao": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 2,
+   "pal": [
+    "E1PAL.BAN",
+    412
+   ]
+  }
+ },
+ "Slig_ReloadGun": {
+  "ao": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 6
+  },
+  "ae": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 6
+  }
+ },
+ "Slig_ReloadGun@StockYardsSlig": {
+  "ao": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 6,
+   "pal": [
+    "E1PAL.BAN",
+    412
+   ]
+  }
+ },
+ "Slig_Sleeping": {
+  "ao": {
+   "file": "SLGSLEEP.BAN",
+   "rid": 413,
+   "anim": 1
+  },
+  "ae": {
+   "file": "SLGSLEEP.BAN",
+   "rid": 413,
+   "anim": 1
+  }
+ },
+ "Slig_Sleeping@StockYardsSlig": {
+  "ao": {
+   "file": "SLGSLEEP.BAN",
+   "rid": 413,
+   "anim": 1,
+   "pal": [
+    "E1PAL.BAN",
+    412
+   ]
+  }
+ },
+ "Slig_StandToWalk": {
+  "ao": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 10
+  },
+  "ae": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 10
+  }
+ },
+ "Slig_StandToWalk@StockYardsSlig": {
+  "ao": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 10,
+   "pal": [
+    "E1PAL.BAN",
+    412
+   ]
+  }
+ },
+ "Slig_TurnAroundStanding": {
+  "ao": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 20
+  },
+  "ae": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 20
+  }
+ },
+ "Slig_TurnAroundStanding@StockYardsSlig": {
+  "ao": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 20,
+   "pal": [
+    "E1PAL.BAN",
+    412
+   ]
+  }
+ },
+ "Slig_WalkToStand": {
+  "ao": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 14
+  },
+  "ae": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 14
+  }
+ },
+ "Slig_WalkToStand@StockYardsSlig": {
+  "ao": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 14,
+   "pal": [
+    "E1PAL.BAN",
+    412
+   ]
+  }
+ },
+ "Slig_Walking": {
+  "ao": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 0
+  },
+  "ae": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 0
+  }
+ },
+ "Slig_Walking@StockYardsSlig": {
+  "ao": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 0,
+   "pal": [
+    "E1PAL.BAN",
+    412
+   ]
+  }
+ },
+ "Slog_Growl": {
+  "ao": {
+   "file": "SLOG.BND",
+   "rid": 574,
+   "anim": 1
+  },
+  "ae": {
+   "file": "SLOG.BND",
+   "rid": 574,
+   "anim": 1
+  }
+ },
+ "Slog_Idle": {
+  "ao": {
+   "file": "SLOG.BND",
+   "rid": 570,
+   "anim": 2
+  },
+  "ae": {
+   "file": "SLOG.BND",
+   "rid": 570,
+   "anim": 2
+  }
+ },
+ "Slog_MoveHeadUpwards": {
+  "ao": {
+   "file": "SLOG.BND",
+   "rid": 570,
+   "anim": 3
+  },
+  "ae": {
+   "file": "SLOG.BND",
+   "rid": 570,
+   "anim": 3
+  }
+ },
+ "Slog_Scratch": {
+  "ao": {
+   "file": "SLOG.BND",
+   "rid": 574,
+   "anim": 0
+  },
+  "ae": {
+   "file": "SLOG.BND",
+   "rid": 574,
+   "anim": 0
+  }
+ },
+ "Slog_Sleeping": {
+  "ao": {
+   "file": "SLOG.BND",
+   "rid": 571,
+   "anim": 1
+  },
+  "ae": {
+   "file": "SLOG.BND",
+   "rid": 571,
+   "anim": 1
+  }
+ },
+ "Slurg_Move": {
+  "ae": {
+   "file": "SLURG.BAN",
+   "rid": 306,
+   "anim": 0
+  }
+ },
+ "Slurg_Turn_Around": {
+  "ae": {
+   "file": "SLURG.BAN",
+   "rid": 306,
+   "anim": 1
+  }
+ },
+ "SmallChime": {
+  "ao": {
+   "file": "CHIMES.BAN",
+   "rid": 2005,
+   "anim": 1
+  }
+ },
+ "Stone_Ball": {
+  "ao": {
+   "file": "F2STNBAL.BAN",
+   "rid": 2002,
+   "anim": 0
+  }
+ },
+ "Stone_Ball_Stopper": {
+  "ao": {
+   "file": "F2STNSCK.BAN",
+   "rid": 2003,
+   "anim": 0
+  }
+ },
+ "Swinging_Ball_Normal": {
+  "ao": {
+   "file": "F2ZBALL.BAN",
+   "rid": 2001,
+   "anim": 0
+  }
+ },
+ "TimedMine_Idle": {
+  "ao": {
+   "file": "BOMB.BND",
+   "rid": 1005,
+   "anim": 0
+  }
+ },
+ "Tortured_Mudokon": {
+  "ae": {
+   "file": "MUDTORT.BAN",
+   "rid": 518,
+   "anim": 1
+  }
+ },
+ "Tortured_Mudokon_Tears": {
+  "ae": {
+   "file": "TEARS.BAN",
+   "rid": 375,
+   "anim": 0
+  }
+ },
+ "Trap_Door_Closed": {
+  "ae": {
+   "file": "TRAPDOOR.BAN",
+   "rid": 1004,
+   "anim": 0
+  }
+ },
+ "Trap_Door_Open": {
+  "ae": {
+   "file": "TRAPDOOR.BAN",
+   "rid": 1004,
+   "anim": 1
+  }
+ },
+ "Trap_Door_Tribal_Closed": {
+  "ae": {
+   "file": "VLTSTRAP.BAN",
+   "rid": 1004,
+   "anim": 1
+  }
+ },
+ "Trap_Door_Tribal_Open": {
+  "ae": {
+   "file": "VLTSTRAP.BAN",
+   "rid": 1004,
+   "anim": 0
+  }
+ },
+ "UXB_Active": {
+  "ao": {
+   "file": "UXB.BND",
+   "rid": 1037,
+   "anim": 0
+  },
+  "ae": {
+   "file": "UXB.BND",
+   "rid": 1037,
+   "anim": 0
+  }
+ },
+ "UXB_Disabled": {
+  "ao": {
+   "file": "UXB.BND",
+   "rid": 1037,
+   "anim": 2
+  },
+  "ae": {
+   "file": "UXB.BND",
+   "rid": 1037,
+   "anim": 2
+  }
+ },
+ "Work_Wheel_Idle": {
+  "ae": {
+   "file": "WORKWHEL.BAN",
+   "rid": 320,
+   "anim": 0
+  }
+ },
+ "Zap_Sparks": {
+  "ae": {
+   "file": "OMMFLARE.BAN",
+   "rid": 312,
+   "anim": 1
+  }
+ },
+ "bg:1017": {
+  "ao": {
+   "bg": 1017
+  }
+ },
+ "bg:1018": {
+  "ao": {
+   "bg": 1018
+  }
+ },
+ "bg:1023": {
+  "ao": {
+   "bg": 1023
+  }
+ },
+ "bg:1024": {
+  "ao": {
+   "bg": 1024
+  }
+ },
+ "bg:1031": {
+  "ao": {
+   "bg": 1031
+  }
+ },
+ "bg:1038": {
+  "ao": {
+   "bg": 1038
+  }
+ },
+ "bg:1039": {
+  "ao": {
+   "bg": 1039
+  }
+ },
+ "bg:1050": {
+  "ao": {
+   "bg": 1050
+  }
+ },
+ "bg:1200": {
+  "ao": {
+   "bg": 1200
+  }
+ },
+ "bg:1201": {
+  "ae": {
+   "bg": 1201
+  }
+ },
+ "bg:1202": {
+  "ae": {
+   "bg": 1202
+  }
+ },
+ "bg:1204": {
+  "ae": {
+   "bg": 1204
+  }
+ },
+ "bg:1206": {
+  "ae": {
+   "bg": 1206
+  }
+ },
+ "bg:1207": {
+  "ae": {
+   "bg": 1207
+  }
+ },
+ "bg:2013": {
+  "ao": {
+   "bg": 2013
+  }
+ },
+ "bg:2014": {
+  "ao": {
+   "bg": 2014
+  }
+ },
+ "bg:2020": {
+  "ao": {
+   "bg": 2020
+  }
+ },
+ "bg:2021": {
+  "ao": {
+   "bg": 2021
+  }
+ },
+ "bg:2022": {
+  "ao": {
+   "bg": 2022
+  }
+ },
+ "bg:2029": {
+  "ao": {
+   "bg": 2029
+  }
+ },
+ "bg:2030": {
+  "ao": {
+   "bg": 2030
+  }
+ },
+ "bg:2031": {
+  "ao": {
+   "bg": 2031
+  }
+ },
+ "bg:2036": {
+  "ao": {
+   "bg": 2036
+  }
+ },
+ "bg:2040": {
+  "ao": {
+   "bg": 2040
+  }
+ },
+ "bg:2041": {
+  "ao": {
+   "bg": 2041
+  }
+ },
+ "bg:2042": {
+  "ao": {
+   "bg": 2042
+  }
+ },
+ "bg:2043": {
+  "ao": {
+   "bg": 2043
+  }
+ },
+ "bg:2044": {
+  "ao": {
+   "bg": 2044
+  }
+ },
+ "bg:2045": {
+  "ao": {
+   "bg": 2045
+  }
+ },
+ "bg:2046": {
+  "ao": {
+   "bg": 2046
+  }
+ },
+ "bg:2047": {
+  "ao": {
+   "bg": 2047
+  }
+ },
+ "bg:2048": {
+  "ao": {
+   "bg": 2048
+  }
+ },
+ "bg:2049": {
+  "ao": {
+   "bg": 2049
+  }
+ },
+ "bg:2050": {
+  "ao": {
+   "bg": 2050
+  }
+ },
+ "bg:2051": {
+  "ao": {
+   "bg": 2051
+  }
+ },
+ "bg:2052": {
+  "ao": {
+   "bg": 2052
+  }
+ },
+ "bg:2053": {
+  "ao": {
+   "bg": 2053
+  }
+ },
+ "bg:2054": {
+  "ao": {
+   "bg": 2054
+  }
+ },
+ "bg:3016": {
+  "ao": {
+   "bg": 3016
+  }
+ },
+ "bg:3017": {
+  "ao": {
+   "bg": 3017
+  }
+ },
+ "bg:3018": {
+  "ao": {
+   "bg": 3018
+  }
+ },
+ "bg:3027": {
+  "ao": {
+   "bg": 3027
+  }
+ },
+ "bg:3031": {
+  "ao": {
+   "bg": 3031
+  }
+ },
+ "bg:3032": {
+  "ao": {
+   "bg": 3032
+  }
+ },
+ "bg:3033": {
+  "ao": {
+   "bg": 3033
+  }
+ },
+ "bg:3034": {
+  "ao": {
+   "bg": 3034
+  }
+ },
+ "bg:3036": {
+  "ao": {
+   "bg": 3036
+  }
+ },
+ "bg:3037": {
+  "ao": {
+   "bg": 3037
+  }
+ },
+ "bg:3038": {
+  "ao": {
+   "bg": 3038
+  }
+ },
+ "bg:3039": {
+  "ao": {
+   "bg": 3039
+  }
+ },
+ "bg:3040": {
+  "ao": {
+   "bg": 3040
+  }
+ },
+ "bg:3041": {
+  "ao": {
+   "bg": 3041
+  }
+ },
+ "bg:3047": {
+  "ao": {
+   "bg": 3047
+  }
+ },
+ "bg:3048": {
+  "ao": {
+   "bg": 3048
+  }
+ },
+ "bg:3049": {
+  "ao": {
+   "bg": 3049
+  }
+ },
+ "bg:3050": {
+  "ao": {
+   "bg": 3050
+  }
+ },
+ "bg:3051": {
+  "ao": {
+   "bg": 3051
+  }
+ },
+ "bg:3052": {
+  "ao": {
+   "bg": 3052
+  }
+ },
+ "bg:4006": {
+  "ao": {
+   "bg": 4006
+  }
+ },
+ "bg:4007": {
+  "ao": {
+   "bg": 4007
+  }
+ },
+ "bg:4008": {
+  "ao": {
+   "bg": 4008
+  }
+ },
+ "bg:4009": {
+  "ao": {
+   "bg": 4009
+  }
+ },
+ "bg:4010": {
+  "ao": {
+   "bg": 4010
+  }
+ },
+ "bg:4011": {
+  "ao": {
+   "bg": 4011
+  }
+ },
+ "bg:4012": {
+  "ao": {
+   "bg": 4012
+  }
+ },
+ "bg:4013": {
+  "ao": {
+   "bg": 4013
+  }
+ },
+ "bg:4014": {
+  "ao": {
+   "bg": 4014
+  }
+ },
+ "bg:4015": {
+  "ao": {
+   "bg": 4015
+  }
+ },
+ "bg:4016": {
+  "ao": {
+   "bg": 4016
+  }
+ },
+ "bg:4017": {
+  "ao": {
+   "bg": 4017
+  }
+ },
+ "bg:4018": {
+  "ao": {
+   "bg": 4018
+  }
+ },
+ "bg:4019": {
+  "ao": {
+   "bg": 4019
+  }
+ },
+ "bg:4021": {
+  "ao": {
+   "bg": 4021
+  }
+ },
+ "bg:4022": {
+  "ao": {
+   "bg": 4022
+  }
+ },
+ "bg:4023": {
+  "ao": {
+   "bg": 4023
+  }
+ },
+ "bg:4024": {
+  "ao": {
+   "bg": 4024
+  }
+ },
+ "bg:4025": {
+  "ao": {
+   "bg": 4025
+  }
+ },
+ "bg:4026": {
+  "ao": {
+   "bg": 4026
+  }
+ },
+ "bg:4027": {
+  "ao": {
+   "bg": 4027
+  }
+ },
+ "bg:4028": {
+  "ao": {
+   "bg": 4028
+  }
+ },
+ "bg:4029": {
+  "ao": {
+   "bg": 4029
+  }
+ },
+ "bg:4030": {
+  "ao": {
+   "bg": 4030
+  }
+ },
+ "bg:4031": {
+  "ao": {
+   "bg": 4031
+  }
+ },
+ "bg:4032": {
+  "ao": {
+   "bg": 4032
+  }
+ },
+ "bg:4033": {
+  "ao": {
+   "bg": 4033
+  }
+ },
+ "bg:4034": {
+  "ao": {
+   "bg": 4034
+  }
+ },
+ "bg:5000": {
+  "ao": {
+   "bg": 5000
+  }
+ },
+ "bg:5001": {
+  "ao": {
+   "bg": 5001
+  }
+ },
+ "bg:5002": {
+  "ao": {
+   "bg": 5002
+  }
+ },
+ "bg:5003": {
+  "ao": {
+   "bg": 5003
+  }
+ },
+ "bg:5004": {
+  "ao": {
+   "bg": 5004
+  }
+ },
+ "bg:5005": {
+  "ao": {
+   "bg": 5005
+  }
+ },
+ "bg:5006": {
+  "ao": {
+   "bg": 5006
+  }
+ },
+ "bg:5007": {
+  "ao": {
+   "bg": 5007
+  }
+ },
+ "bg:6014": {
+  "ao": {
+   "bg": 6014
+  }
+ },
+ "bg:6015": {
+  "ao": {
+   "bg": 6015
+  }
+ },
+ "bg:6016": {
+  "ao": {
+   "bg": 6016
+  }
+ },
+ "bg:6017": {
+  "ao": {
+   "bg": 6017
+  }
+ },
+ "bg:6018": {
+  "ao": {
+   "bg": 6018
+  }
+ },
+ "bg:6019": {
+  "ao": {
+   "bg": 6019
+  }
+ },
+ "bg:6020": {
+  "ao": {
+   "bg": 6020
+  }
+ },
+ "bg:6021": {
+  "ao": {
+   "bg": 6021
+  }
+ },
+ "bg:6022": {
+  "ao": {
+   "bg": 6022
+  }
+ },
+ "bg:6023": {
+  "ao": {
+   "bg": 6023
+  }
+ },
+ "bg:6024": {
+  "ao": {
+   "bg": 6024
+  }
+ },
+ "bg:6025": {
+  "ao": {
+   "bg": 6025
+  }
+ },
+ "bg:6026": {
+  "ao": {
+   "bg": 6026
+  }
+ },
+ "bg:7000": {
+  "ao": {
+   "bg": 7000
+  }
+ },
+ "bg:7001": {
+  "ao": {
+   "bg": 7001
+  }
+ },
+ "bg:7002": {
+  "ao": {
+   "bg": 7002
+  }
+ },
+ "bg:7003": {
+  "ao": {
+   "bg": 7003
+  }
+ },
+ "bg:7004": {
+  "ao": {
+   "bg": 7004
+  }
+ },
+ "bg:7006": {
+  "ao": {
+   "bg": 7006
+  }
+ },
+ "bg:7007": {
+  "ao": {
+   "bg": 7007
+  }
+ },
+ "bg:7008": {
+  "ao": {
+   "bg": 7008
+  }
+ },
+ "bg:7010": {
+  "ao": {
+   "bg": 7010
+  }
+ }
+}

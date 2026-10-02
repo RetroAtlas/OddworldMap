@@ -31,8 +31,17 @@ from oddmap.games import GAMES, game_setup
 from oddmap.image import decode_cam, ensure_oxipng, ensure_tools, reencode_pngs
 from oddmap.messages import write_messages
 from oddmap.paths import HERE, SITE
+from oddmap.sprites import write_sprites
 from oddmap.tables import AE_LEVEL_DISPLAY, AO_R2_ZULAGS
 from oddmap.tlv import resolve_path_meta, walk_obj_region
+
+def write_sprite_data(game_key, archives, out, sheets_rel, abe, line_links, links_dst, merge):
+    """the collision links merged into the table on disk first, so a subset build's
+    sidecar carries every level's links rather than the subset's alone"""
+    links = write_line_links(game_key, line_links, links_dst, merge)
+    write_sprites(game_key, archives, out, sheets_rel, abe, links)
+    return links
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -96,9 +105,10 @@ def main():
     data = {"id": args.game, "game": game["title"], "geometry": game["geometry"], "levels": []}
     line_links = {}
     cam_stats = {"reused": 0, "decoded": 0, "failed": 0}
-    for lid, short, display in game["levels"]:
-        if only and short not in only:
-            continue
+    # every level's archive, whatever subset is built: the sprites are read
+    # game-wide, one copy of each animation standing for every level's
+    archives = {}
+    for _lid, short, _display in game["levels"]:
         if short not in tables:
             continue
         lvl_file = f"{short}.LVL"
@@ -109,12 +119,17 @@ def main():
             print(f"{short}: no {lvl_file} on disc, skipping")
             continue
         disc = max(having, key=lambda d: d.files[lvl_file.upper()][1])
-        print(f"=== {short} ({display}) ===")
         try:
-            lvl = Lvl(disc, lvl_file)
+            archives[short] = Lvl(disc, lvl_file)
         except (ValueError, EOFError) as ex:
-            print(f"  skipping: {ex}")
+            print(f"{short}: skipping: {ex}")
+    for lid, short, display in game["levels"]:
+        if only and short not in only:
             continue
+        if short not in archives:
+            continue
+        lvl = archives[short]
+        print(f"=== {short} ({display}) ===")
         bnd_name = f"{short}PATH.BND"
         if bnd_name not in lvl.files:
             print(f"  no {bnd_name}, skipping")
@@ -235,9 +250,13 @@ def main():
     write_enum_labels(args.game, out)
     # game-wide, so a subset build writes it whole
     write_messages(args.game, discs, out / game["messages_file"])
+    # Exoddus places a few devices by the path's Abe start, a path-table value
+    abe = {short: {str(pid): [row["abe_x"], row["abe_y"]] for pid, row in paths.items() if "abe_x" in row}
+           for short, paths in tables.items()} if args.game == "AE" else None
     # a scratch --out takes its own copy of the links, which is where a verification build compares them
     links_dir = HERE / "data" if out.resolve() == SITE.resolve() else out
-    write_line_links(args.game, line_links, links_dir / game["links_file"], merge=bool(only))
+    line_links = write_sprite_data(args.game, sorted(archives.items()), out, f"{game['cams_dir']}/sprites", abe,
+                                   line_links, links_dir / game["links_file"], bool(only))
     write_relive_export(args.game, out, links_dir)  # carries the links, so after them
     sw_file = out / "sw.js"
     # a scratch --out holds no worker, so a verification build stamps nothing

@@ -3,11 +3,11 @@ Copyright (C) 2026 mariobob
 
 This notice covers the code written for this project. The vendored MDEC decoder
 under tools/ carries its own authors' copyright under this same licence, stated in
-its file header; one decoder under tools/oddmap, decompress_4or5 in image.py, is a
-port from paulsapps/alive under the MIT licence, whose notice closes this file; and
-the extracted game imagery is under neither, never having been this project's to
-license. The Credits & licensing section of README.md states the apportionment per
-tree.
+its file header; two decoders under tools/oddmap, decode_psx67 in sprites.py and
+decompress_4or5 in image.py, are ports from paulsapps/alive under the MIT licence,
+whose notice closes this file; and the extracted game imagery is under neither,
+never having been this project's to license. The Credits & licensing section of
+README.md states the apportionment per tree.
 
                     GNU GENERAL PUBLIC LICENSE
                        Version 2, June 1991
@@ -350,7 +350,7 @@ library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.
 
                  The MIT notice of paulsapps/alive, covering the
-                        ported decoder named above
+                       two ported decoders named above
 
 The MIT License (MIT)
 
