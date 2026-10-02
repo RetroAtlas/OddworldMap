@@ -40,12 +40,14 @@ function brainAnims(r, set) {
   let moved = false;
   for (let t = 0; t <= BRAIN_WINDOW; t++) {
     const shown = resolveRecord(r, set, t);
-    assert.ok(shown, `${r.anim} at ${t}`);
+    if (!shown) continue; // a brain may hide its record for a spell
+
     assert.ok(shown.frame >= 0 && shown.frame < shown.anim.frames.length, `${r.anim} at ${t}`);
     assert.ok(Number.isFinite(shown.x) && Number.isFinite(shown.y), `${r.anim} place at ${t}`);
     names.add(shown.name);
     if (shown.x !== r.x || shown.y !== r.y) moved = true;
   }
+  assert.ok(names.size > 0, `${r.anim} is never shown`);
   names.moved = moved;
   return names;
 }

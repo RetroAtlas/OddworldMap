@@ -125,7 +125,7 @@ function brainAt(r, set, tick) {
       dice: set.dice,
       sw: {},
     };
-    STARTS[cy.brain]?.(st);
+    STARTS[cy.brain]?.(st, r);
     if (!cached) brainStates.set(r, st);
   }
   const rnd = () => st.dice[st.seed++ & 255];
@@ -141,7 +141,14 @@ function brainAt(r, set, tick) {
     MOTIONS[st.cur]?.(st, last, frame, rnd, now);
     if (st.cur !== was) st.set = T;
   }
-  return { anim: st.cur + variant, at: tick - st.set + 1, flip: st.flip, dx: st.dx, dy: st.dy };
+  return {
+    anim: (st.show ?? st.cur) + variant,
+    at: tick - st.set + 1,
+    flip: st.flip,
+    dx: st.dx,
+    dy: st.dy,
+    hidden: !!st.hidden,
+  };
 }
 
 // what a record shows at a tick: its animation, frame, place and facing, after
@@ -157,6 +164,7 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
   if (cy) {
     if (cy.kind === "brain" && (patrolAt !== null || !cy.patrol)) {
       const w = brainAt(r, set, cy.patrol ? patrolAt : tick);
+      if (w.hidden) return null;
       anim = w.anim;
       at = w.at;
       x += w.dx;

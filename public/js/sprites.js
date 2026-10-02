@@ -973,15 +973,25 @@ rule("AE", "CrawlingSligButton", (c) => [
   draw(c, "CrawlingSligButton", mid(c.t), c.t.y2, { layer: c.half ? 6 : 25 }),
 ]);
 
-// a flying slig hangs from the track line its rect's diagonal crosses
+// a flying slig hangs twenty units under the track line its rect's diagonal
+// crosses, and bobs about that
 rule("AE", "FlyingSlig", (c) => {
   const { t, f } = c;
   const hit = raycastDiag(c.lines, t.x1, t.y1, t.x2, t.y2, TRACK);
   if (!hit) return [];
+  const p = {
+    left: f.start_direction === 0,
+    delayed: f.spawn_delay_state === 1,
+    delay: f.spawn_move_delay,
+    pauseMin: f.patrol_pause_min,
+    pauseMax: f.patrol_pause_max,
+    maxSpeed: f.max_velocity,
+  };
   return [
-    draw(c, "FlyingSlig_Idle", hit.line[0], hit.line[1], {
+    draw(c, "FlyingSlig_Idle", hit.line[0], hit.line[1] + 20 * (c.half ? 0.5 : 1), {
       layer: c.half ? 14 : 33,
       flip: f.start_direction === 0,
+      cycle: patrol(c, "flyslig", p, { x1: t.x1, y1: t.y1, x2: t.x2, y2: t.y2 }),
     }),
   ];
 });
@@ -1096,15 +1106,17 @@ rule("AE", "Fleech", (c) => {
 });
 
 rule("AE", "Slurg", (c) => {
-  const { t } = c;
+  const { t, f } = c;
   const x = mid(t) + stackOffset({ ...c, half: false });
   const hit = raycastDown(c.lines, x, t.y1, t.y1 + 24, planeTypes(c.half, FLOOR));
+  const p = { delay: f.time_until_turning_around, right: f.start_direction === 1 };
   // the half-scale slurg keeps a full-size sprite on the half layer
   return [
     draw(c, "Slurg_Move", x, hit ?? t.y1, {
       scale: 1,
       layer: c.half ? 14 : 33,
       rgb: [102, 127, 118],
+      cycle: patrol(c, "slurg", p, { x: mid(t), y: t.y1 }),
     }),
   ];
 });
@@ -1115,23 +1127,36 @@ rule("AE", "Greeter", (c) => {
   const x = mid(t);
   const hit = raycastDown(c.lines, x, t.y1, t.y1 + 24, planeTypes(c.half, FLOOR));
   const y = hit ?? t.y1;
+  // the three records run one brain, each reading its own part of it
+  const part = (name) => patrol(c, "greeter", { part: name }, { x, y: t.y1 });
   return [
-    draw(c, "Greeter_Moving", x, y, { layer: c.half ? 14 : 33, flip: f.start_direction === 0 }),
+    draw(c, "Greeter_Moving", x, y, {
+      layer: c.half ? 14 : 33,
+      flip: f.start_direction === 0,
+      cycle: part("body"),
+    }),
     draw(c, "MotionDetector_Flare", x, y - 20 * s, {
       scale: s,
       layer: 36,
       rgb: [64, 0, 0],
       blend: 1,
+      cycle: part("flare"),
     }),
-    draw(c, "MotionDetector_Laser", x, y, { scale: s, layer: 36, blend: 1 }),
+    draw(c, "MotionDetector_Laser", x, y, { scale: s, layer: 36, blend: 1, cycle: part("laser") }),
   ];
 });
 
 rule("AO", "Bat", (c) => {
-  const { t } = c;
+  const { t, f } = c;
   const hit = raycastDiag(c.lines, t.x1, t.y1, t.x2, t.y2, TRACK);
   if (!hit) return [];
-  return [draw(c, "Bat", hit.line[0], hit.line[1] + 5, { layer: c.half ? 6 : 25 })];
+  const p = { wait: f.ticks_before_moving, speed: f.speed / 256 };
+  return [
+    draw(c, "Bat", hit.line[0], hit.line[1] + 5, {
+      layer: c.half ? 6 : 25,
+      cycle: patrol(c, "bat", p, { x1: t.x1, y1: t.y1, x2: t.x2, y2: t.y2 }),
+    }),
+  ];
 });
 
 rule("AO", "Honey", (c) => [
@@ -1225,10 +1250,12 @@ rule("AE", "Glukkon", (c) => {
   if (f.spawn_switch_id) return []; // waits unseen for its switch
   const x = mid(t);
   const hit = raycastDown(c.lines, x, t.y1, t.y1 + 79, planeTypes(c.half, FLOOR));
+  const type = GLUKKON_TYPE[f.glukkon_type] || "Normal";
   return [
-    draw(c, `Glukkon_${GLUKKON_TYPE[f.glukkon_type] || "Normal"}_Idle`, x, hit ?? t.y1, {
+    draw(c, `Glukkon_${type}_Idle`, x, hit ?? t.y1, {
       flip: f.start_direction === 1,
       rgb: [137, 137, 137],
+      cycle: patrol(c, "glukkon", { type, checkWalls: f.behavior === 1 }, { x, y: t.y1 }),
     }),
   ];
 });
@@ -1237,6 +1264,7 @@ rule("AO", "Glukkon", (c) => [
   draw(c, "Background_Glukkon_Idle" + (AO_GLUKKON_PAL[c.f.pal_id] || ""), c.t.x1, c.t.y1 + 5, {
     scale: (c.f.scale_percent || 100) / 100,
     layer: 27,
+    cycle: brain(c, "glukkonAO"),
   }),
 ]);
 

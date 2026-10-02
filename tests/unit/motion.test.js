@@ -1039,6 +1039,231 @@ test("patrol: a moving bomb follows its track, pauses at a stopper and carries o
   assert.equal(resolveRecord(still, set, 500).x, 300);
 });
 
+const ROAMER_ANIMS = {
+  ...PATROL_ANIMS,
+  Slurg_Move: anim(6, 2, true),
+  Slurg_Turn_Around: anim(6, 2, false),
+  Greeter_Moving: anim(9, 1, true),
+  Greeter_Turn: anim(6, 1, false),
+  Greeter_Speak: anim(8, 1, false),
+  MotionDetector_Flare: anim(1, 1, true),
+  MotionDetector_Laser: anim(1, 1, true),
+  Bat: anim(10, 2, true),
+  Bat_Unknown: anim(7, 1, false),
+  Bat_Flying: anim(15, 1, true),
+  Glukkon_Normal_Idle: anim(7, 4, true),
+  Glukkon_Normal_BeginWalk: anim(3, 1, false),
+  Glukkon_Normal_Walk: anim(18, 1, true),
+  Glukkon_Normal_EndWalk: anim(3, 1, false),
+  Glukkon_Normal_EndSingleStep: anim(3, 1, false),
+  Glukkon_Normal_Turn: anim(10, 1, false),
+  Glukkon_Normal_Speak1: anim(11, 1, false),
+  Glukkon_Normal_LongLaugh: anim(22, 1, false),
+  Background_Glukkon_Idle: anim(6, 4, true),
+  Background_Glukkon_KillHim1: anim(11, 2, false),
+  Background_Glukkon_KillHim2: anim(11, 2, false),
+  FlyingSlig_Idle: anim(4, 1, true),
+  FlyingSlig_IdleToHorizontal: anim(4, 1, false),
+  FlyingSlig_IdleTurnAround: anim(10, 1, false),
+  FlyingSlig_MoveHorizontal: anim(4, 1, true),
+  FlyingSlig_MoveHorizontalEnd: anim(4, 1, false),
+  FlyingSlig_TurnQuick: anim(11, 1, false),
+  FlyingSlig_BeginDownMovement: anim(3, 1, false),
+  FlyingSlig_MoveDown: anim(4, 1, true),
+  FlyingSlig_EndDownMovement: anim(3, 1, true),
+  FlyingSlig_MoveDownToHorizontal: anim(3, 1, false),
+  FlyingSlig_MoveDownTurnAround: anim(6, 1, false),
+  FlyingSlig_MoveUp: anim(4, 1, true),
+  FlyingSlig_EndUpMovement: anim(3, 1, true),
+  FlyingSlig_MoveUpToHorizontal: anim(3, 1, false),
+  FlyingSlig_MoveUpTurnAround: anim(6, 1, false),
+  FlyingSlig_MoveHorizontalToDown: anim(3, 1, false),
+  FlyingSlig_HorizontalToUpMovement: anim(3, 1, false),
+};
+const roamSet = (v) => ({ anims: ROAMER_ANIMS, dice: new Array(256).fill(v) });
+const spanOf = (steps) => {
+  const xs = steps.map((s) => +s.split("@")[1].slice(0, -1));
+  return [Math.min(...xs), Math.max(...xs)];
+};
+const kinds = (steps) => new Set(steps.map((s) => s.split(":")[1].split("@")[0]));
+
+test("roam: a slurg creeps half a unit a tick, pauses on its timer, and turns at a bound", () => {
+  const floor = [[0, 100, 1000, 100, 0]];
+  const bounds = [
+    tlv("ScrabLeftBound", 300, 76, 324, 100),
+    tlv("ScrabRightBound", 700, 76, 724, 100),
+  ];
+  const w = world("AE", floor, bounds, { x: 500, y: 90 });
+  // a right-starting slurg moves toward -x first, unflipped, and turns flipped
+  const r = walker("Slurg_Move", "slurg", { delay: 40, right: true }, w, 500, 100);
+  const set = roamSet(0);
+  assert.equal(resolveRecord(r, set, 1).x, 499, "one unit every other tick");
+  assert.equal(resolveRecord(r, set, 2).x, 499);
+  assert.equal(resolveRecord(r, set, 3).x, 498);
+  const steps = trail(r, set, 1, 1500);
+  const names = kinds(steps);
+  assert.ok(names.has("Turn_Around"), "it pauses or turns");
+  assert.deepEqual(
+    spanOf(steps),
+    [324, 700],
+    "turns at the left bound and stays under the right one",
+  );
+  // the first pause comes when the 40-tick timer runs out, direction kept; the
+  // span is a trace pinned from the port, not derived
+  const pause = steps.findIndex((s) => s.includes("Turn_Around"));
+  assert.equal(pause, 40, `first pause at ${pause}`);
+  assert.equal(resolveRecord(r, set, pause + 1).flip, false, "a pause keeps the facing");
+});
+
+test("roam: a greeter rolls three units a tick, turns at bounds, stops to speak and sweeps its laser", () => {
+  const floor = [[0, 100, 1000, 100, 0]];
+  const bounds = [
+    tlv("ScrabLeftBound", 200, 76, 224, 100),
+    tlv("ScrabRightBound", 800, 76, 824, 100),
+  ];
+  const w = world("AE", floor, bounds, { x: 500, y: 90 });
+  // facing right (start_direction Right_1) it moves toward -x
+  const body = walker("Greeter_Moving", "greeter", { part: "body" }, w, 500, 100, false);
+  const laser = walker("MotionDetector_Laser", "greeter", { part: "laser" }, w, 500, 100, false);
+  const set = roamSet(0);
+  assert.equal(resolveRecord(body, set, 1).x, 497);
+  assert.equal(resolveRecord(body, set, 2).x, 494);
+  const steps = trail(body, set, 1, 2000);
+  const names = kinds(steps);
+  assert.ok(names.has("Turn") && names.has("Speak"), [...names].join());
+  // a trace pinned from the port, not derived
+  assert.deepEqual(spanOf(steps), [236, 788], "turns four strides short of either bound");
+  // the first speech comes at the 70-tick timer, standing still
+  const speak = steps.findIndex((s) => s.includes("Speak"));
+  assert.equal(speak, 70, `speaks at ${speak}`);
+  assert.equal(resolveRecord(body, set, speak + 2).x, resolveRecord(body, set, speak + 5).x);
+  // the laser rides along and sweeps two units a tick past the body
+  const dl = resolveRecord(laser, set, 10).x - resolveRecord(laser, set, 9).x;
+  assert.equal(dl, -3 + 2, "the body's stride plus the sweep's own");
+  assert.equal(resolveRecord(laser, set, speak + 2), null, "hidden while it speaks");
+});
+
+test("roam: a bat hangs its while, takes off along its line and returns to its perch at the chain's end", () => {
+  const track = [[100, 50, 700, 50, 8]];
+  const w = world("AO", track, [], { x1: 90, y1: 40, x2: 114, y2: 64 });
+  const r = walker("Bat", "bat", { wait: 20, speed: 1280 / 256 }, w, 100, 55);
+  const set = roamSet(0);
+  assert.equal(resolveRecord(r, set, 21).name, "Bat");
+  assert.equal(resolveRecord(r, set, 22).name, "Bat_Unknown", "takes off the tick after the wait");
+  assert.ok(Math.abs(resolveRecord(r, set, 23).x - 101.8) < 1e-9, "accelerating 1.8 a tick");
+  assert.equal(resolveRecord(r, set, 29).name, "Bat_Flying");
+  const steps = trail(r, set, 1, 400);
+  const back = steps.findIndex((s, i) => i > 30 && s.includes(":Bat@100"));
+  assert.ok(back > 100, `returns to its perch after the line's end: ${back}`);
+  assert.equal(resolveRecord(r, set, back + 5).name, "Bat");
+});
+
+test("roam: a wall-checking Glukkon paces to its bound, pauses, turns, and has a word", () => {
+  const floor = [[0, 100, 1000, 100, 0]];
+  const bounds = [
+    tlv("ScrabLeftBound", 100, 76, 124, 100),
+    tlv("ScrabRightBound", 600, 76, 624, 100),
+  ];
+  const w = world("AE", floor, bounds, { x: 300, y: 90 });
+  const r = walker(
+    "Glukkon_Normal_Idle",
+    "glukkon",
+    { type: "Normal", checkWalls: true },
+    w,
+    300,
+    100,
+  );
+  // forties never roll under five, so the walk is unbroken by speech
+  const set = roamSet(40);
+  assert.equal(resolveRecord(r, set, 2).name, "Glukkon_Normal_BeginWalk");
+  assert.equal(resolveRecord(r, set, 5).name, "Glukkon_Normal_Walk");
+  assert.ok(resolveRecord(r, set, 30).x > 300, "it strides right");
+  const steps = trail(r, set, 1, 3000);
+  const names = kinds(steps);
+  const has = (set, end) => [...set].some((n) => n.endsWith(end));
+  assert.ok(
+    has(names, "Turn") && (has(names, "Speak1") || has(names, "LongLaugh")),
+    [...names].join(),
+  );
+  const [lo, hi] = spanOf(steps);
+  assert.ok(hi <= 630 && lo >= 95, `between its bounds: ${lo}..${hi}`);
+  // the standing Glukkon never walks
+  const stand = walker(
+    "Glukkon_Normal_Idle",
+    "glukkon",
+    { type: "Normal", checkWalls: false },
+    w,
+    300,
+    100,
+  );
+  const still = trail(stand, set, 1, 1000);
+  assert.ok(!has(kinds(still), "Walk"));
+  assert.equal(spanOf(still)[0], spanOf(still)[1]);
+});
+
+test("roam: Oddysee's background Glukkon speaks a rolled line every dozen-odd ticks", () => {
+  const r = creature("Background_Glukkon_Idle", "glukkonAO");
+  const set = roamSet(0);
+  // zero dice: the pause is twelve ticks and the line is the first
+  assert.deepEqual(segments(r, set, 1, 40), [
+    "Glukkon_Idle 1-14",
+    "Glukkon_KillHim1 15-35",
+    "Glukkon_Idle 36-40",
+  ]);
+  // a roll of four holds its tongue a tick longer each time
+  const quiet = creature("Background_Glukkon_Idle", "glukkonAO");
+  assert.equal(segments(quiet, roamSet(4), 1, 200).join(), "Glukkon_Idle 1-200");
+});
+
+test("roam: a flying slig waits its delay, flies its track to the end, pauses and flies back", () => {
+  const track = [[100, 300, 900, 300, 8]];
+  const w = world("AE", track, [], { x1: 400, y1: 280, x2: 424, y2: 320 });
+  const p = { left: false, delayed: false, delay: 0, pauseMin: 30, pauseMax: 60, maxSpeed: 6 };
+  const r = walker("FlyingSlig_Idle", "flyslig", p, w, 100, 320, false);
+  const set = roamSet(0);
+  // facing right and travelling toward the line's start, it turns about first
+  const steps = trail(r, set, 1, 1500);
+  const names = kinds(steps);
+  assert.ok(
+    names.has("MoveHorizontal") && names.has("Idle") && names.has("IdleTurnAround"),
+    [...names].join(),
+  );
+  assert.deepEqual(spanOf(steps), [100, 900], "flies the whole track");
+  // the push is let off short of the end, so the flight reads as ended while it
+  // coasts in, pushes once more for the last stretch, and rests the rolled delay;
+  // the ticks and places are a trace pinned from the port, not derived
+  const changes = [];
+  for (let i = 1; i < steps.length; i++) {
+    const [was, now] = [steps[i - 1], steps[i]].map((s) => s.split(":")[1].split("@")[0]);
+    if (now !== was) changes.push(`${i + 1}:${now}@${steps[i].split("@")[1]}`);
+  }
+  assert.deepEqual(changes.slice(0, 10), [
+    "31:IdleToHorizontal@100>",
+    "35:MoveHorizontal@106>",
+    "164:MoveHorizontalEnd@862>",
+    "168:Idle@880>",
+    "169:IdleToHorizontal@884>",
+    "173:MoveHorizontalEnd@898>",
+    "177:Idle@900>",
+    "211:IdleTurnAround@900>",
+    "221:MoveHorizontal@874<",
+    "344:MoveHorizontalEnd@138<",
+  ]);
+  // it tops out at its max velocity
+  let fastest = 0;
+  for (let t = 2; t < 400; t++)
+    fastest = Math.max(
+      fastest,
+      Math.abs(resolveRecord(r, set, t).x - resolveRecord(r, set, t - 1).x),
+    );
+  assert.ok(Math.abs(fastest - 6) < 1e-9, `top speed ${fastest}`);
+  // and bobs about its hanging height
+  const ys = new Set(
+    trail(r, set, 1, 60).map((_, i) => Math.round(resolveRecord(r, set, i + 1).y * 1000)),
+  );
+  assert.ok(ys.size > 3, "the bob moves it");
+});
+
 test("clock: stopping cancels the queued frame, so a restart stacks no second callback", () => {
   const queue = new Map();
   let id = 0;

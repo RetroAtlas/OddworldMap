@@ -11,7 +11,9 @@ import {
   camVoidY,
   gridSize,
   moveOnLine,
+  nextLine,
   onEndOfLine,
+  prevLine,
   raycast,
   tlvAt,
   wallHit,
@@ -1172,3 +1174,648 @@ BRAINS.bomb = (st, now, rnd) => {
   }
   place(st);
 };
+
+// ---- Slurg: half a unit a tick, a pause now and then, back at a bound or an edge
+STARTS.slurg = (st) => {
+  standOn(st, st.w.spawn.x, st.w.spawn.y, 24);
+  st.left = st.p.right; // Bit1: set means moving toward -x, and the field's names run the other way
+  st.timer = st.p.delay;
+  st.state = "moving";
+  st.odd = false;
+};
+
+function slurgTurn(st, left) {
+  st.flip = left;
+  st.left = left;
+  st.state = "stopped";
+  st.cur = "Slurg_Turn_Around";
+}
+
+BRAINS.slurg = (st, now, rnd) => {
+  if (st.line === null) return;
+  const s = scaleOf(st);
+  if (st.timer === 0) {
+    st.timer = randomRange(st, rnd, st.p.delay, st.p.delay + 20);
+    st.state = "stopped";
+    st.cur = "Slurg_Turn_Around";
+  }
+  let moved = false;
+  if (st.state === "moving") {
+    st.velx = st.left ? -1 : 1;
+    st.timer--;
+    st.odd = !st.odd;
+    if (st.odd) {
+      st.x += st.velx;
+      moved = true;
+    }
+  } else {
+    st.velx = 0;
+    if (st.m.last) {
+      st.state = "moving";
+      st.cur = "Slurg_Move";
+    }
+  }
+  if (moved) {
+    const at = (name) => tlvAt(st.w.tlvs, st.x, st.y, st.x, st.y, name);
+    if (st.left && at("ScrabLeftBound")) slurgTurn(st, false);
+    else if (!st.left && at("ScrabRightBound")) slurgTurn(st, true);
+    else if (st.left) {
+      if (
+        wall(st, 8 * s, -6 * s) ||
+        onEndOfLine(st.w.game, st.w.lines, st.x, st.y, st.w.half, true, 1)
+      )
+        slurgTurn(st, false);
+    } else if (
+      wall(st, 8 * s, 6 * s) ||
+      onEndOfLine(st.w.game, st.w.lines, st.x, st.y, st.w.half, false, 1)
+    )
+      slurgTurn(st, true);
+  }
+  place(st);
+};
+
+// ---- Greeter: rolls its beat at three units a tick, turns at bounds, stopper,
+// walls and edges, stops to speak, and sweeps its laser across its path. The
+// body, the flare and the laser are three records running one brain.
+const GREETER_SWEEP = 75;
+
+STARTS.greeter = (st, r) => {
+  standOn(st, st.w.spawn.x, st.w.spawn.y, 24);
+  st.part = st.p.part;
+  st.own = r.anim;
+  st.cur = "Greeter_Moving";
+  st.body = "Greeter_Moving";
+  st.state = "patrol";
+  st.speakT = SPAWN_FRAME + randomRange(st, () => st.dice[st.seed++ & 255], 70, 210);
+  st.laserX = st.x;
+  st.sweep = "right";
+  st.sweepT = 0;
+};
+
+function greeterTurn(st) {
+  st.state = "turn";
+  st.velx = 0;
+  st.body = "Greeter_Turn";
+}
+
+BRAINS.greeter = (st, now, rnd) => {
+  if (st.line === null) return;
+  const s = scaleOf(st);
+  if (st.state === "patrol") {
+    st.velx = st.flip ? 3 * s : -3 * s;
+    st.body = "Greeter_Moving";
+    if (now > st.speakT) {
+      st.state = "speak";
+      st.velx = 0;
+      st.body = "Greeter_Speak";
+    }
+  } else if (st.state === "speak") {
+    if (st.m.last) {
+      st.state = "patrol";
+      st.body = "Greeter_Moving";
+      st.speakT = now + randomRange(st, rnd, 160, 200);
+    }
+  } else if (st.m.last) {
+    st.state = "patrol";
+    st.body = "Greeter_Moving";
+    st.flip = !st.flip;
+  }
+  if (st.velx !== 0) {
+    const px = st.x + 4 * st.velx;
+    const at = (name) => tlvAt(st.w.tlvs, px, st.y, px, st.y, name);
+    if (
+      (!st.flip && at("ScrabLeftBound")) ||
+      (st.flip && at("ScrabRightBound")) ||
+      at("EnemyStopper")
+    )
+      greeterTurn(st);
+    else if (
+      (st.flip && onEndOfLine(st.w.game, st.w.lines, st.x, st.y, st.w.half, false, 1)) ||
+      wall(st, 40 * s, st.velx * 3) ||
+      (!st.flip && onEndOfLine(st.w.game, st.w.lines, st.x, st.y, st.w.half, true, 1))
+    )
+      greeterTurn(st);
+    st.x += st.velx;
+  }
+  // the laser rides along and sweeps two units a tick between the ends of
+  // its reach, waiting fifteen ticks at each
+  st.laserX += st.velx;
+  const x1 = st.x - GREETER_SWEEP * s,
+    x2 = st.x + GREETER_SWEEP * s;
+  switch (st.sweep) {
+    case "right":
+      if (st.laserX >= x2) {
+        st.sweep = "waitLeft";
+        st.sweepT = now + 15;
+      } else st.laserX += 2;
+      break;
+    case "waitLeft":
+      if (now > st.sweepT) st.sweep = "left";
+      break;
+    case "left":
+      if (st.laserX <= x1) {
+        st.sweep = "waitRight";
+        st.sweepT = now + 15;
+      } else st.laserX -= 2;
+      break;
+    case "waitRight":
+      if (now > st.sweepT) st.sweep = "right";
+  }
+  st.cur = st.body;
+  if (st.part !== "body") {
+    st.show = st.own;
+    st.hidden = st.state === "speak";
+  }
+  st.dx = (st.part === "laser" ? st.laserX : st.x) - st.x0;
+};
+
+// ---- Bat: hangs its while, takes off and flies its line to the chain's end,
+// where the game removes it; the map returns it to its perch, as a fresh screen would
+STARTS.bat = (st) => {
+  const s = st.w.spawn;
+  const hit = raycast(st.w.lines, s.x1, s.y1, s.x2, s.y2, TRACK);
+  st.line = hit ? hit.line : null;
+  const [ax, ay] = hit ? st.w.lines[hit.line] : [s.x1, s.y1];
+  st.x = st.x0 = ax;
+  st.y = st.y0 = ay;
+  st.velx = 0;
+  st.state = "wait";
+  st.timer = null;
+};
+
+BRAINS.bat = (st, now, rnd) => {
+  if (st.line === null) return;
+  const speed = st.p.speed;
+  const fly = () => {
+    st.velx = Math.min(st.velx + 1.8, speed);
+    const r = moveOnLine(st.w.lines, st.w.links, st.line, st.x, st.y, st.velx, true);
+    if (!r) return false;
+    st.line = r.line;
+    st.x = r.x;
+    st.y = r.y;
+    return true;
+  };
+  switch (st.state) {
+    case "wait":
+      if (st.timer === null) st.timer = now + st.p.wait;
+      else if (now > st.timer) {
+        st.state = "takeoff";
+        st.velx = 0;
+        st.cur = "Bat_Unknown";
+      }
+      break;
+    case "takeoff":
+      fly();
+      if (st.m.last) {
+        st.state = "flying";
+        st.cur = "Bat_Flying";
+        randomRange(st, rnd, 0, 90);
+      }
+      break;
+    case "flying":
+      if (!fly()) {
+        const perch = raycast(
+          st.w.lines,
+          st.w.spawn.x1,
+          st.w.spawn.y1,
+          st.w.spawn.x2,
+          st.w.spawn.y2,
+          TRACK,
+        );
+        st.line = perch.line;
+        st.x = st.x0;
+        st.y = st.y0;
+        st.velx = 0;
+        st.state = "wait";
+        st.timer = null;
+        st.cur = "Bat";
+      }
+  }
+  place(st);
+};
+
+// ---- Exoddus's Glukkon: one that checks for walls paces between its bounds
+// with rolled pauses and a word now and then; one that ignores them stands,
+// turning or speaking on a low roll
+const GLUKKON_WALK = fp16([
+  0, 138412, 257097, 138412, 53543, 326763, 394395, 191561, 138412, 257097, 138412, 53543, 326763,
+  394395, 191561, 138412, 257097, 138412,
+]);
+const glukAnim = (st, name) => `Glukkon_${st.p.type}_${name}`;
+const GLUKKON_STOPS = ["Idle", "Turn", "Speak1", "LongLaugh"];
+
+function glukkonBlocked(st) {
+  const g = grid(st);
+  const ahead = st.flip ? -g : g;
+  if (wall(st, 50 * scaleOf(st), ahead)) return true;
+  if (enemyStopper(st, 1, st.flip, true)) return true;
+  return (
+    tlvAt(
+      st.w.tlvs,
+      st.x,
+      st.y,
+      st.x + ahead,
+      st.y - g,
+      st.flip ? "ScrabLeftBound" : "ScrabRightBound",
+    ) !== null
+  );
+}
+const glukkonEdge = (st) => onEndOfLine(st.w.game, st.w.lines, st.x, st.y, st.w.half, st.flip, 1);
+
+function glukkonSpeak(st, now) {
+  st.next = glukAnim(st, now & 1 ? "Speak1" : "LongLaugh");
+}
+
+STARTS.glukkon = (st) => {
+  standOn(st, st.w.spawn.x, st.w.spawn.y, 79);
+  st.speakT = 0;
+  st.turnT = 0;
+};
+
+BRAINS.glukkon = (st, now, rnd) => {
+  if (st.line === null) return;
+  const idle = glukAnim(st, "Idle");
+  const check = st.p.checkWalls;
+  switch (st.sub) {
+    case 0:
+      if (st.cur !== idle) return;
+      if (check) {
+        if (glukkonEdge(st) || glukkonBlocked(st)) {
+          st.next = glukAnim(st, "Turn");
+          st.sub = 2;
+        } else {
+          st.next = glukAnim(st, "BeginWalk");
+          st.sub = 1;
+        }
+      } else {
+        st.next = idle;
+        st.sub = 1;
+      }
+      return;
+    case 1:
+      if (check && (glukkonEdge(st) || glukkonBlocked(st))) {
+        if (now <= st.speakT) {
+          st.next = idle;
+          st.timer = now + randomRange(st, rnd, 30, 120);
+          st.sub = 4;
+        } else {
+          st.speakT = now + 120;
+          glukkonSpeak(st, now);
+          st.sub = 3;
+        }
+        return;
+      }
+      if (!check && rnd() < 5 && now > st.turnT) {
+        st.turnT = now + 120;
+        st.next = glukAnim(st, "Turn");
+        st.sub = 2;
+        return;
+      }
+      if (rnd() < 5 && now > st.speakT) {
+        st.speakT = now + 120;
+        glukkonSpeak(st, now);
+        st.sub = 6;
+      }
+      return;
+    case 2:
+      if (st.cur === idle) st.sub = 0;
+      return;
+    case 3:
+      if (st.cur === idle && st.next === null) {
+        st.timer = now + randomRange(st, rnd, 30, 120);
+        st.sub = 4;
+      }
+      return;
+    case 4:
+      if (now > st.timer) {
+        st.next = glukAnim(st, "Turn");
+        st.sub = 2;
+      }
+      return;
+    case 5:
+      if (now > st.timer) st.sub = 0;
+      return;
+    case 6:
+      if (st.cur === idle) {
+        st.timer = now + randomRange(st, rnd, 30, 120);
+        st.sub = 5;
+      }
+  }
+};
+
+function glukkonInput(st) {
+  const idle = glukAnim(st, "Idle");
+  if (st.next === null) {
+    st.cur = idle;
+    return;
+  }
+  if (st.next === glukAnim(st, "BeginWalk")) {
+    const g = grid(st);
+    if (!wall(st, 50 * scaleOf(st), st.flip ? -g : g)) {
+      st.cur = st.next;
+      st.next = null;
+    } else st.cur = idle;
+    return;
+  }
+  st.cur = st.next;
+  st.next = null;
+}
+
+function glukkonMove(st, frame, table) {
+  const v = (table ? (table[frame] ?? 0) : 0) * scaleOf(st);
+  st.velx = st.flip ? -v : v;
+  follow(st);
+  place(st);
+}
+
+// every Glukkon art set runs the same motions
+for (const type of ["Normal", "Aslik", "Dripik", "Phleg"]) {
+  const n = (name) => `Glukkon_${type}_${name}`;
+  Object.assign(MOTIONS, {
+    [n("Idle")](st) {
+      glukkonInput(st);
+    },
+    [n("BeginWalk")](st, last, frame) {
+      glukkonMove(st, frame, null);
+      if (last) st.cur = n("Walk");
+    },
+    [n("Walk")](st, last, frame) {
+      glukkonMove(st, frame, GLUKKON_WALK);
+      if (st.line === null) {
+        st.cur = n("Idle");
+        return;
+      }
+      if ((frame === 8 || frame === 17) && GLUKKON_STOPS.some((m) => st.next === n(m)))
+        st.cur = frame === 8 ? n("EndSingleStep") : n("EndWalk");
+    },
+    [n("EndSingleStep")](st, last, frame) {
+      glukkonMove(st, frame, null);
+      if (last) glukkonInput(st);
+    },
+    [n("EndWalk")](st, last, frame) {
+      glukkonMove(st, frame, null);
+      if (last) glukkonInput(st);
+    },
+    [n("Turn")](st, last) {
+      if (last) {
+        st.flip = !st.flip;
+        st.velx = 0;
+        st.cur = n("Idle");
+      }
+    },
+    [n("Speak1")](st, last) {
+      if (last) glukkonInput(st);
+    },
+    [n("LongLaugh")](st, last) {
+      if (last) glukkonInput(st);
+    },
+  });
+}
+
+// ---- Oddysee's background Glukkon: a word every dozen-odd ticks, the line
+// picked by a roll, with every fifth roll holding its tongue a tick longer
+BRAINS.glukkonAO = (st, now, rnd) => {
+  switch (st.sub) {
+    case 0:
+      st.sub = 1;
+      return;
+    case 1:
+      st.timer = now + randomRange(st, rnd, 12, 20);
+      st.sub = 2;
+      return;
+    case 2: {
+      if (now <= st.timer) return;
+      randomRange(st, rnd, 110, 127);
+      rnd();
+      const line = rnd() % 5;
+      if (line === 4) return;
+      st.cur =
+        line === 0 || line === 2 ? "Background_Glukkon_KillHim1" : "Background_Glukkon_KillHim2";
+      st.sub = 3;
+      return;
+    }
+    case 3:
+      if (st.m.last) {
+        st.cur = "Background_Glukkon_Idle";
+        st.sub = 1;
+      }
+  }
+};
+
+// ---- Flying Slig: patrols its track line at up to its top speed, braking
+// for the chain's end or a bound, pausing, and flying back; its animation
+// follows where the track leads and which way it faces, and it bobs on
+// tables of its own
+const FLY_ACCEL = 0.4;
+const FLY_BOB = {
+  idle: [1.141, 1.298, 1.22, 0.905, 0.354, -0.527, -1.258, -1.501, -1.258, -0.527, 0],
+  horizontal: [-2.5, -3.75, -4.375, -5, -4.375, -3.75, -2.5, -1],
+  turning: [0.589, 1.296, 1.296, 0.589, -2.854, -5.261, -2.717, 1.069, 1.527, 0.584],
+};
+const F = (name) => `FlyingSlig_${name}`;
+
+const lineLen = (l) => Math.hypot(l[2] - l[0], l[3] - l[1]);
+
+STARTS.flyslig = (st) => {
+  const s = st.w.spawn;
+  const hit = raycast(st.w.lines, s.x1, s.y1, s.x2, s.y2, TRACK);
+  st.line = hit ? hit.line : null;
+  const l = st.line !== null ? st.w.lines[st.line] : [s.x1, s.y1, s.x1, s.y1];
+  st.x = st.x0 = l[0];
+  st.y = st.y0 = l[1];
+  st.dist = 0;
+  st.speed = 0;
+  st.forward = st.p.left; // Bit4: travel toward the line's end
+  st.xSpeed = 0;
+  st.ySpeed = 0;
+  st.timer = SPAWN_FRAME + (st.p.delayed ? st.p.delay : 1);
+  st.bobTable = null;
+  st.bobI = 0;
+  st.bob = 0;
+};
+
+// a bound at a line end stops travel that would cross it
+function flyBoundBlocks(st, end, forward) {
+  const g = grid(st);
+  const [x, y] = end;
+  const bound =
+    tlvAt(st.w.tlvs, x - g, y - g, x + g, y + g, "SligBoundLeft") ??
+    tlvAt(st.w.tlvs, x - g, y - g, x + g, y + g, "SligBoundRight");
+  if (!bound) return false;
+  const l = st.w.lines[st.line];
+  const width = (l[2] - l[0]) * (forward ? 1 : -1);
+  if (bound.name === "SligBoundLeft" && width > 0) return false;
+  if (bound.name === "SligBoundRight" && width < 0) return false;
+  return true;
+}
+
+function flyDelay(st, rnd) {
+  st.timer = st.now + st.p.pauseMin;
+  if (st.p.pauseMin > st.p.pauseMax) st.timer += rnd() % (st.p.pauseMin - st.p.pauseMax);
+  st.sub = 5;
+}
+
+BRAINS.flyslig = (st, now, rnd) => {
+  if (st.line === null) return;
+  st.now = now;
+  const lines = st.w.lines,
+    links = st.w.links;
+  const ao = false;
+  let acc = 0;
+  if (st.sub === 0 || st.sub === 5) {
+    if (now >= st.timer) st.sub = 2;
+  }
+  if (st.sub === 2) {
+    const l = lines[st.line];
+    const len = lineLen(l);
+    const neighbour = st.forward
+      ? nextLine(lines, links, st.line, ao)
+      : prevLine(lines, links, st.line, ao);
+    const end = st.forward ? [l[2], l[3]] : [l[0], l[1]];
+    const blocked = flyBoundBlocks(st, end, st.forward);
+    if (neighbour !== null && !blocked) acc = st.forward ? 1 : -1;
+    else {
+      const rem = st.forward ? len - st.dist : st.dist;
+      if (rem < st.p.maxSpeed && st.speed === 0) {
+        st.forward = !st.forward;
+        flyDelay(st, rnd);
+      } else if ((st.speed * st.speed) / (2 * FLY_ACCEL) < rem) acc = st.forward ? 1 : -1;
+    }
+  }
+  // the speed answers the push, or decays toward rest
+  if (acc !== 0)
+    st.speed = Math.max(-st.p.maxSpeed, Math.min(st.p.maxSpeed, st.speed + acc * FLY_ACCEL));
+  else if (st.speed > 0) st.speed = Math.max(0, st.speed - FLY_ACCEL);
+  else if (st.speed < 0) st.speed = Math.min(0, st.speed + FLY_ACCEL);
+  if (st.speed !== 0) {
+    st.dist += st.speed;
+    let l = lines[st.line];
+    let len = lineLen(l);
+    while (st.dist > len) {
+      const n = nextLine(lines, links, st.line, ao);
+      if (n === null) {
+        st.dist = len;
+        break;
+      }
+      st.dist -= len;
+      st.line = n;
+      l = lines[n];
+      len = lineLen(l);
+    }
+    while (st.dist < 0) {
+      const p = prevLine(lines, links, st.line, ao);
+      if (p === null) {
+        st.dist = 0;
+        break;
+      }
+      st.line = p;
+      l = lines[p];
+      len = lineLen(l);
+      st.dist += len;
+    }
+    const t = len ? st.dist / len : 0;
+    st.x = l[0] + (l[2] - l[0]) * t;
+    st.y = l[1] + (l[3] - l[1]) * t;
+  }
+  // the heading is the push's, so a braking slig reads as going nowhere
+  const heading = acc !== 0 ? lines[st.line] : null;
+  st.xSpeed = heading ? Math.sign(heading[2] - heading[0]) * acc : 0;
+  st.ySpeed = heading ? Math.sign(heading[3] - heading[1]) * acc : 0;
+  // the bob: a table plays out once armed, then the lift decays a unit a tick
+  if (st.bobTable) {
+    const table = FLY_BOB[st.bobTable];
+    if (st.bobI < table.length) st.bob = table[st.bobI++];
+    else {
+      st.bob = 0;
+      st.bobTable = null;
+    }
+  } else if (st.bob > 0) st.bob = Math.max(0, st.bob - 1);
+  else if (st.bob < 0) st.bob = Math.min(0, st.bob + 1);
+  st.dx = st.x - st.x0;
+  st.dy = st.y - st.y0 + st.bob;
+};
+
+const flyFacing = (st) => (st.xSpeed > 0 && !st.flip) || (st.xSpeed < 0 && st.flip);
+const flyArm = (st, table) => {
+  st.bobTable = table;
+  st.bobI = 0;
+};
+// the motion a horizontal flight picks next
+function flyPick(st) {
+  if (st.ySpeed < 0) return F("HorizontalToUpMovement");
+  if (st.ySpeed > 0) return F("MoveHorizontalToDown");
+  if (st.xSpeed === 0) return F("MoveHorizontalEnd");
+  return flyFacing(st) ? F("MoveHorizontal") : F("TurnQuick");
+}
+
+Object.assign(MOTIONS, {
+  [F("Idle")](st) {
+    if (!st.bobTable) flyArm(st, "idle");
+    if (st.xSpeed !== 0) {
+      st.cur = flyFacing(st) ? F("IdleToHorizontal") : F("IdleTurnAround");
+      if (st.cur === F("IdleToHorizontal")) flyArm(st, "horizontal");
+    } else if (st.ySpeed > 0) st.cur = F("BeginDownMovement");
+  },
+  [F("IdleTurnAround")](st, last) {
+    if (last) {
+      st.flip = !st.flip;
+      st.cur = st.xSpeed === 0 ? (st.ySpeed > 0 ? F("BeginDownMovement") : F("Idle")) : flyPick(st);
+    }
+  },
+  [F("IdleToHorizontal")](st, last) {
+    if (last) st.cur = flyPick(st);
+  },
+  [F("TurnQuick")](st, last) {
+    if (last) {
+      st.flip = !st.flip;
+      st.cur = flyPick(st);
+    }
+  },
+  [F("MoveHorizontal")](st) {
+    const next = flyPick(st);
+    if (next !== F("MoveHorizontal")) {
+      st.cur = next;
+      if (next === F("TurnQuick")) flyArm(st, "turning");
+    }
+  },
+  [F("MoveHorizontalEnd")](st, last) {
+    if (last) st.cur = F("Idle");
+  },
+  [F("BeginDownMovement")](st, last) {
+    if (last) st.cur = F("MoveDown");
+  },
+  [F("MoveDown")](st) {
+    if (st.ySpeed > 0) return;
+    if (st.ySpeed < 0) st.cur = F("MoveDownTurnAround");
+    else st.cur = st.xSpeed !== 0 ? F("MoveDownToHorizontal") : F("EndDownMovement");
+  },
+  [F("EndDownMovement")](st, last) {
+    if (last) st.cur = F("Idle");
+  },
+  [F("MoveDownToHorizontal")](st, last) {
+    if (last) st.cur = flyPick(st);
+  },
+  [F("MoveDownTurnAround")](st, last) {
+    if (last) st.cur = F("MoveUp");
+  },
+  [F("MoveUp")](st) {
+    if (st.ySpeed < 0) return;
+    if (st.ySpeed > 0) st.cur = F("MoveUpTurnAround");
+    else st.cur = st.xSpeed !== 0 ? F("MoveUpToHorizontal") : F("EndUpMovement");
+  },
+  [F("EndUpMovement")](st, last) {
+    if (last) st.cur = F("Idle");
+  },
+  [F("MoveUpToHorizontal")](st, last) {
+    if (last) st.cur = flyPick(st);
+  },
+  [F("MoveUpTurnAround")](st, last) {
+    if (last) st.cur = F("MoveDown");
+  },
+  [F("MoveHorizontalToDown")](st, last) {
+    if (last) st.cur = F("MoveDown");
+  },
+  [F("HorizontalToUpMovement")](st, last) {
+    if (last) st.cur = F("MoveUp");
+  },
+});
