@@ -150,7 +150,8 @@ def reencode_pngs(pairs):
     return [src for (src, _), m in zip(pairs, moved) if m]
 
 def decompress_4or5(data):
-    """alive LZ variant: 0xxxxxxx = literals run, 1xxxxxyy yyyyyyyy = back-copy"""
+    """the LZ scheme of paulsapps/alive's CompressionType4Or5 (MIT, see LICENSE):
+    0xxxxxxx = literals run, 1xxxxxyy yyyyyyyy = back-copy"""
     dst_len = struct.unpack_from("<I", data, 0)[0]
     out = bytearray()
     pos = 4
