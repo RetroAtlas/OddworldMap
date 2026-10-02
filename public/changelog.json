@@ -2,6 +2,12 @@
  "entries": [
   {
    "date": "2026-10-02",
+   "tag": "new",
+   "title": "Chant orbs, sparks, Zs and hint flies",
+   "detail": "With the objects shown as themselves, the game's little effects come with them. Sit-chanting Mudokons glow with chant orbs; chiselling Mudokons strike sparks at every stroke, and Exoddus's drills throw them as they bite. Sleeping Slogs, Sligs, crawling Sligs and Fleeches let off rising Zs, and the Zzz spawners breathe them on their own beat. Oddysee's hint flies hover about their spots in twenty little loops. Each is drawn as the game draws it, the orbs and flies as sprites, the sparks and Zs as the engine's own lines, on the game's dice."
+  },
+  {
+   "date": "2026-10-02",
    "tag": "improved",
    "tiny": true,
    "title": "Labels walk with the creatures",

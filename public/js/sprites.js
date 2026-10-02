@@ -33,6 +33,7 @@ const mid = (t) => trunc((t.x1 + t.x2) / 2);
 const brain = (c, name, emo = false, p = null) => ({
   kind: "brain",
   brain: name,
+  game: c.game,
   seed: c.index & 255,
   emo,
   p,
@@ -923,7 +924,7 @@ both("Slig", (c) => {
   const yards = !ae && AO_STOCKYARDS.has(c.lvl.short);
   const anim = (asleep ? "Slig_Sleeping" : "Slig_Idle") + (yards ? "@StockYardsSlig" : "");
   const rgb = ae ? [102, 127, 118] : yards ? [127, 127, 127] : [105, 105, 105];
-  let cycle = null;
+  let cycle = asleep ? brain(c, "sligSleep") : null;
   if (f.start_state === 1) {
     // the zone is the bounds sharing its id within reach of its camera, each
     // side's edge; a side with none keeps the engine's unset value
@@ -966,9 +967,21 @@ rule("AE", "CrawlingSlig", (c) => {
     draw(c, awake ? "CrawlingSlig_Idle" : "CrawlingSlig_Snoozing", x, hit ?? t.y1, {
       layer: awake ? (c.half ? 8 : 27) : c.half ? 6 : 25,
       rgb: NE_TINT(c),
+      cycle: awake ? null : brain(c, "crawlSleep"),
     }),
   ];
 });
+// a spawner draws nothing itself: its brain breathes out the Zs
+rule("AE", "ZzzSpawner", (c) => [
+  draw(c, null, c.t.x1, c.t.y1, {
+    cycle: brain(c, "zzz", false, {
+      switchId: c.f.switch_id,
+      interval: c.f.zzz_interval,
+      layer: 39,
+      scale: c.half ? 0.5 : 1,
+    }),
+  }),
+]);
 rule("AE", "CrawlingSligButton", (c) => [
   draw(c, "CrawlingSligButton", mid(c.t), c.t.y2, { layer: c.half ? 6 : 25 }),
 ]);
@@ -1009,7 +1022,7 @@ both("Slog", (c) => {
       layer: ae ? 34 : c.half ? 15 : 34,
       flip: f.start_direction === 0,
       rgb,
-      cycle: asleep ? null : brain(c, "slog"),
+      cycle: brain(c, asleep ? "slogSleep" : "slog"),
     }),
   ];
 });
@@ -1086,8 +1099,9 @@ rule("AE", "Fleech", (c) => {
     anim = "Fleech_SleepingWithTongue";
     x = mid(t);
     y += t.y2 - t.y1;
-    cycle = { kind: "sway", cx: x, seed: c.index & 255 };
-  } else if (f.asleep !== 1) {
+    cycle = brain(c, "fleechHang");
+  } else if (f.asleep === 1) cycle = brain(c, "fleechSleep");
+  else {
     const p = {
       goesToSleep: f.goes_to_sleep === 1,
       increaser: f.attack_anger_increaser + 2,
@@ -1159,6 +1173,8 @@ rule("AO", "Bat", (c) => {
   ];
 });
 
+// the flies hover about the hint's point; the hint itself waits on Abe's chant
+rule("AO", "HintFly", (c) => [draw(c, null, c.t.x1, c.t.y1, { cycle: brain(c, "hintfly") })]);
 rule("AO", "Honey", (c) => [
   draw(c, "Honey", c.t.x1 + trunc((c.t.x2 - c.t.x1) / 2), c.t.y1 + 24 + 5, {
     scale: 1,
@@ -1176,7 +1192,7 @@ const AO_MUD_JOB = {
   1: "Mudokon_CrouchScrub",
   2: "Mudokon_CrouchChant",
 };
-const AO_MUD_BRAIN = { 0: "standscrub", 1: "crouchscrub" };
+const AO_MUD_BRAIN = { 0: "standscrub", 1: "crouchscrub", 2: "chant" };
 const aoMudTint = (c) => AO_YARDS_TINT(c, [25, 25, 25], [87, 103, 67]);
 function mudokonAO(c, anim, snap, flip, xNudge = 0, cycle = null) {
   const { t } = c;

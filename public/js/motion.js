@@ -4,7 +4,7 @@
 // No DOM at module top level, so it stays importable in bare Node.
 
 import { LOGIC_FPS } from "./config.js";
-import { BRAINS, MOTIONS, SPAWN_FRAME, STARTS } from "./brains.js";
+import { BRAINS, MOTIONS, SPAWN_FRAME, STARTS, stepEffects } from "./brains.js";
 
 // an animation holds each frame `fps` ticks: at construction frame 0 stands
 // with its counter at 1, so the first tick decodes frame 0 again and loads the
@@ -117,7 +117,7 @@ const brainStates = new WeakMap();
 export function brainAt(r, set, tick) {
   const cy = r.cycle;
   const want = Math.max(tick, 1);
-  const variant = r.anim.includes("@") ? r.anim.slice(r.anim.indexOf("@")) : "";
+  const variant = r.anim?.includes("@") ? r.anim.slice(r.anim.indexOf("@")) : "";
   const gen = cy.patrol ? patrolGen : sceneGen;
   const cached = brainStates.get(r);
   const current = cached && cached.gen === gen ? cached : null;
@@ -127,7 +127,7 @@ export function brainAt(r, set, tick) {
       gen,
       tick: 0,
       sub: 0,
-      cur: r.anim.slice(0, r.anim.length - variant.length),
+      cur: r.anim ? r.anim.slice(0, r.anim.length - variant.length) : null,
       next: null,
       timer: 0,
       turn: 0,
@@ -139,6 +139,12 @@ export function brainAt(r, set, tick) {
       emo: !!cy.emo,
       p: cy.p ?? null,
       w: cy.world ?? null,
+      game: cy.game ?? null,
+      r,
+      ax: r.x,
+      ay: r.y,
+      anims: set.anims,
+      fx: [],
       seed: cy.seed,
       seed2: cy.seed,
       dice: set.dice,
@@ -159,6 +165,7 @@ export function brainAt(r, set, tick) {
     BRAINS[cy.brain](st, now, rnd);
     MOTIONS[st.cur]?.(st, last, frame, rnd, now);
     if (st.cur !== was) st.set = T;
+    if (st.fx.length) stepEffects(st, now, rnd);
   }
   return {
     anim: (st.show ?? st.cur) + variant,
@@ -192,9 +199,6 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
       y += w.dy;
       flip = w.flip;
       moved = !!cy.patrol;
-    } else if (cy.kind === "sway") {
-      // a hanging fleech swings on its tongue, two angle steps a tick from a rolled start
-      x = cy.cx + 4 * cos256(set.dice[cy.seed & 255] + 2 * tick);
     } else if (cy.kind === "uxb") {
       const st = uxbState(cy.digits, tick);
       if (st.flash) anim = "Bomb_Flash";
@@ -236,4 +240,48 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
   if (!a) return null;
   const frame = r.frozen ? r.frame : frameAt(a, at, r.frame);
   return { name: anim, anim: a, frame, x, y, flip, moved };
+}
+
+// what a record's brain has given off at a tick: sprites with their frame,
+// the Z shapes, the spark lines, each with its place and layer
+export function resolveEffects(r, set, tick, patrolAt = tick) {
+  const cy = r.cycle;
+  if (!cy || cy.kind !== "brain" || (cy.patrol && patrolAt === null)) return [];
+  const at = cy.patrol ? patrolAt : tick;
+  const st = brainAt(r, set, at).state;
+  const out = [];
+  for (const p of st.fx) {
+    if (p.kind === "sprite" || p.kind === "fly") {
+      const a = set.anims[p.anim];
+      if (!a || (p.born !== undefined && p.born > at)) continue;
+      const frame = p.kind === "fly" ? 0 : frameAt(a, at - p.born + 1);
+      out.push({
+        kind: "sprite",
+        anim: a,
+        name: p.anim,
+        frame,
+        x: p.x,
+        y: p.y,
+        scale: p.scale,
+        layer: p.layer,
+        blend: p.blend,
+        rgb: p.rgb,
+      });
+    } else if (p.kind === "z") {
+      if (p.born > at) continue;
+      out.push({
+        kind: "z",
+        x: p.x,
+        y: p.y,
+        scale: p.scale,
+        rgb: p.rgb,
+        burst: p.state === "burst",
+        layer: p.layer,
+      });
+    } else if (p.kind === "spark") {
+      if (p.born >= at) continue; // drawn from the tick after it is struck
+      out.push({ kind: "lines", x: p.x, y: p.y, scale: p.scale, segs: p.segs, layer: p.layer });
+    }
+  }
+  return out;
 }

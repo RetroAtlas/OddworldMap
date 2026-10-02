@@ -40,7 +40,7 @@ Item-specific reasoning and cross-references stay inside this folder. An item ma
 
 - [**12.** Curated path names](item-012-curated-path-names.md) — the remaining curation: the still-unnamed AO paths, and one AE name that stands by elimination. _Content pass, anywhere._
 - [**29.** Decomp label-correctness sweep](item-029-decomp-label-sweep.md) — confirmed `scale` and `level` misdeclarations, batched into one upstream PR, then a sidecar regen. _Ongoing._
-- [**94.** Live map](item-094-live-map.md) — shipped as the game's own view: every object as its sprite and the creatures' brains and patrols on the engine's clock under the no-player reading. Open: a Fleech's hoist climb, the fall at a line's end, the Elum, the LCD text, the per-layer foreground masks and the drop shadows. _Small to medium; the mask split needs a disc._
+- [**94.** Live map](item-094-live-map.md) — shipped as the game's own view: every object as its sprite, the creatures' brains and patrols on the engine's clock under the no-player reading and the effects. Open: a Fleech's hoist climb, the fall at a line's end, the Elum, the LCD text, the per-layer foreground masks and the drop shadows. _Small to medium; the mask split needs a disc._
 
 ## Code and build
 

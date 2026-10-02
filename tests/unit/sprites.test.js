@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { spriteDraws, spriteTypes } from "../../public/js/sprites.js";
 import { armFieldData } from "../../public/js/fields.js";
-import { resolveRecord } from "../../public/js/motion.js";
+import { resolveEffects, resolveRecord } from "../../public/js/motion.js";
 
 const pub = (f) => JSON.parse(readFileSync(new URL(`../../public/${f}`, import.meta.url), "utf8"));
 const GAMES = ["AO", "AE"];
@@ -30,7 +30,7 @@ function allRecords(g) {
 
 // the sprite-drawing types the rules cover, pinned so a rule going missing
 // shows up as a count rather than as blank screens
-const SPRITE_TYPES = { AO: 43, AE: 45 };
+const SPRITE_TYPES = { AO: 44, AE: 46 };
 
 // a brain's cycle has no period, since it rolls dice; two hundred seconds of
 // it is long past the longest timer and holds every break and turn
@@ -39,6 +39,11 @@ function brainAnims(r, set) {
   const names = new Set();
   let moved = false;
   for (let t = 0; t <= BRAIN_WINDOW; t++) {
+    for (const e of resolveEffects(r, set, t)) {
+      assert.ok(Number.isFinite(e.x) && Number.isFinite(e.y), `${r.anim} effect at ${t}`);
+      if (e.kind === "sprite") names.add(e.name);
+      moved = true;
+    }
     const shown = resolveRecord(r, set, t);
     if (!shown) continue; // a brain may hide its record for a spell
 
@@ -47,7 +52,8 @@ function brainAnims(r, set) {
     names.add(shown.name);
     if (shown.x !== r.x || shown.y !== r.y) moved = true;
   }
-  assert.ok(names.size > 0, `${r.anim} is never shown`);
+  if (r.anim !== null) assert.ok(names.size > 0, `${r.anim} is never shown`);
+  else assert.ok(moved, `an effect-only record that gives off nothing`);
   names.moved = moved;
   return names;
 }
@@ -55,21 +61,34 @@ function brainAnims(r, set) {
 // the one-shot animations a record is meant to stand on, parked
 const ONE_SHOTS = new Set();
 
-test("every record names an animation the sidecar carries", () => {
+// animations the rules reach only from a state an edit puts an object in
+const EDIT_REACHED = new Set([
+  "CrawlingSlig_Idle", // a crawling slig whose state is set awake
+  "Scrab_JumpAndRunToFall", // a scrab whose scale leaves it no floor
+  "Slig_ReloadGun", // an Oddysee slig turned to face a wall, standing past its reload timer
+  "Slig_ReloadGun@StockYardsSlig",
+]);
+
+test("every record names an animation the sidecar carries, and every sidecar animation is drawn", () => {
   for (const g of GAMES) {
     const used = new Set();
     for (const { r } of allRecords(g)) {
-      assert.ok(
-        sheets[g].anims[r.anim],
-        `${g}: ${r.anim} is drawn but not in sprites_${g.toLowerCase()}.json`,
-      );
-      used.add(r.anim);
+      // an effect-only object draws no sprite of its own
+      if (r.anim !== null) {
+        assert.ok(
+          sheets[g].anims[r.anim],
+          `${g}: ${r.anim} is drawn but not in sprites_${g.toLowerCase()}.json`,
+        );
+        used.add(r.anim);
+      }
       // the cycles name animations of their own
       if (r.cycle?.kind === "uxb")
         for (const n of ["Bomb_Flash", "Bomb_RedGreenTick", "Bomb_RedGreenTick@GreenFlash"])
           used.add(n);
       if (r.cycle?.kind === "brain") for (const n of brainAnims(r, sheets[g])) used.add(n);
     }
+    for (const n of Object.keys(sheets[g].anims))
+      assert.ok(used.has(n) || EDIT_REACHED.has(n), `${g}: ${n} is shipped but nothing draws it`);
   }
 });
 
@@ -108,7 +127,9 @@ test("records are well-formed: finite anchors, the engine's scales and layers, a
         `${where} layer ${r.layer}`,
       );
       assert.equal(r.rgb.length, 3, `${where} rgb`);
-      assert.ok(r.frame < sheets[g].anims[r.anim].frames.length, `${where} start frame`);
+      if (r.anim === null)
+        assert.ok(r.cycle?.kind === "brain", `${where} draws nothing and does nothing`);
+      else assert.ok(r.frame < sheets[g].anims[r.anim].frames.length, `${where} start frame`);
       if (r.tile) assert.ok(r.tile.top <= r.tile.bottom && r.tile.step > 0, `${where} tile`);
     }
 });
@@ -152,7 +173,7 @@ test("nothing parks: every record whose animation does not loop is frozen on pur
   for (const g of GAMES)
     for (const { t, r } of allRecords(g)) {
       const a = sheets[g].anims[r.anim];
-      if (a.loop || a.frames.length <= 1 || r.frozen || r.cycle) continue;
+      if (!a || a.loop || a.frames.length <= 1 || r.frozen || r.cycle) continue;
       assert.ok(ONE_SHOTS.has(r.anim), `${g} ${t.name} parks on ${r.anim}`);
     }
 });

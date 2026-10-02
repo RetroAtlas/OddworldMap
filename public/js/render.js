@@ -37,6 +37,7 @@ import {
   motionRunning,
   patrolTick,
   resetScene,
+  resolveEffects,
   resolveRecord,
   sceneTick,
   setMotionRunning,
@@ -696,9 +697,21 @@ function paintSprites({ ctx, data, layout, path }, sprites, set, tick, patrolAt)
     order++;
     list.forEach((r, k) => recs.push([r, order, k, t]));
   }
+  // what the brains give off joins the records, on layers of its own
+  const fx = [];
+  for (const [r, order, k, t] of recs)
+    if (r.cycle?.kind === "brain")
+      resolveEffects(r, set, tick, patrolAt).forEach((e, i) =>
+        fx.push([e, order, k + 1 + i / 1000, t, true]),
+      );
+  recs.push(...fx);
   recs.sort((a, b) => a[0].layer - b[0].layer || b[1] - a[1] || a[2] - b[2]);
   const ae = data.id === "AE";
-  for (const [r, , , t] of recs) {
+  for (const [r, , , t, isFx] of recs) {
+    if (isFx) {
+      paintEffect(ctx, layout, set, r, ae);
+      continue;
+    }
     const shown = resolveRecord(r, set, tick, patrolAt);
     if (!shown) continue;
     const sc = processedSheet(set.sheets[shown.anim.frames[shown.frame][0]], r.semi, r.rgb);
@@ -758,6 +771,64 @@ function cameraAt(layout, x, y) {
   cam.dy = drawY(cam.wy, layout);
   return cam;
 }
+
+// an effect a brain gave off: a particle sprite drawn additively, a sleeper's
+// Z or a spark's lines drawn as the engine's gouraud lines, clipped to the
+// camera the point falls in
+function paintEffect(ctx, layout, set, e, ae) {
+  const cam = cameraAt(layout, Math.trunc(e.x), Math.trunc(e.y));
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(cam.dx, cam.dy, layout.visW, layout.visH);
+  ctx.clip();
+  ctx.globalCompositeOperation = "lighter";
+  if (e.kind === "sprite") {
+    const sc = processedSheet(set.sheets[e.anim.frames[e.frame][0]], true, e.rgb);
+    if (sc) {
+      const r = { scale: e.scale, flipY: false, swap: false };
+      drawFrame(ctx, cam, sc, e.anim.frames[e.frame], r, { flip: false }, ae, e.x, e.y);
+    }
+  } else {
+    const px = cam.dx + (e.x - cam.wx),
+      py = cam.dy + (e.y - cam.wy);
+    const segs =
+      e.kind === "lines"
+        ? e.segs
+        : e.burst
+          ? Z_BURST
+          : [
+              [-4, -4, 4, -4],
+              [4, -4, -4, 4],
+              [-4, 4, 4, 4],
+            ];
+    const rgb = e.kind === "lines" ? [31, 31, 127] : e.rgb;
+    ctx.lineWidth = 1;
+    for (const [x0, y0, x1, y1] of segs) {
+      const ax = px + x0 * e.scale,
+        ay = py + y0 * e.scale,
+        bx = px + x1 * e.scale,
+        by = py + y1 * e.scale;
+      const g = ctx.createLinearGradient(ax, ay, bx, by);
+      g.addColorStop(0, `rgb(${rgb.map((v) => Math.trunc(v / 2)).join(",")})`);
+      g.addColorStop(1, `rgb(${rgb.join(",")})`);
+      ctx.strokeStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(bx, by);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+// the six rays of a Z's burst, inner end to outer
+const Z_BURST = [
+  [-3, -4, -6, -7],
+  [3, -4, 6, -7],
+  [4, -1, 7, -1],
+  [-4, 1, -7, 1],
+  [-3, 4, -6, 7],
+  [3, 4, 6, 7],
+];
 
 // one frame at a world anchor, placed as Animation::vRender places it: the
 // frame's own offset scaled, a half-scale frame's y offset a unit less and
