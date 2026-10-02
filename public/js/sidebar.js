@@ -5,7 +5,7 @@ import { CATS, PENS, catOf } from "./config.js";
 import { $, cv, filterBox } from "./dom.js";
 import { state } from "./state.js";
 import { setPitch } from "./navigate.js";
-import { draw } from "./render.js";
+import { draw, syncMotion } from "./render.js";
 import { getViewSnapshot, viewChanged } from "./settings.js";
 
 // persisted view options (when "remember" is on) override the HTML/config defaults
@@ -49,6 +49,7 @@ function syncShow(key, cb) {
   state.show[key] = cb.checked;
   if (key === "pens") PENS.on = cb.checked; // the barrier gate lives in config
   if (key === "spaced") setPitch(cb.checked); // moves every draw coordinate; it redraws itself
+  if (key === "objects") syncMotion(); // the clock runs only while the sprites are shown
   if (key !== "ruler" && key !== "route") return;
   if (cb.checked) {
     setEditMode(false); // one tool owns the click at a time
@@ -78,6 +79,7 @@ for (const [key, id] of Object.entries({
   coll: "tColl",
   fg: "tFg",
   dim: "tDim",
+  objects: "tObjects",
   ruler: "tRuler",
   route: "tRoute",
 })) {
@@ -92,6 +94,7 @@ for (const [key, id] of Object.entries({
   showUI.set(key, cb);
 }
 PENS.on = state.show.pens; // ahead of the first draw
+syncMotion();
 // the g/c/f shortcuts flip the same checkboxes the pointer does
 export function toggleShow(key) {
   const cb = showUI.get(key);

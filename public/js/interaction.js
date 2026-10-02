@@ -394,6 +394,7 @@ const SHOW_KEY = {
   p: "pens",
   c: "coll",
   f: "fg",
+  o: "objects",
   m: "ruler",
   r: "route",
 };

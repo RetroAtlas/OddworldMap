@@ -40,6 +40,7 @@ Item-specific reasoning and cross-references stay inside this folder. An item ma
 
 - [**12.** Curated path names](item-012-curated-path-names.md) — the remaining curation: the still-unnamed AO paths, and one AE name that stands by elimination. _Content pass, anywhere._
 - [**29.** Decomp label-correctness sweep](item-029-decomp-label-sweep.md) — confirmed `scale` and `level` misdeclarations, batched into one upstream PR, then a sidecar regen. _Ongoing._
+- [**94.** Live map](item-094-live-map.md) — the Objects-as-themselves toggle shipped: every object as the game's own sprite at its spawn, the loops and the player-free cycles on the engine's clock. Open: the per-layer foreground masks Exoddus draws under sprites, and the drop shadows. _Medium; the mask split needs a disc._
 
 ## Code and build
 
@@ -53,8 +54,6 @@ Item-specific reasoning and cross-references stay inside this folder. An item ma
 ## Undecided
 
 Each needs a verdict before anyone builds it.
-
-- [**94.** Live map](item-094-live-map.md) — the game's own sprites and animations over the artwork. Sprites and frame timing are disc data and can be rebuilt byte for byte; motion is player-relative game code and cannot, so the claim has to be tiered. Needs the disc probe, then a verdict on scope, the foreground-mask rebuild, size and rights. _Large; the pixels need a disc._
 
 ## Deferred
 

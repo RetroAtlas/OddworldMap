@@ -288,7 +288,7 @@ fitBtn.onclick = () => setFit(!fitted);
 
 // keys that aim at the map: over a diagram each is a keypress with nothing to
 // show for it, so they stop here
-const MAP_KEYS = new Set([..."sgawpcfmrile", "Backspace"]);
+const MAP_KEYS = new Set([..."sgawpcfomrile", "Backspace"]);
 // the diagram has two sizes, so the map's zoom keys name them
 const ZOOM = { "+": false, "=": false, "-": true, _: true };
 // driven from here rather than left to the browser: the scroller only answers

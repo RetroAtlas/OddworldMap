@@ -31,6 +31,10 @@ import {
   screenRuns,
 } from "./model.js";
 import { onBackgroundPlane } from "./fields.js";
+import { loadSprites } from "./data.js";
+import { getSettings } from "./settings.js";
+import { motionRunning, motionTick, resolveRecord, setMotionRunning } from "./motion.js";
+import { spriteDraws } from "./sprites.js";
 
 // canvas colors shared with the stylesheet, read once from the tokens
 const COLOR = {
@@ -54,6 +58,25 @@ function img(src) {
 }
 
 const tintCache = {};
+// the foreground masks under Dim: the mask's pixels dimmed the way the screens
+// are, but opaque, so a sprite behind a piece of foreground stays hidden
+const dimCache = {};
+function dimmedImg(src) {
+  if (dimCache[src]) return dimCache[src];
+  const im = img(src);
+  if (!im.complete || !im.naturalWidth) return null;
+  const oc = document.createElement("canvas");
+  oc.width = im.naturalWidth;
+  oc.height = im.naturalHeight;
+  const octx = oc.getContext("2d");
+  octx.drawImage(im, 0, 0);
+  octx.globalCompositeOperation = "source-atop";
+  octx.globalAlpha = 0.65;
+  octx.fillStyle = COLOR.mapBg;
+  octx.fillRect(0, 0, oc.width, oc.height);
+  dimCache[src] = oc;
+  return oc;
+}
 function tintedImg(src) {
   if (tintCache[src]) return tintCache[src];
   const im = img(src);
@@ -70,14 +93,92 @@ function tintedImg(src) {
   return oc;
 }
 
+// game id -> sidecar, null while it is coming, false once a fetch failed. A
+// failure is asked again only from a deliberate point, never by the paint it
+// would drive
+const spriteSets = {};
+function spriteSet(gameId) {
+  if (gameId in spriteSets) return spriteSets[gameId] || null;
+  spriteSets[gameId] = null;
+  loadSprites(gameId).then((d) => {
+    spriteSets[gameId] = d || false;
+    scheduleDraw();
+  });
+  return null;
+}
+const spritesFailed = (gameId) => spriteSets[gameId] === false;
+function retrySprites(gameId) {
+  if (spritesFailed(gameId)) delete spriteSets[gameId];
+}
+const sheetSrcs = (gameId) => spriteSets[gameId]?.sheets || [];
+
+// a sheet as one object draws it: the texels the semi-transparency bit marks
+// blend only where the polygon is semi-transparent, and the engine modulates
+// every texel by the object's colour, 128 being neutral
+const sheetCache = new Map();
+function processedSheet(src, semi, rgb) {
+  const key = `${src}|${semi ? 1 : 0}|${rgb}`;
+  if (sheetCache.has(key)) return sheetCache.get(key);
+  const im = img(src);
+  if (!im.complete || !im.naturalWidth) return null;
+  const oc = document.createElement("canvas");
+  oc.width = im.naturalWidth;
+  oc.height = im.naturalHeight;
+  const octx = oc.getContext("2d");
+  if (!octx) return null;
+  octx.drawImage(im, 0, 0);
+  const id = octx.getImageData(0, 0, oc.width, oc.height);
+  const px = id.data;
+  const [r, g, b] = rgb;
+  for (let i = 0; i < px.length; i += 4) {
+    const a = px[i + 3];
+    if (!a) continue;
+    px[i] = Math.min(255, (px[i] * r) >> 7);
+    px[i + 1] = Math.min(255, (px[i + 1] * g) >> 7);
+    px[i + 2] = Math.min(255, (px[i + 2] * b) >> 7);
+    px[i + 3] = a === 254 ? (semi ? 128 : 255) : 255;
+  }
+  octx.putImageData(id, 0, 0);
+  sheetCache.set(key, oc);
+  return oc;
+}
+
+// the draw records of the standing path, keyed by object; an edit swaps the
+// path and the records with it
+let spriteCache = { path: null, set: null, byTlv: null };
+function spriteRecords(data, lvl, path, set) {
+  if (spriteCache.path !== path || spriteCache.set !== set) {
+    const byTlv = new Map();
+    const abe = set.abe?.[lvl.short]?.[path.id];
+    for (const t of path.tlvs) {
+      const recs = spriteDraws(data, lvl, path, t, set.anims, abe);
+      if (recs.length) byTlv.set(t, recs);
+    }
+    spriteCache = { path, set, byTlv };
+    // a processed sheet is a whole atlas: keep only the colourings this path draws
+    const wanted = new Set();
+    for (const recs of byTlv.values())
+      for (const r of recs) wanted.add(`${r.semi ? 1 : 0}|${r.rgb}`);
+    for (const key of [...sheetCache.keys()])
+      if (!wanted.has(key.slice(key.indexOf("|") + 1))) sheetCache.delete(key);
+  }
+  return spriteCache.byTlv;
+}
+
 // draw() skips an image that has not arrived and repaints when it does; a
 // one-shot paint has no second chance. The masks are waited for whatever the
 // toggle says: a percent of the bytes, and one keypress from being wanted
-export function preloadPath(path) {
+export async function preloadPath(path) {
   const srcs = [];
   for (const c of path.cams) {
     if (c.png) srcs.push(c.png);
     if (c.fg) srcs.push(c.fg);
+  }
+  if (state.show.objects) {
+    // the sheets are known only once the sidecar is in
+    spriteSet(state.data.id);
+    if (spriteSets[state.data.id] === null) await loadSprites(state.data.id);
+    srcs.push(...sheetSrcs(state.data.id));
   }
   return Promise.all(
     srcs.map((src) => {
@@ -87,6 +188,7 @@ export function preloadPath(path) {
       if (im.complete && !im.naturalWidth) {
         delete images[src];
         delete tintCache[src];
+        delete dimCache[src];
         im = img(src);
       }
       if (im.complete) return null;
@@ -111,6 +213,11 @@ export function artworkReady(path) {
     if (c.png && !decoded(c.png)) return false;
     if (state.show.fg && c.fg && !decoded(c.fg)) return false;
   }
+  if (state.show.objects) {
+    // a sidecar still coming keeps the paint waiting; a failed one has nothing more to wait for
+    if (!spriteSets[state.data.id] && !spritesFailed(state.data.id)) return false;
+    for (const s of sheetSrcs(state.data.id)) if (!decoded(s)) return false;
+  }
   return true;
 }
 
@@ -118,7 +225,7 @@ export function artworkReady(path) {
 // for the session; once past the cap, drop what the new path doesn't reference
 window.addEventListener("selection-changed", () => {
   if (Object.keys(images).length <= CACHE_MAX_IMAGES) return;
-  const keep = new Set();
+  const keep = new Set(sheetSrcs(state.data.id));
   for (const c of state.path.cams) {
     if (c.png) keep.add(c.png);
     if (c.fg) keep.add(c.fg);
@@ -128,6 +235,7 @@ window.addEventListener("selection-changed", () => {
     images[src].onload = null; // in-flight loads must not repaint after eviction
     delete images[src];
     delete tintCache[src];
+    delete dimCache[src];
   }
 });
 
@@ -223,6 +331,37 @@ window.addEventListener("data-changed", () => {
   setHighlight(null);
   setPatrol(null);
   scheduleDraw();
+});
+
+// a visitor who asks for reduced motion still sees the sprites, on their first frame
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+let objectsShown = false,
+  shownGame = null;
+export function syncMotion() {
+  const shown = !!state.show.objects;
+  const game = state.data?.id ?? null;
+  if ((shown && !objectsShown) || game !== shownGame) retrySprites(game);
+  objectsShown = shown;
+  shownGame = game;
+  const on =
+    shown && getSettings().animate && !state.graph && !document.hidden && !reducedMotion.matches;
+  setMotionRunning(on, scheduleDraw);
+  if (shown && state.data) spriteSet(state.data.id);
+}
+document.addEventListener("visibilitychange", syncMotion);
+window.addEventListener("settings-changed", (e) => {
+  if (e.detail?.key === "animate") {
+    syncMotion();
+    scheduleDraw();
+  }
+});
+window.addEventListener("graph-changed", syncMotion);
+reducedMotion.addEventListener("change", syncMotion);
+window.addEventListener("selection-changed", syncMotion); // a game switch wants its own sheets
+window.addEventListener("online", () => {
+  if (!state.data) return;
+  retrySprites(state.data.id);
+  syncMotion();
 });
 
 // coalesce bursty redraw sources (pointer moves, image loads) into one paint per frame
@@ -337,11 +476,20 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
     showLabels: show.labels && cam.z > 0.45,
   };
   paintScreens(f, show.dim);
+  // the sprites stand between the artwork and its foreground masks, which the
+  // game draws over them; an export draws the first frame, so two exports agree
+  const set = show.objects ? spriteSet(data.id) : null;
+  const sprites = set ? spriteRecords(data, lvl, path, set) : null;
+  if (sprites) {
+    const live = transients && motionRunning();
+    paintSprites(f, sprites, set, live ? motionTick() : 0);
+    paintForeground(f, show.dim);
+  }
   if (show.fg) paintMasks(f);
   if (show.grid) paintGrid(f);
   if (show.coll) paintLines(f);
   if (transients && patrol) paintPatrol(f, patrol);
-  paintMarkers(f);
+  paintMarkers(f, sprites);
   if (show.wires) paintWires(f, transients ? wireFocus : null);
   if (show.conn) paintConnections(f, transients ? connFocus : null);
   if (transients && highlight) paintHighlight(f, highlight);
@@ -440,11 +588,16 @@ function paintPatrol({ ctx }, zone) {
   ctx.fillRect(zone.x1, zone.y1 - 8, zone.x2 - zone.x1, zone.y2 - zone.y1 + 16);
 }
 
-function paintMarkers(f) {
+function paintMarkers(f, sprites) {
   const { ctx, cam, data, path, layout, showLabels } = f;
   ctx.font = `${11 / cam.z}px sans-serif`;
   for (const t of path.tlvs) {
     if (!markerShown(t)) continue;
+    if (sprites?.has(t)) {
+      // the sprite stands for the marker; the label and the edited mark stay
+      if (showLabels || Object.keys(editedFields(t)).length) paintMarkerNotes(f, t);
+      continue;
+    }
     const dir = PENS.on ? barrierDir(t) : null; // pens off: barriers are plain meta boxes
     if (dir !== null) {
       drawBarrier(f, t, dir);
@@ -513,6 +666,151 @@ function paintMarkers(f) {
     }
     ctx.globalAlpha = 1;
     ctx.setLineDash([]);
+  }
+}
+
+// the objects as the game draws them, back to front by layer and, within a
+// layer, the later-constructed under the earlier; each clipped to its own
+// camera's window, where the game clips too, so a frame reaching past it
+// never paints over a neighbouring screen
+function paintSprites({ ctx, data, layout }, sprites, set, tick) {
+  const recs = [];
+  let order = 0;
+  for (const [t, list] of sprites) {
+    if (!markerShown(t)) continue;
+    order++;
+    list.forEach((r, k) => recs.push([r, order, k, t]));
+  }
+  recs.sort((a, b) => a[0].layer - b[0].layer || b[1] - a[1] || a[2] - b[2]);
+  const ae = data.id === "AE";
+  for (const [r] of recs) {
+    const shown = resolveRecord(r, set, tick);
+    if (!shown) continue;
+    const sc = processedSheet(set.sheets[shown.anim.frames[shown.frame][0]], r.semi, r.rgb);
+    if (!sc) continue;
+    // a record is placed in the coordinates of the camera its anchor falls
+    // in and clipped to that window, as the game shows an object only on the
+    // screen it stands in; a rope tiled across screens is drawn once per screen
+    const ax = Math.trunc(shown.x);
+    const cams = [];
+    if (r.tile) {
+      const first = Math.floor(r.tile.top / layout.worldH),
+        last = Math.floor((r.tile.bottom - 1) / layout.worldH);
+      for (let row = first; row <= last; row++)
+        cams.push(cameraAt(layout, ax, row * layout.worldH + layout.winY));
+    } else cams.push(cameraAt(layout, ax, Math.trunc(shown.y)));
+    const frame = shown.anim.frames[shown.frame];
+    for (const cam of cams) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(cam.dx, cam.dy, layout.visW, layout.visH);
+      ctx.clip();
+      if (r.tile) {
+        // a rope or web: one frame tiled upward from its bottom, cut to its span
+        ctx.beginPath();
+        ctx.rect(cam.dx, cam.dy + (r.tile.top - cam.wy), layout.visW, r.tile.bottom - r.tile.top);
+        ctx.clip();
+      }
+      if (r.blend === 1) ctx.globalCompositeOperation = "lighter";
+      else if (r.blend === 3) {
+        ctx.globalCompositeOperation = "lighter";
+        ctx.globalAlpha = 0.25;
+      }
+      if (r.tile) {
+        let yy = shown.y;
+        const { top, bottom, step } = r.tile;
+        if (yy > bottom) yy = bottom + ((yy - bottom) % step);
+        for (; yy >= top - step; yy -= step)
+          drawFrame(ctx, cam, sc, frame, r, shown, ae, shown.x, yy);
+      } else drawFrame(ctx, cam, sc, frame, r, shown, ae, shown.x, shown.y);
+      ctx.restore();
+    }
+  }
+}
+
+// a camera's window and coordinates for a world point
+function cameraAt(layout, x, y) {
+  const cam = {
+    wx: Math.floor(x / layout.worldW) * layout.worldW + layout.winX,
+    wy: Math.floor(y / layout.worldH) * layout.worldH + layout.winY,
+  };
+  cam.dx = drawX(cam.wx, layout);
+  cam.dy = drawY(cam.wy, layout);
+  return cam;
+}
+
+// one frame at a world anchor, placed as Animation::vRender places it: the
+// frame's own offset scaled, a half-scale frame's y offset a unit less and
+// Exoddus's a pixel larger, every rounding a truncation of v + 0.499
+function drawFrame(ctx, cam, sheet, frame, r, shown, ae, wx, wy) {
+  const [, sx, sy, w, h, xoff, yoff] = frame;
+  const t = (v) => Math.trunc(v + 0.499);
+  const s = r.scale;
+  let fw = w,
+    fh = h,
+    ox = xoff,
+    oy = yoff;
+  if (s !== 1) {
+    fw *= s;
+    fh *= s;
+    ox *= s;
+    oy = oy * s - 1;
+    if (ae && s === 0.5) {
+      fw += 1;
+      fh += 1;
+    }
+  }
+  const xpos = cam.dx + (Math.trunc(wx) - cam.wx),
+    ypos = cam.dy + (Math.trunc(wy) - cam.wy);
+  const dw = Math.floor(fw - 0.501) + 1,
+    dh = Math.floor(fh - 0.501) + 1;
+  const x0 = shown.flip ? xpos - t(ox) - t(fw) : xpos + t(ox);
+  const y0 = r.flipY ? ypos - t(oy) - t(fh) : ypos + t(oy);
+  ctx.save();
+  ctx.translate(x0, y0);
+  if (shown.flip) {
+    ctx.translate(dw, 0);
+    ctx.scale(-1, 1);
+  }
+  if (r.flipY) {
+    ctx.translate(0, dh);
+    ctx.scale(1, -1);
+  }
+  if (r.swap) {
+    // the texture's axes swapped: the frame stands on its side
+    ctx.transform(0, 1, 1, 0, 0, 0);
+    ctx.drawImage(sheet, sx, sy, w, h, 0, 0, dh, dw);
+  } else ctx.drawImage(sheet, sx, sy, w, h, 0, 0, dw, dh);
+  ctx.restore();
+}
+
+// the foreground masks as the game draws them, over the sprites and untinted
+function paintForeground({ ctx, path, layout }, dim) {
+  for (const c of path.cams) {
+    if (!c.fg) continue;
+    const im = dim ? dimmedImg(c.fg) : img(c.fg);
+    if (!im || (im instanceof Image && !(im.complete && im.naturalWidth))) continue;
+    const cx = (c.cell % path.w) * layout.cellW,
+      cy = Math.floor(c.cell / path.w) * layout.cellH;
+    ctx.drawImage(im, cx, cy, layout.visW, layout.visH);
+  }
+}
+
+// the label and the edited mark of an object its sprite stands for
+function paintMarkerNotes({ ctx, cam, layout, showLabels }, t) {
+  const box = drawBox(t, layout);
+  const w = Math.max(box.w, 10),
+    h = Math.max(box.h, 10);
+  if (Object.keys(editedFields(t)).length) {
+    const pad = 3 / cam.z;
+    ctx.strokeStyle = `rgb(${COLOR.editRgb})`;
+    ctx.lineWidth = 1.5 / cam.z;
+    ctx.setLineDash([]);
+    ctx.strokeRect(box.x - pad, box.y - pad, w + 2 * pad, h + 2 * pad);
+  }
+  if (showLabels) {
+    ctx.fillStyle = catOf(t).color;
+    ctx.fillText(t.name, box.x, box.y - 3 / cam.z);
   }
 }
 

@@ -2,8 +2,8 @@
 // setting goes on, and the Settings panel that stores a whole game's artwork in
 // one go, so a place you have never opened still opens with no connection.
 
-import { CAM_FILE_BYTES } from "./config.js";
-import { GAME_FILES, GAME_IDS } from "./data.js";
+import { CAM_FILE_BYTES, SHEET_FILE_BYTES } from "./config.js";
+import { GAME_FILES, GAME_IDS, loadSprites } from "./data.js";
 import { hasStoredEdits } from "./edits.js";
 import { $ } from "./dom.js";
 import { camFiles } from "./model.js";
@@ -22,7 +22,8 @@ const CONTROL_MS = 10000; // how long a download waits for the worker to take th
 const PROGRESS_MS = 120; // redraw pace while files land
 
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
-const estimateMB = (files) => Math.round((files * CAM_FILE_BYTES) / 1e6);
+const bytesOf = (url) => (/\/sprites\//.test(url) ? SHEET_FILE_BYTES : CAM_FILE_BYTES);
+const estimateMB = (urls) => Math.round(urls.reduce((n, u) => n + bytesOf(u), 0) / 1e6);
 
 // the worker only answers fetches on a page it controls, so nothing is worth
 // downloading until it has one. A first registration's claim() can land after
@@ -55,6 +56,7 @@ async function warmShell() {
   const named = [
     "index.html",
     ...Object.values(GAME_FILES),
+    ...GAME_IDS.map((id) => `sprites_${id.toLowerCase()}.json`),
     ...GAME_IDS.filter(hasStoredEdits).map((id) => `relive_export_${id.toLowerCase()}.json`),
   ];
   const urls = new Set(named.map((f) => new URL(f, location.href).href));
@@ -91,7 +93,14 @@ let active = null;
 const complete = (row) => row.stored >= row.urls.length;
 const idle = (row) => !row.running && !row.queued;
 const pending = (row) => idle(row) && !complete(row);
-const totalFiles = () => [...rows.values()].reduce((n, row) => n + row.urls.length, 0);
+const allUrls = () => [...rows.values()].flatMap((row) => row.urls);
+
+function addSheets(row, sprites) {
+  for (const f of sprites.sheets) {
+    const url = new URL(f, location.href).href;
+    if (!row.urls.includes(url)) row.urls.push(url);
+  }
+}
 
 function buildRows() {
   const host = $("oflRows");
@@ -122,6 +131,7 @@ function buildRows() {
     el.append(name, btn, stat, bar);
     host.append(el);
     const row = {
+      id: G.id,
       name: name.textContent,
       urls: camFiles(G).map((f) => new URL(f, location.href).href),
       stat,
@@ -130,6 +140,7 @@ function buildRows() {
       fill,
       stored: 0,
       done: 0,
+      asked: false,
       running: false,
       queued: false,
       error: "",
@@ -138,7 +149,24 @@ function buildRows() {
     btn.onclick = () => (idle(row) ? start(row) : stop(row));
     rows.set(G.id, row);
   }
+  askSheets();
 }
+
+// the sprite sheets are artwork too, listed once a game is on screen: that
+// game asks at the painter's priority, the others behind its cams
+function askSheets() {
+  if (!state.data) return;
+  for (const row of rows.values()) {
+    if (row.asked) continue;
+    row.asked = true;
+    loadSprites(row.id, row.id !== state.data.id).then((d) => {
+      if (!d) return;
+      addSheets(row, d);
+      refresh();
+    });
+  }
+}
+window.addEventListener("selection-changed", askSheets);
 
 function render() {
   for (const row of rows.values()) {
@@ -155,11 +183,11 @@ function render() {
     else if (row.error) row.stat.textContent = row.error;
     else if (complete(row)) row.stat.textContent = "Stored on this device";
     else if (row.stored)
-      row.stat.textContent = `${pct(row.stored)}% stored, about ${estimateMB(files - row.stored)} MB left`;
-    else row.stat.textContent = `about ${estimateMB(files)} MB`;
+      row.stat.textContent = `${pct(row.stored)}% stored, about ${estimateMB(row.urls.slice(row.stored))} MB left`;
+    else row.stat.textContent = `about ${estimateMB(row.urls)} MB`;
   }
   const both = $("oflBoth");
-  both.textContent = `Download both games (about ${estimateMB(totalFiles())} MB)`;
+  both.textContent = `Download both games (about ${estimateMB(allUrls())} MB)`;
   both.hidden = rows.size < 2 || ![...rows.values()].some(pending);
 }
 
@@ -243,6 +271,13 @@ async function download(row) {
   // artwork asked for this deliberately should outlive the browser's own
   // housekeeping, which is free to evict a merely-cached origin
   navigator.storage?.persist?.().catch(() => {});
+  // the sheets are known only once the sidecar is in, so the list is settled here
+  const sprites = await loadSprites(row.id);
+  if (!sprites) {
+    row.error = "The sprite sheets could not be listed: reload the page and try again";
+    return true;
+  }
+  addSheets(row, sprites);
   const have = await storedUrls();
   const todo = row.urls.filter((url) => !have.has(url));
   row.done = row.urls.length - todo.length;

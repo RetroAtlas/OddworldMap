@@ -121,6 +121,13 @@
         >
         <label
           class="checkrow"
+          data-tip="Draws the objects as the game draws them: the sprite each stands in when its screen loads, in place of its marker.&#10;They animate at the engine's own pace while the Animate setting is on; what the game moves only for Abe, a Slig's patrol say, stands on its first frame."
+          ><input type="checkbox" id="tObjects" autocomplete="off" /> Objects as themselves<kbd
+            >o</kbd
+          ></label
+        >
+        <label
+          class="checkrow"
           data-tip="Names each object beside its marker.&#10;From about half zoom in."
           ><input type="checkbox" id="tLabels" autocomplete="off" checked /> Object labels</label
         >
@@ -426,6 +433,10 @@
             >camera grid + names
           </div>
           <div class="sc-row">
+            <span class="sc-keys"><kbd>o</kbd></span
+            >objects as themselves: the sprites in place of the markers
+          </div>
+          <div class="sc-row">
             <span class="sc-keys"><kbd>a</kbd></span
             >connection arrows
           </div>
@@ -511,6 +522,17 @@
               </div>
               <div id="oflRows"></div>
               <button type="button" class="linkbtn" id="oflBoth" hidden></button>
+            </div>
+          </section>
+          <section class="st-sec">
+            <h3>Objects as themselves</h3>
+            <label class="checkrow"
+              ><input type="checkbox" id="sAnimate" autocomplete="off" checked /> Animate the
+              objects</label
+            >
+            <div class="st-desc">
+              Runs the engine's clock under the sprites: mines flash, working Mudokons scrub. Off,
+              every sprite stands on its first frame.
             </div>
           </section>
           <section class="st-sec">
@@ -600,9 +622,10 @@
             collection of interactive maps of classic games.
           </p>
           <p class="ab-meta">
-            Every screen, object and collision line is read from the game discs; an object you edit
-            in the browser is a layer over that, marked wherever it shows and never carried by a
-            link. Formats reverse-engineered by the
+            Every screen, object, sprite and collision line is read from the game discs, and the
+            sprites stand and move by the game's own object rules, ported from the decompilation
+            with no player in the world; an object you edit in the browser is a layer over that,
+            marked wherever it shows and never carried by a link. Formats reverse-engineered by the
             <a href="https://github.com/AliveTeam/alive_reversing" target="_blank" rel="noopener"
               >AliveTeam / alive_reversing</a
             >

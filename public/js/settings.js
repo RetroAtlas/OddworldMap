@@ -26,11 +26,23 @@ export const SETTINGS_DEFAULTS = {
   cacheMap: false,
   showRawValues: false,
   editObjects: false,
+  animate: true,
 };
 // fieldPrefs (not a boolean; added by sanitizeSettings) — which object fields
 // to show: mode "default" (the notable ones) or "more" (per-game, per-type
 // picks in byType, falling back to the defaults).
-export const SHOW_KEYS = ["spaced", "grid", "coll", "fg", "conn", "wires", "pens", "labels", "dim"];
+export const SHOW_KEYS = [
+  "spaced",
+  "grid",
+  "coll",
+  "fg",
+  "conn",
+  "wires",
+  "pens",
+  "labels",
+  "dim",
+  "objects",
+];
 
 // localStorage may be unavailable (private mode, blocked); never let that break the viewer
 export const store = {
@@ -252,6 +264,9 @@ export function initSettings() {
   };
 
   document.body.classList.toggle("fullnames", s.fullNames);
+  bind("sAnimate", "animate", () =>
+    window.dispatchEvent(new CustomEvent("settings-changed", { detail: { key: "animate" } })),
+  );
   bind("sFullNames", "fullNames", (on) => {
     document.body.classList.toggle("fullnames", on);
     window.dispatchEvent(new CustomEvent("settings-changed", { detail: { key: "fullNames" } }));

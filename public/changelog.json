@@ -1,6 +1,13 @@
 {
  "entries": [
   {
+   "date": "2026-10-02",
+   "tag": "new",
+   "flagship": true,
+   "title": "Objects as themselves: every sprite as the game draws it",
+   "detail": "A new Display toggle, \"Objects as themselves\" (or press o), swaps every object that has a sprite for the sprite it stands in the moment its screen loads. The sprites are read off the discs like the camera art, and placed by the game's own rules: snapped to the grid, dropped onto the floor, scaled, facing its way and tinted for its level. Then it animates at the engine's own pace, for as long as a new setting, \"Animate the objects\", is left on; off, every sprite stands on its first frame. Mines flash, a UXB blinks the pattern its fields spell, and working Mudokons scrub and chisel, break off and start again as the game's own dice fall, turning around now and then. Sleeping Sligs and Slogs breathe, motion-detector lasers sweep their rooms, portal doves circle and the chime lock's ball bobs. Zones, bounds and the other invisible markers keep their rectangles, hovering and clicking work as before, and an export draws the first frame."
+  },
+  {
    "date": "2026-09-23",
    "tag": "improved",
    "tiny": true,

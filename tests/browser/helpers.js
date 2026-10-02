@@ -13,6 +13,7 @@ export const QUIET_SHOW = {
   pens: false,
   labels: false,
   dim: false,
+  objects: false,
 };
 export const NO_CATS = {
   board: false,

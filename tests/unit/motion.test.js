@@ -1,0 +1,451 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import {
+  advance,
+  frameAt,
+  motionTick,
+  resolveRecord,
+  setMotionRunning,
+} from "../../public/js/motion.js";
+import { raycastDown, snapX } from "../../public/js/sprites.js";
+
+const anim = (n, fps, loop, loopStart = 0) => ({
+  fps,
+  loop,
+  loop_start: loopStart,
+  frames: Array.from({ length: n }, (_, i) => [0, i, 0, 1, 1, 0, 0]),
+});
+
+test("frameAt: frame 0 stands at construction and the first tick decodes it again", () => {
+  const a = anim(4, 2, true);
+  assert.equal(frameAt(a, 0), 0);
+  assert.equal(frameAt(a, 1), 0);
+  assert.equal(frameAt(a, 2), 0);
+  assert.equal(frameAt(a, 3), 1);
+});
+
+test("frameAt: every frame is held fps ticks", () => {
+  const a = anim(3, 3, true);
+  // frame k shows from tick 1 + 3k
+  assert.deepEqual(
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((t) => frameAt(a, t)),
+    [0, 0, 0, 1, 1, 1, 2, 2, 2, 0],
+  );
+});
+
+test("frameAt: a looping animation returns to its loop start, a parking one holds its last frame", () => {
+  const loop = anim(5, 1, true, 2);
+  assert.deepEqual(
+    [1, 2, 3, 4, 5, 6, 7, 8, 9].map((t) => frameAt(loop, t)),
+    [0, 1, 2, 3, 4, 2, 3, 4, 2],
+  );
+  const park = anim(3, 1, false);
+  assert.deepEqual(
+    [1, 2, 3, 4, 50].map((t) => frameAt(park, t)),
+    [0, 1, 2, 2, 2],
+  );
+});
+
+test("frameAt: a start frame shifts the sequence and a single frame never moves", () => {
+  assert.equal(frameAt(anim(4, 1, true), 1, 2), 2);
+  assert.equal(frameAt(anim(4, 1, true), 3, 2), 0);
+  assert.equal(frameAt(anim(1, 1, true), 999), 0);
+});
+
+test("raycastDown: the nearest line of the asked types under the ray, interpolated along a slope", () => {
+  const lines = [
+    [0, 100, 100, 100, 0], // floor at 100
+    [0, 80, 100, 80, 4], // background floor above it
+    [0, 90, 100, 110, 1], // a sloping wall: y = 90 + x/5
+    [200, 50, 300, 50, 0], // out of reach on x
+  ];
+  assert.equal(raycastDown(lines, 50, 70, 120, [0]), 100);
+  assert.equal(raycastDown(lines, 50, 70, 120, [4]), 80);
+  assert.equal(raycastDown(lines, 50, 70, 120, [0, 1]), 100); // the wall meets x=50 at y=100 too
+  assert.equal(raycastDown(lines, 25, 70, 120, [1]), 95);
+  assert.equal(raycastDown(lines, 50, 70, 90, [0]), null); // the ray stops short
+  assert.equal(raycastDown(lines, 150, 0, 500, [0]), null);
+});
+
+test("snapX: 25-unit squares and 13 at half, each game from its own origin", () => {
+  // Oddysee counts from 15 (full) and 11 (half); a remainder of 13 or 7 rounds up
+  assert.equal(snapX("AO", 15, false), 15);
+  assert.equal(snapX("AO", 27, false), 15);
+  assert.equal(snapX("AO", 28, false), 40);
+  assert.equal(snapX("AO", 11, true), 11);
+  assert.equal(snapX("AO", 18, true), 24);
+  // Exoddus counts from 12 at full scale and, at half, from 6 inside its 375-unit cell
+  assert.equal(snapX("AE", 12, false), 12);
+  assert.equal(snapX("AE", 25, false), 37);
+  assert.equal(snapX("AE", 24, false), 12);
+  assert.equal(snapX("AE", 381, true), 381);
+  assert.equal(snapX("AE", 388, true), 394);
+});
+
+// the working Mudokons' animations at the sidecar's lengths and hold counts
+test("clock: a frame advances the ticks its lateness holds and keeps the remainder", () => {
+  const queue = new Map();
+  let id = 0;
+  globalThis.requestAnimationFrame = (cb) => (queue.set(++id, cb), id);
+  globalThis.cancelAnimationFrame = (h) => queue.delete(h);
+  try {
+    setMotionRunning(true, () => {});
+    const t0 = motionTick();
+    const now = performance.now();
+    assert.equal(advance(now + 1000 / 30), 1, "one tick per 33.3 ms frame");
+    assert.equal(advance(now + 1000 / 30 + 100), 3, "a 100 ms frame holds three");
+    assert.equal(motionTick(), t0 + 4);
+    assert.equal(
+      advance(now + 1000 / 30 + 100 + 1),
+      0,
+      "the remainder carries, a millisecond is not a tick",
+    );
+    assert.equal(advance(now + 1000 / 30 + 100 + 1000 / 30), 1, "and completes the next");
+    setMotionRunning(false);
+  } finally {
+    delete globalThis.requestAnimationFrame;
+    delete globalThis.cancelAnimationFrame;
+  }
+});
+
+const CYCLE_ANIMS = {
+  Bomb_Flash: anim(2, 1, true),
+  Bomb_RedGreenTick: anim(10, 1, true),
+  "Bomb_RedGreenTick@GreenFlash": anim(10, 1, true),
+  MotionDetector_Laser: anim(1, 1, true),
+  ElectricWall_Idle: anim(2, 4, true),
+  ChimeLock_Ball: anim(1, 1, true),
+  Dove_Flying: anim(6, 2, true),
+};
+const cycleSet = { anims: CYCLE_ANIMS, dice: new Array(256).fill(0) };
+const cycled = (animName, cycle) => ({
+  anim: animName,
+  x: 100,
+  y: 200,
+  scale: 1,
+  layer: 20,
+  flip: false,
+  frame: 0,
+  cycle,
+});
+
+test("cycle: a UXB flashes two ticks in twelve and spells its pattern, so many red cycles then a green", () => {
+  const r = cycled("Bomb_RedGreenTick", { kind: "uxb", digits: [2] });
+  const at = (t) => resolveRecord(r, cycleSet, t);
+  assert.equal(at(0).name, "Bomb_Flash");
+  assert.equal(at(1).name, "Bomb_Flash");
+  assert.equal(at(2).name, "Bomb_RedGreenTick");
+  assert.equal(at(2).frame, 0, "the tick light counts from the flash's end");
+  assert.equal(at(4).frame, 1);
+  assert.equal(at(11).frame, 8);
+  assert.equal(at(12).name, "Bomb_Flash");
+  assert.equal(
+    at(14).name,
+    "Bomb_RedGreenTick@GreenFlash",
+    "the second cycle of a 2 is the green one",
+  );
+  assert.equal(
+    at(26).name,
+    "Bomb_RedGreenTick",
+    "the cycle after the green loads the digit red again",
+  );
+  assert.equal(at(38).name, "Bomb_RedGreenTick");
+  assert.equal(
+    at(50).name,
+    "Bomb_RedGreenTick@GreenFlash",
+    "and the pattern repeats three cycles on",
+  );
+  const two = cycled("Bomb_RedGreenTick", { kind: "uxb", digits: [1, 3] });
+  const names = [2, 14, 26, 38, 50, 62, 74, 86].map((t) =>
+    resolveRecord(two, cycleSet, t).name.endsWith("@GreenFlash") ? "G" : "r",
+  );
+  assert.deepEqual(names, ["G", "r", "r", "r", "G", "r", "G", "r"], "1 then 3: the digits in turn");
+});
+
+test("cycle: a motion detector's laser sweeps to the far edge, waits fifteen ticks, and comes back", () => {
+  const r = cycled("MotionDetector_Laser", {
+    kind: "laser",
+    x1: 100,
+    x2: 150,
+    speed: 10,
+    left: false,
+  });
+  const x = (t) => resolveRecord(r, cycleSet, t).x;
+  assert.equal(x(0), 100);
+  assert.equal(x(3), 130);
+  assert.equal(x(5), 150, "five ticks out at ten a tick");
+  assert.equal(x(19), 150, "fifteen ticks at the far edge");
+  assert.equal(x(20), 150);
+  assert.equal(x(22), 130, "back at the same pace");
+  assert.equal(x(25), 100);
+  assert.equal(x(39), 100, "fifteen ticks at the near edge");
+  assert.equal(x(40), 100, "and the next sweep begins");
+  assert.equal(x(41), 110);
+  const left = cycled("MotionDetector_Laser", {
+    kind: "laser",
+    x1: 100,
+    x2: 150,
+    speed: 10,
+    left: true,
+  });
+  assert.equal(resolveRecord(left, cycleSet, 0).x, 150, "a leftward one starts at the right edge");
+  assert.equal(resolveRecord(left, cycleSet, 3).x, 120);
+});
+
+test("cycle: an electric wall flips every eight ticks", () => {
+  const r = cycled("ElectricWall_Idle", { kind: "flip8" });
+  const flip = (t) => resolveRecord(r, cycleSet, t).flip;
+  assert.deepEqual([0, 7, 8, 15, 16, 23, 24].map(flip), [
+    false,
+    false,
+    true,
+    true,
+    false,
+    false,
+    true,
+  ]);
+});
+
+test("cycle: the chime lock's ball bobs on two cosines, five wide at four steps a tick and three high at three", () => {
+  const r = cycled("ChimeLock_Ball", { kind: "chime", x: 100, y: 200 });
+  const at = (t) => resolveRecord(r, cycleSet, t);
+  assert.equal(at(0).x, 105);
+  assert.equal(at(0).y, 203);
+  assert.ok(Math.abs(at(16).x - 100) < 1e-9, "a quarter turn of the 256-step wheel at tick 16");
+  assert.ok(Math.abs(at(32).x - 95) < 1e-9, "and the far side at 32");
+  assert.ok(Math.abs(at(64).x - 105) < 1e-9, "x round in 64 ticks");
+  assert.ok(Math.abs(at(43).y - 197) < 0.02, "y round in about 85, the far side near 43");
+});
+
+test("cycle: the portal doves orbit at four angle steps a tick, an Abe portal's ring breathing its width", () => {
+  const r = cycled("Dove_Flying", { kind: "orbit", cx: 100, cy: 200, rx: 30, ry: 35, phase: 0 });
+  const at = (t) => resolveRecord(r, cycleSet, t);
+  const near = (a, b) => Math.abs(a - b) < 1e-9;
+  assert.ok(near(at(0).x, 100) && near(at(0).y, 235), "angle 0 sits below the centre");
+  assert.ok(near(at(16).x, 130) && near(at(16).y, 200), "a quarter round after 16 ticks");
+  assert.ok(near(at(32).y, 165), "half round at 32");
+  assert.ok(near(at(64).x, 100) && near(at(64).y, 235), "sixty-four ticks a revolution");
+  const phased = cycled("Dove_Flying", {
+    kind: "orbit",
+    cx: 100,
+    cy: 200,
+    rx: 30,
+    ry: 35,
+    phase: 64,
+  });
+  assert.ok(near(resolveRecord(phased, cycleSet, 0).x, 130), "a dove's phase is its start angle");
+  // the ring's width walks between 30 and 0 a unit a tick, turning at each end; a
+  // dove starting at angle 64 is back at the ring's full width every 32 ticks, so
+  // the width reads off its x there
+  const ring = (width, dir) =>
+    cycled("Dove_Flying", {
+      kind: "orbit",
+      cx: 100,
+      cy: 200,
+      rx: 30,
+      ry: 35,
+      phase: 64,
+      abe: { width, dir },
+    });
+  const widthAt = (rec, t) =>
+    Math.round(Math.abs(resolveRecord(rec, cycleSet, t).x - 100) * 1e6) / 1e6;
+  const sides = [0, 32, 64, 96];
+  assert.deepEqual(
+    sides.map((t) => widthAt(ring(0, 1), t)),
+    [0, 28, 4, 24],
+    "opening from closed",
+  );
+  assert.deepEqual(
+    sides.map((t) => widthAt(ring(30, -1), t)),
+    [30, 2, 26, 6],
+    "closing from open",
+  );
+  assert.deepEqual(
+    sides.map((t) => widthAt(ring(12, -1), t)),
+    [12, 20, 8, 24],
+    "closing from 12 wide",
+  );
+});
+
+const WORK_ANIMS = {
+  Mudokon_StandScrubLoop: anim(10, 1, true),
+  Mudokon_StandScrubLoopToPause: anim(3, 2, true),
+  Mudokon_StandScrubPause: anim(6, 4, true),
+  Mudokon_StandScrubPauseToLoop: anim(1, 1, false),
+  Mudokon_CrouchScrub: anim(10, 1, false),
+  Mudokon_CrouchIdle: anim(5, 4, true),
+  Mudokon_CrouchTurn: anim(8, 1, false),
+  Mudokon_CrouchToStand: anim(6, 1, false),
+  Mudokon_Chisel: anim(6, 2, true),
+  Mudokon_StartChisel: anim(1, 1, true),
+  Mudokon_StopChisel: anim(1, 1, true),
+  Mudokon_Idle: anim(6, 4, true),
+};
+// dice that always roll zero: the shortest timer of every range, and a sad
+// worker stands up at its first break
+const ZERO_DICE = { anims: WORK_ANIMS, dice: new Array(256).fill(0) };
+const worker = (brain, emo = false) => ({
+  anim: brain === "chisel" ? "Mudokon_Chisel" : "Mudokon_CrouchScrub",
+  x: 0,
+  y: 0,
+  flip: false,
+  frame: 0,
+  cycle: { kind: "brain", brain, seed: 0, emo },
+});
+const shownAt = (r, set, tick) => {
+  const s = resolveRecord(r, set, tick);
+  return `${s.name.replace("Mudokon_", "")}:${s.frame}${s.flip ? "<" : ""}`;
+};
+// what one record shows over a run of ticks, as the segments it passes through
+function segments(r, set, from, to) {
+  const out = [];
+  for (let t = from; t <= to; t++) {
+    const name = resolveRecord(r, set, t).name.replace("Mudokon_", "");
+    if (out.length && out[out.length - 1].name === name) out[out.length - 1].to = t;
+    else out.push({ name, from: t, to: t });
+  }
+  return out.map((s) => `${s.name} ${s.from}-${s.to}`);
+}
+
+test("work: an Exoddus scrubber scrubs while its timer runs, idles a tick between scrubs, then breaks", () => {
+  const r = worker("scrub");
+  // the first timer is 15 ticks: one scrub, one tick of idle, a second scrub,
+  // then the 15-tick break; the next bursts run 35 ticks, four scrubs each
+  assert.deepEqual(segments(r, ZERO_DICE, 1, 99), [
+    "CrouchScrub 1-10",
+    "CrouchIdle 11-11",
+    "CrouchScrub 12-21",
+    "CrouchIdle 22-38",
+    "CrouchScrub 39-48",
+    "CrouchIdle 49-49",
+    "CrouchScrub 50-59",
+    "CrouchIdle 60-60",
+    "CrouchScrub 61-70",
+    "CrouchIdle 71-71",
+    "CrouchScrub 72-81",
+    "CrouchIdle 82-98",
+    "CrouchScrub 99-99",
+  ]);
+  // a scrub runs its ten frames a tick each; the idle holds each of its five four ticks
+  assert.equal(shownAt(r, ZERO_DICE, 21), "CrouchScrub:9");
+  assert.equal(shownAt(r, ZERO_DICE, 22), "CrouchIdle:0");
+  assert.equal(shownAt(r, ZERO_DICE, 38), "CrouchIdle:4");
+  assert.equal(shownAt(r, ZERO_DICE, 0), "CrouchScrub:0");
+});
+
+test("work: a scrubber turns on a break once its turn timer has run, and faces the other way after", () => {
+  const r = worker("scrub");
+  const segs = segments(r, ZERO_DICE, 1, 600);
+  const turn = segs.findIndex((s) => s.startsWith("CrouchTurn"));
+  assert.ok(turn > 0, segs.join(", "));
+  const [, from, to] = segs[turn].match(/(\d+)-(\d+)/).map(Number);
+  assert.equal(to - from + 1, 8, "eight frames a tick each");
+  assert.ok(segs[turn - 1].startsWith("CrouchIdle") && segs[turn + 1].startsWith("CrouchIdle"));
+  assert.equal(resolveRecord(r, ZERO_DICE, from - 1).flip, false);
+  assert.equal(resolveRecord(r, ZERO_DICE, to).flip, false, "the flip lands with the idle");
+  assert.equal(resolveRecord(r, ZERO_DICE, to + 1).flip, true);
+  assert.ok(from > 240, "no sooner than the turn timer");
+});
+
+test("work: Oddysee's crouched scrubber scrubs once, turns at its first break, then settles into bursts", () => {
+  assert.deepEqual(segments(worker("crouchscrub"), ZERO_DICE, 1, 88), [
+    "CrouchScrub 1-10",
+    "CrouchIdle 11-12",
+    "CrouchTurn 13-20",
+    "CrouchIdle 21-27",
+    "CrouchScrub 28-37",
+    "CrouchIdle 38-38",
+    "CrouchScrub 39-48",
+    "CrouchIdle 49-49",
+    "CrouchScrub 50-59",
+    "CrouchIdle 60-60",
+    "CrouchScrub 61-70",
+    "CrouchIdle 71-87",
+    "CrouchScrub 88-88",
+  ]);
+});
+
+test("work: a chiseller finishes its loop before the one-tick stop, idles, and starts again", () => {
+  assert.deepEqual(segments(worker("chisel"), ZERO_DICE, 1, 112), [
+    "Chisel 1-36",
+    "StopChisel 37-37",
+    "CrouchIdle 38-74",
+    "StartChisel 75-75",
+    "Chisel 76-110",
+    "StopChisel 111-111",
+    "CrouchIdle 112-112",
+  ]);
+});
+
+test("work: Oddysee's standing scrubber pauses through its transitions and resumes", () => {
+  const segs = segments(worker("standscrub"), ZERO_DICE, 1, 200);
+  assert.equal(segs[0], "StandScrubLoop 1-40", "the loop ends at its last frame, not at the timer");
+  assert.equal(segs[1], "StandScrubLoopToPause 41-45");
+  assert.ok(segs[2].startsWith("StandScrubPause 46-"), segs[2]);
+  assert.ok(segs[3].startsWith("StandScrubPauseToLoop"), segs[3]);
+  assert.equal(
+    segs[3]
+      .match(/(\d+)-(\d+)/)
+      .slice(1)
+      .reduce((a, b) => b - a + 1),
+    1,
+    "one tick",
+  );
+  assert.ok(segs[4].startsWith("StandScrubLoop"), segs[4]);
+});
+
+test("work: a sad worker stands at its first break and stays standing", () => {
+  assert.deepEqual(segments(worker("chisel", true), ZERO_DICE, 36, 46), [
+    "Chisel 36-36",
+    "StopChisel 37-37",
+    "CrouchIdle 38-38",
+    "CrouchToStand 39-44",
+    "Idle 45-46",
+  ]);
+  // the scrubber waits ten ticks of the break before it rises
+  assert.deepEqual(segments(worker("scrub", true), ZERO_DICE, 22, 57), [
+    "CrouchIdle 22-49",
+    "CrouchToStand 50-55",
+    "Idle 56-57",
+  ]);
+  assert.equal(shownAt(worker("scrub", true), ZERO_DICE, 5000).split(":")[0], "Idle");
+});
+
+test("work: the dice are the table walked from the seed, so two seeds give two rhythms and a tick asked twice agrees", () => {
+  const dice = Array.from({ length: 256 }, (_, i) => (i * 97 + 13) & 255);
+  const set = { anims: WORK_ANIMS, dice };
+  const a = { ...worker("scrub"), cycle: { kind: "brain", brain: "scrub", seed: 3, emo: false } };
+  const b = { ...worker("scrub"), cycle: { kind: "brain", brain: "scrub", seed: 90, emo: false } };
+  assert.notDeepEqual(segments(a, set, 1, 400), segments(b, set, 1, 400));
+  const once = segments(a, set, 1, 400);
+  resolveRecord(a, set, 2000);
+  assert.deepEqual(
+    segments(a, set, 1, 400),
+    once,
+    "stepping back restarts the brain and lands the same",
+  );
+});
+
+test("clock: stopping cancels the queued frame, so a restart stacks no second callback", () => {
+  const queue = new Map();
+  let id = 0;
+  globalThis.requestAnimationFrame = (cb) => (queue.set(++id, cb), id);
+  globalThis.cancelAnimationFrame = (h) => queue.delete(h);
+  try {
+    for (let i = 0; i < 3; i++) {
+      setMotionRunning(true, () => {});
+      setMotionRunning(false);
+    }
+    setMotionRunning(true, () => {});
+    assert.equal(queue.size, 1);
+    const [h, cb] = [...queue][0];
+    queue.delete(h);
+    cb(performance.now() + 40);
+    assert.equal(queue.size, 1, "one frame re-queues exactly one");
+    setMotionRunning(false);
+    assert.equal(queue.size, 0);
+  } finally {
+    delete globalThis.requestAnimationFrame;
+    delete globalThis.cancelAnimationFrame;
+  }
+});

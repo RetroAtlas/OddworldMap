@@ -109,3 +109,21 @@ export function loadEditorData(id, low) {
   }
   return p;
 }
+
+// the sprite sheets and their animation table are fetched on the first ask rather
+// than at boot, one fetch per game, a failed one forgotten so the next ask retries
+const spriteData = new Map();
+export function loadSprites(id, low) {
+  let p = spriteData.get(id);
+  if (!p) {
+    p = loadJson(`sprites_${id.toLowerCase()}.json`, low ? { priority: "low" } : null).then((d) => {
+      if (!d || !Array.isArray(d.sheets) || !d.anims) {
+        spriteData.delete(id);
+        return null;
+      }
+      return d;
+    });
+    spriteData.set(id, p);
+  }
+  return p;
+}

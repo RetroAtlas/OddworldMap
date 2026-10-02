@@ -1,5 +1,6 @@
 """Sprite animations off the discs: the Anim chunks of a level's BAN, BND and
-CAM files, decoded into the atlases and the sidecar written for the viewer.
+CAM files, decoded into the atlases and the sidecar the viewer's Objects-as-themselves
+toggle draws from.
 
 An Anim chunk is a file header, the frames (each a FrameHeader and its pixel
 payload, the CLUT somewhere beside them) and the animation tables, which pack
