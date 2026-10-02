@@ -679,11 +679,16 @@ function paintMarkers(f, sprites) {
   }
 }
 
+// how far each object on patrol has walked from its mark this frame, so its
+// label and edited mark can follow it
+const movedBy = new Map();
+
 // the objects as the game draws them, back to front by layer and, within a
 // layer, the later-constructed under the earlier; each clipped to its own
 // camera's window, where the game clips too, so a frame reaching past it
 // never paints over a neighbouring screen
-function paintSprites({ ctx, data, layout }, sprites, set, tick, patrolAt) {
+function paintSprites({ ctx, data, layout, path }, sprites, set, tick, patrolAt) {
+  movedBy.clear();
   const recs = [];
   let order = 0;
   for (const [t, list] of sprites) {
@@ -693,11 +698,16 @@ function paintSprites({ ctx, data, layout }, sprites, set, tick, patrolAt) {
   }
   recs.sort((a, b) => a[0].layer - b[0].layer || b[1] - a[1] || a[2] - b[2]);
   const ae = data.id === "AE";
-  for (const [r] of recs) {
+  for (const [r, , , t] of recs) {
     const shown = resolveRecord(r, set, tick, patrolAt);
     if (!shown) continue;
     const sc = processedSheet(set.sheets[shown.anim.frames[shown.frame][0]], r.semi, r.rgb);
     if (!sc) continue;
+    if (shown.moved && !movedBy.has(t))
+      movedBy.set(
+        t,
+        inScreens(path, layout, shown.x, shown.y) ? [shown.x - r.x, shown.y - r.y] : null,
+      );
     // a record is placed in the coordinates of the camera its anchor falls
     // in and clipped to that window, as the game shows an object only on the
     // screen it stands in; a rope tiled across screens is drawn once per screen
@@ -806,9 +816,30 @@ function paintForeground({ ctx, path, layout }, dim) {
   }
 }
 
+// whether a world point lies inside one of the path's screens
+function inScreens(path, layout, x, y) {
+  const cx = Math.floor(x / layout.worldW),
+    cy = Math.floor(y / layout.worldH);
+  if (!path.cams.some((c) => c.cell === cy * path.w + cx && c.png)) return false;
+  const lx = x - cx * layout.worldW,
+    ly = y - cy * layout.worldH;
+  return (
+    lx >= layout.winX &&
+    lx < layout.winX + layout.visW &&
+    ly >= layout.winY &&
+    ly < layout.winY + layout.visH
+  );
+}
+
 // the label and the edited mark of an object its sprite stands for
 function paintMarkerNotes({ ctx, cam, layout, showLabels }, t) {
   const box = drawBox(t, layout);
+  const walked = movedBy.get(t);
+  if (walked === null) return; // walked out of every screen: nothing to stand beside
+  if (walked) {
+    box.x += drawX(t.x1 + walked[0], layout) - drawX(t.x1, layout);
+    box.y += drawY(t.y1 + walked[1], layout) - drawY(t.y1, layout);
+  }
   const w = Math.max(box.w, 10),
     h = Math.max(box.h, 10);
   if (Object.keys(editedFields(t)).length) {

@@ -178,7 +178,8 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
   let anim = r.anim,
     x = r.x,
     y = r.y,
-    flip = r.flip;
+    flip = r.flip,
+    moved = false;
   const cy = r.cycle;
   let at = tick; // the tick the shown animation counts from
   if (cy) {
@@ -190,6 +191,7 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
       x += w.dx;
       y += w.dy;
       flip = w.flip;
+      moved = !!cy.patrol;
     } else if (cy.kind === "sway") {
       // a hanging fleech swings on its tongue, two angle steps a tick from a rolled start
       x = cy.cx + 4 * cos256(set.dice[cy.seed & 255] + 2 * tick);
@@ -233,5 +235,5 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
   const a = anims[anim];
   if (!a) return null;
   const frame = r.frozen ? r.frame : frameAt(a, at, r.frame);
-  return { name: anim, anim: a, frame, x, y, flip };
+  return { name: anim, anim: a, frame, x, y, flip, moved };
 }

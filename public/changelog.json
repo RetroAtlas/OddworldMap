@@ -4,6 +4,13 @@
    "date": "2026-10-02",
    "tag": "improved",
    "tiny": true,
+   "title": "Labels walk with the creatures",
+   "detail": "With \"Patrols\" on, a creature's label and its edited mark go where it goes instead of staying at the spot it was placed; hovering and clicking still work on that spot."
+  },
+  {
+   "date": "2026-10-02",
+   "tag": "improved",
+   "tiny": true,
    "title": "A screen's objects start afresh when you arrive",
    "detail": "With the objects shown as themselves, every mine, Mudokon and patrol on a path begins from its first frame when the path comes into view. That is how the game starts a screen's objects when it loads, rather than from wherever the clock would have carried them meanwhile. Turning \"Objects as themselves\" on starts the screen over too, and \"Patrols\" sends the creatures back to their marks."
   },
