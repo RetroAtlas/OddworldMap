@@ -131,6 +131,46 @@ test.describe("Objects as themselves", () => {
     expect(errors.filter((e) => !/404|Failed to load/.test(e))).toEqual([]);
   });
 
+  test("Patrols needs the objects shown: greyed and refusing its key until they are, then following them", async ({
+    page,
+  }) => {
+    const errors = trackErrors(page);
+    await seedView(page, { show: { objects: false, patrols: false }, cats: ALL_CATS });
+    await page.goto(`/#AE/MI/1/${SLIG.x1}/${SLIG.y1}/1.00`);
+    await settle(page, SLIG);
+    const patrols = page.locator("#tPatrols");
+    await expect(patrols).toBeDisabled();
+    await expect(page.locator("label:has(#tPatrols)")).toHaveAttribute(
+      "title",
+      /needs .*Objects as themselves/,
+    );
+    await page.keyboard.press("b");
+    await expect(patrols).not.toBeChecked();
+    await expect(page.locator("#toastStack")).toContainText("needs");
+    await page.keyboard.press("o");
+    await expect(patrols).toBeEnabled();
+    await page.keyboard.press("b");
+    await expect(patrols).toBeChecked();
+    await page.keyboard.press("o");
+    await expect(patrols).toBeDisabled();
+    await expect(patrols).toBeChecked();
+    await expect(page.locator("#shortcutsBody")).toContainText("patrols");
+    // the Animate setting is a need too, from boot and on every flip
+    await page.keyboard.press("o");
+    await expect(patrols).toBeEnabled();
+    await page.click("#settingsBtn");
+    await page.uncheck("#sAnimate");
+    await expect(patrols).toBeDisabled();
+    await expect(page.locator("label:has(#tPatrols)")).toHaveAttribute(
+      "title",
+      "“Patrols” needs “Animate the objects” on in Settings.",
+    );
+    await page.check("#sAnimate");
+    await expect(patrols).toBeEnabled();
+    await page.click("#settingsClose");
+    expect(errors).toEqual([]);
+  });
+
   test("a lift's top wheel is drawn at its pulley, screens above the lift's own rect", async ({
     page,
   }) => {

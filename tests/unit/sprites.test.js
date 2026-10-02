@@ -22,10 +22,8 @@ function allRecords(g) {
   const set = sheets[g];
   for (const lvl of data[g].levels)
     for (const path of lvl.paths) {
-      const abe = set.abe?.[lvl.short]?.[path.id];
       for (const t of path.tlvs)
-        for (const r of spriteDraws(data[g], lvl, path, t, set.anims, abe))
-          out.push({ lvl, path, t, r });
+        for (const r of spriteDraws(data[g], lvl, path, t, set)) out.push({ lvl, path, t, r });
     }
   return out;
 }
@@ -39,12 +37,16 @@ const SPRITE_TYPES = { AO: 43, AE: 45 };
 const BRAIN_WINDOW = 6000;
 function brainAnims(r, set) {
   const names = new Set();
+  let moved = false;
   for (let t = 0; t <= BRAIN_WINDOW; t++) {
     const shown = resolveRecord(r, set, t);
     assert.ok(shown, `${r.anim} at ${t}`);
     assert.ok(shown.frame >= 0 && shown.frame < shown.anim.frames.length, `${r.anim} at ${t}`);
+    assert.ok(Number.isFinite(shown.x) && Number.isFinite(shown.y), `${r.anim} place at ${t}`);
     names.add(shown.name);
+    if (shown.x !== r.x || shown.y !== r.y) moved = true;
   }
+  names.moved = moved;
   return names;
 }
 
@@ -163,7 +165,7 @@ test("brains: every brain runs on the sidecar's animations and keeps moving", ()
       if (seen.has(key)) continue;
       seen.set(key, t);
       const names = brainAnims(r, set);
-      assert.ok(names.size > 1, `${g} ${key} never changes animation`);
+      assert.ok(names.size > 1 || names.moved, `${g} ${key} never changes animation or place`);
       for (const n of names)
         assert.ok(set.anims[n], `${g} ${key} reaches ${n}, which the sidecar lacks`);
     }
@@ -177,7 +179,7 @@ test("pinned placements: a Mines slig sleeps snapped on its floor, a Rupture Far
   const p1 = mi.paths.find((p) => p.id === 1);
   const slig = p1.tlvs.find((t) => t.name === "Slig");
   assert.equal(slig.fields.start_state, 2, "the first slig of the Mines is placed asleep");
-  const [r] = spriteDraws(ae, mi, p1, slig, sheets.AE.anims);
+  const [r] = spriteDraws(ae, mi, p1, slig, sheets.AE);
   assert.equal(r.anim, "Slig_Sleeping");
   assert.equal(r.x, 1412); // 1400 snapped to the Exoddus grid, whose squares sit at 12 + 25k
   assert.ok(r.y > slig.y1 && r.y <= slig.y1 + 24, "the floor is within the raycast");
@@ -187,7 +189,7 @@ test("pinned placements: a Mines slig sleeps snapped on its floor, a Rupture Far
   const r1 = ao.levels.find((l) => l.short === "R1");
   const path = r1.paths.find((p) => p.tlvs.some((t) => t.name === "Mudokon" && t.fields.job === 0));
   const mud = path.tlvs.find((t) => t.name === "Mudokon" && t.fields.job === 0);
-  const [m] = spriteDraws(ao, r1, path, mud, sheets.AO.anims);
+  const [m] = spriteDraws(ao, r1, path, mud, sheets.AO);
   assert.equal(m.anim, "Mudokon_StandScrubLoop");
   assert.equal(m.x, 6584); // the rect's middle snapped to the Oddysee grid
   assert.equal(m.y, 321); // the walkway at 316 plus the base offset
@@ -202,7 +204,7 @@ test("pinned placements: a rolling ball snaps to the grid, and a lift's two rope
     p.tlvs.filter((t) => t.name === "RollingBall").map((t) => [p, t]),
   );
   assert.deepEqual(
-    balls.map(([p, t]) => [t.x1, spriteDraws(ao, f2, p, t, sheets.AO.anims)[0].x]),
+    balls.map(([p, t]) => [t.x1, spriteDraws(ao, f2, p, t, sheets.AO)[0].x]),
     [
       [5677, 5685],
       [284, 290],
@@ -213,7 +215,7 @@ test("pinned placements: a rolling ball snaps to the grid, and a lift's two rope
     const [p, t] = l.paths.flatMap((p) =>
       p.tlvs.filter((t) => t.name === "LiftPoint" && t.x1 === x1 && t.y1 === y1).map((t) => [p, t]),
     )[0];
-    return spriteDraws(d, l, p, t, sheets[d.id].anims)
+    return spriteDraws(d, l, p, t, sheets[d.id])
       .filter((r) => /Rope/.test(r.anim))
       .sort((a, b) => a.x - b.x)
       .map((r) => [r.x, r.y]);

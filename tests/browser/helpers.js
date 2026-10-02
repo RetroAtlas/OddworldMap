@@ -14,6 +14,7 @@ export const QUIET_SHOW = {
   labels: false,
   dim: false,
   objects: false,
+  patrols: false,
 };
 export const NO_CATS = {
   board: false,

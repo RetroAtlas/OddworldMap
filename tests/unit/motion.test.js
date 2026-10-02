@@ -7,7 +7,7 @@ import {
   resolveRecord,
   setMotionRunning,
 } from "../../public/js/motion.js";
-import { raycastDown, snapX } from "../../public/js/collide.js";
+import { camVoidX, camVoidY, raycastDown, snapX } from "../../public/js/collide.js";
 
 const anim = (n, fps, loop, loopStart = 0) => ({
   fps,
@@ -615,6 +615,428 @@ test("sway: a hanging fleech swings two steps a tick from the angle its roll gav
   assert.ok(Math.abs(resolveRecord(r, set, 32).x - 496) < 1e-9, "half a turn on: the far left");
   assert.ok(Math.abs(resolveRecord(r, set, 64).x - 500) < 1e-9);
   assert.ok(Math.abs(resolveRecord(r, set, 96).x - 504) < 1e-9);
+});
+
+// a flat world: one floor line, the objects given, no links
+const PATROL_ANIMS = {
+  ...IDLE_ANIMS,
+  Slig_Idle: anim(6, 4, true),
+  Slig_StandToWalk: anim(3, 1, false),
+  Slig_Walking: anim(18, 1, true),
+  Slig_WalkToStand: anim(3, 1, false),
+  Slig_TurnAroundStanding: anim(9, 1, false),
+  Slig_ReloadGun: anim(9, 2, false),
+  Scrab_Idle: anim(6, 4, true),
+  Scrab_Walk: anim(22, 1, true),
+  Scrab_Run: anim(14, 1, true),
+  Scrab_Turn: anim(12, 1, false),
+  Scrab_RunToStand: anim(10, 1, false),
+  Scrab_StandToWalk: anim(3, 1, false),
+  Scrab_StandToRun: anim(3, 1, false),
+  Scrab_WalkToStand: anim(3, 1, false),
+  Scrab_HowlBegin: anim(15, 2, true),
+  Scrab_HowlEnd: anim(6, 1, false),
+  Scrab_Shriek: anim(12, 2, false),
+  Fleech_Idle: anim(9, 1, true),
+  Fleech_Crawl: anim(7, 1, true),
+  Fleech_PatrolCry: anim(4, 2, true),
+  Fleech_Knockback: anim(1, 1, false),
+  Fleech_StopMidCrawlCycle: anim(4, 2, false),
+  MovingBomb: anim(15, 2, true),
+};
+const world = (game, lines, tlvs, spawn, half = false) => ({
+  game,
+  half,
+  lines,
+  links: null,
+  tlvs,
+  spawn,
+});
+const tlv = (name, x1, y1, x2, y2, fields = {}) => ({ name, x1, y1, x2, y2, fields });
+const walker = (animName, name, p, w, x, y, flip = false, seed = 0) => ({
+  anim: animName,
+  x,
+  y,
+  flip,
+  frame: 0,
+  cycle: { kind: "brain", brain: name, seed, emo: false, p, world: w, patrol: true },
+});
+const trail = (r, set, from, to, step = 1) => {
+  const out = [];
+  for (let t = from; t <= to; t += step) {
+    const s = resolveRecord(r, set, t);
+    out.push(`${t}:${s.name.replace(/^[A-Za-z]+_/, "")}@${Math.round(s.x)}${s.flip ? "<" : ">"}`);
+  }
+  return out;
+};
+
+test("patrol: a slig walks to its zone's edge, waits the rolled pause, turns and walks back", () => {
+  const floor = [[0, 100, 1000, 100, 0]];
+  const w = world("AE", floor, [], { x: 300, y: 90 });
+  const p = {
+    pauseTime: 10,
+    leftMin: 30,
+    leftMax: 60,
+    rightMin: 30,
+    rightMax: 60,
+    zone: { x: 200, w: 500 },
+  };
+  const r = walker("Slig_Idle", "slig", p, w, 300, 100);
+  const set = { anims: PATROL_ANIMS, dice: new Array(256).fill(0) };
+  // the pause_time wait, then the walk starts: three transition frames, then the loop
+  assert.equal(resolveRecord(r, set, 9).name, "Slig_Idle");
+  assert.equal(resolveRecord(r, set, 9).x, 300);
+  assert.equal(resolveRecord(r, set, 10).name, "Slig_StandToWalk");
+  assert.ok(resolveRecord(r, set, 20).x > 300, "it has moved right");
+  assert.equal(resolveRecord(r, set, 20).name, "Slig_Walking");
+  // a ninth of a grid a tick: 25/9 a tick once walking
+  const dx = resolveRecord(r, set, 40).x - resolveRecord(r, set, 39).x;
+  assert.ok(Math.abs(dx - 25 / 9) < 1e-9, `stride ${dx}`);
+  // the zone's edge is read two grids ahead, but a walk ends only at its eleventh
+  // frame, so it stops about at the edge; it idles the 30-tick pause, turns and heads left
+  let stopT = null,
+    turnT = null,
+    backT = null;
+  for (let t = 20; t < 600; t++) {
+    const s = resolveRecord(r, set, t);
+    if (stopT === null && s.name === "Slig_Idle") stopT = t;
+    if (stopT !== null && turnT === null && s.name === "Slig_TurnAroundStanding") turnT = t;
+    if (turnT !== null && s.name === "Slig_Walking" && s.flip) {
+      backT = t;
+      break;
+    }
+  }
+  // the pause is armed when the edge is read, while the walk still has up to
+  // twenty ticks to run, so the standing part of it is shorter than the field;
+  // the ticks are a trace pinned from the port, not derived from the fields
+  assert.deepEqual([stopT, turnT, backT], [82, 96, 109]);
+  const atStop = resolveRecord(r, set, stopT);
+  assert.ok(Math.abs(atStop.x - 500) < 1e-9, `stops at the edge: ${atStop.x}`);
+  assert.equal(resolveRecord(r, set, turnT).flip, false);
+  assert.equal(
+    resolveRecord(r, set, turnT + 9).flip,
+    true,
+    "the facing flips at the turn's last frame",
+  );
+  assert.ok(resolveRecord(r, set, backT + 30).x < atStop.x, "it walks back left");
+  // and keeps patrolling: it is somewhere inside the zone much later, still moving
+  const late = trail(r, set, 3000, 3600, 100);
+  assert.ok(new Set(late.map((s) => s.split("@")[1])).size > 1, late.join(" "));
+});
+
+test("patrol: a slig at its bound pauses in place, turns, and walks the open way", () => {
+  const floor = [[0, 100, 1000, 100, 0]];
+  const w = world("AO", floor, [], { x: 300, y: 90 });
+  // Oddysee's unset zone reads 12809..6405: facing left it is always at the bound
+  const p = {
+    pauseTime: 0,
+    leftMin: 20,
+    leftMax: 20,
+    rightMin: 20,
+    rightMax: 20,
+    zone: { x: 12809, w: 6405 },
+  };
+  const r = walker("Slig_Idle", "slig", p, w, 300, 100, true);
+  const set = { anims: PATROL_ANIMS, dice: new Array(256).fill(0) };
+  const steps = trail(r, set, 1, 400);
+  const names = steps.map((s) => s.split(":")[1].split("@")[0]);
+  const turn = names.indexOf("TurnAroundStanding"),
+    walk = names.indexOf("Walking");
+  assert.ok(turn > 0 && walk > turn, `turns before it walks: ${turn} ${walk}`);
+  assert.ok(
+    names.slice(0, turn).every((n) => n === "Idle"),
+    "stands until the turn",
+  );
+  assert.ok(
+    resolveRecord(r, set, 400).x > 300 && !resolveRecord(r, set, 400).flip,
+    "then walks right",
+  );
+});
+
+test("patrol: an Oddysee slig walks under a wall an Exoddus one stops at, its probe ten units lower", () => {
+  const lines = [
+    [0, 100, 1000, 100, 0],
+    [400, 50, 400, 64, 1],
+  ];
+  const p = {
+    pauseTime: 0,
+    leftMin: 20,
+    leftMax: 20,
+    rightMin: 20,
+    rightMax: 20,
+    zone: { x: 200, w: 500 },
+  };
+  const set = { anims: PATROL_ANIMS, dice: new Array(256).fill(0) };
+  const reach = (game, x = 300) => {
+    const w = world(game, lines, [], { x, y: 90 });
+    const r = walker("Slig_Idle", "slig", p, w, x, 100);
+    return Math.max(...trail(r, set, 1, 300).map((s) => +s.split("@")[1].slice(0, -1)));
+  };
+  assert.ok(reach("AE") < 400, `Exoddus probes 45 up and meets the wall: ${reach("AE")}`);
+  assert.ok(reach("AO") >= 490, `Oddysee probes 35 up and walks under it: ${reach("AO")}`);
+  // a grid short of the wall the stand-to-walk probe is the one that answers
+  assert.equal(reach("AE", 375), 375, "Exoddus never sets off");
+  assert.ok(reach("AO", 375) > 450, `Oddysee walks to its zone's edge: ${reach("AO", 375)}`);
+});
+
+test("patrol: an Exoddus scrab walks to its bound and turns, waiting the side's rolled delay", () => {
+  const floor = [[0, 100, 1000, 100, 0]];
+  const bounds = [
+    tlv("ScrabLeftBound", 100, 76, 124, 100),
+    tlv("ScrabRightBound", 700, 76, 724, 100),
+  ];
+  const w = world("AE", floor, bounds, { x: 400, y: 90 });
+  const p = { chance: 0, leftMin: 20, leftMax: 40, rightMin: 20, rightMax: 40 };
+  const r = walker("Scrab_Idle", "scrab", p, w, 400, 100);
+  // forties never shriek (under 3) nor howl (under 30), and always walk at chance 0
+  const set = { anims: PATROL_ANIMS, dice: new Array(256).fill(40) };
+  assert.equal(resolveRecord(r, set, 2).name, "Scrab_StandToWalk");
+  assert.equal(resolveRecord(r, set, 10).name, "Scrab_Walk");
+  let turnT = null;
+  for (let t = 10; t < 2000 && turnT === null; t++)
+    if (resolveRecord(r, set, t).name === "Scrab_Turn") turnT = t;
+  // the bound is read a grid ahead and the walk ends at its next stop frame;
+  // the tick and the place are a trace pinned from the port, not derived
+  assert.equal(turnT, 133, "it turns at the right bound");
+  const atTurn = resolveRecord(r, set, turnT);
+  assert.ok(Math.abs(atTurn.x - 702.233417578125) < 1e-9, `turns beside the bound: ${atTurn.x}`);
+  assert.equal(resolveRecord(r, set, turnT + 12).flip, true);
+  assert.equal(resolveRecord(r, set, turnT + 12).name, "Scrab_Idle");
+  assert.equal(resolveRecord(r, set, turnT + 30).name, "Scrab_Idle", "the 20-tick wait holds");
+  assert.ok(resolveRecord(r, set, turnT + 60).x < atTurn.x, "then it walks back left");
+  // chance 4 always runs
+  const runner = walker("Scrab_Idle", "scrab", { ...p, chance: 4 }, w, 400, 100);
+  assert.equal(resolveRecord(runner, set, 2).name, "Scrab_StandToRun");
+  assert.equal(resolveRecord(runner, set, 8).name, "Scrab_Run");
+});
+
+test("patrol: a scrab whose walk meets a wall just before its bound still turns and walks back", () => {
+  const floor = [
+    [0, 100, 1000, 100, 0],
+    [676, 40, 676, 100, 1],
+  ];
+  const bounds = [
+    tlv("ScrabLeftBound", 100, 76, 124, 100),
+    tlv("ScrabRightBound", 700, 76, 724, 100),
+  ];
+  const w = world("AE", floor, bounds, { x: 400, y: 90 });
+  const p = { chance: 0, leftMin: 20, leftMax: 40, rightMin: 20, rightMax: 40 };
+  const r = walker("Scrab_Idle", "scrab", p, w, 400, 100);
+  const set = { anims: PATROL_ANIMS, dice: new Array(256).fill(40) };
+  let turnT = null;
+  for (let t = 1; t < 3000 && turnT === null; t++)
+    if (resolveRecord(r, set, t).name === "Scrab_Turn") turnT = t;
+  // a trace pinned from the port, not derived
+  assert.equal(turnT, 120, "the armed turn survives the wall's stand");
+  const atTurn = resolveRecord(r, set, turnT).x;
+  assert.ok(Math.abs(atTurn - 664.5510295166016) < 1e-9, `stood by the wall: ${atTurn}`);
+  assert.ok(resolveRecord(r, set, turnT + 80).x < atTurn - 50, "and it walks back left afterwards");
+});
+
+test("patrol: an Oddysee scrab meets its bound at its own point and howls on a low roll", () => {
+  const floor = [[0, 100, 1000, 100, 0]];
+  const bounds = [
+    tlv("ScrabLeftBound", 100, 76, 124, 100),
+    tlv("ScrabRightBound", 600, 76, 624, 100),
+  ];
+  const w = world("AO", floor, bounds, { x: 400, y: 90 });
+  const p = { chance: 0, leftMin: 20, leftMax: 20, rightMin: 20, rightMax: 20 };
+  const r = walker("Scrab_Idle", "scrab", p, w, 400, 100);
+  const set = { anims: PATROL_ANIMS, dice: new Array(256).fill(0) };
+  const names = trail(r, set, 1, 1500).map((s) => s.split(":")[1].split("@")[0]);
+  assert.ok(
+    names.includes("Turn") && names.includes("HowlBegin") && names.includes("HowlEnd"),
+    [...new Set(names)].join(),
+  );
+  assert.ok(!names.includes("Shriek"), "Oddysee's patrol never shrieks");
+  const xs = trail(r, set, 1, 1500).map((s) => +s.split("@")[1].slice(0, -1));
+  assert.ok(
+    Math.max(...xs) <= 625 && Math.min(...xs) >= 99,
+    `stays between its bounds: ${Math.min(...xs)}..${Math.max(...xs)}`,
+  );
+});
+
+test("patrol: an Oddysee scrab rolls for the three mixed types alone, and probes the wall through its last strides", () => {
+  const floor = [[0, 100, 1000, 100, 0]];
+  const bounds = [
+    tlv("ScrabLeftBound", 100, 76, 124, 100),
+    tlv("ScrabRightBound", 600, 76, 624, 100),
+  ];
+  const set = { anims: PATROL_ANIMS, dice: new Array(256).fill(40) };
+  const w = world("AO", floor, bounds, { x: 400, y: 90 });
+  const p = { chance: 0, leftMin: 20, leftMax: 20, rightMin: 20, rightMax: 20 };
+  // a type the engine never rolls for walks whatever the dice say
+  const five = walker("Scrab_Idle", "scrab", { ...p, chance: 5 }, w, 400, 100);
+  assert.equal(resolveRecord(five, set, 2).name, "Scrab_StandToWalk");
+  // type 4 runs rolled or not, so the type-5 line is the one that tells the branch
+  const four = walker("Scrab_Idle", "scrab", { ...p, chance: 4 }, w, 400, 100);
+  assert.equal(resolveRecord(four, set, 2).name, "Scrab_StandToRun");
+  // a wall at the bound: the walk-to-stand strides probe it and stand short, where
+  // without the probe the scrab would turn at 602.23; a trace pinned from the port
+  const walled = world("AO", [...floor, [600, 60, 600, 100, 1]], bounds, { x: 400, y: 90 });
+  const r = walker("Scrab_Idle", "scrab", p, walled, 400, 100);
+  assert.equal(resolveRecord(r, set, 87).name, "Scrab_WalkToStand");
+  const turn = resolveRecord(r, set, 91);
+  assert.equal(turn.name, "Scrab_Turn");
+  assert.equal(turn.x.toFixed(2), "599.37");
+});
+
+test("patrol: a sleepy fleech's anger counts down from its field, and it dozes off once it is spent", () => {
+  const floor = [[0, 100, 1000, 100, 0]];
+  const w = world("AE", floor, [], { x: 500, y: 90 });
+  const anims = { ...PATROL_ANIMS, Fleech_Sleeping: anim(9, 4, true) };
+  const set = { anims, dice: new Array(256).fill(7) };
+  // anger starts at 2 + (increaser - 2) / 2 and drops one every 32 ticks; at 1 the fleech sleeps
+  const dozes = (increaser) => {
+    const r = walker(
+      "Fleech_Idle",
+      "fleech",
+      { goesToSleep: true, increaser, range: 0 },
+      w,
+      500,
+      100,
+    );
+    for (let t = 1; t < 600; t++) if (resolveRecord(r, set, t).name === "Fleech_Sleeping") return t;
+    return null;
+  };
+  assert.equal(dozes(4), 56);
+  assert.equal(dozes(8), 120);
+});
+
+test("patrol: a fleech facing left asks for a stopper at its own x, one facing right a grid ahead", () => {
+  const floor = [[0, 100, 1000, 100, 0]];
+  const stopper = (x1, x2, dir) =>
+    tlv("EnemyStopper", x1, 76, x2, 100, { stop_direction: dir, switch_id: 1 });
+  const table = Array.from({ length: 256 }, (_, i) => (i * 200 + 13) & 255);
+  const span = (s, flip) => {
+    const w = world("AE", floor, [s], { x: 500, y: 90 });
+    const r = walker(
+      "Fleech_Idle",
+      "fleech",
+      { goesToSleep: false, increaser: 4, range: 300 },
+      w,
+      500,
+      100,
+      flip,
+    );
+    const xs = trail(r, { anims: PATROL_ANIMS, dice: table }, 1, 1500).map(
+      (q) => +q.split("@")[1].slice(0, -1),
+    );
+    return [Math.min(...xs), Math.max(...xs)];
+  };
+  // facing left it crawls left: a stopper under it holds it, one a grid to its left is not asked about
+  assert.equal(span(stopper(495, 505, 0), true)[0], 500);
+  assert.ok(span(stopper(468, 482, 0), true)[0] < 450);
+  // facing right it crawls right: one under it is not asked about, one a grid ahead holds it
+  assert.ok(span(stopper(495, 505, 1), false)[1] > 550);
+  assert.equal(span(stopper(518, 532, 1), false)[1], 500);
+});
+
+test("patrol: an awake fleech turns on the spot, cries, and crawls within its range", () => {
+  const floor = [[0, 100, 1000, 100, 0]];
+  const w = world("AE", floor, [], { x: 500, y: 90 });
+  const p = { goesToSleep: false, increaser: 4, range: 75 };
+  const r = walker("Fleech_Idle", "fleech", p, w, 500, 100);
+  const table = Array.from({ length: 256 }, (_, i) => (i * 97 + 13) & 255);
+  const set = { anims: PATROL_ANIMS, dice: table };
+  const steps = trail(r, set, 1, 4000);
+  const names = new Set(steps.map((s) => s.split(":")[1].split("@")[0]));
+  assert.ok(
+    names.has("Crawl") && names.has("Knockback") && names.has("PatrolCry"),
+    [...names].join(),
+  );
+  const xs = steps.map((s) => +s.split("@")[1].slice(0, -1));
+  // a crawl stops at its loop's last frame, so it overruns its target by a few strides
+  assert.ok(
+    Math.min(...xs) >= 500 - 75 - 30 && Math.max(...xs) <= 500 + 75 + 30,
+    `${Math.min(...xs)}..${Math.max(...xs)}`,
+  );
+  assert.ok(new Set(xs).size > 10, "it does wander");
+});
+
+test("void: Oddysee's skippers carry a point in the gap between screens to the next one's edge", () => {
+  // the first screen spans 256..624; twelve units of margin count as on it
+  assert.equal(camVoidX(503, 1, 12), null);
+  assert.equal(camVoidX(636, 3, 12), null);
+  assert.equal(camVoidX(640, 3, 12), 1268, "walking right lands twelve inside the next screen");
+  assert.equal(camVoidX(1260, -3, 12), 636, "walking left lands twelve past the first's edge");
+  assert.equal(camVoidX(1270, -3, 12), null);
+  assert.equal(camVoidY(300, 1, 12), null);
+  assert.equal(camVoidY(400, 2, 12), 588, "falling lands twelve above the next screen's top");
+  assert.equal(camVoidY(400, -2, 12), 372, "rising lands twelve under the first's bottom");
+});
+
+test("patrol: an Oddysee slig whose bounds sit on two screens crosses the gap between them and comes back", () => {
+  // two screens' floors each run some way into the gap, with nothing between
+  const floors = [
+    [452, 215, 770, 215, 0],
+    [1129, 215, 1816, 215, 0],
+  ];
+  const bounds = [
+    tlv("SligBoundLeft", 478, 195, 502, 219),
+    tlv("SligBoundRight", 1428, 192, 1452, 216),
+  ];
+  const w = world("AO", floors, bounds, { x: 503, y: 194 });
+  const p = {
+    pauseTime: 10,
+    leftMin: 30,
+    leftMax: 60,
+    rightMin: 30,
+    rightMax: 60,
+    zone: { x: 478, w: 1428 },
+  };
+  const r = walker("Slig_Idle", "slig", p, w, 503, 215);
+  const set = { anims: PATROL_ANIMS, dice: new Array(256).fill(0) };
+  const steps = trail(r, set, 1, 2000);
+  const xs = steps.map((s) => +s.split("@")[1].slice(0, -1));
+  // the step that lands in the gap is the one carried across, so no tick stands deep in it
+  assert.ok(
+    !xs.some((x) => x > 660 && x < 1250),
+    `never stands in the gap: ${xs.filter((x) => x > 660 && x < 1250)[0]}`,
+  );
+  assert.ok(Math.max(...xs) > 1300, `reaches the second screen: ${Math.max(...xs)}`);
+  const back = xs.findIndex((x, i) => i > 0 && xs[i - 1] > 1250 && x < 660);
+  assert.ok(back > 0, "and steps back across");
+  assert.ok(Math.min(...xs.slice(back)) < 540, "to walk its first screen again");
+  assert.ok(
+    steps.every((s) => !s.includes("@NaN")),
+    "stays on its floor throughout",
+  );
+});
+
+test("patrol: a moving bomb follows its track, pauses at a stopper and carries on", () => {
+  const track = [[100, 200, 900, 200, 8]];
+  const stopper = tlv("MovingBombStopper", 500, 190, 524, 214, { min_delay: 10, max_delay: 30 });
+  const w = world("AO", track, [stopper], { x: 290, y: 190 });
+  const p = { speed: 2048 / 256, startSpeed: 0, switchId: 1 };
+  const r = walker("MovingBomb", "bomb", p, w, 300, 200);
+  const set = { anims: PATROL_ANIMS, dice: new Array(256).fill(0) };
+  assert.equal(resolveRecord(r, set, 1).x, 300, "the switch is read before the first move");
+  assert.equal(resolveRecord(r, set, 2).x, 300.5, "half a unit of speed on its first moving tick");
+  assert.ok(resolveRecord(r, set, 60).x > 450);
+  // it brakes inside the stopper, waits ten ticks past braking, then pulls away
+  let stopT = null;
+  // braking passes through a tick of zero speed and half a step back before the wait
+  for (let t = 1; t < 600; t++) {
+    const a = resolveRecord(r, set, t).x,
+      b = resolveRecord(r, set, t + 1).x,
+      c = resolveRecord(r, set, t + 2).x;
+    if (a === b && b === c) {
+      stopT = t;
+      break;
+    }
+  }
+  // a trace pinned from the port, not derived
+  assert.equal(stopT, 51, "it stops");
+  const xStop = resolveRecord(r, set, stopT).x;
+  assert.equal(xStop, 563.5, "past the stopper's edge by its braking distance");
+  assert.equal(resolveRecord(r, set, stopT + 8).x, xStop, "the ten-tick wait holds");
+  assert.ok(resolveRecord(r, set, stopT + 40).x > xStop, "it moves on");
+  // the track's end leaves it standing
+  assert.equal(resolveRecord(r, set, 2000).x, resolveRecord(r, set, 3000).x);
+  // and a switch that is off at a fresh start never moves it
+  const still = walker("MovingBomb", "bomb", { ...p, switchId: 41 }, w, 300, 200);
+  assert.equal(resolveRecord(still, set, 500).x, 300);
 });
 
 test("clock: stopping cancels the queued frame, so a restart stacks no second callback", () => {

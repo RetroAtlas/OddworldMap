@@ -42,6 +42,7 @@ export const SHOW_KEYS = [
   "labels",
   "dim",
   "objects",
+  "patrols",
 ];
 
 // localStorage may be unavailable (private mode, blocked); never let that break the viewer

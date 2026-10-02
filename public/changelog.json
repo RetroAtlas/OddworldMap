@@ -3,6 +3,12 @@
   {
    "date": "2026-10-02",
    "tag": "new",
+   "title": "Patrols: Sligs, Scrabs, Fleeches and bombs on the move",
+   "detail": "A second Display toggle, \"Patrols\" (or press b), lets the creatures that walk their beats walk them, once the objects are shown as themselves. Sligs pace between their bound markers, pause the time their fields give each side, turn on the spot and head back. Scrabs walk or run to their bounds, wait, turn and howl now and then. Awake Fleeches turn about, cry and crawl within their patrol range. The moving bombs that set off at a fresh start follow their tracks and idle at their stoppers. Every stride is the game's own, stepped along the map's collision lines from the brains in the decomp with the game's dice, as an unnoticed Slig would walk it. A creature is drawn wherever it has walked to, while its label stays where it was placed and hovering finds it there. In Oddysee, one whose beat spans two screens steps across the gap between them as Abe does. The toggle sits greyed until the objects are shown and animated."
+  },
+  {
+   "date": "2026-10-02",
+   "tag": "new",
    "title": "Slogs growl, paramites turn, saws and drills stroke",
    "detail": "With the objects shown as themselves, more of the map keeps itself busy the way the game does. Awake Slogs growl and scratch on the timers the game gives them, and patrolling Paramites turn about every few seconds, once in a while drawing back a hiss. Rupture Farms' meat saws stroke down and back and pause between strokes, and Exoddus's drills run their strokes along their rails, each by its own fields. The Fleeches hanging from the ceilings of Necrum and the two vaults sway on their tongues. Every pause and every turn is rolled from the game's own dice table, read off the disc, so no two neighbours keep the same rhythm."
   },

@@ -7,6 +7,7 @@ import { state } from "./state.js";
 import { setPitch } from "./navigate.js";
 import { draw, syncMotion } from "./render.js";
 import { getViewSnapshot, viewChanged } from "./settings.js";
+import { toast } from "./toast.js";
 
 // persisted view options (when "remember" is on) override the HTML/config defaults
 const snap = getViewSnapshot();
@@ -49,7 +50,11 @@ function syncShow(key, cb) {
   state.show[key] = cb.checked;
   if (key === "pens") PENS.on = cb.checked; // the barrier gate lives in config
   if (key === "spaced") setPitch(cb.checked); // moves every draw coordinate; it redraws itself
-  if (key === "objects") syncMotion(); // the clock runs only while the sprites are shown
+  if (key === "objects") {
+    syncMotion(); // the clock runs only while the sprites are shown
+    syncNeeds();
+  }
+  if (key === "patrols") syncMotion(); // the patrols count from the turn
   if (key !== "ruler" && key !== "route") return;
   if (cb.checked) {
     setEditMode(false); // one tool owns the click at a time
@@ -80,6 +85,7 @@ for (const [key, id] of Object.entries({
   fg: "tFg",
   dim: "tDim",
   objects: "tObjects",
+  patrols: "tPatrols",
   ruler: "tRuler",
   route: "tRoute",
 })) {
@@ -95,9 +101,45 @@ for (const [key, id] of Object.entries({
 }
 PENS.on = state.show.pens; // ahead of the first draw
 syncMotion();
+// a toggle's wording, without the key badge or the default mark beside it
+function nameOf(label) {
+  const copy = label.cloneNode(true);
+  for (const el of copy.querySelectorAll("kbd, .st-def")) el.remove();
+  return copy.textContent.replace(/\s+/g, " ").trim();
+}
+// a toggle that needs another on is greyed while it is off, its row saying so
+export function syncNeeds() {
+  for (const box of document.querySelectorAll(
+    "#toggles input[data-needs], #toggles label[data-needs] input",
+  )) {
+    const label = box.closest("label");
+    const unmet = label.dataset.needs
+      .split(" ")
+      .map($)
+      .find((need) => !need.checked);
+    const where = unmet?.closest("#settings") ? " in Settings" : "";
+    const why = unmet
+      ? `“${nameOf(label)}” needs “${nameOf(unmet.closest("label"))}” on${where}.`
+      : "";
+    box.disabled = !!why;
+    label.title = why;
+  }
+}
+for (const label of document.querySelectorAll("#toggles label[data-needs]"))
+  label.addEventListener("click", () => {
+    if (label.querySelector("input").disabled) toast(label.title);
+  });
+syncNeeds();
+window.addEventListener("settings-changed", (e) => {
+  if (e.detail?.key === "animate") syncNeeds();
+});
 // the g/c/f shortcuts flip the same checkboxes the pointer does
 export function toggleShow(key) {
   const cb = showUI.get(key);
+  if (cb.disabled) {
+    toast(cb.closest("label").title);
+    return;
+  }
   cb.checked = !cb.checked;
   syncShow(key, cb);
   viewChanged();
@@ -114,6 +156,7 @@ $("tReset").onclick = () => {
     cb.checked = cb.defaultChecked; // the HTML checked attribute is the source of the defaults
     syncShow(key, cb);
   }
+  syncNeeds();
   viewChanged();
   draw();
 };

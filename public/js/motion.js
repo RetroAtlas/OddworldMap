@@ -4,7 +4,7 @@
 // No DOM at module top level, so it stays importable in bare Node.
 
 import { LOGIC_FPS } from "./config.js";
-import { BRAINS, MOTIONS, STARTS } from "./brains.js";
+import { BRAINS, MOTIONS, SPAWN_FRAME, STARTS } from "./brains.js";
 
 // an animation holds each frame `fps` ticks: at construction frame 0 stands
 // with its counter at 1, so the first tick decodes frame 0 again and loads the
@@ -64,6 +64,17 @@ export function setMotionRunning(on, repaint) {
 
 export const motionRunning = () => running;
 
+// the patrols count from the tick the toggle last came on, so every creature
+// sets off from where it was placed rather than from wherever the clock's
+// elapsed ticks would have carried it
+let patrolEpoch = 0;
+let patrolsOn = false;
+export function setPatrolsRunning(on) {
+  if (on && !patrolsOn) patrolEpoch = tick;
+  patrolsOn = on;
+}
+export const patrolTick = () => (patrolsOn ? tick - patrolEpoch : null);
+
 // the engine's 256-step angle tables
 const sin256 = (a) => Math.sin(((a & 255) * Math.PI) / 128);
 const cos256 = (a) => Math.cos(((a & 255) * Math.PI) / 128);
@@ -80,10 +91,6 @@ function uxbState(digits, tick) {
   }
   return { flash: tick % 12 < 2, green: false };
 }
-
-// the engine's frame counter stands far past any timer a brain sets as an
-// absolute frame by the time a screen has loaded
-const SPAWN_FRAME = 1000;
 
 const brainStates = new WeakMap();
 
@@ -106,12 +113,13 @@ function brainAt(r, set, tick) {
       timer: 0,
       turn: 0,
       set: 1,
-      flip: false,
+      flip: r.flip,
       dx: 0,
       dy: 0,
       m: null,
       emo: !!cy.emo,
       p: cy.p ?? null,
+      w: cy.world ?? null,
       seed: cy.seed,
       seed2: cy.seed,
       dice: set.dice,
@@ -138,7 +146,7 @@ function brainAt(r, set, tick) {
 
 // what a record shows at a tick: its animation, frame, place and facing, after
 // the cycles the game runs without a player
-export function resolveRecord(r, set, tick) {
+export function resolveRecord(r, set, tick, patrolAt = tick) {
   const anims = set.anims;
   let anim = r.anim,
     x = r.x,
@@ -147,13 +155,13 @@ export function resolveRecord(r, set, tick) {
   const cy = r.cycle;
   let at = tick; // the tick the shown animation counts from
   if (cy) {
-    if (cy.kind === "brain") {
-      const w = brainAt(r, set, tick);
+    if (cy.kind === "brain" && (patrolAt !== null || !cy.patrol)) {
+      const w = brainAt(r, set, cy.patrol ? patrolAt : tick);
       anim = w.anim;
       at = w.at;
       x += w.dx;
       y += w.dy;
-      if (w.flip) flip = !flip;
+      flip = w.flip;
     } else if (cy.kind === "sway") {
       // a hanging fleech swings on its tongue, two angle steps a tick from a rolled start
       x = cy.cx + 4 * cos256(set.dice[cy.seed & 255] + 2 * tick);

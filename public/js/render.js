@@ -33,7 +33,14 @@ import {
 import { onBackgroundPlane } from "./fields.js";
 import { loadSprites } from "./data.js";
 import { getSettings } from "./settings.js";
-import { motionRunning, motionTick, resolveRecord, setMotionRunning } from "./motion.js";
+import {
+  motionRunning,
+  motionTick,
+  patrolTick,
+  resolveRecord,
+  setMotionRunning,
+  setPatrolsRunning,
+} from "./motion.js";
 import { spriteDraws } from "./sprites.js";
 
 // canvas colors shared with the stylesheet, read once from the tokens
@@ -149,9 +156,8 @@ let spriteCache = { path: null, set: null, byTlv: null };
 function spriteRecords(data, lvl, path, set) {
   if (spriteCache.path !== path || spriteCache.set !== set) {
     const byTlv = new Map();
-    const abe = set.abe?.[lvl.short]?.[path.id];
     for (const t of path.tlvs) {
-      const recs = spriteDraws(data, lvl, path, t, set.anims, abe);
+      const recs = spriteDraws(data, lvl, path, t, set);
       if (recs.length) byTlv.set(t, recs);
     }
     spriteCache = { path, set, byTlv };
@@ -346,6 +352,7 @@ export function syncMotion() {
   const on =
     shown && getSettings().animate && !state.graph && !document.hidden && !reducedMotion.matches;
   setMotionRunning(on, scheduleDraw);
+  setPatrolsRunning(!!state.show.patrols);
   if (shown && state.data) spriteSet(state.data.id);
 }
 document.addEventListener("visibilitychange", syncMotion);
@@ -482,7 +489,7 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   const sprites = set ? spriteRecords(data, lvl, path, set) : null;
   if (sprites) {
     const live = transients && motionRunning();
-    paintSprites(f, sprites, set, live ? motionTick() : 0);
+    paintSprites(f, sprites, set, live ? motionTick() : 0, live ? patrolTick() : 0);
     paintForeground(f, show.dim);
   }
   if (show.fg) paintMasks(f);
@@ -673,7 +680,7 @@ function paintMarkers(f, sprites) {
 // layer, the later-constructed under the earlier; each clipped to its own
 // camera's window, where the game clips too, so a frame reaching past it
 // never paints over a neighbouring screen
-function paintSprites({ ctx, data, layout }, sprites, set, tick) {
+function paintSprites({ ctx, data, layout }, sprites, set, tick, patrolAt) {
   const recs = [];
   let order = 0;
   for (const [t, list] of sprites) {
@@ -684,7 +691,7 @@ function paintSprites({ ctx, data, layout }, sprites, set, tick) {
   recs.sort((a, b) => a[0].layer - b[0].layer || b[1] - a[1] || a[2] - b[2]);
   const ae = data.id === "AE";
   for (const [r] of recs) {
-    const shown = resolveRecord(r, set, tick);
+    const shown = resolveRecord(r, set, tick, patrolAt);
     if (!shown) continue;
     const sc = processedSheet(set.sheets[shown.anim.frames[shown.frame][0]], r.semi, r.rgb);
     if (!sc) continue;

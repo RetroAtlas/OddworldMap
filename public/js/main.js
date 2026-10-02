@@ -18,7 +18,7 @@ import { setGlossary } from "./glossary.js";
 import { setMessages } from "./messages.js";
 import { setTypeInfo } from "./typeinfo.js";
 import { initSettings, storedLocationHash, clearStoredLocation } from "./settings.js";
-import "./sidebar.js";
+import { syncNeeds } from "./sidebar.js";
 import "./search.js";
 import "./export.js";
 import { toggleMenu } from "./interaction.js";
@@ -36,6 +36,7 @@ import "./graphview.js";
 import "./offline.js";
 
 initSettings();
+syncNeeds();
 initFieldPanel();
 
 // ?embed=1: iframe view (wikis, forums) — chrome hides via body.embed, and

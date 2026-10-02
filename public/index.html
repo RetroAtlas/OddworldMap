@@ -121,10 +121,16 @@
         >
         <label
           class="checkrow"
-          data-tip="Draws the objects as the game draws them: the sprite each stands in when its screen loads, in place of its marker.&#10;They animate at the engine's own pace while the Animate setting is on; what the game moves only for Abe, a Slig's patrol say, stands on its first frame."
+          data-tip="Draws the objects as the game draws them: the sprite each stands in when its screen loads, in place of its marker.&#10;They animate at the engine's own pace while the Animate setting is on; the creatures that walk their beats wait on Patrols."
           ><input type="checkbox" id="tObjects" autocomplete="off" /> Objects as themselves<kbd
             >o</kbd
           ></label
+        >
+        <label
+          class="checkrow"
+          data-tip="Lets the creatures that walk their beats walk them, each by the game's own brain and dice.&#10;Sligs and Scrabs pace between their bounds, Fleeches about their perches, moving bombs along their tracks. Needs the objects shown and animated."
+          data-needs="tObjects sAnimate"
+          ><input type="checkbox" id="tPatrols" autocomplete="off" /> Patrols<kbd>b</kbd></label
         >
         <label
           class="checkrow"
@@ -437,6 +443,10 @@
             >objects as themselves: the sprites in place of the markers
           </div>
           <div class="sc-row">
+            <span class="sc-keys"><kbd>b</kbd></span
+            >patrols: the creatures walking their beats, with the objects shown and animated
+          </div>
+          <div class="sc-row">
             <span class="sc-keys"><kbd>a</kbd></span
             >connection arrows
           </div>
@@ -532,7 +542,8 @@
             >
             <div class="st-desc">
               Runs the engine's clock under the sprites: mines flash, working Mudokons scrub, saws
-              stroke. Off, every sprite stands on its first frame.
+              stroke, and Patrols can move the creatures. Off, every sprite stands on its first
+              frame.
             </div>
           </section>
           <section class="st-sec">

@@ -37,6 +37,31 @@ const brain = (c, name, emo = false, p = null) => ({
   emo,
   p,
 });
+// a brain on patrol walks the path: its lines and their links, its objects,
+// and the spawn the constructor's own raycast stands it on
+const patrol = (c, name, p, spawn) => ({
+  ...brain(c, name, false, p),
+  patrol: true,
+  world: {
+    game: c.game,
+    half: c.half,
+    lines: c.lines,
+    links: c.links,
+    tlvs: c.path.tlvs,
+    spawn,
+  },
+});
+// the cameras within `reach` cells of the object's own, where a constructor
+// scans for its bounds
+function nearCameras(c, t, reach) {
+  const cx = Math.floor(t.x1 / c.geo.worldW),
+    cy = Math.floor(t.y1 / c.geo.worldH);
+  return (o) => {
+    const ox = Math.floor(o.x1 / c.geo.worldW),
+      oy = Math.floor(o.y1 / c.geo.worldH);
+    return Math.abs(ox - cx) <= reach && Math.abs(oy - cy) <= reach;
+  };
+}
 
 // the record a rule returns, with the engine's defaults: full scale on layer
 // 27 and half on layer 8, the game's base colour, a semi-transparent polygon
@@ -613,7 +638,16 @@ both("MovingBomb", (c) => {
     c.game === "AE"
       ? tint(AE_BOMB_TINT, c.lvl.short, [127, 127, 127])
       : tint(AO_BOMB_TINT, c.lvl.short, [127, 127, 127]);
-  return [draw(c, "MovingBomb", x, y, { layer: c.half ? 16 : 35, rgb })];
+  // only a bomb whose switch is the always-on id 1 sets off at a fresh start
+  const switchId = f.start_moving_switch_id ?? f.switch_id;
+  const p = { speed: f.speed / 256, startSpeed: f.start_speed / 256, switchId };
+  return [
+    draw(c, "MovingBomb", x, y, {
+      layer: c.half ? 16 : 35,
+      rgb,
+      cycle: switchId === 1 ? patrol(c, "bomb", p, { x: t.x1, y: t.y1 }) : null,
+    }),
+  ];
 });
 
 both("ElectricWall", (c) => {
@@ -889,7 +923,32 @@ both("Slig", (c) => {
   const yards = !ae && AO_STOCKYARDS.has(c.lvl.short);
   const anim = (asleep ? "Slig_Sleeping" : "Slig_Idle") + (yards ? "@StockYardsSlig" : "");
   const rgb = ae ? [102, 127, 118] : yards ? [127, 127, 127] : [105, 105, 105];
-  return [draw(c, anim, x, y, { layer: c.half ? 14 : 33, flip: f.start_direction === 0, rgb })];
+  let cycle = null;
+  if (f.start_state === 1) {
+    // the zone is the bounds sharing its id within reach of its camera, each
+    // side's edge; a side with none keeps the engine's unset value
+    const near = nearCameras(c, t, ae ? 3 : 2);
+    const id = f.slig_bound_persist_id;
+    const bid = (b) => b.fields?.slig_bound_persist_id ?? b.fields?.slig_id;
+    const edge = (name) => c.path.tlvs.find((b) => b.name === name && bid(b) === id && near(b));
+    const left = edge("SligBoundLeft"),
+      right = edge("SligBoundRight");
+    const zone = ae
+      ? { x: left ? left.x1 : 0, w: right ? right.x1 : 0 }
+      : { x: left ? left.x1 : 12809, w: right ? right.x1 : 6405 };
+    const p = {
+      pauseTime: f.pause_time,
+      leftMin: f.pause_left_min,
+      leftMax: f.pause_left_max,
+      rightMin: f.pause_right_min,
+      rightMax: f.pause_right_max,
+      zone,
+    };
+    cycle = patrol(c, "slig", p, { x, y: t.y1 });
+  }
+  return [
+    draw(c, anim, x, y, { layer: c.half ? 14 : 33, flip: f.start_direction === 0, rgb, cycle }),
+  ];
 });
 
 const locker = (c) => [
@@ -946,14 +1005,26 @@ both("Slog", (c) => {
 });
 
 both("Scrab", (c) => {
-  const { t } = c;
+  const { t, f } = c;
   const ae = c.game === "AE";
   let x = t.x1 + 12;
   const hit = raycastDown(c.lines, x, t.y1, t.y1 + 30, planeTypes(c.half, FLOOR));
   if (hit !== null) x = snapAt(c, x);
   const anim = ae && hit === null ? "Scrab_JumpAndRunToFall" : "Scrab_Idle";
   const rgb = ae ? NE_TINT(c) : [127, 127, 127];
-  return [draw(c, anim, x, (hit ?? t.y1) + (ae ? 0 : 5), { rgb })];
+  const p = {
+    chance: ae ? f.patrol_type_run_or_walk_chance : f.patrol_type,
+    leftMin: f.left_min_delay,
+    leftMax: f.left_max_delay,
+    rightMin: f.right_min_delay,
+    rightMax: f.right_max_delay,
+  };
+  return [
+    draw(c, anim, x, (hit ?? t.y1) + (ae ? 0 : 5), {
+      rgb,
+      cycle: hit === null ? null : patrol(c, "scrab", p, { x, y: t.y1 }),
+    }),
+  ];
 });
 
 both("Paramite", (c) => {
@@ -1006,6 +1077,13 @@ rule("AE", "Fleech", (c) => {
     x = mid(t);
     y += t.y2 - t.y1;
     cycle = { kind: "sway", cx: x, seed: c.index & 255 };
+  } else if (f.asleep !== 1) {
+    const p = {
+      goesToSleep: f.goes_to_sleep === 1,
+      increaser: f.attack_anger_increaser + 2,
+      range: (f.patrol_range || 0) * (c.half ? 13 : 25),
+    };
+    cycle = patrol(c, "fleech", p, { x, y: t.y1 });
   }
   return [
     draw(c, anim, x, y, {
@@ -1246,7 +1324,7 @@ const ALL_LINES = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 const midY = (t) => trunc((t.y1 + t.y2) / 2);
 
 // every record a placed object draws, or [] for a type without a sprite
-export function spriteDraws(data, lvl, path, t, anims, abeStart) {
+export function spriteDraws(data, lvl, path, t, set) {
   const fn = rules[data.id]?.[t.name];
   if (!fn) return [];
   const c = {
@@ -1255,12 +1333,13 @@ export function spriteDraws(data, lvl, path, t, anims, abeStart) {
     lvl,
     path,
     lines: path.lines,
+    links: set.links?.[lvl.short]?.[path.id] ?? null,
     t,
     index: path.tlvs.indexOf(t),
     f: t.fields || {},
     half: onBackgroundPlane(data.id, t),
-    anims,
-    abeStart,
+    anims: set.anims,
+    abeStart: set.abe?.[lvl.short]?.[path.id],
   };
   return fn(c) || [];
 }

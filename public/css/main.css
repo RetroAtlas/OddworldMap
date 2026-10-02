@@ -1004,9 +1004,13 @@ body.page-zoomed #minimap {
   padding: 2.5px 2px;
   font-size: 12px;
 }
-#numbersTypes .checkrow:has(input:disabled) {
+.checkrow:has(input:disabled) {
   opacity: 0.4;
   cursor: default;
+}
+/* a click on a greyed box reaches its row, which says what it needs */
+.checkrow input:disabled {
+  pointer-events: none;
 }
 /* the small heading that divides a list, and the full-width row that acts as
    a button within one */
