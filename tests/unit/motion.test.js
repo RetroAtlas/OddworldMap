@@ -6,6 +6,11 @@ import {
   motionTick,
   resolveRecord,
   setMotionRunning,
+  brainAt,
+  resetScene,
+  setPatrolsRunning,
+  sceneTick,
+  patrolTick,
 } from "../../public/js/motion.js";
 import { camVoidX, camVoidY, raycastDown, snapX } from "../../public/js/collide.js";
 
@@ -101,6 +106,36 @@ test("clock: a frame advances the ticks its lateness holds and keeps the remaind
       "the remainder carries, a millisecond is not a tick",
     );
     assert.equal(advance(now + 1000 / 30 + 100 + 1000 / 30), 1, "and completes the next");
+    setMotionRunning(false);
+  } finally {
+    delete globalThis.requestAnimationFrame;
+    delete globalThis.cancelAnimationFrame;
+  }
+});
+
+test("clock: the scene starts over at the tick it is reset on, and the patrols count from their toggle", () => {
+  const queue = new Map();
+  let id = 0;
+  globalThis.requestAnimationFrame = (cb) => (queue.set(++id, cb), id);
+  globalThis.cancelAnimationFrame = (h) => queue.delete(h);
+  try {
+    setMotionRunning(true, () => {});
+    const now = performance.now();
+    advance(now + 10 * (1000 / 30) + 1);
+    resetScene();
+    assert.equal(sceneTick(), 0);
+    setPatrolsRunning(false);
+    assert.equal(patrolTick(), null, "null while the patrols are off");
+    advance(now + 15 * (1000 / 30) + 1);
+    assert.equal(sceneTick(), 5);
+    setPatrolsRunning(true);
+    assert.equal(patrolTick(), 0, "the patrols count from the tick their toggle came on");
+    advance(now + 17 * (1000 / 30) + 1);
+    assert.equal(patrolTick(), 2);
+    assert.equal(sceneTick(), 7);
+    resetScene();
+    assert.equal(sceneTick(), 0);
+    assert.equal(patrolTick(), 0, "a scene reset sends the patrols back to their marks");
     setMotionRunning(false);
   } finally {
     delete globalThis.requestAnimationFrame;
@@ -1286,4 +1321,56 @@ test("clock: stopping cancels the queued frame, so a restart stacks no second ca
     delete globalThis.requestAnimationFrame;
     delete globalThis.cancelAnimationFrame;
   }
+});
+
+test("brainAt: a new clock generation replaces a cached state, and a tick behind it is answered from a throwaway", () => {
+  const floor = [[0, 100, 1000, 100, 0]];
+  const bounds = [
+    tlv("SligBoundLeft", 100, 76, 124, 100),
+    tlv("SligBoundRight", 700, 76, 724, 100),
+  ];
+  const w = world("AE", floor, bounds, { x: 400, y: 90 });
+  const p = {
+    pauseTime: 10,
+    leftMin: 30,
+    leftMax: 60,
+    rightMin: 30,
+    rightMax: 60,
+    zone: { x: 100, w: 724 },
+  };
+  const r = walker("Slig_Idle", "slig", p, w, 400, 100);
+  const set = { anims: PATROL_ANIMS, dice: new Array(256).fill(0) };
+  const far = brainAt(r, set, 300).state;
+  assert.equal(brainAt(r, set, 300).state, far, "the same ask reuses the state");
+  assert.notEqual(brainAt(r, set, 5).state, far, "a tick behind is a throwaway");
+  assert.equal(brainAt(r, set, 301).state, far, "and the kept state was not replaced by it");
+  // the patrols' toggle turning on is a new generation for a patrol
+  setPatrolsRunning(false);
+  setPatrolsRunning(true);
+  const fresh = brainAt(r, set, 5).state;
+  assert.notEqual(fresh, far);
+  assert.equal(
+    brainAt(r, set, 6).state,
+    fresh,
+    "a new patrol generation starts the brain over and keeps the new state",
+  );
+  // a scene reset is one for a standing brain and for a patrol alike
+  const idle = { ...r, cycle: { ...r.cycle, patrol: false } };
+  const stood = brainAt(idle, set, 100).state;
+  assert.equal(brainAt(idle, set, 100).state, stood);
+  resetScene();
+  const again = brainAt(idle, set, 5).state;
+  assert.notEqual(again, stood);
+  assert.equal(
+    brainAt(idle, set, 6).state,
+    again,
+    "the scene reset starts a standing brain over and keeps the new state",
+  );
+  const walked = brainAt(r, set, 5).state;
+  assert.notEqual(walked, fresh);
+  assert.equal(
+    brainAt(r, set, 6).state,
+    walked,
+    "and a patrol too, its clock restarting with the scene",
+  );
 });

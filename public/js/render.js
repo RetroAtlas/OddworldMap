@@ -35,9 +35,10 @@ import { loadSprites } from "./data.js";
 import { getSettings } from "./settings.js";
 import {
   motionRunning,
-  motionTick,
   patrolTick,
+  resetScene,
   resolveRecord,
+  sceneTick,
   setMotionRunning,
   setPatrolsRunning,
 } from "./motion.js";
@@ -161,6 +162,7 @@ function spriteRecords(data, lvl, path, set) {
       if (recs.length) byTlv.set(t, recs);
     }
     spriteCache = { path, set, byTlv };
+    resetScene();
     // a processed sheet is a whole atlas: keep only the colourings this path draws
     const wanted = new Set();
     for (const recs of byTlv.values())
@@ -347,6 +349,7 @@ export function syncMotion() {
   const shown = !!state.show.objects;
   const game = state.data?.id ?? null;
   if ((shown && !objectsShown) || game !== shownGame) retrySprites(game);
+  if (shown && !objectsShown) resetScene();
   objectsShown = shown;
   shownGame = game;
   const on =
@@ -489,7 +492,7 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   const sprites = set ? spriteRecords(data, lvl, path, set) : null;
   if (sprites) {
     const live = transients && motionRunning();
-    paintSprites(f, sprites, set, live ? motionTick() : 0, live ? patrolTick() : 0);
+    paintSprites(f, sprites, set, live ? sceneTick() : 0, live ? patrolTick() : 0);
     paintForeground(f, show.dim);
   }
   if (show.fg) paintMasks(f);

@@ -2,6 +2,13 @@
  "entries": [
   {
    "date": "2026-10-02",
+   "tag": "improved",
+   "tiny": true,
+   "title": "A screen's objects start afresh when you arrive",
+   "detail": "With the objects shown as themselves, every mine, Mudokon and patrol on a path begins from its first frame when the path comes into view. That is how the game starts a screen's objects when it loads, rather than from wherever the clock would have carried them meanwhile. Turning \"Objects as themselves\" on starts the screen over too, and \"Patrols\" sends the creatures back to their marks."
+  },
+  {
+   "date": "2026-10-02",
    "tag": "new",
    "title": "Slurgs, Greeters, bats, Glukkons and flying Sligs join the patrols",
    "detail": "With \"Patrols\" on, the rest of the creatures that move about do so too. Slurgs creep along their floors and turn back at a bound or an edge. Greeters roll their beat with the laser sweeping ahead of them, stopping now and then for a word. Oddysee's bats hang their while, take off and fly their lines, and flying Sligs patrol their tracks and pause at the ends. Exoddus's Glukkons pace between their bounds with a laugh or a word. Oddysee's background Glukkons speak their lines with the objects shown alone. Every pace, pause and roll is the game's own, from the decomp and the dice table on the disc."

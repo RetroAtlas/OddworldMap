@@ -64,16 +64,32 @@ export function setMotionRunning(on, repaint) {
 
 export const motionRunning = () => running;
 
-// the patrols count from the tick the toggle last came on, so every creature
-// sets off from where it was placed rather than from wherever the clock's
-// elapsed ticks would have carried it
-let patrolEpoch = 0;
+// the scene's ticks count from when the path on screen was set up, as the
+// game constructs a camera's objects the moment it loads, so every object
+// starts from its spawn frame on arrival; the Objects toggle coming on starts
+// it over
+let sceneEpoch = 0,
+  sceneGen = 0;
+export const sceneTick = () => tick - sceneEpoch;
+export function resetScene() {
+  sceneEpoch = tick;
+  patrolEpoch = 0;
+  sceneGen++;
+  patrolGen++;
+}
+
+// the patrols count from the scene tick their toggle last came on
+let patrolEpoch = 0,
+  patrolGen = 0;
 let patrolsOn = false;
 export function setPatrolsRunning(on) {
-  if (on && !patrolsOn) patrolEpoch = tick;
+  if (on && !patrolsOn) {
+    patrolEpoch = sceneTick();
+    patrolGen++;
+  }
   patrolsOn = on;
 }
-export const patrolTick = () => (patrolsOn ? tick - patrolEpoch : null);
+export const patrolTick = () => (patrolsOn ? sceneTick() - patrolEpoch : null);
 
 // the engine's 256-step angle tables
 const sin256 = (a) => Math.sin(((a & 255) * Math.PI) / 128);
@@ -94,18 +110,21 @@ function uxbState(digits, tick) {
 
 const brainStates = new WeakMap();
 
-// a brain's state at a tick, stepped on from where it last stood; a tick
-// behind it starts the brain over from its first
-function brainAt(r, set, tick) {
+// a brain's state at a tick, stepped on from where it last stood. A state
+// belongs to the clock generation it was built in: one from an earlier
+// generation is replaced, while one ahead of the ask within the same generation
+// is kept and the ask answered from a throwaway, so only that ask replays
+export function brainAt(r, set, tick) {
   const cy = r.cycle;
   const want = Math.max(tick, 1);
   const variant = r.anim.includes("@") ? r.anim.slice(r.anim.indexOf("@")) : "";
-  // the cache keeps the later state, so asking for an earlier tick costs no
-  // replay to the present
+  const gen = cy.patrol ? patrolGen : sceneGen;
   const cached = brainStates.get(r);
-  let st = cached && cached.tick <= want ? cached : null;
+  const current = cached && cached.gen === gen ? cached : null;
+  let st = current && current.tick <= want ? current : null;
   if (!st) {
     st = {
+      gen,
       tick: 0,
       sub: 0,
       cur: r.anim.slice(0, r.anim.length - variant.length),
@@ -126,7 +145,7 @@ function brainAt(r, set, tick) {
       sw: {},
     };
     STARTS[cy.brain]?.(st, r);
-    if (!cached) brainStates.set(r, st);
+    if (!current) brainStates.set(r, st);
   }
   const rnd = () => st.dice[st.seed++ & 255];
   while (st.tick < want) {
@@ -145,6 +164,7 @@ function brainAt(r, set, tick) {
     anim: (st.show ?? st.cur) + variant,
     at: tick - st.set + 1,
     flip: st.flip,
+    state: st,
     dx: st.dx,
     dy: st.dy,
     hidden: !!st.hidden,
