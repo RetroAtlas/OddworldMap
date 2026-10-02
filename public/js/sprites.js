@@ -72,6 +72,16 @@ const snapAt = (c, x) => {
 const trunc = Math.trunc;
 const mid = (t) => trunc((t.x1 + t.x2) / 2);
 
+// a brain rolls the game's dice from a seed; the game's is wherever its
+// counter stood, the record's is its place in the path
+const brain = (c, name, emo = false, p = null) => ({
+  kind: "brain",
+  brain: name,
+  seed: c.index & 255,
+  emo,
+  p,
+});
+
 // the record a rule returns, with the engine's defaults: full scale on layer
 // 27 and half on layer 8, the game's base colour, a semi-transparent polygon
 function draw(c, anim, x, y, o = {}) {
@@ -668,33 +678,58 @@ rule("AO", "MeatSaw", (c) => {
   const x = t.x1 + 8;
   const rise = f.max_rise_time || 0;
   const layer = c.half ? 5 : 24;
+  const p = {
+    type: f.type,
+    start: f.start_state,
+    speed: f.speed,
+    offSpeed: f.off_speed,
+    maxRise: rise,
+    switchMin: f.switch_min_time_off,
+    switchMax: f.switch_max_time_off,
+    autoMin: f.automatic_min_time_off,
+    autoMax: f.automatic_max_time_off,
+    initial: f.initial_position === 1,
+    switchId: f.switch_id,
+  };
   return [
-    draw(c, "MeatSaw_Idle", x, t.y1 - rise + (f.initial_position ? rise : 0), { layer }),
+    draw(c, "MeatSaw_Idle", x, t.y1 - rise, { layer, cycle: brain(c, "meatsaw", false, p) }),
     draw(c, "MeatSawMotor", x, t.y1, { layer, semi: true }),
   ];
 });
 
+// the drill's stroke is the brain's: the record stands at the base of its travel
 rule("AE", "Drill", (c) => {
   const { t, f } = c;
   const dir = f.start_direction;
-  const travel = dir === 0 ? t.y2 - t.y1 : t.x2 - t.x1;
-  const off = f.start_position_bottom ? 0 : travel;
-  let x, y, anim;
-  if (dir === 0) {
-    x = t.x1 + 12;
-    y = t.y2 - off;
-    anim = "Drill_Vertical_Off";
-  } else if (dir === 1) {
-    y = t.y2;
-    x = t.x1 + 12 + off;
-    anim = "Drill_Horizontal_Off";
-  } else {
-    y = t.y2;
-    x = t.x2 - 12 - off;
-    anim = "Drill_Horizontal_Off";
-  }
-  const rgb = c.lvl.short === "NE" ? [137, 137, 137] : [127, 127, 127];
-  return [draw(c, anim, x, y, { layer: c.half ? 5 : 24, rgb, flip: dir === 2 })];
+  const vertical = dir === 0;
+  const p = {
+    behavior: f.behavior,
+    startOn: f.start_state_on === 1,
+    speed: f.speed === 250 ? 0.2 : f.speed,
+    offSpeed: f.off_speed === 250 ? 0.2 : f.off_speed,
+    minOff: f.min_off_time,
+    maxOff: f.max_off_time,
+    minOffChange: f.min_off_time_speed_change,
+    maxOffChange: f.max_off_time_speed_change,
+    startBottom: f.start_position_bottom === 1,
+    direction: dir,
+    width: vertical ? t.y2 - t.y1 : t.x2 - t.x1,
+    switchId: f.switch_id,
+  };
+  return [
+    draw(
+      c,
+      vertical ? "Drill_Vertical_Off" : "Drill_Horizontal_Off",
+      dir === 2 ? t.x2 - 12 : t.x1 + 12,
+      t.y2,
+      {
+        layer: c.half ? 5 : 24,
+        rgb: c.lvl.short === "NE" ? [137, 137, 137] : [127, 127, 127],
+        flip: dir === 2,
+        cycle: brain(c, "drill", false, p),
+      },
+    ),
+  ];
 });
 
 // the detector's flare where the device sits and the laser sweeping the rect
@@ -943,11 +978,13 @@ both("Slog", (c) => {
   const x = t.x1 + (ae ? stackOffset(c) : 0);
   const y = (hit ?? t.y1) + (ae ? (c.half ? 2 : 1) : 5);
   const rgb = ae ? [127, 127, 127] : AO_YARDS_TINT(c, [48, 48, 48], [127, 127, 127]);
+  const asleep = f.asleep === 1;
   return [
-    draw(c, f.asleep === 1 ? "Slog_Sleeping" : "Slog_Idle", x, y, {
+    draw(c, asleep ? "Slog_Sleeping" : "Slog_Idle", x, y, {
       layer: ae ? 34 : c.half ? 15 : 34,
       flip: f.start_direction === 0,
       rgb,
+      cycle: asleep ? null : brain(c, "slog"),
     }),
   ];
 });
@@ -971,7 +1008,13 @@ both("Paramite", (c) => {
   const hit = raycastDown(c.lines, x, t.y1, t.y1 + 24, ae ? planeTypes(c.half, FLOOR) : FLOOR);
   if (ae || f.enter_from_web === 1) x = snapAt(c, x);
   x += stackOffset(c);
-  return [draw(c, "Paramite_Idle", x, (hit ?? t.y1) + (ae ? 0 : 5), { rgb: [105, 105, 105] })];
+  const patrol = ae ? f.entrance_type === 0 : f.enter_from_web === 0;
+  return [
+    draw(c, "Paramite_Idle", x, (hit ?? t.y1) + (ae ? 0 : 5), {
+      rgb: [105, 105, 105],
+      cycle: patrol ? brain(c, "paramite") : null,
+    }),
+  ];
 });
 
 // the web a paramite drops down: one segment tiled along the track line
@@ -1001,16 +1044,19 @@ rule("AE", "Fleech", (c) => {
   let x = snapAt(c, t.x1) + stackOffset(c);
   let y = hit ?? t.y1;
   let anim = f.asleep === 1 ? "Fleech_Sleeping" : "Fleech_Idle";
+  let cycle = null;
   if (f.hanging === 1) {
     anim = "Fleech_SleepingWithTongue";
     x = mid(t);
     y += t.y2 - t.y1;
+    cycle = { kind: "sway", cx: x, seed: c.index & 255 };
   }
   return [
     draw(c, anim, x, y, {
       layer: c.half ? 15 : 34,
       flip: f.start_direction === 0,
       rgb: NE_TINT(c),
+      cycle,
     }),
   ];
 });
@@ -1073,9 +1119,6 @@ const AO_MUD_JOB = {
 };
 const AO_MUD_BRAIN = { 0: "standscrub", 1: "crouchscrub" };
 const aoMudTint = (c) => AO_YARDS_TINT(c, [25, 25, 25], [87, 103, 67]);
-// a brain rolls the game's dice from a seed; the game's is wherever its
-// counter stood, the record's is its place in the path
-const brain = (c, name, emo = false) => ({ kind: "brain", brain: name, seed: c.index & 255, emo });
 function mudokonAO(c, anim, snap, flip, xNudge = 0, cycle = null) {
   const { t } = c;
   const hit = raycastDiag(c.lines, t.x1, t.y1, t.x2, t.y2, planeTypes(c.half, FLOOR_WALLS));

@@ -294,13 +294,13 @@ const worker = (brain, emo = false) => ({
 });
 const shownAt = (r, set, tick) => {
   const s = resolveRecord(r, set, tick);
-  return `${s.name.replace("Mudokon_", "")}:${s.frame}${s.flip ? "<" : ""}`;
+  return `${s.name.replace(/^[A-Za-z]+_/, "")}:${s.frame}${s.flip ? "<" : ""}`;
 };
 // what one record shows over a run of ticks, as the segments it passes through
 function segments(r, set, from, to) {
   const out = [];
   for (let t = from; t <= to; t++) {
-    const name = resolveRecord(r, set, t).name.replace("Mudokon_", "");
+    const name = resolveRecord(r, set, t).name.replace(/^[A-Za-z]+_/, "");
     if (out.length && out[out.length - 1].name === name) out[out.length - 1].to = t;
     else out.push({ name, from: t, to: t });
   }
@@ -424,6 +424,197 @@ test("work: the dice are the table walked from the seed, so two seeds give two r
     once,
     "stepping back restarts the brain and lands the same",
   );
+});
+
+const IDLE_ANIMS = {
+  ...WORK_ANIMS,
+  Slog_Idle: anim(6, 2, true),
+  Slog_MoveHeadUpwards: anim(7, 1, false),
+  Slog_Scratch: anim(20, 1, false, 3),
+  Slog_Growl: anim(7, 1, false),
+  Paramite_Idle: anim(6, 4, true),
+  Paramite_Turn: anim(7, 1, false),
+  Paramite_GameSpeakBegin: anim(8, 1, false),
+  Paramite_PreHiss: anim(2, 4, true),
+  Paramite_GameSpeakEnd: anim(8, 1, false),
+  MeatSaw_Idle: anim(6, 1, true),
+  MeatSaw_Moving: anim(3, 1, true),
+  Drill_Vertical_Off: anim(1, 1, true),
+  Drill_Vertical_On: anim(4, 1, true),
+};
+const dice = (v) => ({ anims: IDLE_ANIMS, dice: new Array(256).fill(v) });
+const creature = (animName, name, p = null, seed = 0) => ({
+  anim: animName,
+  x: 0,
+  y: 0,
+  flip: false,
+  frame: 0,
+  cycle: { kind: "brain", brain: name, seed, emo: false, p },
+});
+
+test("brain: an awake slog growls and scratches on timers its first tick finds long past", () => {
+  // sevens never land the one-in-64 woof; the growl timer takes 7 + 60, the scratch 7 + 120
+  const r = creature("Slog_Idle", "slog");
+  assert.deepEqual(segments(r, dice(7), 1, 139), [
+    "Idle 1-1",
+    "Growl 2-8",
+    "Idle 9-9",
+    "Scratch 10-29",
+    "Idle 30-69",
+    "Growl 70-76",
+    "Idle 77-137",
+    "Growl 138-139",
+  ]);
+});
+
+test("brain: a slog's growl after a woof holds its third frame a dozen ticks and growls again", () => {
+  // zero dice woof every idle tick; a woof then a growl is forced by the growl timer's reset
+  const r = creature("Slog_Idle", "slog");
+  const segs = segments(r, dice(0), 1, 40);
+  assert.equal(segs[0], "Idle 1-1");
+  assert.equal(segs[1], "MoveHeadUpwards 2-8");
+  // zero dice always woof, so the growl never comes: the head goes up and up
+  assert.equal(segs[2], "Idle 9-9");
+  assert.equal(segs[3], "MoveHeadUpwards 10-16");
+  // a table that woofs once then rolls sevens: the growl that follows freezes
+  const table = new Array(256).fill(7);
+  table[0] = 0; // the first own roll woofs
+  const set = { anims: IDLE_ANIMS, dice: table };
+  const r2 = creature("Slog_Idle", "slog");
+  const s2 = segments(r2, set, 1, 60);
+  assert.equal(s2[1], "MoveHeadUpwards 2-8");
+  assert.equal(s2[2], "Idle 9-9");
+  assert.ok(s2[3].startsWith("Growl 10-"), s2[3]);
+  const [, from, to] = s2[3].match(/(\d+)-(\d+)/).map(Number);
+  assert.equal(to - from + 1, 7 + 13, "seven frames plus thirteen held ticks");
+  assert.equal(resolveRecord(r2, set, 13).frame, 3);
+  assert.equal(resolveRecord(r2, set, 26).frame, 3);
+  assert.equal(resolveRecord(r2, set, 27).frame, 4);
+  assert.ok(s2[5].startsWith("Growl"), `a second growl follows: ${s2[5]}`);
+});
+
+test("brain: a patrolling paramite waits, then turns or draws a hiss, and waits again", () => {
+  // zero dice: the shortest wait, and a roll under six draws the hiss
+  const r = creature("Paramite_Idle", "paramite");
+  assert.deepEqual(segments(r, dice(0), 1, 105), [
+    "Idle 1-46",
+    "GameSpeakBegin 47-54",
+    "PreHiss 55-59",
+    "GameSpeakEnd 60-67",
+    "Idle 68-104",
+    "GameSpeakBegin 105-105",
+  ]);
+  // sevens turn instead, flipping at the turn's last frame
+  const t = creature("Paramite_Idle", "paramite");
+  assert.deepEqual(segments(t, dice(7), 1, 61), ["Idle 1-53", "Turn 54-60", "Idle 61-61"]);
+  assert.equal(resolveRecord(t, dice(7), 60).flip, false);
+  assert.equal(resolveRecord(t, dice(7), 61).flip, true);
+});
+
+test("brain: a meat saw strokes down and back and pauses the rolled time", () => {
+  const p = {
+    type: 0,
+    start: 1,
+    speed: 8,
+    offSpeed: 0,
+    maxRise: 65,
+    switchMin: 15,
+    switchMax: 45,
+    autoMin: 30,
+    autoMax: 30,
+    initial: false,
+    switchId: 0,
+  };
+  const r = creature("MeatSaw_Idle", "meatsaw", p);
+  const set = dice(0);
+  const dy = (t) => resolveRecord(r, set, t).y;
+  assert.equal(resolveRecord(r, set, 1).name, "MeatSaw_Moving");
+  assert.deepEqual([1, 2, 9, 10, 11, 18, 19].map(dy), [0, 8, 64, 72, 64, 8, 0]);
+  assert.equal(resolveRecord(r, set, 19).name, "MeatSaw_Idle");
+  assert.equal(resolveRecord(r, set, 33).name, "MeatSaw_Idle");
+  assert.equal(resolveRecord(r, set, 34).name, "MeatSaw_Moving");
+  assert.equal(dy(35), 8);
+  // a switch-driven saw with its switch off at a fresh start never moves
+  const still = creature("MeatSaw_Idle", "meatsaw", { ...p, type: 2, start: 0, switchId: 40 });
+  assert.equal(segments(still, set, 1, 300).join(), "Idle 1-300");
+  // one that starts at the bottom rises first
+  const low = creature("MeatSaw_Idle", "meatsaw", { ...p, initial: true });
+  assert.equal(resolveRecord(low, set, 1).y, 65 + 8 - (65 % 8) - 8);
+  assert.ok(resolveRecord(low, set, 2).y < resolveRecord(low, set, 1).y);
+});
+
+test("brain: a drill strokes along its direction and rests a tick between strokes", () => {
+  const p = {
+    behavior: 0,
+    startOn: true,
+    speed: 5,
+    offSpeed: 0,
+    minOff: 0,
+    maxOff: 0,
+    minOffChange: 0,
+    maxOffChange: 0,
+    startBottom: false,
+    direction: 0,
+    width: 100,
+    switchId: 0,
+  };
+  const r = creature("Drill_Vertical_Off", "drill", p);
+  const set = dice(0);
+  const at = (t) => resolveRecord(r, set, t);
+  assert.equal(at(0).y, -100, "resting at the top of its rect");
+  assert.equal(at(1).name, "Drill_Vertical_On");
+  assert.deepEqual(
+    [2, 3, 21, 22, 41, 42, 43].map((t) => at(t).y),
+    [-95, -90, 0, -5, -100, -100, -95],
+  );
+  assert.equal(at(41).name, "Drill_Vertical_Off");
+  assert.equal(at(42).name, "Drill_Vertical_On");
+  // a toggled drill whose switch is off at a fresh start stands still
+  const still = creature("Drill_Vertical_Off", "drill", {
+    ...p,
+    behavior: 1,
+    startOn: false,
+    switchId: 62,
+  });
+  assert.equal(segments(still, set, 1, 200).join(), "Vertical_Off 1-200");
+  // the always-on switch id 1 flips the toggled outcomes: a start-off drill runs
+  const run = creature("Drill_Vertical_Off", "drill", {
+    ...p,
+    behavior: 1,
+    startOn: false,
+    switchId: 1,
+  });
+  assert.equal(resolveRecord(run, set, 1).name, "Drill_Vertical_On");
+  const held = creature("Drill_Vertical_Off", "drill", {
+    ...p,
+    behavior: 1,
+    startOn: true,
+    switchId: 1,
+  });
+  assert.equal(segments(held, set, 1, 50).join(), "Vertical_Off 1-50");
+  // the quarter-speed code moves a fifth of a pixel a tick
+  const slow = creature("Drill_Vertical_Off", "drill", { ...p, speed: 0.2 });
+  assert.ok(Math.abs(resolveRecord(slow, set, 11).y - -98) < 1e-9);
+});
+
+test("sway: a hanging fleech swings two steps a tick from the angle its roll gave it", () => {
+  const r = {
+    anim: "Fleech_SleepingWithTongue",
+    x: 500,
+    y: 0,
+    flip: false,
+    frame: 0,
+    cycle: { kind: "sway", cx: 500, seed: 3 },
+  };
+  const set = {
+    anims: { Fleech_SleepingWithTongue: anim(9, 4, true) },
+    dice: new Array(256).fill(64),
+  };
+  // angle 64 is a quarter turn: the cosine is zero there and the swing crosses the middle
+  assert.ok(Math.abs(resolveRecord(r, set, 0).x - 500) < 1e-9);
+  assert.ok(Math.abs(resolveRecord(r, set, 32).x - 496) < 1e-9, "half a turn on: the far left");
+  assert.ok(Math.abs(resolveRecord(r, set, 64).x - 500) < 1e-9);
+  assert.ok(Math.abs(resolveRecord(r, set, 96).x - 504) < 1e-9);
 });
 
 test("clock: stopping cancels the queued frame, so a restart stacks no second callback", () => {
