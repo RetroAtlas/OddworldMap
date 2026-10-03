@@ -389,7 +389,7 @@ export function nearestCam(x, y, path, layout) {
 
 // nearest snappable point within tol draw units of pt — a shown object's
 // center, or a collision-line endpoint when those are drawn — or null
-export function snapTarget(pt, path, tol, layout, lines = false) {
+export function snapTarget(pt, path, tol, layout, lines = false, shown = markerShown) {
   let best = null,
     bd = tol * tol;
   const consider = (x, y) => {
@@ -400,7 +400,7 @@ export function snapTarget(pt, path, tol, layout, lines = false) {
     }
   };
   for (const t of path.tlvs) {
-    if (!markerShown(t)) continue;
+    if (!shown(t)) continue;
     // a barrier drawn as a post snaps on its boundary line, not the stamp's middle
     const post = PENS.on && t.name in BARRIERS;
     const [cx, cy] = markerCentre(t, layout);

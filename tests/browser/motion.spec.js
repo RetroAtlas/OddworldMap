@@ -8,6 +8,8 @@ const SLIG = { game: "AE", level: "MI", path: 1, x1: 1400, y1: 700, x2: 1424, y2
 // of the top wheel's frame between the two ropes
 const PULLEY = { game: "AE", level: "MI", path: 1, x1: 4025, y1: 925, x2: 4049, y2: 949 };
 const WHEEL = { x1: 4032, y1: 900, x2: 4046, y2: 920 };
+// the slig's left bound, a marker with no sprite
+const BOUND = { game: "AE", level: "MI", path: 1, x1: 1175, y1: 700, x2: 1199, y2: 724 };
 
 // the canvas pixels under a world rectangle, as [r, g, b, a] rows
 async function pixels(page, rect) {
@@ -171,6 +173,41 @@ test.describe("Objects as themselves", () => {
     expect(errors).toEqual([]);
   });
 
+  test("the patrol pens draw their posts with the markers off", async ({ page }) => {
+    const errors = trackErrors(page);
+    await seedView(page, { show: { objects: true, markers: false, pens: true }, cats: ALL_CATS });
+    await page.goto(`/?embed=1#AE/MI/1/${BOUND.x1 + 12}/${BOUND.y1 - 10}/1.00`);
+    await settle(page, BOUND);
+    await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const render = await import(u("render.js"));
+      const deadline = Date.now() + 20000;
+      while (Date.now() < deadline) {
+        await render.preloadPath(st.state.path);
+        if (render.artworkReady(st.state.path)) break;
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      render.draw();
+    });
+    // a post is drawn in the enemies' purple, which the mine's artwork does not carry
+    const purple = (px) => {
+      let n = 0;
+      for (let i = 0; i < px.length; i += 4)
+        if (px[i] > 150 && px[i] < 230 && px[i + 1] < 140 && px[i + 2] > 200) n++;
+      return n;
+    };
+    const post = { x1: BOUND.x1 - 2, y1: BOUND.y1 - 30, x2: BOUND.x1 + 2, y2: BOUND.y2 };
+    expect(purple(await pixels(page, post))).toBeGreaterThan(0);
+    await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const sidebar = await import(u("sidebar.js"));
+      sidebar.toggleShow("pens");
+    });
+    expect(purple(await pixels(page, post))).toBe(0);
+    expect(errors).toEqual([]);
+  });
+
   test("a lift's top wheel is drawn at its pulley, screens above the lift's own rect", async ({
     page,
   }) => {
@@ -197,6 +234,63 @@ test.describe("Objects as themselves", () => {
       sidebar.toggleShow("objects");
     });
     expect(await pixels(page, WHEEL)).not.toEqual(withWheel);
+    expect(errors).toEqual([]);
+  });
+
+  test("Markers for the rest needs the objects shown; off, a bound's marker leaves the map", async ({
+    page,
+  }) => {
+    const errors = trackErrors(page);
+    await seedView(page, { show: { objects: false, markers: true }, cats: ALL_CATS });
+    await page.goto(`/?embed=1#AE/MI/1/${BOUND.x1 + 12}/${BOUND.y1 - 10}/1.00`);
+    await settle(page, BOUND);
+    const markers = page.locator("#tMarkers");
+    await expect(markers).toBeDisabled();
+    await expect(markers).toBeChecked();
+    await expect(page.locator("label:has(#tMarkers)")).toHaveAttribute(
+      "title",
+      /needs .*Objects as themselves/,
+    );
+    const withMarker = await pixels(page, BOUND);
+    await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const sidebar = await import(u("sidebar.js"));
+      sidebar.toggleShow("objects");
+    });
+    await expect(markers).toBeEnabled();
+    await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const render = await import(u("render.js"));
+      const deadline = Date.now() + 20000;
+      while (Date.now() < deadline) {
+        await render.preloadPath(st.state.path);
+        if (render.artworkReady(st.state.path)) break;
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      render.draw();
+    });
+    // a bound has no sprite, so its marker stays while the toggle is on
+    expect(await pixels(page, BOUND)).toEqual(withMarker);
+    await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const sidebar = await import(u("sidebar.js"));
+      sidebar.toggleShow("markers");
+    });
+    await expect(markers).not.toBeChecked();
+    await page.evaluate(async () => {
+      const render = await import(new URL("js/render.js", location.href).href);
+      render.draw();
+    });
+    expect(await pixels(page, BOUND)).not.toEqual(withMarker);
+    const hovered = await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const render = await import(u("render.js"));
+      const t = st.state.path.tlvs.find((o) => o.name === "SligBoundLeft" && o.x1 === 1175);
+      return render.objectShown(t);
+    });
+    expect(hovered).toBe(false);
     expect(errors).toEqual([]);
   });
 

@@ -9,7 +9,6 @@ import {
   EDITED_NOTE,
   OFFSCREEN_NOTE,
   PAGE_ZOOM_MIN,
-  markerShown,
   PENS,
   LINE_COLORS,
   LINE_NAMES,
@@ -34,6 +33,7 @@ import {
   scheduleDraw,
   setConnFocus,
   setHighlight,
+  objectShown,
   setPatrol,
   setWireFocus,
 } from "./render.js";
@@ -381,7 +381,7 @@ function drawAtMouse() {
 // or a collision endpoint while those are drawn — within a few screen pixels
 function snapAtMouse() {
   const pt = drawAtMouse();
-  return snapTarget(pt, state.path, 8 / state.cam.z, LAYOUT, state.show.coll) ?? pt;
+  return snapTarget(pt, state.path, 8 / state.cam.z, LAYOUT, state.show.coll, objectShown) ?? pt;
 }
 
 // ---- keyboard: arrows pan, + / - zoom about the canvas center, [ / ] cycle
@@ -526,7 +526,7 @@ function updateHover() {
       .slice(0, 4);
   }
   hoverTlvs = state.path.tlvs.filter((t) => {
-    if (!markerShown(t)) return false;
+    if (!objectShown(t)) return false;
     const { x, y, w, h } = drawBox(t, LAYOUT);
     const x2 = x + Math.max(w, 10),
       y2 = y + Math.max(h, 10);
@@ -552,7 +552,7 @@ function updateHover() {
   setConnFocus(state.show.conn ? (hoverTlvs.find((t) => shownDest(t)) ?? null) : null);
   // wiring overlay: the same, for the hovered object's own drawn wires
   const wiring = state.show.wires ? computeWiring(state.path, state.data.id) : null;
-  const wireDrawn = (e) => markerShown(e.src) && markerShown(e.dst);
+  const wireDrawn = (e) => objectShown(e.src) && objectShown(e.dst);
   setWireFocus(
     wiring
       ? (hoverTlvs.find((t) =>
@@ -611,7 +611,7 @@ function updateHover() {
             const wired = (m, id) => (m.get(id) ?? []).filter((o) => o !== t);
             for (const id of ends.out) {
               const local = wired(wiring.cons, id);
-              const shown = local.filter(markerShown);
+              const shown = local.filter(objectShown);
               if (shown.length === 1) lines.push(`sets ${id} → ${shown[0].name}`);
               else if (shown.length) lines.push(`sets ${id} → ${shown.length} objects`);
               else if (!local.length) {
@@ -621,7 +621,7 @@ function updateHover() {
             }
             for (const id of ends.in) {
               const local = wired(wiring.prod, id);
-              const shown = local.filter(markerShown);
+              const shown = local.filter(objectShown);
               const names = new Set(shown.map((o) => o.name));
               if (shown.length === 1) lines.push(`answers ${id} ← ${shown[0].name}`);
               else if (names.size === 1)

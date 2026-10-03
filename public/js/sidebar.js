@@ -86,6 +86,7 @@ for (const [key, id] of Object.entries({
   dim: "tDim",
   objects: "tObjects",
   patrols: "tPatrols",
+  markers: "tMarkers",
   ruler: "tRuler",
   route: "tRoute",
 })) {

@@ -1,6 +1,12 @@
 {
  "entries": [
   {
+   "date": "2026-10-03",
+   "tag": "new",
+   "title": "Markers for the rest: the map as the game shows it",
+   "detail": "A third Display toggle beside \"Objects as themselves\", \"Markers for the rest\", keeps a marker for every object of a type that has no sprite. Those are the zones, bounds, triggers, spawners and stoppers the game never shows, and the few types the map does not draw yet. It is on by default, so nothing changes until you turn it off; then, with the objects shown as themselves, the map shows only the objects the game shows. A hidden object takes its label, its hover and its wires with it. The object categories keep choosing which objects are on the map at all, so the enemies can still go while the rest stay."
+  },
+  {
    "date": "2026-10-02",
    "tag": "new",
    "title": "Chant orbs, sparks, Zs and hint flies",

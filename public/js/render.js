@@ -174,6 +174,14 @@ function spriteRecords(data, lvl, path, set) {
   return spriteCache.byTlv;
 }
 
+// an object is on the map while its category is and, with the markers off,
+// only as a sprite; the hover and the snap judge by the last paint's records
+let paintedSprites = null;
+const shown = (t, sprites) =>
+  markerShown(t) &&
+  ((PENS.on && barrierDir(t) !== null) || state.show.markers || !sprites || sprites.has(t));
+export const objectShown = (t) => shown(t, paintedSprites);
+
 // draw() skips an image that has not arrived and repaints when it does; a
 // one-shot paint has no second chance. The masks are waited for whatever the
 // toggle says: a percent of the bytes, and one keypress from being wanted
@@ -491,6 +499,7 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   // game draws over them; an export draws the first frame, so two exports agree
   const set = show.objects ? spriteSet(data.id) : null;
   const sprites = set ? spriteRecords(data, lvl, path, set) : null;
+  paintedSprites = sprites;
   if (sprites) {
     const live = transients && motionRunning();
     paintSprites(f, sprites, set, live ? sceneTick() : 0, live ? patrolTick() : 0);
@@ -603,7 +612,7 @@ function paintMarkers(f, sprites) {
   const { ctx, cam, data, path, layout, showLabels } = f;
   ctx.font = `${11 / cam.z}px sans-serif`;
   for (const t of path.tlvs) {
-    if (!markerShown(t)) continue;
+    if (!shown(t, sprites)) continue;
     if (sprites?.has(t)) {
       // the sprite stands for the marker; the label and the edited mark stay
       if (showLabels || Object.keys(editedFields(t)).length) paintMarkerNotes(f, t);
@@ -940,7 +949,7 @@ function paintWires({ ctx, cam, data, path, layout }, focus) {
   // the spotlight judges what is drawn: a hovered object whose wires are
   // all hidden must not dim the rest with nothing to show for it
   const drawn = computeWiring(path, data.id).edges.filter(
-    (e) => markerShown(e.src) && markerShown(e.dst),
+    (e) => objectShown(e.src) && objectShown(e.dst),
   );
   const focusActive = focus && drawn.some((e) => e.src === focus || e.dst === focus);
   ctx.strokeStyle = ctx.fillStyle = WIRE_COLOR;
