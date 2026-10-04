@@ -4,6 +4,8 @@ import { seedView, settle, trackErrors } from "./helpers.js";
 // the sleeping slig at the mouth of the Mines, read off the shipped data: its
 // marker box and where its sprite stands
 const SLIG = { game: "AE", level: "MI", path: 1, x1: 1400, y1: 700, x2: 1424, y2: 724 };
+// a Zulag 4 slig whose beat spans two screens, walking from its first tick
+const WALKER = { game: "AO", level: "R2", path: 14, x1: 503, y1: 194, x2: 527, y2: 218 };
 // the pulley of the Mines' first lift, three screens above the lift's rect, and a band
 // of the top wheel's frame between the two ropes
 const PULLEY = { game: "AE", level: "MI", path: 1, x1: 4025, y1: 925, x2: 4049, y2: 949 };
@@ -229,6 +231,51 @@ test.describe("Objects as themselves", () => {
     await page.check("#sAnimate");
     await expect(patrols).toBeEnabled();
     await page.click("#settingsClose");
+    expect(errors).toEqual([]);
+  });
+
+  test("a creature on patrol is hovered where it stands, not where its marker was placed", async ({
+    page,
+  }) => {
+    const errors = trackErrors(page);
+    await seedView(page, { show: { objects: true, patrols: true }, cats: ALL_CATS });
+    await page.goto(`/?embed=1#AO/R2/14/${WALKER.x1 + 12}/${WALKER.y1 + 40}/1.00`);
+    await settle(page, WALKER);
+    // let it walk a while by the patrol clock; it keeps going, so the hover
+    // follows the read at once
+    await page.evaluate(async () => {
+      window.__motion = await import(new URL("js/motion.js", location.href).href);
+    });
+    await page.waitForFunction(() => window.__motion.patrolTick() > 70);
+    const spots = await page.evaluate(async (w) => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const render = await import(u("render.js"));
+      const model = await import(u("model.js"));
+      const t = st.state.path.tlvs.find((o) => o.name === "Slig" && o.x1 === w.x1 && o.y1 === w.y1);
+      const r = document.getElementById("cv").getBoundingClientRect();
+      const client = (b) => ({
+        x: r.left + (b.x + b.w / 2 - st.state.cam.x) * st.state.cam.z,
+        y: r.top + (b.y + b.h / 2 - st.state.cam.y) * st.state.cam.z,
+      });
+      const placed = model.drawBox(t, st.LAYOUT);
+      const standing = render.standingBox(t, st.LAYOUT);
+      return { placed: client(placed), standing: client(standing), walked: standing.x - placed.x };
+    }, WALKER);
+    expect(Math.abs(spots.walked)).toBeGreaterThan(30);
+    const tip = page.locator("#tip");
+    await page.mouse.move(spots.standing.x, spots.standing.y);
+    await expect(tip).toContainText("Slig (503,194)");
+    await page.mouse.move(spots.placed.x, spots.placed.y);
+    // nothing stands at the placed spot now: a hidden tip keeps its last text
+    await expect
+      .poll(() =>
+        page.evaluate(() => {
+          const el = document.getElementById("tip");
+          return el.style.display === "none" || !el.textContent.includes("Slig (503,194)");
+        }),
+      )
+      .toBe(true);
     expect(errors).toEqual([]);
   });
 

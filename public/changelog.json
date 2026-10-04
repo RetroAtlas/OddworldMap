@@ -2,6 +2,12 @@
  "entries": [
   {
    "date": "2026-10-04",
+   "tag": "improved",
+   "title": "Hovering follows a creature on patrol",
+   "detail": "With \"Patrols\" on, a creature's label already went where it went. Now hovering, clicking, the dashed highlight and the selection outline follow it there too, so a Slig half-way along its beat is inspected where it stands rather than at the spot it was placed."
+  },
+  {
+   "date": "2026-10-04",
    "tag": "fixed",
    "title": "No flash of rectangles before the sprites",
    "detail": "When the objects came on, the first paint ran before the sprite table had arrived and drew every object as its marker for a moment, so the sprites landed over a flash of rectangles. An object that will stand as a sprite now draws nothing until its table is in, and the rest follow \"Markers for the rest\" as before."

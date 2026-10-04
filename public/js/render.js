@@ -512,7 +512,7 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
     const live = transients && motionRunning();
     paintSprites(f, sprites, set, live ? sceneTick() : 0, live ? patrolTick() : 0);
     paintForeground(f, show.dim);
-  }
+  } else movedBy.clear();
   if (show.fg) paintMasks(f);
   if (show.grid) paintGrid(f);
   if (show.coll) paintLines(f);
@@ -920,15 +920,23 @@ function inScreens(path, layout, x, y) {
   );
 }
 
-// the label and the edited mark of an object its sprite stands for
-function paintMarkerNotes({ ctx, cam, layout, showLabels }, t) {
+// the marker's box carried to wherever its creature has walked, or null while
+// it stands outside every screen
+export function standingBox(t, layout) {
   const box = drawBox(t, layout);
   const walked = movedBy.get(t);
-  if (walked === null) return; // walked out of every screen: nothing to stand beside
+  if (walked === null) return null;
   if (walked) {
     box.x += drawX(t.x1 + walked[0], layout) - drawX(t.x1, layout);
     box.y += drawY(t.y1 + walked[1], layout) - drawY(t.y1, layout);
   }
+  return box;
+}
+
+// the label and the edited mark of an object its sprite stands for
+function paintMarkerNotes({ ctx, cam, layout, showLabels }, t) {
+  const box = standingBox(t, layout);
+  if (!box) return;
   const w = Math.max(box.w, 10),
     h = Math.max(box.h, 10);
   if (Object.keys(editedFields(t)).length) {
@@ -1048,7 +1056,7 @@ function paintConnections({ ctx, cam, data, lvl, path, layout, showLabels }, foc
 function paintHighlight({ ctx, cam, layout }, t) {
   // drawn even when the object's category is toggled off: the outline is
   // what locates a listed object whose marker is hidden
-  const box = drawBox(t, layout);
+  const box = standingBox(t, layout) ?? drawBox(t, layout);
   const x1 = box.x,
     y1 = box.y;
   const w = Math.max(box.w, 10),
@@ -1063,7 +1071,7 @@ function paintHighlight({ ctx, cam, layout }, t) {
 
 function paintSelection({ ctx, cam, layout }, t) {
   // the object being edited, outlined whether or not its category is on
-  const box = drawBox(t, layout);
+  const box = standingBox(t, layout) ?? drawBox(t, layout);
   const w = Math.max(box.w, 10),
     h = Math.max(box.h, 10);
   const pad = 5 / cam.z;

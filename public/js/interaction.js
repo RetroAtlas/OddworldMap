@@ -36,13 +36,13 @@ import {
   objectShown,
   setPatrol,
   setWireFocus,
+  standingBox,
 } from "./render.js";
 import {
   camCenter,
   computeWiring,
   destOf,
   destTrusted,
-  drawBox,
   isLoopback,
   levelWiring,
   lineRuns,
@@ -527,7 +527,9 @@ function updateHover() {
   }
   hoverTlvs = state.path.tlvs.filter((t) => {
     if (!objectShown(t)) return false;
-    const { x, y, w, h } = drawBox(t, LAYOUT);
+    const box = standingBox(t, LAYOUT);
+    if (!box) return false;
+    const { x, y, w, h } = box;
     const x2 = x + Math.max(w, 10),
       y2 = y + Math.max(h, 10);
     return pt.x >= x - 4 && pt.x <= x2 + 4 && pt.y >= y - 4 && pt.y <= y2 + 4;
