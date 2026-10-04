@@ -86,7 +86,7 @@ What the first slice leaves out is stated in [docs/viewer-geometry.md](../docs/v
 
 ## Shipped (2026-10-03)
 
-**The Markers-for-the-rest toggle** (`show.markers`, on by default, greyed until the objects are shown): the marker of every object whose type the rules do not know. Off, the object is off the map, label, hover and wires included, by the one predicate (`objectShown` in render.js) every surface judges by, so the categories go on choosing which objects are there and the two drawing toggles how they are drawn. It answers the mixture the sprites left: a category turned off hid its sprites with its rectangles, so no setting of the categories gave the game's own view.
+**The Markers-for-the-rest toggle** (`show.markers`, on by default, greyed until the objects are shown): the marker of every object whose type the rules do not know; a known type whose state draws nothing, an open door say, stays hoverable and labelled, unseen as in the game. Off, the object is off the map, label, hover and wires included, by the one predicate (`objectShown` in render.js) every surface judges by, so the categories go on choosing which objects are there and the two drawing toggles how they are drawn. It answers the mixture the sprites left: a category turned off hid its sprites with its rectangles, so no setting of the categories gave the game's own view.
 
 ## What could ship, in order
 

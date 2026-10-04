@@ -91,6 +91,56 @@ test.describe("Objects as themselves", () => {
     expect(errors).toEqual([]);
   });
 
+  test("while the sidecar is still coming, nothing stands where a sprite will", async ({
+    page,
+  }) => {
+    const errors = trackErrors(page);
+    await seedView(page, { show: { objects: false }, cats: ALL_CATS });
+    await page.goto(`/?embed=1#AE/MI/1/${SLIG.x1 + 12}/${SLIG.y1 - 10}/1.00`);
+    await settle(page, SLIG);
+    const marker = await pixels(page, SLIG);
+    let release;
+    const held = new Promise((r) => (release = r));
+    await page.route(/sprites_ae\.json$/, async (route) => {
+      await held;
+      await route.continue();
+    });
+    await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const sidebar = await import(u("sidebar.js"));
+      sidebar.toggleShow("objects");
+    });
+    const bare = await pixels(page, SLIG);
+    const corner = (px) => px.slice(0, 4);
+    expect(corner(bare)).not.toEqual(corner(marker));
+    // an export would wait: the artwork is not ready without the sidecar
+    expect(
+      await page.evaluate(async () => {
+        const u = (m) => new URL("js/" + m, location.href).href;
+        const st = await import(u("state.js"));
+        const render = await import(u("render.js"));
+        return render.artworkReady(st.state.path);
+      }),
+    ).toBe(false);
+    const landed = page.waitForResponse(/sprites_ae\.json$/);
+    release();
+    await landed;
+    await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const render = await import(u("render.js"));
+      const deadline = Date.now() + 20000;
+      while (Date.now() < deadline) {
+        await render.preloadPath(st.state.path);
+        if (render.artworkReady(st.state.path)) break;
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      render.draw();
+    });
+    expect(await pixels(page, SLIG)).not.toEqual(bare);
+    expect(errors).toEqual([]);
+  });
+
   test("a sidecar that fails to load is asked for once, the objects fall back to markers, and the toggle retries", async ({
     page,
   }) => {
@@ -114,6 +164,15 @@ test.describe("Objects as themselves", () => {
     expect(asks.length).toBe(1);
     // with the sidecar failed the slig stays on the map, as its marker: the same
     // pixels the objects off would paint
+    expect(
+      await page.evaluate(async () => {
+        const u = (m) => new URL("js/" + m, location.href).href;
+        const st = await import(u("state.js"));
+        const render = await import(u("render.js"));
+        const t = st.state.path.tlvs.find((o) => o.name === "Slig");
+        return render.objectShown(t);
+      }),
+    ).toBe(true);
     const fallen = await pixels(page, SLIG);
     await page.evaluate(async () => {
       const u = (m) => new URL("js/" + m, location.href).href;
@@ -291,6 +350,15 @@ test.describe("Objects as themselves", () => {
       return render.objectShown(t);
     });
     expect(hovered).toBe(false);
+    // an open door's type is drawn, so the door stays on the map unseen
+    const door = await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const render = await import(u("render.js"));
+      const t = st.state.path.tlvs.find((o) => o.name === "Door" && o.fields?.start_state === 0);
+      return t && render.objectShown(t);
+    });
+    expect(door).toBe(true);
     expect(errors).toEqual([]);
   });
 

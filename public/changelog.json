@@ -1,6 +1,12 @@
 {
  "entries": [
   {
+   "date": "2026-10-04",
+   "tag": "fixed",
+   "title": "No flash of rectangles before the sprites",
+   "detail": "When the objects came on, the first paint ran before the sprite table had arrived and drew every object as its marker for a moment, so the sprites landed over a flash of rectangles. An object that will stand as a sprite now draws nothing until its table is in, and the rest follow \"Markers for the rest\" as before."
+  },
+  {
    "date": "2026-10-03",
    "tag": "new",
    "title": "Markers for the rest: the map as the game shows it",

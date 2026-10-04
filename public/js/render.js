@@ -43,7 +43,7 @@ import {
   setMotionRunning,
   setPatrolsRunning,
 } from "./motion.js";
-import { spriteDraws } from "./sprites.js";
+import { spriteDraws, spriteTypes } from "./sprites.js";
 
 // canvas colors shared with the stylesheet, read once from the tokens
 const COLOR = {
@@ -174,13 +174,21 @@ function spriteRecords(data, lvl, path, set) {
   return spriteCache.byTlv;
 }
 
-// an object is on the map while its category is and, with the markers off,
-// only as a sprite; the hover and the snap judge by the last paint's records
+// what an object is drawn as: its sprite, its marker, or nothing. A type the
+// rules know is a sprite object whatever its own state draws, an open door
+// included, so it stays there to point at
 let paintedSprites = null;
-const shown = (t, sprites) =>
-  markerShown(t) &&
-  ((PENS.on && barrierDir(t) !== null) || state.show.markers || !sprites || sprites.has(t));
-export const objectShown = (t) => shown(t, paintedSprites);
+const ruled = {};
+const hasRule = (game, name) => (ruled[game] ??= new Set(spriteTypes(game))).has(name);
+function drawnAs(t, sprites) {
+  if (!markerShown(t)) return null;
+  if (PENS.on && barrierDir(t) !== null) return "marker";
+  if (!state.show.objects) return "marker";
+  if (hasRule(state.data.id, t.name))
+    return sprites ? "sprite" : spritesFailed(state.data.id) ? "marker" : null;
+  return state.show.markers ? "marker" : null;
+}
+export const objectShown = (t) => drawnAs(t, paintedSprites) !== null;
 
 // draw() skips an image that has not arrived and repaints when it does; a
 // one-shot paint has no second chance. The masks are waited for whatever the
@@ -612,8 +620,9 @@ function paintMarkers(f, sprites) {
   const { ctx, cam, data, path, layout, showLabels } = f;
   ctx.font = `${11 / cam.z}px sans-serif`;
   for (const t of path.tlvs) {
-    if (!shown(t, sprites)) continue;
-    if (sprites?.has(t)) {
+    const as = drawnAs(t, sprites);
+    if (!as) continue;
+    if (as === "sprite") {
       // the sprite stands for the marker; the label and the edited mark stay
       if (showLabels || Object.keys(editedFields(t)).length) paintMarkerNotes(f, t);
       continue;
