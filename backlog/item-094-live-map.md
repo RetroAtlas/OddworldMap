@@ -86,11 +86,13 @@ What the first slice leaves out is stated in [docs/viewer-geometry.md](../docs/v
 
 ## Shipped (2026-10-03)
 
-**The Markers-for-the-rest toggle** (`show.markers`, on by default, greyed until the objects are shown): the marker of every object whose type the rules do not know; a known type whose state draws nothing, an open door say, stays hoverable and labelled, unseen as in the game. Off, the object is off the map, label, hover and wires included, by the one predicate (`objectShown` in render.js) every surface judges by, so the categories go on choosing which objects are there and the two drawing toggles how they are drawn. It answers the mixture the sprites left: a category turned off hid its sprites with its rectangles, so no setting of the categories gave the game's own view.
+**The Markers-for-the-rest toggle** (`show.markers`, on by default, greyed until the objects are shown): the marker of every object whose type the rules do not know; a known type whose state draws nothing, an open door say, stays hoverable, unseen as in the game. Off, the object is off the map, label, hover and wires included, by the one predicate (`objectShown` in render.js) every surface judges by, so the categories go on choosing which objects are there and the two drawing toggles how they are drawn. It answers the mixture the sprites left: a category turned off hid its sprites with its rectangles, so no setting of the categories gave the game's own view.
 
 ## Shipped (2026-10-04)
 
 **The defaults.** The map opens with the objects as themselves and the patrols walking, the markers of what has no sprite kept on, so a visitor meets the map moving and still sees every object on it, the game's own view one toggle away. The cost was measured before deciding: the busiest paths paint in 2 to 6 ms a frame on a retina canvas at the engine's 30 ticks, the sidecar is some 17 KB gzipped a game and the atlas one PNG a game, 636 KB for Exoddus and 956 KB for Oddysee, fetched once and kept by the offline download; the clock already yields to a hidden tab, the world graph and a reduced-motion preference. A view remembered from before these toggles existed carries no value for them, so it opens on the new defaults too.
+
+**The ways out.** With the markers off, a door, well, teleporter or transition whose state draws nothing stays on the map unseen, hoverable and clickable, so every arrow leaves from something that can be followed.
 
 ## What could ship, in order
 

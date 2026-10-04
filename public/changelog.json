@@ -3,6 +3,12 @@
   {
    "date": "2026-10-04",
    "tag": "improved",
+   "title": "The ways out stay on the map",
+   "detail": "With the markers off, a well, teleporter or transition of a type with no sprite went off the map with the rest, so an arrow could leave from an empty spot. They now stay, unseen: hovering finds them and a click still follows, so every arrow leaves from something you can follow."
+  },
+  {
+   "date": "2026-10-04",
+   "tag": "improved",
    "title": "The map opens with the objects as themselves",
    "detail": "The map now opens with the objects drawn as themselves and the patrols walking, and \"Markers for the rest\" stays on, so the first view shows every object: the game's own sprite where it has one, a rectangle where it has none. The toggles are where they were: \"Objects as themselves\" (or press o) brings every marker back, \"Patrols\" (or press b) holds the creatures in place, and \"Markers for the rest\" off leaves the objects the game shows and nothing else. A view remembered from before these toggles existed opens on the new defaults too."
   },

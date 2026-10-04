@@ -406,6 +406,15 @@ test.describe("Objects as themselves", () => {
       return t && render.objectShown(t);
     });
     expect(door).toBe(true);
+    // a well has no sprite in Exoddus but is a way out, so it stays as well
+    const well = await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const render = await import(u("render.js"));
+      const t = st.state.path.tlvs.find((o) => o.name === "WellExpress" && o.x1 === 1025);
+      return t && render.objectShown(t);
+    });
+    expect(well).toBe(true);
     expect(errors).toEqual([]);
   });
 

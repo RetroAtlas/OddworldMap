@@ -27,6 +27,7 @@ import {
   drawBox,
   lineRuns,
   markerCentre,
+  wayThrough,
   offScreen,
   screenRuns,
 } from "./model.js";
@@ -174,19 +175,31 @@ function spriteRecords(data, lvl, path, set) {
   return spriteCache.byTlv;
 }
 
-// what an object is drawn as: its sprite, its marker, or nothing. A type the
-// rules know is a sprite object whatever its own state draws, an open door
-// included, so it stays there to point at
 let paintedSprites = null;
 const ruled = {};
 const hasRule = (game, name) => (ruled[game] ??= new Set(spriteTypes(game))).has(name);
+let waysCache = { path: null, set: null };
+function hasWay(t) {
+  const { data, lvl, path } = state;
+  if (waysCache.path !== path)
+    waysCache = { path, set: new Set(path.tlvs.filter((o) => wayThrough(o, data, lvl, path))) };
+  return waysCache.set.has(t);
+}
+// what an object is drawn as: its sprite, its marker, unseen (there to point
+// at, nothing to paint) or nothing. A type the rules know is a sprite object
+// whatever its own state draws, an open door included, and a way out of the
+// path stays whatever the markers toggle says, so an arrow always leaves from
+// something that can be followed
 function drawnAs(t, sprites) {
   if (!markerShown(t)) return null;
   if (PENS.on && barrierDir(t) !== null) return "marker";
   if (!state.show.objects) return "marker";
-  if (hasRule(state.data.id, t.name))
-    return sprites ? "sprite" : spritesFailed(state.data.id) ? "marker" : null;
-  return state.show.markers ? "marker" : null;
+  if (hasRule(state.data.id, t.name)) {
+    if (sprites) return sprites.has(t) ? "sprite" : "unseen";
+    return spritesFailed(state.data.id) ? "marker" : null;
+  }
+  if (state.show.markers) return "marker";
+  return hasWay(t) ? "unseen" : null;
 }
 export const objectShown = (t) => drawnAs(t, paintedSprites) !== null;
 
@@ -622,9 +635,11 @@ function paintMarkers(f, sprites) {
   for (const t of path.tlvs) {
     const as = drawnAs(t, sprites);
     if (!as) continue;
-    if (as === "sprite") {
-      // the sprite stands for the marker; the label and the edited mark stay
-      if (showLabels || Object.keys(editedFields(t)).length) paintMarkerNotes(f, t);
+    if (as !== "marker") {
+      // the sprite stands for the marker; the edited mark stays, and the label
+      // where there is a sprite to name
+      const label = showLabels && as === "sprite";
+      if (label || Object.keys(editedFields(t)).length) paintMarkerNotes(f, t, label);
       continue;
     }
     const dir = PENS.on ? barrierDir(t) : null; // pens off: barriers are plain meta boxes
@@ -934,7 +949,7 @@ export function standingBox(t, layout) {
 }
 
 // the label and the edited mark of an object its sprite stands for
-function paintMarkerNotes({ ctx, cam, layout, showLabels }, t) {
+function paintMarkerNotes({ ctx, cam, layout }, t, label) {
   const box = standingBox(t, layout);
   if (!box) return;
   const w = Math.max(box.w, 10),
@@ -946,7 +961,7 @@ function paintMarkerNotes({ ctx, cam, layout, showLabels }, t) {
     ctx.setLineDash([]);
     ctx.strokeRect(box.x - pad, box.y - pad, w + 2 * pad, h + 2 * pad);
   }
-  if (showLabels) {
+  if (label) {
     ctx.fillStyle = catOf(t).color;
     ctx.fillText(t.name, box.x, box.y - 3 / cam.z);
   }
