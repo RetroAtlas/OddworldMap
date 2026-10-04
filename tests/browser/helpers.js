@@ -2,6 +2,8 @@
 // page.evaluate against the page's own live module singletons and come back as
 // plain data, so every assertion happens in Node where a failure prints both sides.
 
+import { CATS } from "../../public/js/config.js";
+
 // every key explicit, so a future default flip cannot move a test
 export const QUIET_SHOW = {
   spaced: false,
@@ -30,6 +32,9 @@ export const NO_CATS = {
   nav: false,
   meta: false,
 };
+
+// the categories as config.js ships them
+export const DEFAULT_CATS = Object.fromEntries(CATS.map((c) => [c.key, c.on]));
 
 export function trackErrors(page) {
   const errors = [];

@@ -3,6 +3,12 @@
   {
    "date": "2026-10-04",
    "tag": "improved",
+   "title": "The map opens with the objects as themselves",
+   "detail": "The map now opens with the objects drawn as themselves and the patrols walking, and \"Markers for the rest\" stays on, so the first view shows every object: the game's own sprite where it has one, a rectangle where it has none. The toggles are where they were: \"Objects as themselves\" (or press o) brings every marker back, \"Patrols\" (or press b) holds the creatures in place, and \"Markers for the rest\" off leaves the objects the game shows and nothing else. A view remembered from before these toggles existed opens on the new defaults too."
+  },
+  {
+   "date": "2026-10-04",
+   "tag": "improved",
    "title": "Hovering follows a creature on patrol",
    "detail": "With \"Patrols\" on, a creature's label already went where it went. Now hovering, clicking, the dashed highlight and the selection outline follow it there too, so a Slig half-way along its beat is inspected where it stands rather than at the spot it was placed."
   },

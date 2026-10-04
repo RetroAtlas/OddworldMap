@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { test, expect } from "@playwright/test";
-import { trackErrors, settleAny } from "./helpers.js";
+import { DEFAULT_CATS, seedView, settleAny, trackErrors } from "./helpers.js";
 import { canonical } from "../../public/js/reliveexport.js";
 
 const DIGESTS = JSON.parse(
@@ -36,11 +36,14 @@ async function attach(page) {
 }
 const editOn = (page) => page.evaluate(() => window.__st.edit);
 
-// the setting that arms the mode, seeded before any module runs
-const armEditing = (page) =>
-  page.addInitScript(() =>
+// the setting that arms the mode, seeded before any module runs, beside the
+// quiet view whose markers the clicks land on
+const armEditing = async (page) => {
+  await seedView(page, { cats: DEFAULT_CATS });
+  await page.addInitScript(() =>
     localStorage.setItem("owm:settings", JSON.stringify({ editObjects: true })),
   );
+};
 
 // centre the standing path's first Door by setting the camera itself, the way
 // settle() does, so no scheduled hash write can re-apply under the click; returns
@@ -419,6 +422,7 @@ test("undo and redo step a path's edits, on the keys and in the panel", async ({
 
 test("editing waits behind a setting, and the data never does", async ({ page }) => {
   const errors = trackErrors(page);
+  await seedView(page, { cats: DEFAULT_CATS });
   await page.goto("/#AE");
   await settleAny(page);
   await attach(page);
