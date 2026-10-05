@@ -33,10 +33,10 @@ import {
   scheduleDraw,
   setConnFocus,
   setHighlight,
+  hitBoxes,
   objectShown,
   setPatrol,
   setWireFocus,
-  standingBox,
 } from "./render.js";
 import {
   camCenter,
@@ -51,7 +51,6 @@ import {
   pathIn,
   patrolZone,
   resolveTarget,
-  smallestMarker,
   snapTarget,
   wireEnds,
   zoomAt,
@@ -295,7 +294,7 @@ cv.addEventListener("click", () => {
   }
   updateHover(); // taps arrive without a preceding hover move
   if (state.edit) {
-    selectObject(smallestMarker(hoverTlvs, LAYOUT));
+    selectObject(hoverTlvs[0] ?? null);
     return;
   }
   for (const t of hoverTlvs) {
@@ -525,15 +524,25 @@ function updateHover() {
       )
       .slice(0, 4);
   }
-  hoverTlvs = state.path.tlvs.filter((t) => {
-    if (!objectShown(t)) return false;
-    const box = standingBox(t, LAYOUT);
-    if (!box) return false;
-    const { x, y, w, h } = box;
-    const x2 = x + Math.max(w, 10),
-      y2 = y + Math.max(h, 10);
-    return pt.x >= x - 4 && pt.x <= x2 + 4 && pt.y >= y - 4 && pt.y <= y2 + 4;
+  // each object under the point by the smallest of its boxes the point fell
+  // in, ranked what the eye sees first, then the smaller box, then the one
+  // placed later (painted on top) among equals
+  const under = [];
+  state.path.tlvs.forEach((t, i) => {
+    if (!objectShown(t)) return;
+    let best = null;
+    for (const b of hitBoxes(t, LAYOUT)) {
+      const w = Math.max(b.w, 10),
+        h = Math.max(b.h, 10);
+      if (pt.x < b.x - 4 || pt.x > b.x + w + 4 || pt.y < b.y - 4 || pt.y > b.y + h + 4) continue;
+      const area = w * h;
+      if (!best || (b.drawn && !best.drawn) || (b.drawn === best.drawn && area < best.area))
+        best = { drawn: b.drawn, area };
+    }
+    if (best) under.push({ t, i, ...best });
   });
+  under.sort((a, b) => b.drawn - a.drawn || a.area - b.area || b.i - a.i);
+  hoverTlvs = under.map((u) => u.t);
   // partner preview: hovering a linked object outlines its counterpart when
   // the destination resolves within the current path
   let partner = null;

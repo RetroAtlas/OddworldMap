@@ -1,6 +1,12 @@
 {
  "entries": [
   {
+   "date": "2026-10-05",
+   "tag": "improved",
+   "title": "Point at a sprite where it is drawn",
+   "detail": "Hovering and clicking now answer over the sprite as drawn, as well as over the object's own rectangle as before, so a creature whose image reaches past its rectangle is found by its image. Where a sprite's image covers a smaller unseen rectangle, the sprite is what a click picks."
+  },
+  {
    "date": "2026-10-04",
    "tag": "improved",
    "title": "The ways out stay on the map",

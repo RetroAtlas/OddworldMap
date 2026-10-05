@@ -6,6 +6,8 @@ import { seedView, settle, trackErrors } from "./helpers.js";
 const SLIG = { game: "AE", level: "MI", path: 1, x1: 1400, y1: 700, x2: 1424, y2: 724 };
 // a Zulag 4 slig whose beat spans two screens, walking from its first tick
 const WALKER = { game: "AO", level: "R2", path: 14, x1: 503, y1: 194, x2: 527, y2: 218 };
+// a Paramonian rolling ball, drawn far larger than the rectangle that places it
+const BALL = { game: "AO", level: "F2", path: 4, x1: 284, y1: 696, x2: 308, y2: 720 };
 // the pulley of the Mines' first lift, three screens above the lift's rect, and a band
 // of the top wheel's frame between the two ropes
 const PULLEY = { game: "AE", level: "MI", path: 1, x1: 4025, y1: 925, x2: 4049, y2: 949 };
@@ -340,6 +342,98 @@ test.describe("Objects as themselves", () => {
       sidebar.toggleShow("objects");
     });
     expect(await pixels(page, WHEEL)).not.toEqual(withWheel);
+    expect(errors).toEqual([]);
+  });
+
+  test("over a sprite's image, the hover names what the eye sees before an unseen rectangle beneath", async ({
+    page,
+  }) => {
+    const errors = trackErrors(page);
+    await seedView(page, { show: { objects: true }, cats: ALL_CATS });
+    // the lift's rope runs over a lift stop two screens up, whose rectangle draws nothing
+    const spot = { x: 4038, y: 992 };
+    await page.goto(`/?embed=1#AE/MI/1/${spot.x}/${spot.y}/1.00`);
+    await settle(page, PULLEY);
+    await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const render = await import(u("render.js"));
+      const deadline = Date.now() + 20000;
+      while (Date.now() < deadline) {
+        await render.preloadPath(st.state.path);
+        if (render.artworkReady(st.state.path)) break;
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      render.draw();
+    });
+    const client = await page.evaluate(async (w) => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const r = document.getElementById("cv").getBoundingClientRect();
+      return {
+        x: r.left + (st.dX(w.x) - st.state.cam.x) * st.state.cam.z,
+        y: r.top + (st.dY(w.y) - st.state.cam.y) * st.state.cam.z,
+      };
+    }, spot);
+    await page.mouse.move(client.x, client.y);
+    const tip = page.locator("#tip");
+    await expect(tip).toContainText("LiftPoint (4000,980)");
+    await expect(tip).toContainText("LiftPoint (4000,1500)");
+    expect((await tip.textContent()).indexOf("LiftPoint (4000,1500)")).toBeLessThan(
+      (await tip.textContent()).indexOf("LiftPoint (4000,980)"),
+    );
+    expect(errors).toEqual([]);
+  });
+
+  test("a sprite larger than its rectangle is hovered over its whole image", async ({ page }) => {
+    const errors = trackErrors(page);
+    await seedView(page, { show: { objects: true }, cats: ALL_CATS });
+    await page.goto(`/?embed=1#AO/F2/4/${BALL.x1 + 12}/${BALL.y1 + 12}/1.60`);
+    await settle(page, BALL);
+    await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const render = await import(u("render.js"));
+      const deadline = Date.now() + 20000;
+      while (Date.now() < deadline) {
+        await render.preloadPath(st.state.path);
+        if (render.artworkReady(st.state.path)) break;
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      render.draw();
+    });
+    // a point inside the drawn sprite but clear of the placed rectangle
+    const spot = await page.evaluate(async (b) => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const render = await import(u("render.js"));
+      const model = await import(u("model.js"));
+      const t = st.state.path.tlvs.find((o) => o.name === "RollingBall" && o.x1 === b.x1);
+      const [marker, sprite] = render.hitBoxes(t, st.LAYOUT);
+      if (!sprite) return null;
+      const r = document.getElementById("cv").getBoundingClientRect();
+      const client = (x, y) => ({
+        x: r.left + (x - st.state.cam.x) * st.state.cam.z,
+        y: r.top + (y - st.state.cam.y) * st.state.cam.z,
+      });
+      const outside = (x, y) =>
+        x < marker.x - 6 || x > marker.x + Math.max(marker.w, 10) + 6 || y < marker.y - 6;
+      for (const [x, y] of [
+        [sprite.x + 3, sprite.y + 3],
+        [sprite.x + sprite.w - 3, sprite.y + 3],
+        [sprite.x + 3, sprite.y + sprite.h - 3],
+      ])
+        if (outside(x, y))
+          return {
+            ...client(x, y),
+            area: sprite.w * sprite.h,
+            placed: model.drawBox(t, st.LAYOUT).w,
+          };
+      return null;
+    }, BALL);
+    expect(spot).not.toBeNull();
+    await page.mouse.move(spot.x, spot.y);
+    await expect(page.locator("#tip")).toContainText(`RollingBall (${BALL.x1},${BALL.y1})`);
     expect(errors).toEqual([]);
   });
 

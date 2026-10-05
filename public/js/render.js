@@ -525,7 +525,10 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
     const live = transients && motionRunning();
     paintSprites(f, sprites, set, live ? sceneTick() : 0, live ? patrolTick() : 0);
     paintForeground(f, show.dim);
-  } else movedBy.clear();
+  } else {
+    movedBy.clear();
+    spriteBoxes.clear();
+  }
   if (show.fg) paintMasks(f);
   if (show.grid) paintGrid(f);
   if (show.coll) paintLines(f);
@@ -716,6 +719,26 @@ function paintMarkers(f, sprites) {
 // how far each object on patrol has walked from its mark this frame, so its
 // label and edited mark can follow it
 const movedBy = new Map();
+// the rectangle each object's sprite was last drawn in, clipped to its camera
+const spriteBoxes = new Map();
+function noteBox(t, b, cam, layout) {
+  const x1 = Math.max(b.x, cam.dx),
+    y1 = Math.max(b.y, cam.dy),
+    x2 = Math.min(b.x + b.w, cam.dx + layout.visW),
+    y2 = Math.min(b.y + b.h, cam.dy + layout.visH);
+  if (x2 <= x1 || y2 <= y1) return;
+  const u = spriteBoxes.get(t);
+  if (!u) {
+    spriteBoxes.set(t, { x: x1, y: y1, w: x2 - x1, h: y2 - y1 });
+    return;
+  }
+  const ux2 = Math.max(u.x + u.w, x2),
+    uy2 = Math.max(u.y + u.h, y2);
+  u.x = Math.min(u.x, x1);
+  u.y = Math.min(u.y, y1);
+  u.w = ux2 - u.x;
+  u.h = uy2 - u.y;
+}
 
 // the objects as the game draws them, back to front by layer and, within a
 // layer, the later-constructed under the earlier; each clipped to its own
@@ -723,6 +746,7 @@ const movedBy = new Map();
 // never paints over a neighbouring screen
 function paintSprites({ ctx, data, layout, path }, sprites, set, tick, patrolAt) {
   movedBy.clear();
+  spriteBoxes.clear();
   const recs = [];
   let order = 0;
   for (const [t, list] of sprites) {
@@ -787,8 +811,9 @@ function paintSprites({ ctx, data, layout, path }, sprites, set, tick, patrolAt)
         const { top, bottom, step } = r.tile;
         if (yy > bottom) yy = bottom + ((yy - bottom) % step);
         for (; yy >= top - step; yy -= step)
-          drawFrame(ctx, cam, sc, frame, r, shown, ae, shown.x, yy);
-      } else drawFrame(ctx, cam, sc, frame, r, shown, ae, shown.x, shown.y);
+          noteBox(t, drawFrame(ctx, cam, sc, frame, r, shown, ae, shown.x, yy), cam, layout);
+      } else
+        noteBox(t, drawFrame(ctx, cam, sc, frame, r, shown, ae, shown.x, shown.y), cam, layout);
       ctx.restore();
     }
   }
@@ -906,6 +931,7 @@ function drawFrame(ctx, cam, sheet, frame, r, shown, ae, wx, wy) {
     ctx.drawImage(sheet, sx, sy, w, h, 0, 0, dh, dw);
   } else ctx.drawImage(sheet, sx, sy, w, h, 0, 0, dw, dh);
   ctx.restore();
+  return { x: x0, y: y0, w: dw, h: dh };
 }
 
 // the foreground masks as the game draws them, over the sprites and untinted
@@ -946,6 +972,18 @@ export function standingBox(t, layout) {
     box.y += drawY(t.y1 + walked[1], layout) - drawY(t.y1, layout);
   }
   return box;
+}
+
+// where an object can be pointed at: its marker's box, carried by any walk,
+// and the rectangle its sprite was last drawn in, each saying whether it is
+// what the eye sees there
+export function hitBoxes(t, layout) {
+  const boxes = [];
+  const b = standingBox(t, layout);
+  if (b) boxes.push({ ...b, drawn: drawnAs(t, paintedSprites) === "marker" });
+  const s = spriteBoxes.get(t);
+  if (s) boxes.push({ ...s, drawn: true });
+  return boxes;
 }
 
 // the label and the edited mark of an object its sprite stands for

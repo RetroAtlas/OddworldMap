@@ -25,7 +25,6 @@ import {
   parseHash,
   patrolZone,
   resolveTarget,
-  smallestMarker,
   snapTarget,
   zoomAt,
 } from "../../public/js/model.js";
@@ -1363,19 +1362,4 @@ test("a segment always names its path, so undo across a seam cannot rebind it", 
 test("the route token refuses a marker flood", () => {
   const markers = Array.from({ length: MAX_ROUTE_PTS + 1 }, () => "sR1.1").join(";");
   assert.equal(parseHash(`#AO/R2/1/0/0/1.00/route=n1;${markers};1,2;end`).route, null);
-});
-
-test("the smallest marker under a point wins, and a tie goes to the last", () => {
-  const geo = AE_GEOMETRY;
-  const zone = { x1: 10, y1: 10, x2: 210, y2: 110 };
-  const door = { x1: 60, y1: 40, x2: 84, y2: 64 };
-  assert.equal(smallestMarker([zone, door], geo), door);
-  assert.equal(smallestMarker([door, zone], geo), door);
-  const twin = { ...door };
-  assert.equal(smallestMarker([door, twin], geo), twin);
-  // a post's zero width floors at 10, so a squat box can still be the smaller
-  const post = { x1: 100, y1: 10, x2: 100, y2: 110 };
-  const squat = { x1: 100, y1: 10, x2: 140, y2: 30 };
-  assert.equal(smallestMarker([post, squat], geo), squat);
-  assert.equal(smallestMarker([], geo), null);
 });

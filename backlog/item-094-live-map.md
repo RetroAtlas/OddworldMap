@@ -94,6 +94,10 @@ What the first slice leaves out is stated in [docs/viewer-geometry.md](../docs/v
 
 **The ways out.** With the markers off, a door, well, teleporter or transition whose state draws nothing stays on the map unseen, hoverable and clickable, so every arrow leaves from something that can be followed.
 
+## Shipped (2026-10-05)
+
+**The hover answers over a sprite's drawn rectangle** as well as its placed one (`hitBoxes`).
+
 ## What could ship, in order
 
 Nothing before the probe. Then three tiers, each shippable alone and each true to the bar it claims:

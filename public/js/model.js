@@ -252,19 +252,6 @@ export function markerCentre(t, layout) {
   return [b.x + b.w / 2, b.y + b.h / 2];
 }
 
-// of several markers one point hits, the smallest box: a zone covers the objects
-// inside it, and of two alike the one painted last is on top
-export function smallestMarker(ts, layout) {
-  let best = null,
-    area = Infinity;
-  for (const t of ts) {
-    const b = drawBox(t, layout);
-    const a = Math.max(b.w, 10) * Math.max(b.h, 10);
-    if (a <= area) [best, area] = [t, a];
-  }
-  return best;
-}
-
 const inWindow = (v, cell, win, vis) => {
   const off = v - Math.floor(v / cell) * cell;
   return off >= win && off < win + vis;
