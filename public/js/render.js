@@ -404,6 +404,7 @@ window.addEventListener("settings-changed", (e) => {
     syncMotion();
     scheduleDraw();
   }
+  if (e.detail?.key === "labelScenery") scheduleDraw();
 });
 window.addEventListener("graph-changed", syncMotion);
 reducedMotion.addEventListener("change", syncMotion);
@@ -642,12 +643,15 @@ function paintPatrol({ ctx }, zone) {
   ctx.fillRect(zone.x1, zone.y1 - 8, zone.x2 - zone.x1, zone.y2 - zone.y1 + 16);
 }
 
+const labelled = (t) => !catOf(t).quietLabels || getSettings().labelScenery;
+
 function paintMarkers(f, sprites) {
-  const { ctx, cam, data, path, layout, showLabels } = f;
+  const { ctx, cam, data, path, layout } = f;
   ctx.font = `${11 / cam.z}px sans-serif`;
   for (const t of path.tlvs) {
     const as = drawnAs(t, sprites);
     if (!as) continue;
+    const showLabels = f.showLabels && labelled(t);
     if (as !== "marker") {
       // the sprite stands for the marker; the edited mark stays, and the label
       // where there is a sprite to name

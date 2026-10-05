@@ -27,6 +27,7 @@ export const SETTINGS_DEFAULTS = {
   showRawValues: false,
   editObjects: false,
   animate: true,
+  labelScenery: false,
 };
 // fieldPrefs (not a boolean; added by sanitizeSettings) — which object fields
 // to show: mode "default" (the notable ones) or "more" (per-game, per-type
@@ -268,6 +269,9 @@ export function initSettings() {
   document.body.classList.toggle("fullnames", s.fullNames);
   bind("sAnimate", "animate", () =>
     window.dispatchEvent(new CustomEvent("settings-changed", { detail: { key: "animate" } })),
+  );
+  bind("sLabelScenery", "labelScenery", () =>
+    window.dispatchEvent(new CustomEvent("settings-changed", { detail: { key: "labelScenery" } })),
   );
   bind("sFullNames", "fullNames", (on) => {
     document.body.classList.toggle("fullnames", on);

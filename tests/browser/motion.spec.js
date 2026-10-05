@@ -8,6 +8,8 @@ const SLIG = { game: "AE", level: "MI", path: 1, x1: 1400, y1: 700, x2: 1424, y2
 const WALKER = { game: "AO", level: "R2", path: 14, x1: 503, y1: 194, x2: 527, y2: 218 };
 // a Paramonian rolling ball, drawn far larger than the rectangle that places it
 const BALL = { game: "AO", level: "F2", path: 4, x1: 284, y1: 696, x2: 308, y2: 720 };
+// a Rupture Farms light effect under the Before Packaging walkway
+const LIGHT = { game: "AO", level: "R1", path: 15, x1: 4405, y1: 233, x2: 4429, y2: 257 };
 // the pulley of the Mines' first lift, three screens above the lift's rect, and a band
 // of the top wheel's frame between the two ropes
 const PULLEY = { game: "AE", level: "MI", path: 1, x1: 4025, y1: 925, x2: 4049, y2: 949 };
@@ -435,6 +437,43 @@ test.describe("Objects as themselves", () => {
     expect(spot).not.toBeNull();
     await page.mouse.move(spot.x, spot.y);
     await expect(page.locator("#tip")).toContainText(`RollingBall (${BALL.x1},${BALL.y1})`);
+    expect(errors).toEqual([]);
+  });
+
+  test("the scenery carries no label until the setting asks, then it does", async ({ page }) => {
+    const errors = trackErrors(page);
+    await seedView(page, { show: { objects: true, labels: true }, cats: ALL_CATS });
+    await page.goto(`/#AO/R1/15/${LIGHT.x1 + 30}/${LIGHT.y1}/2.00`);
+    await settle(page, LIGHT);
+    await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const render = await import(u("render.js"));
+      const deadline = Date.now() + 20000;
+      while (Date.now() < deadline) {
+        await render.preloadPath(st.state.path);
+        if (render.artworkReady(st.state.path)) break;
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      render.draw();
+    });
+    // the label's colour is the Scenery filter's own, nowhere in the artwork above the light
+    const pink = (px) => {
+      let n = 0;
+      for (let i = 0; i < px.length; i += 4)
+        if (px[i] > 220 && px[i + 1] > 150 && px[i + 1] < 200 && px[i + 2] > 170) n++;
+      return n;
+    };
+    const band = { x1: LIGHT.x1, y1: LIGHT.y1 - 8, x2: LIGHT.x1 + 60, y2: LIGHT.y1 - 1 };
+    expect(pink(await pixels(page, band))).toBe(0);
+    await page.click("#settingsBtn");
+    await page.check("#sLabelScenery");
+    await page.click("#settingsClose");
+    await page.evaluate(async () => {
+      const render = await import(new URL("js/render.js", location.href).href);
+      render.draw();
+    });
+    expect(pink(await pixels(page, band))).toBeGreaterThan(0);
     expect(errors).toEqual([]);
   });
 

@@ -2,6 +2,12 @@
  "entries": [
   {
    "date": "2026-10-05",
+   "tag": "improved",
+   "title": "The scenery keeps quiet",
+   "detail": "The glows, backdrops, doves, fires and webs go unlabelled, since there are hundreds of them and their names would cover a Rupture Farms screen at any zoom close enough to read them. A new setting under Buttons and names, \"Label the scenery\", names them in either view. Hovering and the screen list name each of them as before."
+  },
+  {
+   "date": "2026-10-05",
    "tag": "new",
    "title": "Scenery gets a filter of its own",
    "detail": "The object filters are sorted so the map opens showing what the game shows. A new \"Scenery\" filter holds the glows and door lights, the animated backdrops, the portal doves, the flintlock fires and the Paramites' webs, and is on by default. \"Displays\" comes on as well, so Oddysee's hint flies are part of the opening view. Lifts have moved in with \"Doors / Transitions\", since they carry Abe between floors the way doors carry him between screens, honey sits with the pickups, and the remaining \"Hoists / edges\" filter stays off."
