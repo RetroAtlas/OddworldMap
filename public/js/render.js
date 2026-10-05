@@ -13,6 +13,7 @@ import {
   barrierDir,
   catOf,
   markerShown,
+  USED_UNSEEN,
 } from "./config.js";
 import { $, cv, cvCtx, cssVar } from "./dom.js";
 import { editedFields } from "./edits.js";
@@ -26,8 +27,9 @@ import {
   computeWiring,
   drawBox,
   lineRuns,
+  destOf,
+  destTrusted,
   markerCentre,
-  wayThrough,
   offScreen,
   screenRuns,
 } from "./model.js";
@@ -178,18 +180,26 @@ function spriteRecords(data, lvl, path, set) {
 let paintedSprites = null;
 const ruled = {};
 const hasRule = (game, name) => (ruled[game] ??= new Set(spriteTypes(game))).has(name);
-let waysCache = { path: null, set: null };
-function hasWay(t) {
+let usedCache = { path: null, set: null };
+function used(t) {
   const { data, lvl, path } = state;
-  if (waysCache.path !== path)
-    waysCache = { path, set: new Set(path.tlvs.filter((o) => wayThrough(o, data, lvl, path))) };
-  return waysCache.set.has(t);
+  if (usedCache.path !== path) {
+    const follows = (o) => {
+      const d = destOf(o, data, lvl, path);
+      return d && destTrusted(d, data, lvl);
+    };
+    usedCache = {
+      path,
+      set: new Set(path.tlvs.filter((o) => USED_UNSEEN.includes(o.name) || follows(o))),
+    };
+  }
+  return usedCache.set.has(t);
 }
 // what an object is drawn as: its sprite, its marker, unseen (there to point
 // at, nothing to paint) or nothing. A type the rules know is a sprite object
-// whatever its own state draws, an open door included, and a way out of the
-// path stays whatever the markers toggle says, so an arrow always leaves from
-// something that can be followed
+// whatever its own state draws, an open door included, and what can be
+// followed or used stays whatever the markers toggle says, so an arrow always
+// leaves from something that can be followed
 function drawnAs(t, sprites) {
   if (!markerShown(t)) return null;
   if (PENS.on && barrierDir(t) !== null) return "marker";
@@ -199,7 +209,7 @@ function drawnAs(t, sprites) {
     return spritesFailed(state.data.id) ? "marker" : null;
   }
   if (state.show.markers) return "marker";
-  return hasWay(t) ? "unseen" : null;
+  return used(t) ? "unseen" : null;
 }
 export const objectShown = (t) => drawnAs(t, paintedSprites) !== null;
 

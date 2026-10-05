@@ -79,6 +79,9 @@ export const barrierDir = t => {
 // hundreds of posts are clutter for anyone not reading patrol ranges
 export const PENS = { on: false };
 
+// scenery the game draws nothing for yet Abe uses, kept there to point at
+export const USED_UNSEEN = ["HandStone", "MovieHandStone", "BellSongStone", "MovieStone"];
+
 // the one visibility rule for map markers: what is drawn is exactly what can
 // be pointed at
 export const markerShown = t =>

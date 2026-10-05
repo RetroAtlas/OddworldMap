@@ -98,6 +98,8 @@ What the first slice leaves out is stated in [docs/viewer-geometry.md](../docs/v
 
 **The hover answers over a sprite's drawn rectangle** as well as its placed one (`hitBoxes`).
 
+**The stones Abe uses** stay present unseen with the markers off (`USED_UNSEEN` in config.js), as the ways out do.
+
 ## What could ship, in order
 
 Nothing before the probe. Then three tiers, each shippable alone and each true to the bar it claims:

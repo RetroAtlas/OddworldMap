@@ -3,6 +3,12 @@
   {
    "date": "2026-10-05",
    "tag": "improved",
+   "title": "The stones Abe uses stay on the map",
+   "detail": "With the markers off, the hand, bell and movie stones went off the map, though the game shows each of them. They now stay the way the ways out do, answering a hover and a click with nothing drawn."
+  },
+  {
+   "date": "2026-10-05",
+   "tag": "improved",
    "title": "Point at a sprite where it is drawn",
    "detail": "Hovering and clicking now answer over the sprite as drawn, as well as over the object's own rectangle as before, so a creature whose image reaches past its rectangle is found by its image. Where a sprite's image covers a smaller unseen rectangle, the sprite is what a click picks."
   },
