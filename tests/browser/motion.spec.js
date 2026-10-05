@@ -561,6 +561,54 @@ test.describe("Objects as themselves", () => {
     expect(errors).toEqual([]);
   });
 
+  test("the clock runs with the objects shown, stops with the setting, and the patrols count from their turn", async ({
+    page,
+  }) => {
+    const errors = trackErrors(page);
+    await seedView(page, { show: { objects: true, patrols: true }, cats: ALL_CATS });
+    await page.goto(`/#AE/MI/1/${SLIG.x1}/${SLIG.y1}/1.00`);
+    await settle(page, SLIG);
+    await page.evaluate(async () => {
+      window.__motion = await import(new URL("js/motion.js", location.href).href);
+    });
+    const read = () =>
+      page.evaluate(() => {
+        const m = window.__motion;
+        return { running: m.motionRunning(), scene: m.sceneTick(), patrol: m.patrolTick() };
+      });
+    await page.waitForFunction(() => window.__motion.sceneTick() > 10);
+    const a = await read();
+    expect(a.running).toBe(true);
+    // the setting stops the clock where it stands
+    await page.click("#settingsBtn");
+    await page.uncheck("#sAnimate");
+    const b = await read();
+    expect(b.running).toBe(false);
+    await page.waitForTimeout(200);
+    expect((await read()).scene).toBe(b.scene);
+    await page.check("#sAnimate");
+    await page.click("#settingsClose");
+    await page.waitForFunction((was) => window.__motion.sceneTick() > was + 5, b.scene);
+    // the patrols count from their toggle's turn while the scene keeps counting
+    const before = await read();
+    const after = await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const sidebar = await import(u("sidebar.js"));
+      sidebar.toggleShow("patrols");
+      sidebar.toggleShow("patrols");
+      const m = window.__motion;
+      return { scene: m.sceneTick(), patrol: m.patrolTick() };
+    });
+    expect(after.patrol).toBeLessThan(before.patrol);
+    expect(after.patrol).toBeLessThan(2);
+    expect(after.scene).toBeGreaterThanOrEqual(before.scene);
+    // a path change starts the scene over
+    await page.keyboard.press("]");
+    await page.waitForFunction(() => location.hash.startsWith("#AE/MI/2"));
+    await page.waitForFunction((was) => window.__motion.sceneTick() < was, before.scene);
+    expect(errors).toEqual([]);
+  });
+
   test("Dim backgrounds dims the foreground masks drawn over the sprites too", async ({ page }) => {
     const errors = trackErrors(page);
     // no categories on: with the objects off every marker draws, and one could cover the pixel
