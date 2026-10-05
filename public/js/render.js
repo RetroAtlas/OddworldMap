@@ -814,7 +814,7 @@ function paintSprites({ ctx, data, layout, path }, sprites, set, tick, patrolAt)
       if (r.blend === 1) ctx.globalCompositeOperation = "lighter";
       else if (r.blend === 3) {
         ctx.globalCompositeOperation = "lighter";
-        ctx.globalAlpha = 0.25;
+        ctx.globalAlpha = 0.25 * shown.bright;
       }
       if (r.tile) {
         let yy = shown.y;

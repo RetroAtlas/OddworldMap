@@ -178,6 +178,46 @@ export function brainAt(r, set, tick) {
   };
 }
 
+// the door lights share one timer: at rest between windows and, in each,
+// brightening and dimming on a half sine over the window, the rest and the
+// window rolled from the dice. The engine's quarter-sine table, 16.16 fixed
+const SINE = [
+  0, 1633, 3266, 4897, 6525, 8148, 9767, 11380, 12985, 14582, 16171, 17749, 19316, 20872, 22414,
+  23942, 25456, 26953, 28434, 29897, 31342, 32767, 34172, 35555, 36917, 38255, 39570, 40860, 42125,
+  43363, 44575, 45758, 46914, 48040, 49136, 50202, 51237, 52240, 53210, 54147, 55051, 55920, 56754,
+  57554, 58317, 59044, 59735, 60388, 61004, 61582, 62122, 62623, 63085, 63508, 63891, 64235, 64539,
+  64803, 65026, 65209, 65351, 65453, 65514, 65535,
+];
+const halfSine = (a) => (a < 64 ? SINE[a] : a < 128 ? SINE[127 - a] : 0) / 65536;
+const LIGHT_REST = 32;
+const pulses = new WeakMap();
+export function lightLevel(set, tick) {
+  let p = pulses.get(set);
+  if (!p) {
+    p = { seed: 0, windows: [{ next: 0, end: 0 }] };
+    p.windows[0].end = roll(p, set.dice, 30, 45);
+    pulses.set(set, p);
+  }
+  const w = p.windows;
+  while (w[w.length - 1].end < tick) {
+    const next = w[w.length - 1].end + 1 + roll(p, set.dice, 6, 20);
+    w.push({ next, end: next + roll(p, set.dice, 30, 45) });
+  }
+  if (tick <= 0) return LIGHT_REST;
+  let lo = 0,
+    hi = w.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (w[mid].end < tick) lo = mid + 1;
+    else hi = mid;
+  }
+  const { next, end } = w[lo];
+  if (tick < next) return LIGHT_REST;
+  const angle = Math.trunc((128 * (tick - next)) / (end - next)) & 255;
+  return Math.min(255, Math.trunc(255 * halfSine(angle)) + LIGHT_REST);
+}
+const roll = (p, dice, min, max) => min + (dice[p.seed++ & 255] % (max - min + 1));
+
 // what a record shows at a tick: its animation, frame, place and facing, after
 // the cycles the game runs without a player
 export function resolveRecord(r, set, tick, patrolAt = tick) {
@@ -186,7 +226,8 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
     x = r.x,
     y = r.y,
     flip = r.flip,
-    moved = false;
+    moved = false,
+    bright = 1;
   const cy = r.cycle;
   let at = tick; // the tick the shown animation counts from
   if (cy) {
@@ -218,6 +259,8 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
       else if (p < 2 * n + 15) d = n * cy.speed - (p - n - 15) * cy.speed;
       else d = 0;
       x = start + dir * d;
+    } else if (cy.kind === "pulse") {
+      bright = lightLevel(set, tick) / 255;
     } else if (cy.kind === "flip8") {
       if (Math.floor(tick / 8) % 2) flip = !flip;
     } else if (cy.kind === "chime") {
@@ -239,7 +282,7 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
   const a = anims[anim];
   if (!a) return null;
   const frame = r.frozen ? r.frame : frameAt(a, at, r.frame);
-  return { name: anim, anim: a, frame, x, y, flip, moved };
+  return { name: anim, anim: a, frame, x, y, flip, moved, bright };
 }
 
 // what a record's brain has given off at a tick: sprites with their frame,

@@ -858,13 +858,16 @@ rule("AO", "LightEffect", (c) => {
   if (!anim) return [];
   const flip = f.direction === 0;
   const xoff = f.type === 4 ? 6 : 0;
+  // the sheet at the pulse's peak; the pulse itself is the additive pass's alpha.
+  // The flint glow is the switchable light, red until its switch is thrown
   return [
     draw(c, anim, t.x1 + (flip ? -xoff : xoff), t.y1 + 5, {
       scale: 1,
       layer: 17,
       flip,
       blend: 3,
-      rgb: [32, 32, 32],
+      rgb: f.type === 3 ? [255, 32, 32] : [255, 255, 255],
+      cycle: { kind: "pulse" },
     }),
   ];
 });

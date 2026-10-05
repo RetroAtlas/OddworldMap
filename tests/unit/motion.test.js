@@ -988,6 +988,38 @@ test("void: Oddysee's skippers carry a point in the gap between screens to the n
   assert.equal(camVoidY(400, -2, 12), 372, "rising lands twelve under the first's bottom");
 });
 
+test("pulse: the door lights rest dim, then breathe up and back over the windows the dice set", () => {
+  const set = { anims: { GoldGlow: anim(1, 15, true) }, dice: new Array(256).fill(0) };
+  const r = {
+    anim: "GoldGlow",
+    x: 0,
+    y: 0,
+    scale: 1,
+    layer: 17,
+    flip: false,
+    frame: 0,
+    cycle: { kind: "pulse" },
+  };
+  const level = (t) => Math.round(resolveRecord(r, set, t).bright * 255);
+  // zero dice: a first window of 30 ticks from tick 0, then rests of 6 and windows of 30
+  assert.equal(level(0), 32);
+  assert.equal(level(1), 57);
+  assert.equal(level(3), 107, "four angle steps a tick up the half sine");
+  assert.equal(level(15), 255);
+  assert.equal(level(29), 57);
+  assert.equal(level(30), 32, "the window's last tick is back at rest");
+  assert.equal(level(36), 32, "the six-tick rest");
+  assert.equal(level(37), 32, "the second window opens at angle zero");
+  assert.equal(level(38), 57);
+  assert.equal(level(42), 159, "mid-ramp");
+  assert.equal(level(52), 255);
+  assert.equal(level(66), 57);
+  assert.equal(level(67), 32, "and closes");
+  assert.equal(level(68), 32);
+  assert.equal(level(3), 107, "a tick already passed reads the same");
+  assert.equal(level(1), 57, "asking back behind the cursor answers from the record");
+});
+
 test("patrol: an Oddysee slig whose bounds sit on two screens crosses the gap between them and comes back", () => {
   // two screens' floors each run some way into the gap, with nothing between
   const floors = [
