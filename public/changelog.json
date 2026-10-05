@@ -3,6 +3,12 @@
   {
    "date": "2026-10-05",
    "tag": "new",
+   "title": "Scenery gets a filter of its own",
+   "detail": "The object filters are sorted so the map opens showing what the game shows. A new \"Scenery\" filter holds the glows and door lights, the animated backdrops, the portal doves, the flintlock fires and the Paramites' webs, and is on by default. \"Displays\" comes on as well, so Oddysee's hint flies are part of the opening view. Lifts have moved in with \"Doors / Transitions\", since they carry Abe between floors the way doors carry him between screens, honey sits with the pickups, and the remaining \"Hoists / edges\" filter stays off."
+  },
+  {
+   "date": "2026-10-05",
+   "tag": "new",
    "title": "The lights breathe",
    "detail": "Oddysee's glows and door lights now pulse the way the game pulses them, all on one timer. They rest dim for a moment, then brighten and dim together over a second or so, the rest and the swell rolled from the game's own dice."
   },

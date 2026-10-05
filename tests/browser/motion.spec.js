@@ -42,6 +42,7 @@ const ALL_CATS = {
   pickup: true,
   screen: true,
   nav: true,
+  scenery: true,
   meta: true,
 };
 

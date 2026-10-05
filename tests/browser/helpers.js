@@ -30,6 +30,7 @@ export const NO_CATS = {
   pickup: false,
   screen: false,
   nav: false,
+  scenery: false,
   meta: false,
 };
 

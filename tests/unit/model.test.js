@@ -1257,13 +1257,13 @@ test("every prefix of a multi-path route link parses as a prefix of it, or as no
 
 test("snapTarget: shown objects' centers and collision ends, within tolerance", () => {
   const door = { ...tlv("Door"), x1: 256 + 100, y1: 120 + 50, x2: 256 + 110, y2: 120 + 60 };
-  const honey = { ...tlv("Honey"), x1: 256 + 200, y1: 120 + 50, x2: 256 + 210, y2: 120 + 60 };
-  const P = path(1, [door, honey]);
+  const zone = { ...tlv("ShadowZone"), x1: 256 + 200, y1: 120 + 50, x2: 256 + 210, y2: 120 + 60 };
+  const P = path(1, [door, zone]);
   P.lines = [[256, 120, 256 + 50, 120, 0]]; // draw-space (0,0)→(50,0)
   const snap = (pt, lines) => snapTarget(pt, P, 8, AO_GEOMETRY, lines);
   assert.deepEqual(snap({ x: 100, y: 52 }), { x: 105, y: 55 }); // the door's center
   assert.equal(snap({ x: 96, y: 55 }), null); // a pixel past the radius
-  assert.equal(snap({ x: 205, y: 55 }), null); // Honey's category is off
+  assert.equal(snap({ x: 205, y: 55 }), null); // the zone's category is off
   assert.equal(snap({ x: 2, y: 2 }), null); // lines not drawn, ends inert
   assert.deepEqual(snap({ x: 2, y: 2 }, true), { x: 0, y: 0 });
   assert.deepEqual(snap({ x: 48, y: 3 }, true), { x: 50, y: 0 }); // nearer end wins
