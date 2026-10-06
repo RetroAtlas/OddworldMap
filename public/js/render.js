@@ -220,18 +220,18 @@ function kept(t) {
 }
 // what an object is drawn as: its sprite, its marker, unseen (there to point
 // at, nothing to paint) or nothing. A type the rules know stays present when
-// its own state draws nothing, an open door included: a marker while the
-// markers are on, unseen otherwise; what the kept set holds stays present
-// unseen while the markers are off
+// its own state draws nothing, an open door included
 function drawnAs(t, sprites) {
   if (!markerShown(t)) return null;
   if (PENS.on && barrierDir(t) !== null) return "marker";
   if (!state.show.objects) return "marker";
+  // the editor's click needs a box for everything it may edit
+  const markers = state.show.markers || state.edit;
   if (hasRule(state.data.id, t.name)) {
-    if (sprites) return sprites.has(t) ? "sprite" : state.show.markers ? "marker" : "unseen";
+    if (sprites) return sprites.has(t) ? "sprite" : markers ? "marker" : "unseen";
     return spritesFailed(state.data.id) ? "marker" : null;
   }
-  if (state.show.markers) return "marker";
+  if (markers) return "marker";
   return kept(t) ? "unseen" : null;
 }
 export const objectShown = (t) => drawnAs(t, paintedSprites) !== null;
@@ -427,6 +427,7 @@ window.addEventListener("settings-changed", (e) => {
   if (e.detail?.key === "labelScenery") scheduleDraw();
 });
 window.addEventListener("graph-changed", syncMotion);
+window.addEventListener("edit-changed", scheduleDraw);
 reducedMotion.addEventListener("change", syncMotion);
 window.addEventListener("selection-changed", syncMotion); // a game switch wants its own sheets
 window.addEventListener("online", () => {

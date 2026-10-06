@@ -108,6 +108,8 @@ What the first slice leaves out is stated in [docs/viewer-geometry.md](../docs/v
 
 **A marker again.** A type the rules know whose state draws nothing, an open door, a lift stop, an electric wall that is off, takes its marker back while Markers for the rest is on, so that toggle is the whole reference view: every object a sprite or a marker.
 
+**Edit mode draws every marker** while it is on, whatever Markers for the rest says, so what the panel can edit can be clicked, and puts them away when it is off.
+
 ## What could ship, in order
 
 Nothing before the probe. Then three tiers, each shippable alone and each true to the bar it claims:

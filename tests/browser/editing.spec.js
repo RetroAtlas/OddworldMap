@@ -420,6 +420,81 @@ test("undo and redo step a path's edits, on the keys and in the panel", async ({
   expect(errors).toEqual([]);
 });
 
+test("the mode draws every marker, whatever Markers for the rest says", async ({ page }) => {
+  const errors = trackErrors(page);
+  await seedView(page, {
+    show: { objects: true, markers: false, wires: false },
+    cats: DEFAULT_CATS,
+  });
+  // the clock stopped, so only the mode's own repaint can change the canvas
+  await page.addInitScript(() =>
+    localStorage.setItem("owm:settings", JSON.stringify({ editObjects: true, animate: false })),
+  );
+  await page.goto("/#AE/MI/1");
+  await settleAny(page);
+  // the sheet lands after the first paint; the canvas is read only once it has
+  await page.evaluate(async () => {
+    const u = (m) => new URL("js/" + m, location.href).href;
+    const st = await import(u("state.js"));
+    const render = await import(u("render.js"));
+    const deadline = Date.now() + 20000;
+    while (Date.now() < deadline) {
+      await render.preloadPath(st.state.path);
+      if (render.artworkReady(st.state.path)) break;
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    render.draw();
+  });
+  // a spawner has no sprite, no wire drawn and no way out: unseen until the mode wants it
+  const boxes = () =>
+    page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const render = await import(u("render.js"));
+      const t = st.state.path.tlvs.find((o) => o.name === "SligSpawner");
+      return {
+        shown: render.objectShown(t),
+        drawn: render.hitBoxes(t, st.LAYOUT).map((b) => b.drawn),
+      };
+    });
+  // the canvas under the spawner's rect, read after the paint the mode flip schedules
+  const pixels = async () => {
+    await page.evaluate(
+      () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
+    );
+    return page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const t = st.state.path.tlvs.find((o) => o.name === "SligSpawner");
+      const cv = document.getElementById("cv");
+      const z = st.state.cam.z;
+      const x = (st.dX(t.x1) - st.state.cam.x) * z,
+        y = (st.dY(t.y1) - st.state.cam.y) * z;
+      const w = (st.dX(t.x2) - st.dX(t.x1)) * z,
+        h = (st.dY(t.y2) - st.dY(t.y1)) * z;
+      const px = cv
+        .getContext("2d")
+        .getImageData(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+      return [...px.data];
+    });
+  };
+  expect(await boxes()).toEqual({ shown: false, drawn: [false] });
+  const bare = await pixels();
+  await page.keyboard.press("e");
+  await page.waitForFunction(
+    () => document.getElementById("editBtn").getAttribute("aria-pressed") === "true",
+  );
+  expect(await boxes()).toEqual({ shown: true, drawn: [true] });
+  expect(await pixels()).not.toEqual(bare);
+  await page.keyboard.press("e");
+  await page.waitForFunction(
+    () => document.getElementById("editBtn").getAttribute("aria-pressed") !== "true",
+  );
+  expect(await boxes()).toEqual({ shown: false, drawn: [false] });
+  expect(await pixels()).toEqual(bare);
+  expect(errors).toEqual([]);
+});
+
 test("editing waits behind a setting, and the data never does", async ({ page }) => {
   const errors = trackErrors(page);
   await seedView(page, { cats: DEFAULT_CATS });

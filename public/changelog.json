@@ -3,6 +3,12 @@
   {
    "date": "2026-10-06",
    "tag": "improved",
+   "title": "Edit mode shows every object",
+   "detail": "With the markers off, a spawner, a trigger or a continue point had no box to click, so the editor could reach it only through the screen list. \"Edit objects\" now draws every marker while it is on, whatever \"Markers for the rest\" says, and puts them away when it is off."
+  },
+  {
+   "date": "2026-10-06",
+   "tag": "improved",
    "title": "\"Markers for the rest\" shows every object",
    "detail": "With the toggle on, an object whose sprite has nothing to draw in its state kept nothing of its own: an open door, a lift stop, an electric wall that is off stood unseen. The toggle now gives each its rectangle back, so \"Markers for the rest\" on is the whole reference view, every object either a sprite or a marker."
   },
