@@ -27,6 +27,13 @@ const snapAt = (c, x) => {
 
 const trunc = Math.trunc;
 const mid = (t) => trunc((t.x1 + t.x2) / 2);
+const midY = (t) => trunc((t.y1 + t.y2) / 2);
+const ALL_LINES = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+// the levels whose themed art and tints differ
+const AE_VAULTS = new Set(["NE", "PV", "SV"]);
+const AO_STOCKYARDS = new Set(["E1", "E2"]);
+const AO_YARDS_TINT = (c, yards, other) => (AO_STOCKYARDS.has(c.lvl.short) ? yards : other);
+const NE_TINT = (c) => (c.lvl.short === "NE" ? [137, 137, 137] : [127, 127, 127]);
 
 // a brain rolls the game's dice from a seed; the game's is wherever its
 // counter stood, the record's is its place in the path
@@ -261,7 +268,6 @@ rule("AO", "TrapDoor", (c) => {
   ];
 });
 
-const AE_SLAM_VAULT = new Set(["NE", "PV", "SV"]);
 rule("AE", "SlamDoor", (c) => {
   const { t, f } = c;
   if (f.start_shut !== 1) return [];
@@ -269,7 +275,7 @@ rule("AE", "SlamDoor", (c) => {
   const x = mid(t);
   const hit = raycastDown(c.lines, x, t.y1, t.y1 + 24, planeTypes(c.half, FLOOR));
   const y = (hit ?? t.y1) + (f.flip_on_y_axis === 1 ? trunc(-68 * s) : 0);
-  const theme = AE_SLAM_VAULT.has(c.lvl.short) ? "Vault" : "Industrial";
+  const theme = AE_VAULTS.has(c.lvl.short) ? "Vault" : "Industrial";
   return [
     draw(c, `Slam_Door_${theme}_Closed`, x, y, {
       layer: c.half ? 6 : 25,
@@ -319,8 +325,7 @@ const rope = (c, anim, x, y, top, bottom, s, o = {}) =>
     ...o,
   });
 
-const AE_NECRUM_ROPE = new Set(["NE", "PV", "SV"]);
-const aeRope = (c) => (AE_NECRUM_ROPE.has(c.lvl.short) ? "AE_Rope@NECROPE" : "AE_Rope");
+const aeRope = (c) => (AE_VAULTS.has(c.lvl.short) ? "AE_Rope@NECROPE" : "AE_Rope");
 const AO_R1_ROPE = new Set(["R1", "D1", "D2", "R6", "R2", "D7"]);
 const aoRope = (c) => (AO_R1_ROPE.has(c.lvl.short) ? "Rope_R1" : "Rope_Lines");
 
@@ -364,7 +369,6 @@ rule("AE", "WorkWheel", (c) => {
 
 // the platform the start-point TLV of a lift column spawns, with its bottom
 // wheel, its two ropes and the top wheel at the pulley the column carries
-const AE_LIFT_NECRUM = new Set(["NE", "PV", "SV"]);
 const AO_LIFT = {
   R1: "RuptureFarms",
   R6: "RuptureFarms",
@@ -381,7 +385,7 @@ function liftPoint(c) {
   if (f.start_point !== 1) return [];
   const ae = c.game === "AE";
   const theme = ae
-    ? AE_LIFT_NECRUM.has(c.lvl.short)
+    ? AE_VAULTS.has(c.lvl.short)
       ? "Necrum"
       : "Mines"
     : AO_LIFT[c.lvl.short] || "Forest";
@@ -472,7 +476,6 @@ function liftPoint(c) {
 both("LiftPoint", liftPoint);
 
 rule("AE", "RockSack", (c) => [draw(c, "RockSack_Idle", mid(c.t), c.t.y2, { semi: false })]);
-const AO_STOCKYARDS = new Set(["E1", "E2"]);
 rule("AO", "RockSack", (c) => [
   draw(
     c,
@@ -484,14 +487,14 @@ rule("AO", "RockSack", (c) => [
 ]);
 rule("AE", "MeatSack", (c) => [
   draw(c, "MeatSack_Idle", c.t.x1, c.t.y1, {
-    rgb: c.lvl.short === "NE" ? [137, 137, 137] : [127, 127, 127],
+    rgb: NE_TINT(c),
   }),
 ]);
 rule("AO", "MeatSack", (c) => [draw(c, "MeatSack_Idle", c.t.x1, c.t.y1)]);
 rule("AE", "BoneBag", (c) => [
   draw(c, "BoneBag_Idle", mid(c.t), c.t.y2, {
     semi: false,
-    rgb: c.lvl.short === "NE" ? [137, 137, 137] : [127, 127, 127],
+    rgb: NE_TINT(c),
   }),
 ]);
 
@@ -570,7 +573,7 @@ rule("AO", "Mine", (c) => {
   const x = t.x1 + 12,
     y = t.y1 + 24;
   const layer = c.half ? 16 : 35;
-  const rgb = AO_STOCKYARDS.has(c.lvl.short) ? [50, 50, 50] : [105, 105, 105];
+  const rgb = AO_YARDS_TINT(c, [50, 50, 50], [105, 105, 105]);
   return [
     draw(c, "Mine_Flash", x, y, { layer, rgb: [128, 128, 128] }),
     draw(c, "Mine", x, y, { layer, rgb }),
@@ -592,7 +595,7 @@ rule("AE", "UXB", (c) => {
   const y = hit ?? t.y1;
   const s = c.half ? 0.5 : 1;
   const layer = c.half ? 16 : 35;
-  const rgb = c.lvl.short === "NE" ? [137, 137, 137] : [127, 127, 127];
+  const rgb = NE_TINT(c);
   const off = f.start_state === 1;
   return [
     draw(c, off ? "Bomb_RedGreenTick@GreenFlash" : "Bomb_RedGreenTick", x, y - trunc(s * 17), {
@@ -610,7 +613,7 @@ rule("AO", "UXB", (c) => {
     y = t.y1 + 24;
   const s = c.half ? 0.5 : 1;
   const layer = c.half ? 16 : 35;
-  const rgb = AO_STOCKYARDS.has(c.lvl.short) ? [80, 90, 110] : [105, 105, 105];
+  const rgb = AO_YARDS_TINT(c, [80, 90, 110], [105, 105, 105]);
   const off = f.start_state === 1;
   return [
     draw(c, off ? "Bomb_RedGreenTick@GreenFlash" : "Bomb_RedGreenTick", x, y - trunc(s * 12), {
@@ -734,7 +737,7 @@ rule("AE", "Drill", (c) => {
       t.y2,
       {
         layer: c.half ? 5 : 24,
-        rgb: c.lvl.short === "NE" ? [137, 137, 137] : [127, 127, 127],
+        rgb: NE_TINT(c),
         flip: dir === 2,
         cycle: brain(c, "drill", false, p),
       },
@@ -931,9 +934,6 @@ const camOf = (c, t) =>
     (cm) =>
       cm.cell === Math.floor(t.y1 / c.geo.worldH) * c.path.w + Math.floor(t.x1 / c.geo.worldW),
   );
-
-const AO_YARDS_TINT = (c, yards, other) => (AO_STOCKYARDS.has(c.lvl.short) ? yards : other);
-const NE_TINT = (c) => (c.lvl.short === "NE" ? [137, 137, 137] : [127, 127, 127]);
 
 both("Slig", (c) => {
   const { t, f } = c;
@@ -1391,9 +1391,6 @@ both("BirdPortal", (c) => {
     );
   return out;
 });
-
-const ALL_LINES = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-const midY = (t) => trunc((t.y1 + t.y2) / 2);
 
 // every record a placed object draws, or [] for a type without a sprite
 export function spriteDraws(data, lvl, path, t, set) {
