@@ -57,47 +57,50 @@ export async function seedView(page, { show = {}, cats = {} } = {}) {
 
 // imports resolve through location.href so they hit the same module instances
 // the page booted
-export async function settle(page, { game, level, path }) {
-  await page.evaluate(
-    async (sel) => {
-      const u = (m) => new URL("js/" + m, location.href).href;
-      const st = await import(u("state.js"));
-      const render = await import(u("render.js"));
-      const cv = document.getElementById("cv");
-      const deadline = Date.now() + 30000;
-      const there = () =>
-        st.state.data?.id === sel.game &&
-        st.state.lvl?.short === sel.level &&
-        st.state.path?.id === sel.path &&
-        cv.clientWidth > 0;
-      while (!there()) {
-        if (Date.now() > deadline) throw new Error(`settle timeout at ${location.hash}`);
-        await new Promise(requestAnimationFrame);
-      }
-      await render.preloadPath(st.state.path);
-      if (!render.artworkReady(st.state.path)) throw new Error("artwork did not load");
-      render.draw();
-    },
-    { game, level, path },
-  );
-}
-
-// the same settle for wherever boot lands, when the test pins no place
-export async function settleAny(page) {
-  await page.evaluate(async () => {
+async function settleAt(page, sel) {
+  await page.evaluate(async (sel) => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const st = await import(u("state.js"));
     const render = await import(u("render.js"));
     const cv = document.getElementById("cv");
     const deadline = Date.now() + 30000;
-    while (!(st.state.path && cv.clientWidth > 0)) {
-      if (Date.now() > deadline) throw new Error("settle timeout");
-      await new Promise(requestAnimationFrame);
+    const frame = () => {
+      if (Date.now() > deadline)
+        throw new Error(`settle timeout at ${location.hash || "the boot view"}`);
+      return new Promise(requestAnimationFrame);
+    };
+    const there = sel
+      ? () =>
+          st.state.data?.id === sel.game &&
+          st.state.lvl?.short === sel.level &&
+          st.state.path?.id === sel.path
+      : () => !!st.state.path;
+    while (!(there() && cv.clientWidth > 0)) await frame();
+    // the sidebar's boot slide shrinks the canvas for a while and the view recentres
+    // with it, so a read waits for the width to come to rest
+    let width = cv.clientWidth,
+      still = 0;
+    while (still < 3) {
+      await frame();
+      if (cv.clientWidth === width) still++;
+      else {
+        width = cv.clientWidth;
+        still = 0;
+      }
     }
     await render.preloadPath(st.state.path);
     if (!render.artworkReady(st.state.path)) throw new Error("artwork did not load");
     render.draw();
-  });
+  }, sel);
+}
+
+export async function settle(page, { game, level, path }) {
+  await settleAt(page, { game, level, path });
+}
+
+// the same settle for wherever boot lands, when the test pins no place
+export async function settleAny(page) {
+  await settleAt(page, null);
 }
 
 export async function probeAnchor(page, anchor) {
