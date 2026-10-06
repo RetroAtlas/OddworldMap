@@ -583,6 +583,16 @@ function enemyStopper(st, grids, left, aboveGrid) {
   );
 }
 
+// a SlamDoor across the probe that the switches hold shut: one shut at a fresh
+// start with its switch off, or one open at a fresh start with its switch on
+function slamDoorBlocks(st, x1, y1, x2, y2) {
+  const t = tlvAt(st.w.tlvs, x1, y1, x2, y2, "SlamDoor");
+  if (!t) return false;
+  const f = t.fields || {};
+  const on = switchGet(st, f.switch_id) !== 0;
+  return f.start_shut === 1 ? !on : on;
+}
+
 // ---- Slig: a walk to the zone's edge, a pause, a turn, and back
 const sligFacingLeft = (st) =>
   st.cur === "Slig_TurnAroundStanding" && st.m.frame > 4 ? !st.flip : st.flip;
@@ -795,6 +805,7 @@ function scrabAtBound(st) {
   const g = grid(st) * (Math.abs(st.velx) > 5 ? 2 : 1);
   const ahead = st.flip ? -g : g;
   if (wall(st, 45 * scaleOf(st), ahead)) return true;
+  if (slamDoorBlocks(st, st.x, st.y, st.x + ahead, st.y - grid(st))) return true;
   if (enemyStopper(st, Math.abs(st.velx) > 5 ? 2 : 1, st.flip, true)) return true;
   return (
     tlvAt(
@@ -1106,7 +1117,8 @@ Object.assign(MOTIONS, {
       const sx = st.flip ? st.x : px;
       if (
         wall(st, st.w.half ? 5 : 10, st.flip ? -g : g) ||
-        stopperBlocks(st, tlvAt(st.w.tlvs, sx, st.y, sx, st.y, "EnemyStopper"), st.flip)
+        stopperBlocks(st, tlvAt(st.w.tlvs, sx, st.y, sx, st.y, "EnemyStopper"), st.flip) ||
+        slamDoorBlocks(st, px, st.y, px, st.y)
       )
         fleechToIdle(st);
       else st.cur = "Fleech_Crawl";
@@ -1446,6 +1458,7 @@ function glukkonBlocked(st) {
   const g = grid(st);
   const ahead = st.flip ? -g : g;
   if (wall(st, 50 * scaleOf(st), ahead)) return true;
+  if (slamDoorBlocks(st, st.x, st.y, st.x + ahead, st.y - g)) return true;
   if (enemyStopper(st, 1, st.flip, true)) return true;
   return (
     tlvAt(

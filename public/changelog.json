@@ -2,6 +2,12 @@
  "entries": [
   {
    "date": "2026-10-06",
+   "tag": "fixed",
+   "title": "Walkers stop at a shut slam door",
+   "detail": "A Scrab, a Glukkon or a Fleech on patrol walked through a slam door the game keeps shut at a fresh start, and four of them did on the shipped paths. They now turn at such a door as the game turns them, whether it starts shut with its switch off or open with its switch already on, and walk through an open one."
+  },
+  {
+   "date": "2026-10-06",
    "tag": "improved",
    "title": "The sprites arrive sooner",
    "detail": "On a cold visit the map asked for its sprite table only once the first screen had painted, so the objects stood bare for a round trip. The table is now asked for alongside the map data when the view opens with the objects shown, and the sheet follows at the first paint."

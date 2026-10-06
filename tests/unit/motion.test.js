@@ -954,6 +954,44 @@ test("patrol: a fleech facing left asks for a stopper at its own x, one facing r
   assert.equal(span(stopper(518, 532, 1), false)[1], 500);
 });
 
+test("patrol: a slam door the switches hold shut turns a scrab, a Glukkon and a fleech as a wall would", () => {
+  const floor = [[0, 100, 1000, 100, 0]];
+  const bounds = [
+    tlv("ScrabLeftBound", 100, 76, 124, 100),
+    tlv("ScrabRightBound", 700, 76, 724, 100),
+  ];
+  const door = (x, start_shut, switch_id) =>
+    tlv("SlamDoor", x, 76, x + 24, 100, { start_shut, switch_id });
+  const anims = { ...PATROL_ANIMS, ...ROAMER_ANIMS };
+  const steps = (door, animName, brain, p, x, dice) => {
+    const w = world("AE", floor, [...bounds, door], { x, y: 90 });
+    return trail(walker(animName, brain, p, w, x, 100), { anims, dice }, 1, 1500);
+  };
+  const forties = new Array(256).fill(40);
+  const scrab = { chance: 0, leftMin: 20, leftMax: 40, rightMin: 20, rightMax: 40 };
+  const far = (d) => spanOf(steps(d, "Scrab_Idle", "scrab", scrab, 400, forties))[1];
+  assert.ok(
+    far(door(580, 1, 7)) < 580,
+    "the scrab turns short of a door shut until its switch is thrown",
+  );
+  assert.ok(far(door(580, 0, 7)) > 650, "and walks through one open until then");
+  assert.ok(far(door(580, 0, 1)) < 580, "a door the always-on switch shuts turns it too");
+  assert.ok(far(door(580, 1, 1)) > 650, "and one that switch opens is walked through");
+  const gluk = { type: "Normal", checkWalls: true };
+  const gfar = (d) => spanOf(steps(d, "Glukkon_Normal_Idle", "glukkon", gluk, 400, forties))[1];
+  assert.ok(gfar(door(580, 1, 7)) < 580, "the Glukkon turns at it");
+  assert.ok(gfar(door(580, 0, 7)) > 650);
+  // a fleech probes the door only as a crawl starts, a grid ahead: with these dice
+  // every crawl would head right into it, so it stands all the while
+  const fleech = { goesToSleep: false, increaser: 4, range: 300 };
+  const table = Array.from({ length: 256 }, (_, i) => (i * 200 + 13) & 255);
+  const shut = steps(door(520, 1, 7), "Fleech_Idle", "fleech", fleech, 500, table);
+  assert.deepEqual([...kinds(shut)], ["Idle"], "it never sets off into the door");
+  assert.deepEqual(spanOf(shut), [500, 500]);
+  const open = steps(door(520, 0, 7), "Fleech_Idle", "fleech", fleech, 500, table);
+  assert.ok(spanOf(open)[1] > 600, "an open door is crawled through");
+});
+
 test("patrol: an awake fleech turns on the spot, cries, and crawls within its range", () => {
   const floor = [[0, 100, 1000, 100, 0]];
   const w = world("AE", floor, [], { x: 500, y: 90 });
