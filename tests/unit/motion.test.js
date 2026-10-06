@@ -13,7 +13,7 @@ import {
   sceneTick,
   patrolTick,
 } from "../../public/js/motion.js";
-import { camVoidX, camVoidY, raycastDown, snapX } from "../../public/js/collide.js";
+import { camVoidX, camVoidY, snapX } from "../../public/js/collide.js";
 
 const anim = (n, fps, loop, loopStart = 0) => ({
   fps,
@@ -56,21 +56,6 @@ test("frameAt: a start frame shifts the sequence and a single frame never moves"
   assert.equal(frameAt(anim(4, 1, true), 1, 2), 2);
   assert.equal(frameAt(anim(4, 1, true), 3, 2), 0);
   assert.equal(frameAt(anim(1, 1, true), 999), 0);
-});
-
-test("raycastDown: the nearest line of the asked types under the ray, interpolated along a slope", () => {
-  const lines = [
-    [0, 100, 100, 100, 0], // floor at 100
-    [0, 80, 100, 80, 4], // background floor above it
-    [0, 90, 100, 110, 1], // a sloping wall: y = 90 + x/5
-    [200, 50, 300, 50, 0], // out of reach on x
-  ];
-  assert.equal(raycastDown(lines, 50, 70, 120, [0]), 100);
-  assert.equal(raycastDown(lines, 50, 70, 120, [4]), 80);
-  assert.equal(raycastDown(lines, 50, 70, 120, [0, 1]), 100); // the wall meets x=50 at y=100 too
-  assert.equal(raycastDown(lines, 25, 70, 120, [1]), 95);
-  assert.equal(raycastDown(lines, 50, 70, 90, [0]), null); // the ray stops short
-  assert.equal(raycastDown(lines, 150, 0, 500, [0]), null);
 });
 
 test("snapX: 25-unit squares and 13 at half, each game from its own origin", () => {

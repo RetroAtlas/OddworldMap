@@ -39,6 +39,24 @@ test("raycast: the nearest crossing of an asked type, a parallel line never coun
   );
 });
 
+test("raycastDown: the nearest line of the asked types under the ray, interpolated along a slope", () => {
+  const lines = [
+    [0, 100, 100, 100, 0], // floor at 100
+    [0, 80, 100, 80, 4], // background floor above it
+    [0, 90, 100, 110, 1], // a sloping wall: y = 90 + x/5
+    [200, 50, 300, 50, 0], // out of reach on x
+  ];
+  assert.equal(raycastDown(lines, 50, 70, 120, [0]), 100);
+  assert.equal(raycastDown(lines, 50, 70, 120, [4]), 80);
+  assert.equal(raycastDown(lines, 50, 70, 120, [0, 1]), 100); // the wall meets x=50 at y=100 too
+  assert.equal(raycastDown(lines, 25, 70, 120, [1]), 95);
+  assert.equal(raycastDown(lines, 50, 70, 90, [0]), null); // the ray stops short
+  assert.equal(raycastDown(lines, 150, 0, 500, [0]), null);
+  // a vertical line is parallel to the probe, which the engine's raycast never counts
+  assert.equal(raycastDown([...lines, [50, 60, 50, 130, 1]], 50, 70, 120, [1]), 100);
+  assert.equal(raycastDown([[50, 60, 50, 130, 0]], 50, 70, 120, [0]), null);
+});
+
 test("raycastDown and raycastDiag: the vertical probe's nearest y, and the diagonal's crossing with its line", () => {
   assert.equal(raycastDown(LINES, 50, 0, 200, [0]), 100);
   assert.equal(raycastDown(LINES, 150, 0, 200, [0]), 50);
