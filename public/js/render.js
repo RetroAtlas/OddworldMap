@@ -3,6 +3,7 @@
 import { formatDist } from "./util.js";
 import {
   CACHE_MAX_IMAGES,
+  CATS,
   CONN_COLORS,
   ENEMY_CAT,
   FLASH_HOLD_MAX_MS,
@@ -13,7 +14,7 @@ import {
   barrierDir,
   catOf,
   markerShown,
-  USED_UNSEEN,
+  KEPT_UNSEEN,
 } from "./config.js";
 import { $, cv, cvCtx, cssVar } from "./dom.js";
 import { editedFields } from "./edits.js";
@@ -180,26 +181,47 @@ function spriteRecords(data, lvl, path, set) {
 let paintedSprites = null;
 const ruled = {};
 const hasRule = (game, name) => (ruled[game] ??= new Set(spriteTypes(game))).has(name);
-let usedCache = { path: null, set: null };
-function used(t) {
+// connection edges, computed lazily and keyed by path object identity —
+// selection-changed alone won't do: it re-fires for the same path on every
+// pushed hash write
+let connCache = { path: null, edges: null };
+const connections = (data, lvl, path) => {
+  if (connCache.path !== path) connCache = { path, edges: computeConnections(data, lvl, path) };
+  return connCache.edges;
+};
+let keptCache = { path: null, conn: null, wires: null, filters: null, set: null };
+function kept(t) {
   const { data, lvl, path } = state;
-  if (usedCache.path !== path) {
+  const conn = !!state.show.conn,
+    wires = !!state.show.wires;
+  const filters = CATS.map((c) => (c.on ? 1 : 0)).join("") + (PENS.on ? "p" : "");
+  if (
+    keptCache.path !== path ||
+    keptCache.conn !== conn ||
+    keptCache.wires !== wires ||
+    keptCache.filters !== filters
+  ) {
     const follows = (o) => {
       const d = destOf(o, data, lvl, path);
       return d && destTrusted(d, data, lvl);
     };
-    usedCache = {
-      path,
-      set: new Set(path.tlvs.filter((o) => USED_UNSEEN.includes(o.name) || follows(o))),
-    };
+    const set = new Set(path.tlvs.filter((o) => KEPT_UNSEEN.includes(o.name) || follows(o)));
+    if (conn)
+      for (const e of connections(data, lvl, path)) if (e.dst && catOf(e.src).on) set.add(e.dst);
+    if (wires)
+      for (const e of computeWiring(path, data.id).edges)
+        if (markerShown(e.src) && markerShown(e.dst)) {
+          set.add(e.src);
+          set.add(e.dst);
+        }
+    keptCache = { path, conn, wires, filters, set };
   }
-  return usedCache.set.has(t);
+  return keptCache.set.has(t);
 }
 // what an object is drawn as: its sprite, its marker, unseen (there to point
 // at, nothing to paint) or nothing. A type the rules know is a sprite object
-// whatever its own state draws, an open door included, and what can be
-// followed or used stays whatever the markers toggle says, so an arrow always
-// leaves from something that can be followed
+// whatever its own state draws, an open door included, and what the kept set
+// holds stays present unseen while the markers are off
 function drawnAs(t, sprites) {
   if (!markerShown(t)) return null;
   if (PENS.on && barrierDir(t) !== null) return "marker";
@@ -209,7 +231,7 @@ function drawnAs(t, sprites) {
     return spritesFailed(state.data.id) ? "marker" : null;
   }
   if (state.show.markers) return "marker";
-  return used(t) ? "unseen" : null;
+  return kept(t) ? "unseen" : null;
 }
 export const objectShown = (t) => drawnAs(t, paintedSprites) !== null;
 
@@ -326,11 +348,6 @@ function animateFlash() {
   flashRaf = requestAnimationFrame(animateFlash);
 }
 
-// connection edges, computed lazily and keyed by path object identity —
-// selection-changed alone won't do: it re-fires for the same path on every
-// pushed hash write
-let connCache = { path: null, edges: null };
-
 // hovered followable object: its connection edges render emphasized while
 // the rest dim, so one object's circulation reads out of a dense path
 let connFocus = null;
@@ -378,6 +395,8 @@ window.addEventListener("data-changed", () => {
   setWireFocus(null);
   setHighlight(null);
   setPatrol(null);
+  keptCache = { path: null, conn: null, wires: null, filters: null, set: null };
+  connCache = { path: null, edges: null };
   scheduleDraw();
 });
 
@@ -1065,14 +1084,14 @@ function paintWires({ ctx, cam, data, path, layout }, focus) {
 // pairs (double-headed when mutual), dashed to a bare camera, and fixed
 // 45° labelled stubs for destinations on other paths
 function paintConnections({ ctx, cam, data, lvl, path, layout, showLabels }, focus) {
-  if (connCache.path !== path) connCache = { path, edges: computeConnections(data, lvl, path) };
+  const edges = connections(data, lvl, path);
   // focus only dims the rest when the hovered object actually has edges
-  const focusActive = focus && connCache.edges.some((e) => e.src === focus || e.dst === focus);
+  const focusActive = focus && edges.some((e) => e.src === focus || e.dst === focus);
   const headLen = 12 / cam.z;
   const stubLen = Math.min(Math.max(56 / cam.z, 60), 150);
   const S = Math.SQRT1_2;
   ctx.font = `${11 / cam.z}px sans-serif`;
-  for (const e of connCache.edges) {
+  for (const e of edges) {
     if (!catOf(e.src).on) continue; // hidden markers keep their arrows hidden too
     const focused = focusActive && (e.src === focus || e.dst === focus);
     ctx.globalAlpha = focusActive ? (focused ? 0.95 : 0.15) : 0.65;

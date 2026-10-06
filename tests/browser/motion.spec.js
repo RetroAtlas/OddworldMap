@@ -14,6 +14,8 @@ const LIGHT = { game: "AO", level: "R1", path: 15, x1: 4405, y1: 233, x2: 4429, 
 // of the top wheel's frame between the two ropes
 const PULLEY = { game: "AE", level: "MI", path: 1, x1: 4025, y1: 925, x2: 4049, y2: 949 };
 const WHEEL = { x1: 4032, y1: 900, x2: 4046, y2: 920 };
+// a bird portal's exit in Necrum, pointed at by an arrow and by nothing else
+const EXIT = { game: "AE", level: "NE", path: 2, x1: 650, y1: 440, x2: 674, y2: 464 };
 // the slig's left bound, a marker with no sprite
 const BOUND = { game: "AE", level: "MI", path: 1, x1: 1175, y1: 700, x2: 1199, y2: 724 };
 
@@ -388,6 +390,64 @@ test.describe("Objects as themselves", () => {
     expect(errors).toEqual([]);
   });
 
+  test("an arrival only an arrow points at stays while the arrows are drawn", async ({ page }) => {
+    const errors = trackErrors(page);
+    await seedView(page, { show: { objects: true, markers: false, conn: true }, cats: ALL_CATS });
+    await page.goto(`/?embed=1#AE/NE/2/${EXIT.x1}/${EXIT.y1}/1.00`);
+    await settle(page, EXIT);
+    const exit = () =>
+      page.evaluate(async (e) => {
+        const u = (m) => new URL("js/" + m, location.href).href;
+        const st = await import(u("state.js"));
+        const render = await import(u("render.js"));
+        const t = st.state.path.tlvs.find((o) => o.name === "BirdPortalExit" && o.x1 === e.x1);
+        return render.objectShown(t);
+      }, EXIT);
+    expect(await exit()).toBe(true);
+    await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const sidebar = await import(u("sidebar.js"));
+      sidebar.toggleShow("conn");
+    });
+    expect(await exit()).toBe(false);
+    expect(errors).toEqual([]);
+  });
+
+  test("the kept set follows the filters: a way out whose category comes on joins it", async ({
+    page,
+  }) => {
+    const errors = trackErrors(page);
+    await seedView(page, {
+      show: { objects: true, markers: false, conn: true },
+      cats: { ...ALL_CATS, door: false },
+    });
+    await page.goto(`/#AE/NE/2/${EXIT.x1}/${EXIT.y1}/1.00`);
+    await settle(page, EXIT);
+    const exit = () =>
+      page.evaluate(async (e) => {
+        const u = (m) => new URL("js/" + m, location.href).href;
+        const st = await import(u("state.js"));
+        const render = await import(u("render.js"));
+        const t = st.state.path.tlvs.find((o) => o.name === "BirdPortalExit" && o.x1 === e.x1);
+        return render.objectShown(t);
+      }, EXIT);
+    expect(await exit()).toBe(false);
+    // the filter's own checkbox, clicked as the pointer would
+    const doors = (on) =>
+      page.evaluate((want) => {
+        const row = [...document.querySelectorAll("label.checkrow")].find((l) =>
+          l.textContent.includes("Doors / Transitions"),
+        );
+        const cb = row.querySelector("input");
+        if (cb.checked !== want) cb.click();
+      }, on);
+    await doors(true);
+    expect(await exit()).toBe(true);
+    await doors(false);
+    expect(await exit()).toBe(false);
+    expect(errors).toEqual([]);
+  });
+
   test("a sprite larger than its rectangle is hovered over its whole image", async ({ page }) => {
     const errors = trackErrors(page);
     await seedView(page, { show: { objects: true }, cats: ALL_CATS });
@@ -481,7 +541,7 @@ test.describe("Objects as themselves", () => {
     page,
   }) => {
     const errors = trackErrors(page);
-    await seedView(page, { show: { objects: false, markers: true }, cats: ALL_CATS });
+    await seedView(page, { show: { objects: false, markers: true, wires: false }, cats: ALL_CATS });
     await page.goto(`/?embed=1#AE/MI/1/${BOUND.x1 + 12}/${BOUND.y1 - 10}/1.00`);
     await settle(page, BOUND);
     const markers = page.locator("#tMarkers");
@@ -558,6 +618,37 @@ test.describe("Objects as themselves", () => {
       return t && render.objectShown(t);
     });
     expect(stone).toBe(true);
+    // a screen the game writes on stays too, though the map cannot draw it yet
+    const lcd = await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const render = await import(u("render.js"));
+      const t = st.state.path.tlvs.find((o) => o.name === "LCD" && o.x1 === 1159);
+      return t && render.objectShown(t);
+    });
+    expect(lcd).toBe(true);
+    // a wire's far end stays only while the wiring is drawn
+    const light = () =>
+      page.evaluate(async () => {
+        const u = (m) => new URL("js/" + m, location.href).href;
+        const st = await import(u("state.js"));
+        const render = await import(u("render.js"));
+        const t = st.state.path.tlvs.find((o) => o.name === "StatusLight" && o.x1 === 1800);
+        return render.objectShown(t);
+      });
+    expect(await light()).toBe(false);
+    await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const sidebar = await import(u("sidebar.js"));
+      sidebar.toggleShow("wires");
+    });
+    expect(await light()).toBe(true);
+    await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const sidebar = await import(u("sidebar.js"));
+      sidebar.toggleShow("wires");
+    });
+    expect(await light()).toBe(false);
     expect(errors).toEqual([]);
   });
 

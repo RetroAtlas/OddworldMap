@@ -1,6 +1,6 @@
 # 94. Live map — the game's own sprites and animations over the artwork
 
-**Status:** open — shipped 2026-10-02 as the sprites at their spawn frame, the loops at header timing, the player-free cycles and the creatures' brains and patrols under the no-player reading, with the game's player-free effects; the Markers-for-the-rest toggle 2026-10-03; the objects as themselves and the patrols as the defaults 2026-10-04; the pulsing lights and the Scenery filter 2026-10-05; open: a Fleech's hoist climb, the fall at a line's end, the Elum, the LCD text, the per-layer foreground masks and the drop shadows · **Effort:** the open slices small to medium (a brain each for the walkers' gaps; a disc rebuild of the masks; a shadow rule per creature) · **Where:** the mask split needs a disc; the rest anywhere · **Filed:** 2026-09-17 investigation over the pinned decomp, upstream `beta` and paulsapps/alive
+**Status:** open — shipped 2026-10-02 as the sprites at their spawn frame, the loops at header timing, the player-free cycles and the creatures' brains and patrols under the no-player reading, with the game's player-free effects; the Markers-for-the-rest toggle 2026-10-03; the objects as themselves and the patrols as the defaults 2026-10-04; the pulsing lights and the Scenery filter 2026-10-05; what the game shows kept unseen 2026-10-06; open: a Fleech's hoist climb, the fall at a line's end, the Elum, the LCD text, the per-layer foreground masks and the drop shadows · **Effort:** the open slices small to medium (a brain each for the walkers' gaps; a disc rebuild of the masks; a shadow rule per creature) · **Where:** the mask split needs a disc; the rest anywhere · **Filed:** 2026-09-17 investigation over the pinned decomp, upstream `beta` and paulsapps/alive
 
 ## What and why
 
@@ -98,9 +98,13 @@ What the first slice leaves out is stated in [docs/viewer-geometry.md](../docs/v
 
 **The hover answers over a sprite's drawn rectangle** as well as its placed one (`hitBoxes`).
 
-**The stones Abe uses** stay present unseen with the markers off (`USED_UNSEEN` in config.js), as the ways out do.
+**The stones Abe uses** stay present unseen with the markers off (`KEPT_UNSEEN` in config.js), as the ways out do.
 
 **The light effects pulse** on the engine's shared DoorLight timer, a rest of 6 to 20 frames then a half-sine window of 30 to 45, both rolled from the dice from one cursor (`lightLevel` in motion.js); the level rides the additive pass's alpha over a sheet processed at the peak colour, which dims the flint glow's fixed channels along with it (the flint glow being the one switchable light; the door and hub lights pulse grey over red art), the one approximation. The categories were resorted so the default view shows what the game shows: a Scenery category (light effects, background animations, doves, flintlock fires and the Paramites' webs) on by default, Displays on by default, lifts under Doors / Transitions with the rest of what carries Abe, honey among the pickups, and Hoists / edges left off. The Scenery carries no labels unless the "Label the scenery" setting asks (`quietLabels` on the category), since eight hundred light effects named at once papered the factory screens.
+
+## Shipped (2026-10-06)
+
+**The kept set.** With the markers off, what the game shows stays on the map unseen, by one rule (`kept` in render.js): the ways out and the stones, the types in `KEPT_UNSEEN` (the LCD boards and screens, Exoddus's wells, the gas countdowns and the meters), and, while the arrows or the wiring are drawn, both ends of every edge they draw, so no overlay leaves from or lands on nothing.
 
 ## What could ship, in order
 

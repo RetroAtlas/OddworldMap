@@ -80,8 +80,10 @@ export const barrierDir = t => {
 // hundreds of posts are clutter for anyone not reading patrol ranges
 export const PENS = { on: false };
 
-// scenery the game draws nothing for yet Abe uses, kept there to point at
-export const USED_UNSEEN = ["HandStone", "MovieHandStone", "BellSongStone", "MovieStone"];
+// types the game shows that the rules cannot draw yet, and the stones Abe
+// uses: kept on the map to point at while the markers are off
+export const KEPT_UNSEEN = ["LCDStatusBoard", "LCDScreen", "LCD", "LocalWell", "WellExpress", "GasCountdown",
+                            "ColourfulMeter", "HandStone", "MovieHandStone", "BellSongStone", "MovieStone"];
 
 // the one visibility rule for map markers: what is drawn is exactly what can
 // be pointed at
