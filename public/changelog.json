@@ -3,6 +3,12 @@
   {
    "date": "2026-10-06",
    "tag": "improved",
+   "title": "The sprites arrive sooner",
+   "detail": "On a cold visit the map asked for its sprite table only once the first screen had painted, so the objects stood bare for a round trip. The table is now asked for alongside the map data when the view opens with the objects shown, and the sheet follows at the first paint."
+  },
+  {
+   "date": "2026-10-06",
+   "tag": "improved",
    "title": "Edit mode shows every object",
    "detail": "With the markers off, a spawner, a trigger or a continue point had no box to click, so the editor could reach it only through the screen list. \"Edit objects\" now draws every marker while it is on, whatever \"Markers for the rest\" says, and puts them away when it is off."
   },

@@ -716,6 +716,29 @@ test.describe("Objects as themselves", () => {
     expect(errors).toEqual([]);
   });
 
+  test("a view that opens with the objects shown asks for the sprite table beside the map data", async ({
+    page,
+  }) => {
+    const errors = trackErrors(page);
+    const order = [];
+    page.on("request", (q) => {
+      if (/map_data_ae\.json|sprites_ae\.json/.test(q.url()))
+        order.push("ask " + q.url().split("/").pop());
+    });
+    page.on("response", (r) => {
+      if (/map_data_ae\.json/.test(r.url())) order.push("got " + r.url().split("/").pop());
+    });
+    await seedView(page, { show: { objects: true }, cats: ALL_CATS });
+    await page.goto(`/?embed=1#AE/MI/1/${SLIG.x1}/${SLIG.y1}/1.00`);
+    await settle(page, SLIG);
+    expect(order.indexOf("ask sprites_ae.json")).toBeGreaterThan(-1);
+    expect(order.indexOf("ask sprites_ae.json")).toBeLessThan(
+      order.indexOf("got map_data_ae.json"),
+    );
+    expect(order.filter((o) => o === "ask sprites_ae.json")).toHaveLength(1);
+    expect(errors).toEqual([]);
+  });
+
   test("Dim backgrounds dims the foreground masks drawn over the sprites too", async ({ page }) => {
     const errors = trackErrors(page);
     // no categories on: with the objects off every marker draws, and one could cover the pixel

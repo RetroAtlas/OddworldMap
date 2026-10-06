@@ -120,6 +120,9 @@ function spriteSet(gameId) {
   return null;
 }
 const spritesFailed = (gameId) => spriteSets[gameId] === false;
+export function warmSprites(gameId) {
+  spriteSet(gameId);
+}
 function retrySprites(gameId) {
   if (spritesFailed(gameId)) delete spriteSets[gameId];
 }
@@ -403,12 +406,15 @@ window.addEventListener("data-changed", () => {
 
 // a visitor who asks for reduced motion still sees the sprites, on their first frame
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-let objectsShown = false,
+// null until the first sync: the boot is neither a flip nor a switch
+let objectsShown = null,
   shownGame = null;
 export function syncMotion() {
   const shown = !!state.show.objects;
   const game = state.data?.id ?? null;
-  if ((shown && !objectsShown) || game !== shownGame) retrySprites(game);
+  const flippedOn = shown && objectsShown === false;
+  const switched = shownGame !== null && game !== shownGame;
+  if (flippedOn || switched) retrySprites(game);
   if (shown && !objectsShown) resetScene();
   objectsShown = shown;
   shownGame = game;

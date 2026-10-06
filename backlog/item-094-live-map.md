@@ -110,6 +110,8 @@ What the first slice leaves out is stated in [docs/viewer-geometry.md](../docs/v
 
 **Edit mode draws every marker** while it is on, whatever Markers for the rest says, so what the panel can edit can be clicked, and puts them away when it is off.
 
+**The sprite table is asked for beside the map data** when a view opens with the objects shown, so a cold visit no longer stands the ruled objects bare for a round trip.
+
 ## What could ship, in order
 
 Nothing before the probe. Then three tiers, each shippable alone and each true to the bar it claims:

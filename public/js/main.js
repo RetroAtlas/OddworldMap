@@ -1,7 +1,7 @@
 // Boot: fetch the map data, then hand over to the modules.
 
 import { $ } from "./dom.js";
-import { resize } from "./render.js";
+import { resize, warmSprites } from "./render.js";
 import { addGame, selectGame, applyHash } from "./navigate.js";
 import {
   GAME_IDS,
@@ -19,6 +19,7 @@ import { setMessages } from "./messages.js";
 import { setTypeInfo } from "./typeinfo.js";
 import { initSettings, storedLocationHash, clearStoredLocation } from "./settings.js";
 import { syncNeeds } from "./sidebar.js";
+import { state } from "./state.js";
 import "./search.js";
 import "./export.js";
 import { toggleMenu } from "./interaction.js";
@@ -51,10 +52,12 @@ if (embedded) {
 // the game this visit is looking at, in flight while the sidecars come down:
 // awaiting both games would spend the whole download budget of the one on
 // screen before a line of it is drawn. A boot that will apply saved edits needs
-// the editor data too, so that fetch starts beside the dataset's
+// the editor data too, and one that opens with the objects shown the sprite
+// table, so those fetches start beside the dataset's
 const bootId = bootGame(location.hash, embedded ? null : storedLocationHash());
 if (hasStoredEdits(bootId)) loadEditorData(bootId);
 const booting = loadGame(bootId);
+if (state.show.objects) warmSprites(bootId);
 
 Promise.all([
   loadJson("annotations.json"),
