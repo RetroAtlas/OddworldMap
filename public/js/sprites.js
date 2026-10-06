@@ -71,7 +71,7 @@ function draw(c, anim, x, y, o = {}) {
   return {
     anim,
     x,
-    y,
+    y: y + (o.yOff ?? c.yOff),
     scale,
     flip: !!o.flip,
     flipY: !!o.flipY,
@@ -213,7 +213,7 @@ rule("AO", "Door", (c) => {
   // the Rupture Farms and Lines sets carry one art for all three kinds
   if (set === "RuptureFarms" || set === "Lines") anim = `Door_${set}_Closed`;
   x += f.x_offset || 0;
-  y += (f.y_offset || 0) + 5;
+  y += f.y_offset || 0;
   return [draw(c, anim, x, y, { layer, scale })];
 });
 
@@ -254,6 +254,7 @@ rule("AO", "TrapDoor", (c) => {
   const anim = name(f.start_state === 0 ? "Open" : "Closed");
   return [
     draw(c, anim, mid(t) + (f.x_offset || 0), platformY(c, name("Closed"), s), {
+      yOff: 0,
       layer: c.half ? 6 : 25,
       flip: f.direction === 1,
     }),
@@ -293,7 +294,7 @@ const AO_LEVER = {
   L1: "Lines_Lever_Idle",
 };
 rule("AO", "Switch", (c) => [
-  draw(c, AO_LEVER[c.lvl.short] || "Lever_Idle", mid(c.t), c.t.y1 + 5, { layer: c.half ? 6 : 25 }),
+  draw(c, AO_LEVER[c.lvl.short] || "Lever_Idle", mid(c.t), c.t.y1, { layer: c.half ? 6 : 25 }),
 ]);
 
 const AE_FOOT = { PV: "Vault", SV: "Vault", BW: "Bonewerkz" };
@@ -303,7 +304,7 @@ rule("AE", "FootSwitch", (c) => [
   }),
 ]);
 rule("AO", "FootSwitch", (c) => [
-  draw(c, "Foot_Switch_Temple", c.t.x1 + 12, c.t.y1 + 5, { layer: 25 }),
+  draw(c, "Foot_Switch_Temple", c.t.x1 + 12, c.t.y1, { layer: 25 }),
 ]);
 
 // a rope is one frame tiled upward from its bottom to its top, every segment
@@ -314,6 +315,7 @@ const rope = (c, anim, x, y, top, bottom, s, o = {}) =>
     layer: s === 1 ? 24 : 5,
     semi: false,
     tile: { top, bottom, step: s === 1 ? 15 : 7 },
+    yOff: 0,
     ...o,
   });
 
@@ -343,8 +345,8 @@ rule("AO", "PullRingRope", (c) => {
   const x = t.x1 + 12;
   const y = len + t.y1 + 24;
   return [
-    rope(c, aoRope(c), x + nudge + 1, y + 5, y - len, y + 5, s, { rgb: [128, 128, 128] }),
-    draw(c, farms ? "Pullring_Farms_Idle" : "Pullring_Desert_Idle", x, y + 5),
+    rope(c, aoRope(c), x + nudge + 1, y + c.yOff, y - len, y + c.yOff, s, { rgb: [128, 128, 128] }),
+    draw(c, farms ? "Pullring_Farms_Idle" : "Pullring_Desert_Idle", x, y),
   ];
 });
 
@@ -393,11 +395,12 @@ function liftPoint(c) {
   const wheelRgb = ae ? rgb : [128, 128, 128];
   const out = [];
   const wheel = draw(c, `LiftBottomWheel_${wheelTheme}`, x + 3 * s, y - 5 * s, {
+    yOff: 0,
     layer,
     rgb: wheelRgb,
     semi: false,
   });
-  const plat = draw(c, platform, x, y, { layer, rgb });
+  const plat = draw(c, platform, x, y, { layer, rgb, yOff: 0 });
   if (ae && c.lvl.short !== "NE") out.push(wheel, plat);
   else out.push(plat, wheel);
   // the pulley: Exoddus walks up the column camera by camera, Oddysee looks in
@@ -426,7 +429,12 @@ function liftPoint(c) {
     top = pulley.y1 - 19 * s;
     const px = trunc((-10 * s + 13 * s) / 2 + Math.floor(x));
     out.push(
-      draw(c, `LiftTopWheel_${wheelTheme}`, px, pulley.y1, { layer, rgb: wheelRgb, semi: false }),
+      draw(c, `LiftTopWheel_${wheelTheme}`, px, pulley.y1, {
+        layer,
+        rgb: wheelRgb,
+        semi: false,
+        yOff: 0,
+      }),
     );
   }
   const [n1, n2] = AO_ROPE_NUDGE[c.lvl.short] || [0, 0];
@@ -470,7 +478,7 @@ rule("AO", "RockSack", (c) => [
     c,
     AO_STOCKYARDS.has(c.lvl.short) ? "RockSack_Idle@BlueRockSack" : "RockSack_Idle",
     c.t.x1,
-    c.t.y1 + 5,
+    c.t.y1,
     { semi: false },
   ),
 ]);
@@ -479,7 +487,7 @@ rule("AE", "MeatSack", (c) => [
     rgb: c.lvl.short === "NE" ? [137, 137, 137] : [127, 127, 127],
   }),
 ]);
-rule("AO", "MeatSack", (c) => [draw(c, "MeatSack_Idle", c.t.x1, c.t.y1 + 5)]);
+rule("AO", "MeatSack", (c) => [draw(c, "MeatSack_Idle", c.t.x1, c.t.y1)]);
 rule("AE", "BoneBag", (c) => [
   draw(c, "BoneBag_Idle", mid(c.t), c.t.y2, {
     semi: false,
@@ -498,7 +506,7 @@ rule("AE", "FallingItem", (c) => {
 rule("AO", "FallingItem", (c) => {
   const farms = c.lvl.short === "R1" || c.lvl.short === "R2";
   return [
-    draw(c, farms ? "FallingMeat_Falling" : "AO_FallingRock_Falling", c.t.x1, c.t.y1 + 5, {
+    draw(c, farms ? "FallingMeat_Falling" : "AO_FallingRock_Falling", c.t.x1, c.t.y1, {
       layer: 31,
       rgb: c.lvl.short === "L1" ? [77, 120, 190] : [105, 105, 105],
     }),
@@ -506,7 +514,7 @@ rule("AO", "FallingItem", (c) => {
 });
 
 rule("AO", "BellHammer", (c) => [
-  draw(c, "BellHammer_Idle", c.t.x1 + 82, c.t.y1 + 94 + 5, {
+  draw(c, "BellHammer_Idle", c.t.x1 + 82, c.t.y1 + 94, {
     layer: c.half ? 6 : 25,
     flip: c.f.direction === 1,
     semi: false,
@@ -518,12 +526,12 @@ rule("AO", "ChimeLock", (c) => {
   const s = c.half ? 0.5 : 1;
   return [
     ...["BigChime", "MediumChime", "SmallChime"].map((a) =>
-      draw(c, a, t.x1, t.y1 + 5, { scale: s, layer: 36 }),
+      draw(c, a, t.x1, t.y1, { scale: s, layer: 36 }),
     ),
-    draw(c, "Chime_Ball", t.x1 + 5, t.y1 + 43 + 5, {
+    draw(c, "Chime_Ball", t.x1 + 5, t.y1 + 43, {
       scale: 1,
       layer: 37,
-      cycle: { kind: "chime", x: t.x1, y: t.y1 + 40 + 5 },
+      cycle: { kind: "chime", x: t.x1, y: t.y1 + 40 + c.yOff },
     }),
   ];
 });
@@ -533,7 +541,7 @@ const aoWell = (c) => {
   const id = c.f.animation_id;
   if (!id) return [];
   return [
-    draw(c, `bg:${id}`, c.t.x1, c.t.y1 + 5, {
+    draw(c, `bg:${id}`, c.t.x1, c.t.y1, {
       scale: 1,
       layer: c.half ? 4 : 23,
       rgb: [128, 128, 128],
@@ -560,7 +568,7 @@ rule("AE", "Mine", (c) => {
 rule("AO", "Mine", (c) => {
   const { t } = c;
   const x = t.x1 + 12,
-    y = t.y1 + 24 + 5;
+    y = t.y1 + 24;
   const layer = c.half ? 16 : 35;
   const rgb = AO_STOCKYARDS.has(c.lvl.short) ? [50, 50, 50] : [105, 105, 105];
   return [
@@ -606,12 +614,13 @@ rule("AO", "UXB", (c) => {
   const off = f.start_state === 1;
   return [
     draw(c, off ? "Bomb_RedGreenTick@GreenFlash" : "Bomb_RedGreenTick", x, y - trunc(s * 12), {
+      yOff: 0,
       layer,
       rgb: [128, 128, 128],
       blend: 1,
       cycle: off ? null : uxbCycle(f),
     }),
-    draw(c, off ? "UXB_Disabled" : "UXB_Active", x, y + 5, { layer, rgb }),
+    draw(c, off ? "UXB_Disabled" : "UXB_Active", x, y, { layer, rgb }),
   ];
 });
 
@@ -622,8 +631,13 @@ rule("AO", "TimedMine", (c) => {
   const s = c.half ? 0.5 : 1;
   const layer = c.half ? 16 : 35;
   return [
-    draw(c, "Bomb_RedGreenTick", x, y - trunc(s * 14), { layer, rgb: [128, 128, 128], blend: 1 }),
-    draw(c, "TimedMine_Idle", x, y + 5, { layer, rgb: [105, 105, 105] }),
+    draw(c, "Bomb_RedGreenTick", x, y - trunc(s * 14), {
+      layer,
+      rgb: [128, 128, 128],
+      blend: 1,
+      yOff: 0,
+    }),
+    draw(c, "TimedMine_Idle", x, y, { layer, rgb: [105, 105, 105] }),
   ];
 });
 
@@ -644,6 +658,7 @@ both("MovingBomb", (c) => {
   const p = { speed: f.speed / 256, startSpeed: f.start_speed / 256, switchId };
   return [
     draw(c, "MovingBomb", x, y, {
+      yOff: 0,
       layer: c.half ? 16 : 35,
       rgb,
       cycle: switchId === 1 ? patrol(c, "bomb", p, { x: t.x1, y: t.y1 }) : null,
@@ -655,7 +670,7 @@ both("ElectricWall", (c) => {
   const { t, f } = c;
   if (f.start_state !== 1) return []; // off until its switch flips
   return [
-    draw(c, "Electric_Wall", t.x1, t.y1 + (c.game === "AO" ? 5 : 0), {
+    draw(c, "Electric_Wall", t.x1, t.y1, {
       layer: 36,
       rgb: [80, 80, 80],
       blend: 1,
@@ -683,8 +698,12 @@ rule("AO", "MeatSaw", (c) => {
     switchId: f.switch_id,
   };
   return [
-    draw(c, "MeatSaw_Idle", x, t.y1 - rise, { layer, cycle: brain(c, "meatsaw", false, p) }),
-    draw(c, "MeatSawMotor", x, t.y1, { layer, semi: true }),
+    draw(c, "MeatSaw_Idle", x, t.y1 - rise, {
+      layer,
+      cycle: brain(c, "meatsaw", false, p),
+      yOff: 0,
+    }),
+    draw(c, "MeatSawMotor", x, t.y1, { layer, semi: true, yOff: 0 }),
   ];
 });
 
@@ -737,6 +756,7 @@ both("MotionDetector", (c) => {
     } else [fx, fy] = [f.device_x + 11, f.device_y];
     out.push(
       draw(c, "MotionDetector_Flare", fx, fy, {
+        yOff: 0,
         scale: s,
         layer: 36,
         rgb: [64, 0, 0],
@@ -749,6 +769,7 @@ both("MotionDetector", (c) => {
   const left = f.initial_move_direction === 1;
   out.push(
     draw(c, "MotionDetector_Laser", left ? t.x2 : t.x1, t.y2, {
+      yOff: 0,
       scale: s,
       layer: 36,
       blend: 1,
@@ -764,17 +785,17 @@ const securityOrbAE = (c) => [
 ];
 rule("AE", "SecurityOrb", securityOrbAE);
 rule("AE", "SecurityClaw", securityOrbAE);
-rule("AO", "SecurityOrb", (c) => [draw(c, "Security_Orb", c.t.x1, c.t.y1 + 5, { layer: 27 })]);
+rule("AO", "SecurityOrb", (c) => [draw(c, "Security_Orb", c.t.x1, c.t.y1, { layer: 27 })]);
 rule("AO", "SecurityClaw", (c) => {
   const { t } = c;
   const s = c.half ? 0.5 : 1;
   const yards = AO_STOCKYARDS.has(c.lvl.short);
   return [
-    draw(c, "Security_Claw_Lower_Idle", t.x1, t.y1 + 5, {
+    draw(c, "Security_Claw_Lower_Idle", t.x1, t.y1, {
       layer: c.half ? 9 : 28,
       rgb: yards ? [80, 55, 55] : [127, 127, 127],
     }),
-    draw(c, "Security_Claw_Upper_Rotating", t.x1, t.y1 + 8 * s + 5, {
+    draw(c, "Security_Claw_Upper_Rotating", t.x1, t.y1 + 8 * s, {
       layer: 27,
       rgb: yards ? [105, 55, 55] : [127, 127, 127],
     }),
@@ -787,7 +808,7 @@ rule("AO", "ZBall", (c) => {
   if (c.lvl.short !== "F2") return [];
   const { t, f } = c;
   return [
-    draw(c, `Swinging_Ball_${ZBALL_SPEED[f.speed] || "Normal"}`, t.x1, t.y1 + 5, {
+    draw(c, `Swinging_Ball_${ZBALL_SPEED[f.speed] || "Normal"}`, t.x1, t.y1, {
       layer: 27,
       rgb: [128, 128, 128],
       frame: ZBALL_START[f.start_position] ?? 0,
@@ -804,14 +825,14 @@ both("BoomMachine", (c) => {
   const left = f.nozzle_side === 1;
   const rgb = ae ? [127, 127, 127] : [105, 105, 105];
   return [
-    draw(c, "BoomMachine_Pipe_Idle", x + (left ? -1 : 1) * 30 * s, y - 30 * s + (ae ? 0 : 5), {
+    draw(c, "BoomMachine_Pipe_Idle", x + (left ? -1 : 1) * 30 * s, y - 30 * s, {
       scale: s,
       layer: 27,
       rgb,
       semi: false,
       flip: left,
     }),
-    draw(c, "BoomMachine_Button_On", x, y, { scale: s, layer: 27, rgb, blend: 1 }),
+    draw(c, "BoomMachine_Button_On", x, y, { scale: s, layer: 27, rgb, blend: 1, yOff: 0 }),
   ];
 });
 
@@ -825,8 +846,8 @@ rule("AO", "FlintLockFire", (c) => {
   const { t } = c;
   const layer = c.half ? 6 : 25;
   return [
-    draw(c, "FlintLock_Hammers_Disabled", t.x1, t.y1 + 5, { layer }),
-    draw(c, "FlintLock_Gourd", t.x1, t.y1 + 5, { layer, frozen: true }),
+    draw(c, "FlintLock_Hammers_Disabled", t.x1, t.y1, { layer }),
+    draw(c, "FlintLock_Gourd", t.x1, t.y1, { layer, frozen: true }),
   ];
 });
 
@@ -834,14 +855,14 @@ rule("AO", "RollingBall", (c) => {
   const { t, f } = c;
   const hit = raycastDown(c.lines, t.x1, t.y1, t.y1 + 24, planeTypes(c.half, FLOOR));
   return [
-    draw(c, "Stone_Ball", snapAt(c, t.x1), (hit ?? t.y1) + 5, {
+    draw(c, "Stone_Ball", snapAt(c, t.x1), hit ?? t.y1, {
       layer: c.half ? 12 : 31,
       flip: f.roll_direction === 0,
     }),
   ];
 });
 rule("AO", "RollingBallStopper", (c) => [
-  draw(c, "Stone_Ball_Stopper", c.t.x1, c.t.y1 + 5, { layer: 37, flip: c.f.direction === 0 }),
+  draw(c, "Stone_Ball_Stopper", c.t.x1, c.t.y1, { layer: 37, flip: c.f.direction === 0 }),
 ]);
 
 // an Oddysee light effect is one of the door lights; the star draws nothing
@@ -861,7 +882,7 @@ rule("AO", "LightEffect", (c) => {
   // the sheet at the pulse's peak; the pulse itself is the additive pass's alpha.
   // The flint glow is the switchable light, red until its switch is thrown
   return [
-    draw(c, anim, t.x1 + (flip ? -xoff : xoff), t.y1 + 5, {
+    draw(c, anim, t.x1 + (flip ? -xoff : xoff), t.y1, {
       scale: 1,
       layer: 17,
       flip,
@@ -879,6 +900,7 @@ both("BackgroundAnimation", (c) => {
   const ae = c.game === "AE";
   return [
     draw(c, `bg:${f.animation_id}`, t.x1, t.y1, {
+      yOff: 0,
       scale: 1,
       layer: ae ? (AE_BG_LAYER[f.layer] ?? 27) : 1,
       semi: f.is_semi_trans === 1,
@@ -922,7 +944,7 @@ both("Slig", (c) => {
   const unstacked =
     ae && c.lvl.short === "BW" && c.path.id === 2 && camOf(c, t)?.name?.endsWith("C05");
   x += unstacked ? 0 : stackOffset(c);
-  const y = (hit ?? t.y1) + (ae ? 0 : 5);
+  const y = hit ?? t.y1;
   const asleep = f.start_state === 2;
   const yards = !ae && AO_STOCKYARDS.has(c.lvl.short);
   const anim = (asleep ? "Slig_Sleeping" : "Slig_Idle") + (yards ? "@StockYardsSlig" : "");
@@ -1017,11 +1039,12 @@ both("Slog", (c) => {
   const ae = c.game === "AE";
   const hit = raycastDown(c.lines, t.x1, t.y1, t.y1 + 24, ae ? FLOOR : planeTypes(c.half, FLOOR));
   const x = t.x1 + (ae ? stackOffset(c) : 0);
-  const y = (hit ?? t.y1) + (ae ? (c.half ? 2 : 1) : 5);
+  const y = hit ?? t.y1;
   const rgb = ae ? [127, 127, 127] : AO_YARDS_TINT(c, [48, 48, 48], [127, 127, 127]);
   const asleep = f.asleep === 1;
   return [
     draw(c, asleep ? "Slog_Sleeping" : "Slog_Idle", x, y, {
+      yOff: ae ? (c.half ? 2 : 1) : c.yOff,
       layer: ae ? 34 : c.half ? 15 : 34,
       flip: f.start_direction === 0,
       rgb,
@@ -1046,7 +1069,7 @@ both("Scrab", (c) => {
     rightMax: f.right_max_delay,
   };
   return [
-    draw(c, anim, x, (hit ?? t.y1) + (ae ? 0 : 5), {
+    draw(c, anim, x, hit ?? t.y1, {
       rgb,
       cycle: hit === null ? null : patrol(c, "scrab", p, { x, y: t.y1 }),
     }),
@@ -1063,7 +1086,7 @@ both("Paramite", (c) => {
   x += stackOffset(c);
   const patrol = ae ? f.entrance_type === 0 : f.enter_from_web === 0;
   return [
-    draw(c, "Paramite_Idle", x, (hit ?? t.y1) + (ae ? 0 : 5), {
+    draw(c, "Paramite_Idle", x, hit ?? t.y1, {
       rgb: [105, 105, 105],
       cycle: patrol ? brain(c, "paramite") : null,
     }),
@@ -1169,7 +1192,7 @@ rule("AO", "Bat", (c) => {
   if (!hit) return [];
   const p = { wait: f.ticks_before_moving, speed: f.speed / 256 };
   return [
-    draw(c, "Bat", hit.line[0], hit.line[1] + 5, {
+    draw(c, "Bat", hit.line[0], hit.line[1], {
       layer: c.half ? 6 : 25,
       cycle: patrol(c, "bat", p, { x1: t.x1, y1: t.y1, x2: t.x2, y2: t.y2 }),
     }),
@@ -1177,15 +1200,17 @@ rule("AO", "Bat", (c) => {
 });
 
 // the flies hover about the hint's point; the hint itself waits on Abe's chant
-rule("AO", "HintFly", (c) => [draw(c, null, c.t.x1, c.t.y1, { cycle: brain(c, "hintfly") })]);
+rule("AO", "HintFly", (c) => [
+  draw(c, null, c.t.x1, c.t.y1, { cycle: brain(c, "hintfly"), yOff: 0 }),
+]);
 rule("AO", "Honey", (c) => [
-  draw(c, "Honey", c.t.x1 + trunc((c.t.x2 - c.t.x1) / 2), c.t.y1 + 24 + 5, {
+  draw(c, "Honey", c.t.x1 + trunc((c.t.x2 - c.t.x1) / 2), c.t.y1 + 24, {
     scale: 1,
     layer: 27,
     rgb: [128, 128, 128],
   }),
 ]);
-rule("AO", "HoneySack", (c) => [draw(c, "HoneySack_Hanging", c.t.x1, c.t.y1 + 5, { layer: 31 })]);
+rule("AO", "HoneySack", (c) => [draw(c, "HoneySack_Hanging", c.t.x1, c.t.y1, { layer: 31 })]);
 
 // ---- Mudokons, Glukkons and the rest ----------------------------------------
 
@@ -1204,7 +1229,7 @@ function mudokonAO(c, anim, snap, flip, xNudge = 0, cycle = null) {
   if (snap) x = snapAt(c, x);
   x += xNudge;
   return [
-    draw(c, anim, x, (hit ? hit.y : t.y2) + 5, {
+    draw(c, anim, x, hit ? hit.y : t.y2, {
       layer: c.half ? 13 : 32,
       flip,
       rgb: aoMudTint(c),
@@ -1280,7 +1305,7 @@ rule("AE", "Glukkon", (c) => {
 });
 const AO_GLUKKON_PAL = { 825: "@GlukRed", 826: "@GlukGreen", 827: "@GlukBlue", 828: "@GlukAqua" };
 rule("AO", "Glukkon", (c) => [
-  draw(c, "Background_Glukkon_Idle" + (AO_GLUKKON_PAL[c.f.pal_id] || ""), c.t.x1, c.t.y1 + 5, {
+  draw(c, "Background_Glukkon_Idle" + (AO_GLUKKON_PAL[c.f.pal_id] || ""), c.t.x1, c.t.y1, {
     scale: (c.f.scale_percent || 100) / 100,
     layer: 27,
     cycle: brain(c, "glukkonAO"),
@@ -1294,7 +1319,7 @@ both("Dove", (c) => {
   const ae = c.game === "AE";
   const [x, y] = f.pixel_perfect === 1 ? [t.x1, t.y1 + 10] : [mid(t), midY(t) + 10];
   const rgb = ae ? [127, 127, 127] : AO_YARDS_TINT(c, [30, 30, 30], [105, 105, 105]);
-  return [draw(c, "Dove_Idle", x, y + (ae ? 0 : 5), { semi: false, rgb })];
+  return [draw(c, "Dove_Idle", x, y, { semi: false, rgb })];
 });
 
 rule("AE", "MineCar", (c) => {
@@ -1325,7 +1350,7 @@ both("AbeStart", (c) => {
   const x = t.x1 + 12;
   const bottom = Math.floor(t.y1 / c.geo.worldH) * c.geo.worldH + c.geo.winY + c.geo.visH;
   const hit = raycastDown(c.lines, x, t.y1, bottom, planeTypes(false, FLOOR));
-  return [draw(c, "Mudokon_Idle", x, (hit ?? t.y1) + (ae ? 0 : 5), { scale: 1, layer: 32, rgb })];
+  return [draw(c, "Mudokon_Idle", x, hit ?? t.y1, { scale: 1, layer: 32, rgb })];
 });
 
 // a portal's six doves circle its anchor; an Abe portal's ring breathes
@@ -1350,13 +1375,13 @@ both("BirdPortal", (c) => {
   const out = [];
   for (let i = 0; i < 6; i++)
     out.push(
-      draw(c, "Dove_Flying", px, py + 30 * s + (ae ? 0 : 5), {
+      draw(c, "Dove_Flying", px, py + 30 * s, {
         semi: false,
         rgb,
         cycle: {
           kind: "orbit",
           cx: px,
-          cy: py + 30 * s + (ae ? 0 : 5),
+          cy: py + 30 * s + c.yOff,
           phase: 42 * i,
           rx: 30 * s,
           ry: 35 * s,
@@ -1385,6 +1410,7 @@ export function spriteDraws(data, lvl, path, t, set) {
     index: path.tlvs.indexOf(t),
     f: t.fields || {},
     half: onBackgroundPlane(data.id, t),
+    yOff: data.id === "AO" ? 5 : 0,
     anims: set.anims,
     abeStart: set.abe?.[lvl.short]?.[path.id],
   };
