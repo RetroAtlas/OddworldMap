@@ -44,6 +44,7 @@ Item-specific reasoning and cross-references stay inside this folder. An item ma
 
 ## Code and build
 
+- [**95.** A bare link's fit zoom is read off the canvas mid-slide](item-095-fit-zoom-boot-slide.md) — `fitView` reads the canvas width during the sidebar's boot slide, so the same path link opens at a slightly different zoom each visit; wait for the slide, or fit again when it ends. _Small._
 - [**57.** One module lifecycle: explicit `init()`](item-057-module-lifecycle.md) — the current boot order is a load-bearing accident. _Medium._
 
 ## Moonshot
