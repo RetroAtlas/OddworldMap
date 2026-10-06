@@ -56,6 +56,8 @@ test("pure modules import in bare Node", async () => {
     "edits",
     "collide",
     "sprites",
+    "patrolkit",
+    "effects",
     "brains",
     "motion",
   ]) {
