@@ -219,15 +219,16 @@ function kept(t) {
   return keptCache.set.has(t);
 }
 // what an object is drawn as: its sprite, its marker, unseen (there to point
-// at, nothing to paint) or nothing. A type the rules know is a sprite object
-// whatever its own state draws, an open door included, and what the kept set
-// holds stays present unseen while the markers are off
+// at, nothing to paint) or nothing. A type the rules know stays present when
+// its own state draws nothing, an open door included: a marker while the
+// markers are on, unseen otherwise; what the kept set holds stays present
+// unseen while the markers are off
 function drawnAs(t, sprites) {
   if (!markerShown(t)) return null;
   if (PENS.on && barrierDir(t) !== null) return "marker";
   if (!state.show.objects) return "marker";
   if (hasRule(state.data.id, t.name)) {
-    if (sprites) return sprites.has(t) ? "sprite" : "unseen";
+    if (sprites) return sprites.has(t) ? "sprite" : state.show.markers ? "marker" : "unseen";
     return spritesFailed(state.data.id) ? "marker" : null;
   }
   if (state.show.markers) return "marker";

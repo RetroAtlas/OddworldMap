@@ -3,6 +3,12 @@
   {
    "date": "2026-10-06",
    "tag": "improved",
+   "title": "\"Markers for the rest\" shows every object",
+   "detail": "With the toggle on, an object whose sprite has nothing to draw in its state kept nothing of its own: an open door, a lift stop, an electric wall that is off stood unseen. The toggle now gives each its rectangle back, so \"Markers for the rest\" on is the whole reference view, every object either a sprite or a marker."
+  },
+  {
+   "date": "2026-10-06",
+   "tag": "improved",
    "title": "What the game shows stays there to point at",
    "detail": "With the markers off, the map kept only the ways out and the stones. Now everything an arrow or a wire runs from or to stays as well, so no arrow or wire ends at an empty spot. The things the game shows that the map cannot draw yet stay too: the LCD boards and screens, whose marquees read out on hover again, Exoddus's wells, the gas countdowns and the meters. Hovering and clicking find each of them; nothing new is drawn."
   },

@@ -354,7 +354,7 @@ test.describe("Objects as themselves", () => {
     page,
   }) => {
     const errors = trackErrors(page);
-    await seedView(page, { show: { objects: true }, cats: ALL_CATS });
+    await seedView(page, { show: { objects: true, markers: false }, cats: ALL_CATS });
     // the lift's rope runs over a lift stop two screens up, whose rectangle draws nothing
     const spot = { x: 4038, y: 992 };
     await page.goto(`/?embed=1#AE/MI/1/${spot.x}/${spot.y}/1.00`);
@@ -649,6 +649,22 @@ test.describe("Objects as themselves", () => {
       sidebar.toggleShow("wires");
     });
     expect(await light()).toBe(false);
+    // the toggle back on gives the open door its marker again: a drawn box where an unseen rect stood
+    const doorBox = () =>
+      page.evaluate(async () => {
+        const u = (m) => new URL("js/" + m, location.href).href;
+        const st = await import(u("state.js"));
+        const render = await import(u("render.js"));
+        const t = st.state.path.tlvs.find((o) => o.name === "Door" && o.fields?.start_state === 0);
+        return render.hitBoxes(t, st.LAYOUT).map((b) => b.drawn);
+      });
+    expect(await doorBox()).toEqual([false]);
+    await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const sidebar = await import(u("sidebar.js"));
+      sidebar.toggleShow("markers");
+    });
+    expect(await doorBox()).toEqual([true]);
     expect(errors).toEqual([]);
   });
 
