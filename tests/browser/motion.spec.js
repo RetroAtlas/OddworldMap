@@ -190,7 +190,7 @@ test.describe("Objects as themselves", () => {
     });
     expect(await pixels(page, SLIG)).toEqual(fallen);
     // the toggle coming on again is the one deliberate retry
-    const second = page.waitForRequest(/sprites_ae\.json$/);
+    const second = page.waitForResponse(/sprites_ae\.json$/);
     await page.evaluate(async () => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const sidebar = await import(u("sidebar.js"));
