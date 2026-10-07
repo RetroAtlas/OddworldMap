@@ -313,3 +313,10 @@ test("pinned patrols: a slig's side without a bound reads zero, and only an Oddy
   assert.deepEqual(recordAt("AO", "D1", 8, "Slig", 4649, 311).cycle.p.zone, { x: 12809, w: 6405 });
   assert.deepEqual(recordAt("AE", "MI", 2, "Slig", 1800, 840).cycle.p.zone, { x: 0, w: 0 });
 });
+
+test("pinned patrols: an Oddysee slig placed in the void beside its screen stays between its bounds", () => {
+  const r = recordAt("AO", "F1", 9, "Slig", 660, 294);
+  assert.deepEqual(r.cycle.p.zone, { x: 565, w: 673 });
+  const [lo, hi] = xSpan(r, sheets.AO);
+  assert.ok(lo >= 565 && hi <= 673 && lo < r.x, `walks between its bounds: ${lo}..${hi}`);
+});

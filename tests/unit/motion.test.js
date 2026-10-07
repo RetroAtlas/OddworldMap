@@ -1081,6 +1081,28 @@ test("patrol: an Oddysee slig whose bounds sit on two screens crosses the gap be
   );
 });
 
+test("patrol: an Oddysee slig placed in the void walks it uncarried, between its own bounds", () => {
+  // a floor from beside the first screen far into the void, the zone across the screen's edge
+  const floor = [[127, 317, 894, 317, 4]];
+  const w = world("AO", floor, [], { x: 661, y: 294 }, true);
+  const p = {
+    pauseTime: 10,
+    leftMin: 30,
+    leftMax: 60,
+    rightMin: 30,
+    rightMax: 60,
+    zone: { x: 565, w: 673 },
+  };
+  const r = walker("Slig_Idle", "slig", p, w, 661, 317, true);
+  const set = { anims: PATROL_ANIMS, dice: new Array(256).fill(0) };
+  const xs = trail(r, set, 1, 1800).map((s) => +s.split("@")[1].slice(0, -1));
+  const [lo, hi] = [Math.min(...xs), Math.max(...xs)];
+  assert.ok(lo >= 565 && hi <= 673, `paces between its bounds: ${lo}..${hi}`);
+  // the screen counts to 636 with the skippers' margin
+  const out = xs.findIndex((x, i) => i > 0 && xs[i - 1] <= 636 && x > 636);
+  assert.ok(lo < 636 && out > 0, "walks onto its screen and back out into the void");
+});
+
 test("patrol: a moving bomb follows its track, pauses at a stopper and carries on", () => {
   const track = [[100, 200, 900, 200, 8]];
   const stopper = tlv("MovingBombStopper", 500, 190, 524, 214, { min_delay: 10, max_delay: 30 });

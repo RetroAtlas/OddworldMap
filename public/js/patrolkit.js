@@ -48,12 +48,15 @@ export function standOn(st, x, y, reach) {
   st.x0 = st.x;
   st.y0 = st.y;
   st.velx = 0;
+  st.placedInVoid =
+    st.w.game === "AO" && (camVoidX(st.x, 0, 12) !== null || camVoidY(st.y, 0, 12) !== null);
 }
 
 // a step along the held line; a chain that ends leaves the creature standing
 // at its edge, where the game would have it fall. In Oddysee a step that lands
 // in the void between screens is carried into the next, onto the line a probe
-// finds there, as the engine carries Abe and its moving bombs
+// finds there, as the engine carries Abe and its moving bombs; a walker placed
+// in the void walks it uncarried, as the game does, its beat running there
 export function follow(st, types = floorOf(st.w.half), yVelAgainstX = false) {
   if (st.line === null || st.velx === 0) return;
   const ox = st.x,
@@ -67,7 +70,7 @@ export function follow(st, types = floorOf(st.w.half), yVelAgainstX = false) {
   st.line = r.line;
   st.x = r.x;
   st.y = r.y;
-  if (st.w.game !== "AO") return;
+  if (st.w.game !== "AO" || st.placedInVoid) return;
   const sx = camVoidX(ox, st.x - ox, 12);
   if (sx !== null) {
     st.x = sx;
