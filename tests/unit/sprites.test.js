@@ -271,3 +271,33 @@ test("pinned placements: each game's first Abe stands on the floor inside his ow
   assert.equal(ae.x, aeStart.x1 + 12);
   assert.equal(ae.y, 1500);
 });
+
+// the record a placed object draws, found by its place
+function recordAt(g, lv, pid, name, x1, y1) {
+  const lvl = data[g].levels.find((l) => l.short === lv);
+  const path = lvl.paths.find((p) => p.id === pid);
+  const t = path.tlvs.find((o) => o.name === name && o.x1 === x1 && o.y1 === y1);
+  return spriteDraws(data[g], lvl, path, t, sheets[g])[0];
+}
+
+// a minute of the patrol clock, longer than any pause a creature on patrol rolls
+const PATROL_MINUTE = 1800;
+function xSpan(r, set) {
+  let lo = Infinity,
+    hi = -Infinity;
+  for (let t = 0; t <= PATROL_MINUTE; t++) {
+    const { x } = resolveRecord(r, set, t);
+    lo = Math.min(lo, x);
+    hi = Math.max(hi, x);
+  }
+  return [lo, hi];
+}
+
+test("pinned patrols: a slig with two bounds of a side in reach takes the last, as the engine's scan overwrites", () => {
+  // a pair of bounds on each of two screens, all sharing the slig's id
+  const r = recordAt("AO", "R2", 9, "Slig", 1503, 753);
+  assert.deepEqual(r.cycle.p.zone, { x: 1428, w: 1599 });
+  const [lo, hi] = xSpan(r, sheets.AO);
+  assert.ok(lo >= 1428 && hi <= 1599, `paces between its bounds: ${lo}..${hi}`);
+  assert.ok(hi - lo > 80, `and does pace: ${lo}..${hi}`);
+});

@@ -952,11 +952,13 @@ both("Slig", (c) => {
   let cycle = asleep ? brain(c, "sligSleep") : null;
   if (f.start_state === 1) {
     // the zone is the bounds sharing its id within reach of its camera, each
-    // side's edge; a side with none keeps the engine's unset value
+    // side's edge the last such bound in the path's camera order, as the
+    // engine's scan overwrites on every match; a side with none keeps the
+    // engine's unset value
     const near = nearCameras(c, t, ae ? 3 : 2);
     const id = f.slig_bound_persist_id;
     const bid = (b) => b.fields?.slig_bound_persist_id ?? b.fields?.slig_id;
-    const edge = (name) => c.path.tlvs.find((b) => b.name === name && bid(b) === id && near(b));
+    const edge = (name) => c.path.tlvs.findLast((b) => b.name === name && bid(b) === id && near(b));
     const left = edge("SligBoundLeft"),
       right = edge("SligBoundRight");
     const zone = ae
