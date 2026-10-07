@@ -301,3 +301,15 @@ test("pinned patrols: a slig with two bounds of a side in reach takes the last, 
   assert.ok(lo >= 1428 && hi <= 1599, `paces between its bounds: ${lo}..${hi}`);
   assert.ok(hi - lo > 80, `and does pace: ${lo}..${hi}`);
 });
+
+test("pinned patrols: a slig's side without a bound reads zero, and only an Oddysee slig with none takes the decomp's hack values", () => {
+  const oneSided = recordAt("AO", "R2", 4, "Slig", 2639, 655);
+  assert.deepEqual(oneSided.cycle.p.zone, { x: 2605, w: 0 });
+  // at an edge whichever way it faces, it turns where it stands
+  assert.deepEqual(xSpan(oneSided, sheets.AO), [oneSided.x, oneSided.x]);
+  const facings = new Set();
+  for (let t = 0; t <= PATROL_MINUTE; t++) facings.add(resolveRecord(oneSided, sheets.AO, t).flip);
+  assert.equal(facings.size, 2);
+  assert.deepEqual(recordAt("AO", "D1", 8, "Slig", 4649, 311).cycle.p.zone, { x: 12809, w: 6405 });
+  assert.deepEqual(recordAt("AE", "MI", 2, "Slig", 1800, 840).cycle.p.zone, { x: 0, w: 0 });
+});

@@ -953,17 +953,18 @@ both("Slig", (c) => {
   if (f.start_state === 1) {
     // the zone is the bounds sharing its id within reach of its camera, each
     // side's edge the last such bound in the path's camera order, as the
-    // engine's scan overwrites on every match; a side with none keeps the
-    // engine's unset value
+    // engine's scan overwrites on every match
     const near = nearCameras(c, t, ae ? 3 : 2);
     const id = f.slig_bound_persist_id;
     const bid = (b) => b.fields?.slig_bound_persist_id ?? b.fields?.slig_id;
     const edge = (name) => c.path.tlvs.findLast((b) => b.name === name && bid(b) === id && near(b));
     const left = edge("SligBoundLeft"),
       right = edge("SligBoundRight");
-    const zone = ae
-      ? { x: left ? left.x1 : 0, w: right ? right.x1 : 0 }
-      : { x: left ? left.x1 : 12809, w: right ? right.x1 : 6405 };
+    // a side with none reads zero, as Oddysee's decomp clears the zone before
+    // its scan; a slig there that no bound matched at all takes the decomp's
+    // hack values
+    const zone =
+      ae || left || right ? { x: left?.x1 ?? 0, w: right?.x1 ?? 0 } : { x: 12809, w: 6405 };
     const p = {
       pauseTime: f.pause_time,
       leftMin: f.pause_left_min,
