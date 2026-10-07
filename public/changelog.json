@@ -1,6 +1,12 @@
 {
  "entries": [
   {
+   "date": "2026-10-07",
+   "tag": "fixed",
+   "title": "Sligs keep to their own beat",
+   "detail": "Some Sligs on patrol left the stretch their bound markers give them and ended up standing somewhere else. A Slig with more than one marker of a side in reach took the first where the game takes the last, which in Rupture Farms Return sent one off toward another pair's stretch. An Oddysee Slig with a marker on one side only walked to the far end of its floor, where the decompilation turns it on the spot. Outside the Temple, a third was placed in the hidden gap beside its screen and vanished on its first step. Each now keeps to the stretch the game gives it."
+  },
+  {
    "date": "2026-10-06",
    "tag": "fixed",
    "title": "Walkers stop at a shut slam door",
