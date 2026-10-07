@@ -320,3 +320,43 @@ test("pinned patrols: an Oddysee slig placed in the void beside its screen stays
   const [lo, hi] = xSpan(r, sheets.AO);
   assert.ok(lo >= 565 && hi <= 673 && lo < r.x, `walks between its bounds: ${lo}..${hi}`);
 });
+
+// stranded: ending the minute far from its spawn, after standing longer than
+// any pause a shipped field rolls
+const STRANDED_FAR = 200;
+const STRANDED_STILL = 750;
+// the creatures whose walk runs off the end of their line, where the game has
+// them fall and the patrols stand them at the edge
+const FALLS = new Map([
+  ["AO E1 P6 Scrab (2551,1260)", "runs right off its floor"],
+  ["AO D2 P4 Scrab (2501,299)", "turns at its right bound and walks left off its floor"],
+  ["AO D2 P4 Scrab (4526,1242)", "turns at its right bound and walks left off its floor"],
+  ["AE SV P2 Scrab (53,550)", "runs right off its floor, with no bound before the edge"],
+  ["AE BA P5 MovingBomb (3101,2261)", "rides off the end of its track"],
+]);
+
+test("patrols: no creature on patrol is left stranded far from its spawn, but for the falls at a line's end", () => {
+  const stranded = [];
+  for (const g of GAMES)
+    for (const { lvl, path, t, r } of allRecords(g)) {
+      if (!r.cycle?.patrol) continue;
+      let end = null,
+        moved = 0;
+      for (let tick = 0; tick <= PATROL_MINUTE; tick++) {
+        const s = resolveRecord(r, sheets[g], tick);
+        if (!s) continue; // a brain may hide its record for a spell
+        if (end && (s.x !== end.x || s.y !== end.y)) moved = tick;
+        end = s;
+      }
+      const far = Math.hypot(end.x - r.x, end.y - r.y) > STRANDED_FAR;
+      if (far && PATROL_MINUTE - moved >= STRANDED_STILL)
+        stranded.push(`${g} ${lvl.short} P${path.id} ${t.name} (${t.x1},${t.y1})`);
+    }
+  assert.deepEqual(
+    stranded.filter((k) => !FALLS.has(k)),
+    [],
+    "stranded far from their spawn",
+  );
+  const stale = [...FALLS].filter(([k]) => !stranded.includes(k));
+  assert.deepEqual(stale, [], "a listed fall no longer strands its creature");
+});
