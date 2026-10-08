@@ -7,6 +7,7 @@
 
 import { onBackgroundPlane } from "./fields.js";
 import { raycastDiag, raycastDown, snapX } from "./collide.js";
+import { sligBounds } from "./model.js";
 
 // collision-line types a constructor raycasts against; the background plane's
 // copies sit four above the foreground's
@@ -59,17 +60,6 @@ const patrol = (c, name, p, spawn) => ({
     spawn,
   },
 });
-// the cameras within `reach` cells of the object's own, where a constructor
-// scans for its bounds
-function nearCameras(c, t, reach) {
-  const cx = Math.floor(t.x1 / c.geo.worldW),
-    cy = Math.floor(t.y1 / c.geo.worldH);
-  return (o) => {
-    const ox = Math.floor(o.x1 / c.geo.worldW),
-      oy = Math.floor(o.y1 / c.geo.worldH);
-    return Math.abs(ox - cx) <= reach && Math.abs(oy - cy) <= reach;
-  };
-}
 
 // the record a rule returns, with the engine's defaults: full scale on layer
 // 27 and half on layer 8, the game's base colour, a semi-transparent polygon
@@ -951,15 +941,7 @@ both("Slig", (c) => {
   const rgb = ae ? [102, 127, 118] : yards ? [127, 127, 127] : [105, 105, 105];
   let cycle = asleep ? brain(c, "sligSleep") : null;
   if (f.start_state === 1) {
-    // the zone is the bounds sharing its id within reach of its camera, each
-    // side's edge the last such bound in the path's camera order, as the
-    // engine's scan overwrites on every match
-    const near = nearCameras(c, t, ae ? 3 : 2);
-    const id = f.slig_bound_persist_id;
-    const bid = (b) => b.fields?.slig_bound_persist_id ?? b.fields?.slig_id;
-    const edge = (name) => c.path.tlvs.findLast((b) => b.name === name && bid(b) === id && near(b));
-    const left = edge("SligBoundLeft"),
-      right = edge("SligBoundRight");
+    const { left, right } = sligBounds(t, c.path, c.geo, c.game);
     // a side with none reads zero, as Oddysee's decomp clears the zone before
     // its scan; a slig there that no bound matched at all takes the decomp's
     // hack values

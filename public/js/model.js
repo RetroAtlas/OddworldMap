@@ -412,19 +412,16 @@ function perGame(table, gameId) {
   return table[gameId];
 }
 
-// the pen a Slig or SligSpawner patrols: the x-span between the SligBound pair
-// sharing its id, which the engine scans for over a camera window (AO ±2 cells,
-// AE ±3 — Slig.cpp's bound loops) and reads by each bound's top-left x. Honoured
-// only when exactly one Left and one Right answer in the window: the engine's
-// last-match-wins on duplicates is not worth imitating. Scrab bounds ship no
-// ids, so scrabs get no pen. Returns a draw-space rect, or null.
+// the SligBound pair a Slig or SligSpawner patrols between: the bounds sharing
+// its id over the camera window the engine scans (Slig.cpp's bound loops), each
+// side the last such bound in the path's camera order, as the scan overwrites
+// on every match. Either side may be null
 const BOUND_WINDOW = { AO: 2, AE: 3 };
-export function patrolZone(t, path, layout, gameId) {
+export function sligBounds(t, path, geo, gameId) {
   const win = perGame(BOUND_WINDOW, gameId);
-  if (t.name !== "Slig" && t.name !== "SligSpawner") return null;
   const id = t.fields?.slig_bound_persist_id;
-  if (id == null) return null;
-  const cellOf = (o) => [Math.floor(o.x1 / layout.worldW), Math.floor(o.y1 / layout.worldH)];
+  if (id == null) return { left: null, right: null };
+  const cellOf = (o) => [Math.floor(o.x1 / geo.worldW), Math.floor(o.y1 / geo.worldH)];
   const [tc, tr] = cellOf(t);
   const near = (o) => {
     const [c, r] = cellOf(o);
@@ -433,16 +430,24 @@ export function patrolZone(t, path, layout, gameId) {
   // the id lives under a different name per game (AO slig_id, AE the same key
   // the Slig itself carries)
   const idOf = (o) => o.fields?.slig_id ?? o.fields?.slig_bound_persist_id;
-  const find = (name) => path.tlvs.filter((o) => o.name === name && idOf(o) === id && near(o));
-  const L = find("SligBoundLeft"),
-    R = find("SligBoundRight");
-  if (L.length !== 1 || R.length !== 1) return null;
-  if (R[0].x1 <= L[0].x1) return null; // an inside-out pen is data noise, not a zone
+  const last = (name) =>
+    path.tlvs.findLast((o) => o.name === name && idOf(o) === id && near(o)) ?? null;
+  return { left: last("SligBoundLeft"), right: last("SligBoundRight") };
+}
+
+// the pen a Slig or SligSpawner patrols: the x-span between its bound pair, read
+// by each bound's top-left x, wherever the pair stands. A side without a bound
+// or an inside-out pair pens nothing, and Scrab bounds ship no ids, so scrabs
+// get no pen. Returns a draw-space rect, or null.
+export function patrolZone(t, path, layout, gameId) {
+  const { left: L, right: R } = sligBounds(t, path, layout, gameId);
+  if ((t.name !== "Slig" && t.name !== "SligSpawner") || !L || !R) return null;
+  if (R.x1 <= L.x1) return null; // an inside-out pen is data noise, not a zone
   return {
-    x1: drawX(L[0].x1, layout),
-    x2: drawX(R[0].x1, layout),
-    y1: drawY(Math.min(L[0].y1, R[0].y1, t.y1), layout),
-    y2: drawY(Math.max(L[0].y2, R[0].y2, t.y2), layout),
+    x1: drawX(L.x1, layout),
+    x2: drawX(R.x1, layout),
+    y1: drawY(Math.min(L.y1, R.y1, t.y1), layout),
+    y2: drawY(Math.max(L.y2, R.y2, t.y2), layout),
   };
 }
 

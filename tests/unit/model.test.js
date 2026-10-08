@@ -24,6 +24,7 @@ import {
   screenRuns,
   parseHash,
   patrolZone,
+  sligBounds,
   resolveTarget,
   snapTarget,
   zoomAt,
@@ -1279,7 +1280,7 @@ test("snapTarget: a line's end in the slack snaps where the line is drawn", () =
   assert.equal(snapTarget({ x: 188, y: 80 }, P, 8, AO_GEOMETRY, true), null);
 });
 
-test("patrolZone: the pen between the id-matched bound pair, window-bounded", () => {
+test("patrolZone: the pen between the id-matched bound pair, window-bounded, the last of a side winning", () => {
   const at = (name, cellX, off, fields) => ({
     ...tlv(name),
     x1: cellX * 1024 + 256 + off,
@@ -1307,8 +1308,8 @@ test("patrolZone: the pen between the id-matched bound pair, window-bounded", ()
   // boundaries the pen crosses is canvas, and the pen is wider by both
   const [, spaced] = pitches(AO_GEOMETRY);
   assert.deepEqual(patrolZone(slig, P, spaced, "AO"), { x1: 40, x2: 2248, y1: 50, y2: 74 });
-  // AE's wider window lets the far bound in — and two Rights answering is no pen
-  assert.equal(patrolZone(slig, P, AO_GEOMETRY, "AE"), null);
+  // AE's wider window lets the far bound in, and of two Rights the engine keeps the later
+  assert.deepEqual(patrolZone(slig, P, AO_GEOMETRY, "AE"), { x1: 40, x2: 1482, y1: 50, y2: 74 });
 
   // AE names the bound-side key like the Slig's own; spawners are penned too
   const spawner = at("SligSpawner", 1, 100, { slig_bound_persist_id: 7 });
@@ -1324,6 +1325,7 @@ test("patrolZone: the pen between the id-matched bound pair, window-bounded", ()
     1,
   );
   assert.equal(patrolZone(spawner, P2, AO_GEOMETRY, "AO"), null); // right bound out of window
+  assert.deepEqual(sligBounds(spawner, P2, AO_GEOMETRY, "AO"), { left: P2.tlvs[1], right: null });
   assert.deepEqual(patrolZone(spawner, P2, AO_GEOMETRY, "AE"), {
     x1: 60,
     x2: 4 * 368 + 80,

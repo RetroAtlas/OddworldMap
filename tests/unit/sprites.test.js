@@ -4,6 +4,8 @@ import { readFileSync, readdirSync } from "node:fs";
 import { spriteDraws, spriteTypes } from "../../public/js/sprites.js";
 import { armFieldData } from "../../public/js/fields.js";
 import { resolveEffects, resolveRecord } from "../../public/js/motion.js";
+import { patrolZone, sligBounds } from "../../public/js/model.js";
+import { drawX } from "../../public/js/geometry.js";
 
 const pub = (f) => JSON.parse(readFileSync(new URL(`../../public/${f}`, import.meta.url), "utf8"));
 const GAMES = ["AO", "AE"];
@@ -319,6 +321,25 @@ test("pinned patrols: an Oddysee slig placed in the void beside its screen stays
   assert.deepEqual(r.cycle.p.zone, { x: 565, w: 673 });
   const [lo, hi] = xSpan(r, sheets.AO);
   assert.ok(lo >= 565 && hi <= 673 && lo < r.x, `walks between its bounds: ${lo}..${hi}`);
+});
+
+test("patrols: a patrolling slig's pen is the zone it walks, wherever both its bounds stand", () => {
+  let penned = 0;
+  for (const g of GAMES) {
+    const geo = data[g].geometry;
+    for (const { path, t, r } of allRecords(g)) {
+      if (t.name !== "Slig" || !r.cycle?.patrol) continue;
+      const where = `${g} Slig@${t.x1},${t.y1}`;
+      const { left, right } = sligBounds(t, path, geo, g);
+      const pen = patrolZone(t, path, geo, g);
+      assert.equal(!!pen, !!left && !!right && right.x1 > left.x1, where);
+      if (!pen) continue;
+      penned++;
+      const { x, w } = r.cycle.p.zone;
+      assert.deepEqual([pen.x1, pen.x2], [drawX(x, geo), drawX(w, geo)], where);
+    }
+  }
+  assert.ok(penned > 200, `${penned} penned`);
 });
 
 // stranded: ending the minute far from its spawn, after standing longer than

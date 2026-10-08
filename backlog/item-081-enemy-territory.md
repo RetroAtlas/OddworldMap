@@ -30,3 +30,7 @@ Where the sketch was wrong, read from `Slig.cpp` before building:
 
 - The whole treatment sits behind the "Enemy patrol pens" Display toggle (`p` — initially shipped as a Settings row, but a lens you flip mid-reading is Display ink), **off by default**: hundreds of posts are clutter for anyone not reading patrol ranges. Pens off, barriers are the plain meta boxes they always were.
 - The posts stand on each stamp's top-left x — the boundary the engine actually enforces, and the edge the pen band is built from, so posts and band always meet; a centred post would stand half a stamp off the band on both sides. Snapping follows the line too.
+
+## Grown since filing
+
+**The pen takes the engine's last match, 2026-10-08.** The patrols ([94](item-094-live-map.md)) walk a Slig between the last bound of each side that shares its id, which is the engine's own pick: Slig.cpp's scan overwrites the zone on every match, and every path lists its objects in camera order. A pen kept to a unique pair showed nothing for the 29 Sligs and spawners with a duplicate, though the patrolling ones among them walk between definite posts, so the pen reads the same pick (`sligBounds` in [js/model.js](../public/js/model.js)) and is drawn wherever the pair stands, another Slig's pair included; a side with no bound or a pair inside out still pens nothing. 163 of AO's 186 penned sligs and 282 of AE's 323 get a pen, counted by `patrolZone` over the shipped data on that date.

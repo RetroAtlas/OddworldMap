@@ -1,6 +1,13 @@
 {
  "entries": [
   {
+   "date": "2026-10-08",
+   "tag": "improved",
+   "tiny": true,
+   "title": "A Slig's pen shades where it walks",
+   "detail": "With \"Enemy patrol pens\" on, hovering a Slig shaded nothing when more than one post on a side carried its id. The pen now shades the pair the game picks, the last of each side within reach, so it covers the stretch the Slig walks, and 29 more Sligs and spawners get one. Now and then that pair lies beside the Slig rather than around it, which is why a few of them stand still."
+  },
+  {
    "date": "2026-10-07",
    "tag": "fixed",
    "title": "Sligs keep to their own beat",
