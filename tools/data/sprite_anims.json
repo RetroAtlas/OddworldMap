@@ -6,6 +6,13 @@
    "anim": 0
   }
  },
+ "AE_FallingRock_Waiting": {
+  "ae": {
+   "file": "FALLROCK.BAN",
+   "rid": 2007,
+   "anim": 1
+  }
+ },
  "AE_Rope": {
   "ae": {
    "file": "ROPES.BAN",
@@ -24,6 +31,13 @@
   "ao": {
    "file": "F2ROCK.BAN",
    "rid": 2007,
+   "anim": 0
+  }
+ },
+ "AirExplosion": {
+  "ae": {
+   "file": "EXPLO2.BAN",
+   "rid": 301,
    "anim": 0
   }
  },
@@ -180,6 +194,13 @@
    "anim": 1
   }
  },
+ "Bee_Swarm": {
+  "ao": {
+   "file": "WASP.BAN",
+   "rid": 61,
+   "anim": 0
+  }
+ },
  "BellHammer_Idle": {
   "ao": {
    "bg": 1019,
@@ -280,6 +301,11 @@
    "file": "OMMFLARE.BAN",
    "rid": 312,
    "anim": 0
+  },
+  "ae": {
+   "file": "OMMFLARE.BAN",
+   "rid": 312,
+   "anim": 0
   }
  },
  "Chime_Ball": {
@@ -315,6 +341,13 @@
    "file": "CRAWLSLG.BND",
    "rid": 449,
    "anim": 9
+  }
+ },
+ "DeathFlare_2": {
+  "ao": {
+   "file": "DEADFLR.BAN",
+   "rid": 349,
+   "anim": 0
   }
  },
  "Desert_TrapDoor_Closed": {
@@ -479,6 +512,25 @@
    "anim": 0
   }
  },
+ "Explosion_Rock": {
+  "ae": {
+   "file": "DEBRIS00.BAN",
+   "rid": 1105,
+   "anim": 0
+  }
+ },
+ "Explosion_Stick": {
+  "ao": {
+   "file": "STICK.BAN",
+   "rid": 358,
+   "anim": 0
+  },
+  "ae": {
+   "file": "STICK.BAN",
+   "rid": 358,
+   "anim": 0
+  }
+ },
  "FallingCrate_Falling": {
   "ae": {
    "file": "FALLBONZ.BAN",
@@ -486,11 +538,25 @@
    "anim": 0
   }
  },
+ "FallingCrate_Waiting": {
+  "ae": {
+   "file": "FALLBONZ.BAN",
+   "rid": 2007,
+   "anim": 1
+  }
+ },
  "FallingMeat_Falling": {
   "ao": {
    "file": "R1BARREL.BAN",
    "rid": 2007,
    "anim": 0
+  }
+ },
+ "FallingMeat_Waiting": {
+  "ao": {
+   "file": "R1BARREL.BAN",
+   "rid": 2007,
+   "anim": 1
   }
  },
  "FinalTestDoor_Desert_Closed": {
@@ -505,6 +571,13 @@
    "file": "FDOOR.BND",
    "rid": 2018,
    "anim": 1
+  }
+ },
+ "Fleech_Climb": {
+  "ae": {
+   "file": "FLEECH.BAN",
+   "rid": 900,
+   "anim": 13
   }
  },
  "Fleech_Crawl": {
@@ -533,6 +606,20 @@
    "file": "FLEECH.BAN",
    "rid": 900,
    "anim": 2
+  }
+ },
+ "Fleech_RaiseHead": {
+  "ae": {
+   "file": "FLEECH.BAN",
+   "rid": 900,
+   "anim": 12
+  }
+ },
+ "Fleech_SettleOnGround": {
+  "ae": {
+   "file": "FLEECH.BAN",
+   "rid": 900,
+   "anim": 14
   }
  },
  "Fleech_Sleeping": {
@@ -1004,6 +1091,13 @@
    "anim": 1
   }
  },
+ "Honey_Drip": {
+  "ao": {
+   "file": "HONEY.BAN",
+   "rid": 337,
+   "anim": 0
+  }
+ },
  "HubDoor_Desert_Closed": {
   "ao": {
    "file": "DDOOR.BND",
@@ -1028,6 +1122,34 @@
    "file": "SWITCH1.BAN",
    "rid": 1009,
    "anim": 0
+  }
+ },
+ "Lever_Pull_Left": {
+  "ae": {
+   "file": "SWITCH1.BAN",
+   "rid": 1009,
+   "anim": 1
+  }
+ },
+ "Lever_Pull_Release_Left": {
+  "ae": {
+   "file": "SWITCH1.BAN",
+   "rid": 1009,
+   "anim": 2
+  }
+ },
+ "Lever_Pull_Release_Right": {
+  "ae": {
+   "file": "SWITCH1.BAN",
+   "rid": 1009,
+   "anim": 4
+  }
+ },
+ "Lever_Pull_Right": {
+  "ae": {
+   "file": "SWITCH1.BAN",
+   "rid": 1009,
+   "anim": 3
   }
  },
  "LiftBottomWheel_Desert": {
@@ -1208,6 +1330,13 @@
    "file": "R1METSAW.BAN",
    "rid": 6003,
    "anim": 1
+  }
+ },
+ "Meat_Gib": {
+  "ao": {
+   "file": "R1MEAT.BAN",
+   "rid": 6014,
+   "anim": 0
   }
  },
  "MediumChime": {
@@ -1404,6 +1533,27 @@
    "anim": 4
   }
  },
+ "Mudokon_LeverUse": {
+  "ae": {
+   "file": "ABEPULL.BAN",
+   "rid": 11,
+   "anim": 0
+  }
+ },
+ "Mudokon_Sling_Idle": {
+  "ao": {
+   "file": "MUDSLING.BAN",
+   "rid": 508,
+   "anim": 0
+  }
+ },
+ "Mudokon_Sling_Speak": {
+  "ao": {
+   "file": "MUDSLING.BAN",
+   "rid": 508,
+   "anim": 4
+  }
+ },
  "Mudokon_Speak3@AngryMud": {
   "ae": {
    "file": "ABEBSIC1.BAN",
@@ -1415,6 +1565,17 @@
    ]
   }
  },
+ "Mudokon_Speak3@WiredMud": {
+  "ae": {
+   "file": "ABEBSIC1.BAN",
+   "rid": 55,
+   "anim": 6,
+   "pal": [
+    "MUDPAL.BND",
+    532
+   ]
+  }
+ },
  "Mudokon_SpeakFart@SadMud": {
   "ae": {
    "file": "ABEBSIC1.BAN",
@@ -1423,6 +1584,17 @@
    "pal": [
     "MUDPAL.BND",
     531
+   ]
+  }
+ },
+ "Mudokon_SpeakFart@WiredMud": {
+  "ae": {
+   "file": "ABEBSIC1.BAN",
+   "rid": 55,
+   "anim": 5,
+   "pal": [
+    "MUDPAL.BND",
+    532
    ]
   }
  },
@@ -1495,6 +1667,32 @@
     "MUDPAL.BND",
     533
    ]
+  }
+ },
+ "Mudokon_TurnWheel": {
+  "ae": {
+   "file": "ABEWORK.BAN",
+   "rid": 515,
+   "anim": 0
+  }
+ },
+ "Mudokon_TurnWheelBegin": {
+  "ae": {
+   "file": "ABEWORK.BAN",
+   "rid": 515,
+   "anim": 1
+  }
+ },
+ "ObjectShadow": {
+  "ao": {
+   "file": "SHADOW.BAN",
+   "rid": 2035,
+   "anim": 0
+  },
+  "ae": {
+   "file": "SHADOW.BAN",
+   "rid": 2035,
+   "anim": 0
   }
  },
  "ParamiteWeb": {
@@ -1655,6 +1853,13 @@
    "anim": 0
   }
  },
+ "Scrab_AO_ToFall": {
+  "ao": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 11
+  }
+ },
  "Scrab_HowlBegin": {
   "ao": {
    "file": "SCRAB.BND",
@@ -1696,6 +1901,20 @@
    "file": "SCRAB.BND",
    "rid": 700,
    "anim": 11
+  }
+ },
+ "Scrab_Knockback": {
+  "ae": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 15
+  }
+ },
+ "Scrab_Landing": {
+  "ae": {
+   "file": "SCRAB.BND",
+   "rid": 700,
+   "anim": 7
   }
  },
  "Scrab_Run": {
@@ -1796,6 +2015,13 @@
    "anim": 1
   }
  },
+ "Security_Claw_Upper_NoRotation": {
+  "ao": {
+   "file": "F2EYEORB.BAN",
+   "rid": 2008,
+   "anim": 4
+  }
+ },
  "Security_Claw_Upper_Rotating": {
   "ao": {
    "file": "F2EYEORB.BAN",
@@ -1834,6 +2060,13 @@
    "file": "GHOSTTRP.BAN",
    "rid": 1053,
    "anim": 2
+  }
+ },
+ "SlapLock_Shaking": {
+  "ae": {
+   "file": "GHOSTTRP.BAN",
+   "rid": 1053,
+   "anim": 0
   }
  },
  "Slig_Idle": {
@@ -2078,6 +2311,13 @@
    "anim": 1
   }
  },
+ "Status_Light_Green": {
+  "ae": {
+   "file": "STATUSLT.BAN",
+   "rid": 373,
+   "anim": 0
+  }
+ },
  "Stone_Ball": {
   "ao": {
    "file": "F2STNBAL.BAN",
@@ -2172,11 +2412,30 @@
    "anim": 2
   }
  },
+ "Well_Leaf": {
+  "ao": {
+   "file": "WELLLEAF.BAN",
+   "rid": 341,
+   "anim": 0
+  },
+  "ae": {
+   "file": "WELLLEAF.BAN",
+   "rid": 341,
+   "anim": 0
+  }
+ },
  "Work_Wheel_Idle": {
   "ae": {
    "file": "WORKWHEL.BAN",
    "rid": 320,
    "anim": 0
+  }
+ },
+ "Work_Wheel_Turning": {
+  "ae": {
+   "file": "WORKWHEL.BAN",
+   "rid": 320,
+   "anim": 1
   }
  },
  "Zap_Sparks": {

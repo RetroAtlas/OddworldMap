@@ -6,7 +6,7 @@
 // exactly as fresh as with no worker, and refresh the fallback as they pass.
 // The builder writes this line: it is a content hash of the artwork, so a
 // regenerated PNG expires the cache and an unchanged build leaves it alone.
-const CACHE_NAME = "cams-16266c2cad73";
+const CACHE_NAME = "cams-989ed03dbe34";
 // the shell bucket self-refreshes per request, so its name never has to move;
 // bumping it is only for retiring an incompatible storage scheme
 const SHELL = "shell-v1";

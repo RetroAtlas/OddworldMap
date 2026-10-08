@@ -71,6 +71,52 @@ const EDIT_REACHED = new Set([
   "Slig_ReloadGun@StockYardsSlig",
 ]);
 
+// animations the sheets carry before the rule or brain that draws them is
+// written; one leaves its game's list with the code that draws it
+const SHIPPED_AHEAD = {
+  AO: new Set([
+    "Bee_Swarm", // a honey sack's swarm and the bee hole's
+    "DeathFlare_2", // a sling Mudokon appearing
+    "Explosion_Stick", // a falling item's debris
+    "FallingMeat_Waiting", // meat on the always-on switch
+    "Honey_Drip", // a hanging honey sack
+    "Meat_Gib", // meat's debris
+    "Mudokon_Sling_Idle", // a sling Mudokon
+    "Mudokon_Sling_Speak",
+    "ObjectShadow", // a creature's drop shadow
+    "Scrab_AO_ToFall", // a scrab walking off its line's end
+    "Security_Claw_Upper_NoRotation", // a claw carrying motion detectors
+    "Well_Leaf", // a well letting a leaf go
+  ]),
+  AE: new Set([
+    "AE_FallingRock_Waiting", // a rock on the always-on switch
+    "AirExplosion", // a crate's blast
+    "ChantOrb_Particle", // the flare running down a web line
+    "Explosion_Rock", // a rock's debris
+    "Explosion_Stick", // a crate's debris
+    "FallingCrate_Waiting", // a crate on the always-on switch
+    "Fleech_Climb", // a fleech climbing a hoist
+    "Fleech_RaiseHead",
+    "Fleech_SettleOnGround",
+    "Lever_Pull_Left", // a lever an angry worker pulls
+    "Lever_Pull_Release_Left",
+    "Lever_Pull_Release_Right",
+    "Lever_Pull_Right",
+    "Mudokon_LeverUse", // an angry worker at its lever
+    "Mudokon_Speak3@WiredMud", // a wired Mudokon laughing
+    "Mudokon_SpeakFart@WiredMud",
+    "Mudokon_TurnWheel", // an angry worker at its wheel
+    "Mudokon_TurnWheelBegin",
+    "ObjectShadow", // a creature's drop shadow
+    "Scrab_Knockback", // a scrab walking into a wall
+    "Scrab_Landing", // a scrab landing from a fall
+    "SlapLock_Shaking", // a slap lock holding its ghost
+    "Status_Light_Green", // a status light whose switch is on
+    "Well_Leaf", // a well letting a leaf go
+    "Work_Wheel_Turning", // a wheel an angry worker turns
+  ]),
+};
+
 test("every record names an animation the sidecar carries, and every sidecar animation is drawn", () => {
   for (const g of GAMES) {
     const used = new Set();
@@ -90,7 +136,17 @@ test("every record names an animation the sidecar carries, and every sidecar ani
       if (r.cycle?.kind === "brain") for (const n of brainAnims(r, sheets[g])) used.add(n);
     }
     for (const n of Object.keys(sheets[g].anims))
-      assert.ok(used.has(n) || EDIT_REACHED.has(n), `${g}: ${n} is shipped but nothing draws it`);
+      assert.ok(
+        used.has(n) || EDIT_REACHED.has(n) || SHIPPED_AHEAD[g].has(n),
+        `${g}: ${n} is shipped but nothing draws it`,
+      );
+    for (const n of SHIPPED_AHEAD[g]) {
+      assert.ok(
+        sheets[g].anims[n],
+        `${g}: ${n} is listed as shipped ahead but the sidecar lacks it`,
+      );
+      assert.ok(!used.has(n), `${g}: ${n} is drawn, so it leaves SHIPPED_AHEAD`);
+    }
   }
 });
 
