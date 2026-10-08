@@ -128,22 +128,25 @@ function retrySprites(gameId) {
 }
 const sheetSrcs = (gameId) => spriteSets[gameId]?.sheets || [];
 
-// a sheet as one object draws it: the texels the semi-transparency bit marks
+// a frame as one object draws it: the texels the semi-transparency bit marks
 // blend only where the polygon is semi-transparent, and the engine modulates
-// every texel by the object's colour, 128 being neutral
-const sheetCache = new Map();
-function processedSheet(src, semi, rgb) {
-  const key = `${src}|${semi ? 1 : 0}|${rgb}`;
-  if (sheetCache.has(key)) return sheetCache.get(key);
+// every texel by the object's colour, 128 being neutral. The frame is cut
+// alone, so a smoothed draw repeats its own edge rather than reading the art
+// packed beside it
+const frameCache = new Map();
+function processedFrame(src, frame, semi, rgb) {
+  const [, fx, fy, fw, fh] = frame;
+  const key = `${src}|${fx},${fy},${fw},${fh}|${semi ? 1 : 0}|${rgb}`;
+  if (frameCache.has(key)) return frameCache.get(key);
   const im = img(src);
   if (!im.complete || !im.naturalWidth) return null;
   const oc = document.createElement("canvas");
-  oc.width = im.naturalWidth;
-  oc.height = im.naturalHeight;
+  oc.width = fw;
+  oc.height = fh;
   const octx = oc.getContext("2d");
   if (!octx) return null;
-  octx.drawImage(im, 0, 0);
-  const id = octx.getImageData(0, 0, oc.width, oc.height);
+  octx.drawImage(im, -fx, -fy);
+  const id = octx.getImageData(0, 0, fw, fh);
   const px = id.data;
   const [r, g, b] = rgb;
   for (let i = 0; i < px.length; i += 4) {
@@ -155,7 +158,7 @@ function processedSheet(src, semi, rgb) {
     px[i + 3] = a === 254 ? (semi ? 128 : 255) : 255;
   }
   octx.putImageData(id, 0, 0);
-  sheetCache.set(key, oc);
+  frameCache.set(key, oc);
   return oc;
 }
 
@@ -171,12 +174,7 @@ function spriteRecords(data, lvl, path, set) {
     }
     spriteCache = { path, set, byTlv };
     resetScene();
-    // a processed sheet is a whole atlas: keep only the colourings this path draws
-    const wanted = new Set();
-    for (const recs of byTlv.values())
-      for (const r of recs) wanted.add(`${r.semi ? 1 : 0}|${r.rgb}`);
-    for (const key of [...sheetCache.keys()])
-      if (!wanted.has(key.slice(key.indexOf("|") + 1))) sheetCache.delete(key);
+    frameCache.clear();
   }
   return spriteCache.byTlv;
 }
@@ -812,8 +810,9 @@ function paintSprites({ ctx, data, layout, path }, sprites, set, tick, patrolAt)
     }
     const shown = resolveRecord(r, set, tick, patrolAt);
     if (!shown) continue;
-    const sc = processedSheet(set.sheets[shown.anim.frames[shown.frame][0]], r.semi, r.rgb);
-    if (!sc) continue;
+    const frame = shown.anim.frames[shown.frame];
+    const tile = processedFrame(set.sheets[frame[0]], frame, r.semi, r.rgb);
+    if (!tile) continue;
     if (shown.moved && !movedBy.has(t))
       movedBy.set(
         t,
@@ -830,7 +829,6 @@ function paintSprites({ ctx, data, layout, path }, sprites, set, tick, patrolAt)
       for (let row = first; row <= last; row++)
         cams.push(cameraAt(layout, ax, row * layout.worldH + layout.winY));
     } else cams.push(cameraAt(layout, ax, Math.trunc(shown.y)));
-    const frame = shown.anim.frames[shown.frame];
     for (const cam of cams) {
       ctx.save();
       ctx.beginPath();
@@ -852,9 +850,9 @@ function paintSprites({ ctx, data, layout, path }, sprites, set, tick, patrolAt)
         const { top, bottom, step } = r.tile;
         if (yy > bottom) yy = bottom + ((yy - bottom) % step);
         for (; yy >= top - step; yy -= step)
-          noteBox(t, drawFrame(ctx, cam, sc, frame, r, shown, ae, shown.x, yy), cam, layout);
+          noteBox(t, drawFrame(ctx, cam, tile, frame, r, shown, ae, shown.x, yy), cam, layout);
       } else
-        noteBox(t, drawFrame(ctx, cam, sc, frame, r, shown, ae, shown.x, shown.y), cam, layout);
+        noteBox(t, drawFrame(ctx, cam, tile, frame, r, shown, ae, shown.x, shown.y), cam, layout);
       ctx.restore();
     }
   }
@@ -882,10 +880,11 @@ function paintEffect(ctx, layout, set, e, ae) {
   ctx.clip();
   ctx.globalCompositeOperation = "lighter";
   if (e.kind === "sprite") {
-    const sc = processedSheet(set.sheets[e.anim.frames[e.frame][0]], true, e.rgb);
-    if (sc) {
+    const frame = e.anim.frames[e.frame];
+    const tile = processedFrame(set.sheets[frame[0]], frame, true, e.rgb);
+    if (tile) {
       const r = { scale: e.scale, flipY: false, swap: false };
-      drawFrame(ctx, cam, sc, e.anim.frames[e.frame], r, { flip: false }, ae, e.x, e.y);
+      drawFrame(ctx, cam, tile, frame, r, { flip: false }, ae, e.x, e.y);
     }
   } else {
     const px = cam.dx + (e.x - cam.wx),
@@ -932,8 +931,8 @@ const Z_BURST = [
 // one frame at a world anchor, placed as Animation::vRender places it: the
 // frame's own offset scaled, a half-scale frame's y offset a unit less and
 // Exoddus's a pixel larger, every rounding a truncation of v + 0.499
-function drawFrame(ctx, cam, sheet, frame, r, shown, ae, wx, wy) {
-  const [, sx, sy, w, h, xoff, yoff] = frame;
+function drawFrame(ctx, cam, tile, frame, r, shown, ae, wx, wy) {
+  const [, , , w, h, xoff, yoff] = frame;
   const t = (v) => Math.trunc(v + 0.499);
   const s = r.scale;
   let fw = w,
@@ -969,8 +968,8 @@ function drawFrame(ctx, cam, sheet, frame, r, shown, ae, wx, wy) {
   if (r.swap) {
     // the texture's axes swapped: the frame stands on its side
     ctx.transform(0, 1, 1, 0, 0, 0);
-    ctx.drawImage(sheet, sx, sy, w, h, 0, 0, dh, dw);
-  } else ctx.drawImage(sheet, sx, sy, w, h, 0, 0, dw, dh);
+    ctx.drawImage(tile, 0, 0, dh, dw);
+  } else ctx.drawImage(tile, 0, 0, dw, dh);
   ctx.restore();
   return { x: x0, y: y0, w: dw, h: dh };
 }
