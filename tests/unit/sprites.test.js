@@ -257,6 +257,58 @@ test("pinned placements: a rolling ball snaps to the grid, and a lift's two rope
   ]);
 });
 
+test("pinned placements: of two start points on one lift shaft in a camera, the first its list reaches builds the lift", () => {
+  const lift = (d, lvl, path, t) =>
+    spriteDraws(d, lvl, path, t, sheets[d.id]).some((r) => /^LiftPlatform/.test(r.anim));
+  const at = (d, lv, pid, x1, y1) => {
+    const l = d.levels.find((l) => l.short === lv);
+    const p = l.paths.find((p) => p.id === pid);
+    return lift(
+      d,
+      l,
+      p,
+      p.tlvs.find((t) => t.name === "LiftPoint" && t.x1 === x1 && t.y1 === y1),
+    );
+  };
+  // Mine Run lists its upper start point first, and the game's lift stands there
+  assert.deepEqual(
+    [at(data.AO, "D1", 7, 6522, 1179), at(data.AO, "D1", 7, 6523, 1259)],
+    [true, false],
+  );
+  assert.deepEqual(
+    [at(data.AE, "BA", 5, 3900, 900), at(data.AE, "BA", 5, 3900, 840)],
+    [true, false],
+  );
+  // Exoddus asks the standing lift for the start point's own id, Oddysee does not
+  const shaft = (g, lv) => {
+    const point = (y1, id) => ({
+      name: "LiftPoint",
+      x1: 400,
+      y1,
+      x2: 475,
+      y2: y1 + 24,
+      fields: { start_point: 1, lift_point_id: id, scale: 0 },
+    });
+    const path = { id: 1, w: 1, h: 1, cams: [], lines: [], tlvs: [point(300, 1), point(380, 2)] };
+    const lvl = data[g].levels.find((l) => l.short === lv);
+    return path.tlvs.map((t) => lift(data[g], lvl, path, t));
+  };
+  assert.deepEqual(shaft("AO", "R1"), [true, false]);
+  assert.deepEqual(shaft("AE", "MI"), [true, true]);
+  // and no camera of the shipped paths draws two lifts on one shaft
+  for (const g of GAMES) {
+    const G = data[g].geometry;
+    const drawn = new Map();
+    for (const { lvl, path, t, r } of allRecords(g)) {
+      if (!/^LiftPlatform/.test(r.anim)) continue;
+      const k = `${g} ${lvl.short} P${path.id} ${Math.floor(t.x1 / G.worldW)},${Math.floor(t.y1 / G.worldH)}`;
+      const xs = drawn.get(k) ?? [];
+      assert.ok(!xs.some((x) => Math.abs(x - r.x) < 25), `${k}: a second lift at x ${r.x}`);
+      drawn.set(k, [...xs, r.x]);
+    }
+  }
+});
+
 test("pinned placements: each game's first Abe stands on the floor inside his own screen", () => {
   const abeAt = (d, lv, pid) => {
     const l = d.levels.find((l) => l.short === lv);

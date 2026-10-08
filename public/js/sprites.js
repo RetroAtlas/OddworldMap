@@ -370,9 +370,28 @@ const AO_LIFT = {
 };
 const AO_LIFT_WHEEL = { Desert2: "Desert" };
 const AO_ROPE_NUDGE = { D1: [2, 1], D2: [2, 1], D7: [2, 1] };
+// a camera builds its lifts in its list's order, and the factory gives a start
+// point none where one already stands within its span (Exoddus also asking for
+// the same lift id), so of two start points on one shaft the first builds it
+function liftStanding(c) {
+  const { t, path, geo } = c;
+  const cell = (o) => `${Math.floor(o.x1 / geo.worldW)},${Math.floor(o.y1 / geo.worldH)}`;
+  const built = [];
+  for (const o of path.tlvs) {
+    if (o.name !== "LiftPoint" || o.fields?.start_point !== 1 || cell(o) !== cell(t)) continue;
+    const id = o.fields.lift_point_id;
+    const standing = built.some(
+      (b) => o.x1 <= b.x && b.x <= o.x2 && (c.game === "AO" || b.id === id),
+    );
+    if (o === t) return standing;
+    if (!standing)
+      built.push({ x: snapAt({ ...c, half: onBackgroundPlane(c.game, o) }, mid(o)), id });
+  }
+  return false;
+}
 function liftPoint(c) {
   const { t, f } = c;
-  if (f.start_point !== 1) return [];
+  if (f.start_point !== 1 || liftStanding(c)) return [];
   const ae = c.game === "AE";
   const theme = ae
     ? AE_VAULTS.has(c.lvl.short)

@@ -2,6 +2,13 @@
  "entries": [
   {
    "date": "2026-10-08",
+   "tag": "fixed",
+   "tiny": true,
+   "title": "Each lift is drawn once",
+   "detail": "Three screens drew a lift twice, one above the other, where the level places two starting stops on the same lift: one each in Scrabania's Mine Run, the Slig Barracks' Block 2 Worker Camps and the Brewery Terminal. The game builds the lift at whichever of the two its screen lists first and leaves the other bare. The map now does the same, which in Mine Run puts it at the upper stop."
+  },
+  {
+   "date": "2026-10-08",
    "tag": "improved",
    "tiny": true,
    "title": "A Slig's pen shades where it walks",
