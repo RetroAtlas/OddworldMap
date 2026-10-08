@@ -185,6 +185,16 @@ The script needs Python 3.8 or newer, compiles `tools/cam2rgba` automatically on
 
 A rebuild that changes any committed cam PNG also rewrites `CACHE_NAME` in [sw.js](public/sw.js), which the build summary prints — commit that line with the artwork. It is a content hash of the images, and visitors who opted into artwork caching serve cams cache-first from a service worker and never revalidate them, so it is what stops them keeping the old images indefinitely.
 
+## Visiting a place in the game
+
+[tools/visit.py](tools/visit.py) starts Abe's Oddysee at the place a permalink names, so what the map shows there can be checked against the game itself without playing your way to it. It writes a PlayStation memory card holding one save per permalink; loading a save starts its path the way the game starts any path from a save, every object back at its own spawn and Abe on the floor at the linked place: the permalink's object, else the centre of its view, else `--at X,Y`.
+
+```bash
+python3 tools/visit.py --launch 'https://oddworldmap.com/#AO/D1/7/4637/1709/1.60/ContinuePoint@4625,1638'
+```
+
+The card is `visit.mcd` under `--out` (`$ODDWORLD_VISITS`, else `OddworldMap/visits` in your home folder), and the disc image comes from `--disc` or `$ODDWORLD_DISC_AO`, as for a build. `--launch` boots the game in [DuckStation](https://www.duckstation.org) from a profile of its own beside the card, made on first launch from a copy of your DuckStation settings with the card in slot 1, so nothing in DuckStation's own folder is written; on the main menu choose Load, then Load again and the save, which is titled with its level, path and camera. It runs on macOS and Linux, where DuckStation takes its folder from `HOME` or `XDG_CONFIG_HOME`, and not on Windows or with a portable install, which keep one folder whatever they are run with; `--app` names the program (default `/Applications/DuckStation.app` on macOS, `duckstation-qt` on the PATH on Linux). Without `--launch`, mount the card in any emulator. Exoddus permalinks are refused for now; [docs/visit.md](docs/visit.md) has why, and what the save holds.
+
 ## How it works
 
 - **Disc → files**: raw MODE2/FORM1 sectors are parsed as ISO9660; each level is a `.LVL` archive (32-byte header + 24-byte file records) containing the path data (`xxPATH.BND`) and one `.CAM` per camera.
