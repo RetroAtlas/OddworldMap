@@ -175,6 +175,7 @@ export function brainAt(r, set, tick) {
     dx: st.dx,
     dy: st.dy,
     hidden: !!st.hidden,
+    rgb: st.rgb ?? null,
   };
 }
 
@@ -218,8 +219,8 @@ export function lightLevel(set, tick) {
 }
 const roll = (p, dice, min, max) => min + (dice[p.seed++ & 255] % (max - min + 1));
 
-// what a record shows at a tick: its animation, frame, place and facing, after
-// the cycles the game runs without a player
+// what a record shows at a tick: its animation, frame, place, facing and
+// colour, after the cycles the game runs without a player
 export function resolveRecord(r, set, tick, patrolAt = tick) {
   const anims = set.anims;
   let anim = r.anim,
@@ -227,7 +228,8 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
     y = r.y,
     flip = r.flip,
     moved = false,
-    bright = 1;
+    bright = 1,
+    rgb = r.rgb;
   const cy = r.cycle;
   let at = tick; // the tick the shown animation counts from
   if (cy) {
@@ -240,6 +242,7 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
       y += w.dy;
       flip = w.flip;
       moved = !!cy.patrol;
+      if (w.rgb) rgb = w.rgb;
     } else if (cy.kind === "uxb") {
       const st = uxbState(cy.digits, tick);
       if (st.flash) anim = "Bomb_Flash";
@@ -282,7 +285,7 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
   const a = anims[anim];
   if (!a) return null;
   const frame = r.frozen ? r.frame : frameAt(a, at, r.frame);
-  return { name: anim, anim: a, frame, x, y, flip, moved, bright };
+  return { name: anim, anim: a, frame, x, y, flip, moved, bright, rgb };
 }
 
 // what a record's brain has given off at a tick: sprites with their frame,

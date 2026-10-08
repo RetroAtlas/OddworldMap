@@ -1404,6 +1404,28 @@
    "anim": 4
   }
  },
+ "Mudokon_Speak3@AngryMud": {
+  "ae": {
+   "file": "ABEBSIC1.BAN",
+   "rid": 55,
+   "anim": 6,
+   "pal": [
+    "MUDPAL.BND",
+    530
+   ]
+  }
+ },
+ "Mudokon_SpeakFart@SadMud": {
+  "ae": {
+   "file": "ABEBSIC1.BAN",
+   "rid": 55,
+   "anim": 5,
+   "pal": [
+    "MUDPAL.BND",
+    531
+   ]
+  }
+ },
  "Mudokon_StandScrubLoop": {
   "ao": {
    "file": "MUDCHSL.BAN",
@@ -1430,6 +1452,13 @@
    "file": "MUDCHSL.BAN",
    "rid": 511,
    "anim": 4
+  }
+ },
+ "Mudokon_StandToCrouch": {
+  "ae": {
+   "file": "ABEBSIC.BAN",
+   "rid": 10,
+   "anim": 6
   }
  },
  "Mudokon_StartChisel": {

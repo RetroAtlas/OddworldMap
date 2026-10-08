@@ -301,11 +301,14 @@ const WORK_ANIMS = {
   Mudokon_StartChisel: anim(1, 1, true),
   Mudokon_StopChisel: anim(1, 1, true),
   Mudokon_Idle: anim(6, 4, true),
+  Mudokon_StandToCrouch: anim(11, 1, false),
+  "Mudokon_SpeakFart@SadMud": anim(7, 2, false),
+  "Mudokon_Speak3@AngryMud": anim(7, 2, true),
 };
-// dice that always roll zero: the shortest timer of every range, and a sad
-// worker stands up at its first break
+// dice that always roll zero: the shortest timer of every range, and a sad or
+// angry worker stands up at every break
 const ZERO_DICE = { anims: WORK_ANIMS, dice: new Array(256).fill(0) };
-const worker = (brain, emo = false) => ({
+const worker = (brain, mood = null) => ({
   anim: brain === "chisel" ? "Mudokon_Chisel" : "Mudokon_CrouchScrub",
   x: 0,
   y: 0,
@@ -313,7 +316,8 @@ const worker = (brain, emo = false) => ({
   layer: 27,
   flip: false,
   frame: 0,
-  cycle: { kind: "brain", brain, seed: 0, emo },
+  rgb: [87, 103, 67],
+  cycle: { kind: "brain", brain, seed: 0, emo: mood !== null, p: { sad: mood === "sad" } },
 });
 const shownAt = (r, set, tick) => {
   const s = resolveRecord(r, set, tick);
@@ -417,21 +421,65 @@ test("work: Oddysee's standing scrubber pauses through its transitions and resum
   assert.ok(segs[4].startsWith("StandScrubLoop"), segs[4]);
 });
 
-test("work: a sad worker stands at its first break and stays standing", () => {
-  assert.deepEqual(segments(worker("chisel", true), ZERO_DICE, 36, 46), [
+test("work: a sad worker stands at a break, sighs in its mood's palette and goes back to work", () => {
+  // the chiseller rises at once and holds the rest of its ten ticks standing;
+  // back in its crouch it takes its next break at once, where zeros stand it again
+  assert.deepEqual(segments(worker("chisel", "sad"), ZERO_DICE, 36, 76), [
     "Chisel 36-36",
     "StopChisel 37-37",
     "CrouchIdle 38-38",
     "CrouchToStand 39-44",
-    "Idle 45-46",
+    "Idle 45-49",
+    "SpeakFart@SadMud 50-62",
+    "Idle 63-63",
+    "StandToCrouch 64-74",
+    "CrouchIdle 75-75",
+    "CrouchToStand 76-76",
   ]);
-  // the scrubber waits ten ticks of the break before it rises
-  assert.deepEqual(segments(worker("scrub", true), ZERO_DICE, 22, 57), [
+  // the scrubber holds its ten ticks crouched before it rises, and returns to its break
+  assert.deepEqual(segments(worker("scrub", "sad"), ZERO_DICE, 22, 82), [
     "CrouchIdle 22-49",
     "CrouchToStand 50-55",
-    "Idle 56-57",
+    "Idle 56-56",
+    "SpeakFart@SadMud 57-69",
+    "Idle 70-70",
+    "StandToCrouch 71-81",
+    "CrouchIdle 82-82",
   ]);
-  assert.equal(shownAt(worker("scrub", true), ZERO_DICE, 5000).split(":")[0], "Idle");
+  // the mood's palette speaks under the engine's flat grey, the worker's own tint either side
+  const rgbAt = (t) => resolveRecord(worker("scrub", "sad"), ZERO_DICE, t).rgb;
+  assert.deepEqual(
+    [rgbAt(56), rgbAt(57), rgbAt(69), rgbAt(70)],
+    [
+      [87, 103, 67],
+      [63, 63, 63],
+      [63, 63, 63],
+      [87, 103, 67],
+    ],
+  );
+});
+
+test("work: an angry worker stands at a break, has its say and goes back to its job", () => {
+  assert.deepEqual(segments(worker("scrub", "angry"), ZERO_DICE, 50, 97), [
+    "CrouchToStand 50-55",
+    "Idle 56-58",
+    "Speak3@AngryMud 59-71",
+    "Idle 72-72",
+    "StandToCrouch 73-83",
+    "CrouchIdle 84-85",
+    "CrouchScrub 86-95",
+    "CrouchIdle 96-96",
+    "CrouchScrub 97-97",
+  ]);
+  // a chiseller goes back down into its chiselling
+  assert.deepEqual(segments(worker("chisel", "angry"), ZERO_DICE, 64, 80), [
+    "Speak3@AngryMud 64-64",
+    "Idle 65-65",
+    "StandToCrouch 66-76",
+    "CrouchIdle 77-77",
+    "StartChisel 78-78",
+    "Chisel 79-80",
+  ]);
 });
 
 test("work: the dice are the table walked from the seed, so two seeds give two rhythms and a tick asked twice agrees", () => {

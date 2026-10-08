@@ -1271,8 +1271,9 @@ rule("AE", "Mudokon", (c) => {
   else {
     anim = AE_MUD_STATE[f.state] || "Mudokon_Idle";
     snap = f.state === 0 || f.state === 1;
-    // a sad or angry worker may down tools at a break and stand for good
-    if (AE_MUD_BRAIN[f.state]) cycle = brain(c, AE_MUD_BRAIN[f.state], f.emotion !== 0);
+    // a sad or angry worker may stand up at a break and have its say
+    if (AE_MUD_BRAIN[f.state])
+      cycle = brain(c, AE_MUD_BRAIN[f.state], f.emotion !== 0, { sad: f.emotion === 2 });
   }
   let x = mid(t);
   if (snap) x = snapAt(c, x);

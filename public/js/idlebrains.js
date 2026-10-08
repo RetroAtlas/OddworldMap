@@ -4,10 +4,59 @@
 import { BRAINS, MOTIONS, STARTS, randomRange, scaleOf, switchGet } from "./patrolkit.js";
 import { emitSpark } from "./effects.js";
 
-// a sad or angry worker downs tools for good and stands
+// a sad or angry worker may stand up at a break, holding as the engine holds
+// one alerted alone; the stagger it adds when several are alerted is left out
 function standUp(st, now) {
   st.sub = 3;
   st.timer = now + 10;
+}
+
+// what a worker standing in a mood says, in the mood's palette under the
+// engine's flat grey
+const SAD_SPEAK = "Mudokon_SpeakFart@SadMud",
+  ANGRY_SPEAK = "Mudokon_Speak3@AngryMud";
+const MOOD_GREY = [63, 63, 63];
+// a speak ends standing, the mood's palette and grey given back
+const speakEnds = (st, last) => {
+  if (!last) return;
+  st.rgb = null;
+  st.cur = "Mudokon_Idle";
+};
+
+// the hold over: the sad worker sighs and goes back to work, the angry one
+// hands over to the listening brain
+function moodSpeaks(st) {
+  if (st.p?.sad) {
+    st.next = SAD_SPEAK;
+    st.sub = 4;
+  } else st.listen = 0;
+}
+
+// the listening brain with nobody to answer: the angry worker has its say and
+// returns to the job it left by the motion that leads back into it
+// (ListeningToAbe's states 0, 1, 10 and 22); its turn to face Abe is left out,
+// Abe being nowhere
+function listen(st, back) {
+  switch (st.listen) {
+    case 0:
+      st.next = null;
+      st.listen = 1;
+      return;
+    case 1:
+      if (st.cur !== "Mudokon_Idle") return;
+      st.next = ANGRY_SPEAK;
+      st.listen = 10;
+      return;
+    case 10:
+      st.next = back;
+      st.listen = 22;
+      return;
+    case 22:
+      st.next = back;
+      if (st.cur !== "Mudokon_CrouchIdle" && st.cur !== "Mudokon_Chisel") return;
+      st.listen = null;
+      st.sub = 0;
+  }
 }
 
 const DIRECTION_DOWN = 0,
@@ -134,6 +183,7 @@ Object.assign(BRAINS, {
   },
   // Exoddus's scrubber: bursts of scrubbing, a break, a turn now and then
   scrub(st, now, rnd) {
+    if (st.listen != null) return listen(st, "Mudokon_CrouchIdle");
     switch (st.sub) {
       case 0:
         st.cur = "Mudokon_CrouchScrub";
@@ -163,7 +213,14 @@ Object.assign(BRAINS, {
         } else st.cur = "Mudokon_CrouchScrub";
         return;
       case 3:
-        if (now > st.timer && st.cur === "Mudokon_CrouchIdle") st.next = "Mudokon_CrouchToStand";
+        if (now <= st.timer) return;
+        if (st.cur === "Mudokon_CrouchIdle") st.next = "Mudokon_CrouchToStand";
+        if (st.cur === "Mudokon_Idle") moodSpeaks(st);
+        return;
+      case 4:
+        if (st.cur !== "Mudokon_Idle") return;
+        st.next = "Mudokon_StandToCrouch";
+        st.sub = 1;
     }
   },
   // an awake slog: a woof, a growl and a scratch on their own timers, which
@@ -316,10 +373,13 @@ Object.assign(BRAINS, {
   },
   // Exoddus's chiseller: chisel, a break, chisel again
   chisel(st, now, rnd) {
+    if (st.listen != null) return listen(st, "Mudokon_Chisel");
     switch (st.sub) {
       case 0:
-        st.cur = "Mudokon_Chisel";
-        st.next = null;
+        if (st.cur !== "Mudokon_StandToCrouch") {
+          st.cur = "Mudokon_Chisel";
+          st.next = null;
+        }
         st.timer = (rnd() % 64) + now + 35;
         st.sub = 1;
         return;
@@ -339,6 +399,19 @@ Object.assign(BRAINS, {
         st.timer = (rnd() % 64) + now + 35;
         st.next = "Mudokon_Chisel";
         st.sub = 1;
+        return;
+      case 3:
+        if (now <= st.timer || st.cur !== "Mudokon_Idle") {
+          if (!st.next && (st.cur === "Mudokon_Chisel" || st.cur === "Mudokon_CrouchIdle"))
+            st.next = "Mudokon_Idle";
+          return;
+        }
+        moodSpeaks(st);
+        return;
+      case 4:
+        if (st.cur !== "Mudokon_Idle") return;
+        st.next = "Mudokon_StandToCrouch";
+        st.sub = 0;
     }
   },
 });
@@ -383,6 +456,29 @@ Object.assign(MOTIONS, {
   Mudokon_CrouchToStand(st, last) {
     if (last) st.cur = "Mudokon_Idle";
   },
+  // standing, a motion done crouched goes down first, keeping its own turn
+  // unless it is the crouch itself
+  Mudokon_Idle(st) {
+    const next = st.next;
+    if (!next) return;
+    if (
+      next === "Mudokon_CrouchIdle" ||
+      next === "Mudokon_Chisel" ||
+      next === "Mudokon_CrouchScrub"
+    ) {
+      st.cur = "Mudokon_StandToCrouch";
+      if (next === "Mudokon_CrouchIdle") st.next = null;
+      return;
+    }
+    st.cur = next;
+    st.next = null;
+    if (next === SAD_SPEAK || next === ANGRY_SPEAK) st.rgb = MOOD_GREY;
+  },
+  Mudokon_StandToCrouch(st, last) {
+    if (last) st.cur = "Mudokon_CrouchIdle";
+  },
+  [SAD_SPEAK]: speakEnds,
+  [ANGRY_SPEAK]: speakEnds,
   Mudokon_Chisel(st, last, frame, rnd, now) {
     // the stroke lands at the last frame: sparks on the odd ticks of it
     if (last && now % 2 === 1)

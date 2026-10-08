@@ -811,7 +811,7 @@ function paintSprites({ ctx, data, layout, path }, sprites, set, tick, patrolAt)
     const shown = resolveRecord(r, set, tick, patrolAt);
     if (!shown) continue;
     const frame = shown.anim.frames[shown.frame];
-    const tile = processedFrame(set.sheets[frame[0]], frame, r.semi, r.rgb);
+    const tile = processedFrame(set.sheets[frame[0]], frame, r.semi, shown.rgb);
     if (!tile) continue;
     if (shown.moved && !movedBy.has(t))
       movedBy.set(
