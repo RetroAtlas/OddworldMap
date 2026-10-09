@@ -1,17 +1,24 @@
 """Tests for the sprite stage's pure functions: the animation-table walk over a
 synthetic chunk, each frame codec against a frame lifted off a disc with the
-rows it decodes to, the texel alpha states and the deterministic packing."""
+rows it decodes to, the texel alpha states, the deterministic packing and the
+sheet set's name, in a build and in the committed tree."""
 
+import contextlib
 import hashlib
+import io
 import json
 import struct
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
 
 sys.path[:0] = [str(Path(__file__).resolve().parents[1])]
 
-from oddmap import sprites  # noqa: E402
+from oddmap import image, sprites  # noqa: E402
+from oddmap.paths import SITE  # noqa: E402
 
 FIXTURES = json.loads((Path(__file__).parent / "fixtures" / "sprite_frames.json").read_text())
 
@@ -133,6 +140,60 @@ class Pack(unittest.TestCase):
         self.assertEqual(len(heights), 1 + max(s for s, _, _ in placed))
         self.assertEqual(heights[0], max(r[4] for r in rects))
 
+
+
+class SheetSet(unittest.TestCase):
+    """a game's sheets are one set, named for their pixels, alone in their directory"""
+
+    def write(self, out, px):
+        frames, entries = [(1, 1, px)], {"A": {"frames": [(0, 0, 0)]}}
+        with mock.patch.object(sprites, "build_sprites", return_value=(frames, entries, [])), \
+                mock.patch.object(sprites, "read_dice", return_value=list(range(256))), \
+                mock.patch.object(sprites, "write_png",
+                                  side_effect=lambda path, w, h, rgba, keep_alpha: Path(path).write_bytes(rgba)), \
+                contextlib.redirect_stdout(io.StringIO()):
+            dst = sprites.write_sprites("AO", [("R1", SimpleNamespace(disc="d"))], out, "cams/ao/sprites")
+        return json.loads(dst.read_text())["sheets"]
+
+    def test_a_set_is_named_for_its_pixels_and_their_shape(self):
+        a = (2, 1, bytes(8))
+        name = sprites.sheet_set_name([a])
+        self.assertEqual(name, sprites.sheet_set_name([(2, 1, bytes(8))]))
+        self.assertNotEqual(name, sprites.sheet_set_name([(2, 1, bytes(7) + b"\1")]))
+        self.assertNotEqual(name, sprites.sheet_set_name([(1, 2, bytes(8))]))
+        self.assertNotEqual(name, sprites.sheet_set_name([a, a]))
+
+    def test_a_build_leaves_its_set_alone_in_the_directory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            sheets = out / "cams/ao/sprites"
+            (sheets / "0123456789ab").mkdir(parents=True)
+            (sheets / "0123456789ab/0.png").write_bytes(b"x")
+            (sheets / "0.png").write_bytes(b"x")
+
+            def shipped():
+                return sorted(p.relative_to(out).as_posix() for p in sheets.rglob("*") if p.is_file())
+            first = self.write(out, bytes([1, 2, 3, 255]))
+            self.assertEqual(shipped(), first)
+            self.assertEqual(len(list(sheets.iterdir())), 1)
+            self.assertEqual(self.write(out, bytes([1, 2, 3, 255])), first)
+            second = self.write(out, bytes([1, 2, 4, 255]))
+            self.assertNotEqual(second, first)
+            self.assertEqual(shipped(), second)
+            self.assertEqual(len(list(sheets.iterdir())), 1)
+
+    def test_each_game_ships_the_one_set_its_sidecar_names(self):
+        for game in ("ao", "ae"):
+            with self.subTest(game=game):
+                listed = json.loads((SITE / f"sprites_{game}.json").read_text())["sheets"]
+                sheets = SITE / "cams" / game / sprites.SHEETS_DIR
+                self.assertEqual(sorted(p.relative_to(SITE).as_posix() for p in sheets.rglob("*") if p.is_file()),
+                                 sorted(listed))
+                names = {Path(f).parent.name for f in listed}
+                self.assertEqual(len(names), 1, names)
+                pixels = [image.read_png((SITE / f).read_bytes()) for f in listed]
+                self.assertEqual(names.pop(), sprites.sheet_set_name(pixels),
+                                 "a sheet set's directory is named for its pixels: rebuild the sprites")
 
 
 def container(*chunks):

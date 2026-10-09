@@ -4,9 +4,13 @@
 // visitors re-download all PNGs. The app shell (page, code, data) is
 // network-first with the cache as an offline fallback: online loads stay
 // exactly as fresh as with no worker, and refresh the fallback as they pass.
-// The builder writes this line: it is a content hash of the artwork, so a
-// regenerated PNG expires the cache and an unchanged build leaves it alone.
-const CACHE_NAME = "cams-989ed03dbe34";
+// The builder writes this line: it is a content hash of the cameras and masks,
+// so a regenerated one expires the cache and an unchanged build leaves it alone.
+const CACHE_NAME = "cams-a7920ce5410f";
+// a game's sprite sheets sit in a directory named for their pixels, outside the
+// hash: a changed set arrives under new URLs, and storing one retires the
+// game's other sets
+const SHEET_SET = /^\/cams\/([^/]+)\/sprites\/([^/]+)\/[^/]+\.png$/;
 // the shell bucket self-refreshes per request, so its name never has to move;
 // bumping it is only for retiring an incompatible storage scheme
 const SHELL = "shell-v1";
@@ -60,6 +64,15 @@ async function trim(cache) {
   for (const key of keys.slice(0, keys.length - MAX_ENTRIES)) await cache.delete(key);
 }
 
+async function retireSheets(cache, request) {
+  const [, game, set] = SHEET_SET.exec(new URL(request.url).pathname) || [];
+  if (!set) return;
+  for (const key of await cache.keys()) {
+    const [, g, s] = SHEET_SET.exec(new URL(key.url).pathname) || [];
+    if (g === game && s !== set) await cache.delete(key);
+  }
+}
+
 async function camResponse(event) {
   let cache = null;
   try {
@@ -75,6 +88,7 @@ async function camResponse(event) {
   if (cache && response.ok) {
     try {
       await cache.put(event.request, response.clone());
+      event.waitUntil(retireSheets(cache, event.request).catch(() => {}));
       event.waitUntil(trim(cache).catch(() => {}));
     } catch {
       /* the response still counts even if it can't be stored */

@@ -11,6 +11,7 @@ from oddmap.decomp import load_cache
 from oddmap.games import game_setup
 from oddmap.paths import HERE
 from oddmap.schema import load_enum_labels
+from oddmap.sprites import SHEETS_DIR
 
 # decomp quirks corrected when emitting field_types (the schema cache stays
 # faithful to the source): a field whose declared type contradicts its meaning
@@ -136,11 +137,13 @@ def write_enum_labels(game_key, out):
 CACHE_NAME_LINE = re.compile(r'(?m)^const CACHE_NAME = "[^"]*";$')
 
 def cams_stamp(cams_dir):
-    """name the artwork cache after the artwork, so regenerating a PNG expires it
-    and a build that decodes nothing leaves every visitor's copy alone. One worker
-    serves both games, so the stamp answers to either tree."""
+    """name the artwork cache after the cameras and masks, so regenerating one expires
+    it and a build that decodes nothing leaves every visitor's copy alone. One worker
+    serves both games, so the stamp answers to either tree. The sprite sheets stay
+    out: a set is named for its pixels, so a changed one arrives under new URLs."""
     h = hashlib.sha1()
-    for rel in sorted(p.relative_to(cams_dir).as_posix() for p in cams_dir.rglob("*.png")):
+    for rel in sorted(p.relative_to(cams_dir).as_posix() for p in cams_dir.rglob("*.png")
+                      if p.relative_to(cams_dir).parts[1:2] != (SHEETS_DIR,)):
         h.update(rel.encode())
         h.update(hashlib.sha1((cams_dir / rel).read_bytes()).digest())
     return f"cams-{h.hexdigest()[:12]}"

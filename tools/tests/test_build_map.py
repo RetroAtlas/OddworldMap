@@ -680,7 +680,7 @@ class PathMetaCensus(unittest.TestCase):
 
 
 class CacheStamp(unittest.TestCase):
-    """the artwork cache name answers to the artwork and to nothing else"""
+    """the artwork cache name answers to the cameras and masks and to nothing else"""
 
     def worker(self, tmp, files):
         cams = Path(tmp) / "cams"
@@ -702,6 +702,14 @@ class CacheStamp(unittest.TestCase):
             self.assertEqual(base, emit.stamp_cache_name(sw, cams))  # content, not a counter
             (cams / "ao/L/A.png").rename(cams / "ao/L/Z.png")
             self.assertNotEqual(base, emit.stamp_cache_name(sw, cams))
+
+    def test_a_sheet_reaches_no_stamp(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            sw, cams = self.worker(tmp, {"ao/L/A.png": b"a", "ao/sprites/s1/0.png": b"s"})
+            base = emit.stamp_cache_name(sw, cams)
+            (cams / "ao/sprites/s1").rename(cams / "ao/sprites/s2")
+            (cams / "ao/sprites/s2/0.png").write_bytes(b"t")
+            self.assertEqual(base, emit.stamp_cache_name(sw, cams))
 
     def test_it_rewrites_the_one_line(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1042,7 +1050,7 @@ class PinnedEncoder(unittest.TestCase):
                          f"install that release (brew upgrade oxipng, or cargo install oxipng --version "
                          f"{image.OXIPNG_VERSION} --locked), or move OXIPNG_VERSION and re-encode the tree")
         pngs = sorted((SITE / "cams").rglob("*.png"))
-        few = [p for p in pngs if p.name.endswith("_fg.png") or p.parent.name == "sprites"]
+        few = [p for p in pngs if p.name.endswith("_fg.png") or p.parent.parent.name == "sprites"]
         sample = few + [p for p in pngs if p not in few][::40]
         with tempfile.TemporaryDirectory() as tmp:
             moved = image.reencode_pngs([(p, Path(tmp) / f"{i}.png") for i, p in enumerate(sample)])

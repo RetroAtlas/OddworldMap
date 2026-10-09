@@ -6,7 +6,7 @@
 
 ## What and why
 
-Each sheet rebuild re-packs and re-encodes the whole PNG, every version of which history keeps, and moves the cache stamp, so the sheets took 37 animations in one rebuild before any code draws them: 25 for Exoddus and 12 for Oddysee. `SHIPPED_AHEAD` in `tests/unit/sprites.test.js` names them per game; the test fails a listed animation that something draws, so each group below takes its names off the list in the commit that draws them, and the list ends empty. The file, resource id and ordinal of each is in `tools/data/sprite_anims.json`.
+Each sheet rebuild re-packs and re-encodes the whole PNG, every version of which history keeps, and every visitor storing artwork downloads it again, so the sheets took 37 animations in one rebuild before any code draws them: 25 for Exoddus and 12 for Oddysee. `SHIPPED_AHEAD` in `tests/unit/sprites.test.js` names them per game; the test fails a listed animation that something draws, so each group below takes its names off the list in the commit that draws them, and the list ends empty. The file, resource id and ordinal of each is in `tools/data/sprite_anims.json`.
 
 Every behaviour below is the decomp's, read under the no-player reading [94](item-094-live-map.md) shipped: nobody in the world, a fresh game's switches (1 on, 0 and 2 to 255 off). Reach was measured 2026-10-08 over the shipped data, with the map's own patrol walk instrumented where a brain decides it.
 

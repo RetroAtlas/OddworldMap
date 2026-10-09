@@ -31,7 +31,7 @@ from oddmap.games import GAMES, game_setup
 from oddmap.image import decode_cam, ensure_oxipng, ensure_tools, reencode_pngs
 from oddmap.messages import write_messages
 from oddmap.paths import HERE, SITE
-from oddmap.sprites import write_sprites
+from oddmap.sprites import SHEETS_DIR, write_sprites
 from oddmap.tables import AE_LEVEL_DISPLAY, AO_R2_ZULAGS
 from oddmap.tlv import resolve_path_meta, walk_obj_region
 
@@ -255,7 +255,7 @@ def main():
            for short, paths in tables.items()} if args.game == "AE" else None
     # a scratch --out takes its own copy of the links, which is where a verification build compares them
     links_dir = HERE / "data" if out.resolve() == SITE.resolve() else out
-    line_links = write_sprite_data(args.game, sorted(archives.items()), out, f"{game['cams_dir']}/sprites", abe,
+    line_links = write_sprite_data(args.game, sorted(archives.items()), out, f"{game['cams_dir']}/{SHEETS_DIR}", abe,
                                    line_links, links_dir / game["links_file"], bool(only))
     write_relive_export(args.game, out, links_dir)  # carries the links, so after them
     sw_file = out / "sw.js"

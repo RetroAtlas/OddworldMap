@@ -9,7 +9,9 @@ contiguously after the last frame-info record; the file header names one table
 frame infos and walking forward. Every offset is from byte 0 of the chunk data.
 Exoddus ships 260 chunks in a second shape, one pre-rendered sheet whose frame
 infos carry sub-rectangles in the slot a frame-header offset usually fills."""
+import hashlib
 import json
+import shutil
 import struct
 
 from oddmap.disc import parse_chunks
@@ -20,6 +22,7 @@ SPRITE_ANIMS = HERE / "data" / "sprite_anims.json"
 
 SHEET_W = 1024          # atlas width; the height follows the frames, capped per sheet
 SHEET_MAX_H = 2048
+SHEETS_DIR = "sprites"  # under a game's cams directory, one set of sheets in it
 
 # alpha states a texel can take in an atlas: the viewer blends the marked ones
 # only where the object's polygon is semi-transparent, which is the object's
@@ -442,29 +445,40 @@ def read_dice(disc):
         raise SystemExit(f"sprites: {name} holds {len(hits)} candidate random tables, expected one")
     return list(exe[hits[0]:hits[0] + 256])
 
+def sheet_set_name(sheets):
+    """a game's sheets are named as one set for their pixels, so a changed sheet is a
+    new URL while an unchanged rebuild or a re-encode keeps the old one"""
+    h = hashlib.sha1()
+    for w, hh, rgba in sheets:
+        h.update(struct.pack("<II", w, hh))
+        h.update(hashlib.sha1(rgba).digest())
+    return h.hexdigest()[:12]
+
 def write_sprites(game_key, levels, out, sheets_rel, abe=None, links=None):
-    """the game's sprite atlases under `sheets_rel` and its sprites sidecar beside the
-    data file, carrying the per-path Abe start where the game places a device by it
-    and each collision line's previous and next links, which the engine's line
-    following walks; misses fail the build, since a name the viewer may ask for must
-    not be left out silently"""
+    """the game's sprite atlases as the one set under `sheets_rel` and its sprites
+    sidecar beside the data file, carrying the per-path Abe start where the game
+    places a device by it and each collision line's previous and next links, which
+    the engine's line following walks; misses fail the build, since a name the
+    viewer may ask for must not be left out silently"""
     frames, entries, misses = build_sprites(game_key, levels)
     if misses:
         raise SystemExit(f"sprites: {len(misses)} listed animations not found on the discs: "
                          + ", ".join(misses))
     placed, heights = pack([(w, h) for w, h, _ in frames])
-    sheets_dir = out / sheets_rel
-    sheets_dir.mkdir(parents=True, exist_ok=True)
     images = [bytearray(SHEET_W * hh * 4) for hh in heights]
     for (w, h, px), (s, x, y) in zip(frames, placed):
         img = images[s]
         for yy in range(h):
             at = ((y + yy) * SHEET_W + x) * 4
             img[at:at + w * 4] = px[yy * w * 4:(yy + 1) * w * 4]
+    sheets = [(SHEET_W, hh, bytes(img)) for img, hh in zip(images, heights)]
+    name = sheet_set_name(sheets)
+    sheets_dir = out / sheets_rel
+    (sheets_dir / name).mkdir(parents=True, exist_ok=True)
     sheet_files = []
-    for s, (img, hh) in enumerate(zip(images, heights)):
-        rel = f"{sheets_rel}/{s}.png"
-        write_png(out / rel, SHEET_W, hh, bytes(img), keep_alpha=True)
+    for s, (w, hh, rgba) in enumerate(sheets):
+        rel = f"{sheets_rel}/{name}/{s}.png"
+        write_png(out / rel, w, hh, rgba, keep_alpha=True)
         sheet_files.append(rel)
     for entry in entries.values():
         entry["frames"] = [[*placed[i], *frames[i][:2], xoff, yoff] for i, xoff, yoff in entry["frames"]]
@@ -479,5 +493,13 @@ def write_sprites(game_key, levels, out, sheets_rel, abe=None, links=None):
                             for short, paths in links.items()}
     dst = out / f"sprites_{game_key.lower()}.json"
     dst.write_text(json.dumps(sidecar, indent=1))
-    print(f"sprites -> {dst} ({len(entries)} animations, {len(frames)} frames on {len(sheet_files)} sheets)")
+    for old in sheets_dir.iterdir():
+        if old.name == name:
+            continue
+        if old.is_dir():
+            shutil.rmtree(old)
+        else:
+            old.unlink()
+    print(f"sprites -> {dst} ({len(entries)} animations, {len(frames)} frames on {len(sheet_files)} sheets "
+          f"in set {name})")
     return dst

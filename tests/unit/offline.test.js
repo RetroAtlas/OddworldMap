@@ -17,7 +17,19 @@ const CAM_RULE = "/^\\/cams\\/.+\\.png$/";
 for (const [, , file] of GAMES)
   test(`${file}: the sheets sit under the cams the worker caches`, () => {
     assert.ok(read("sw.js").includes(CAM_RULE), "the worker's cam rule is the one quoted here");
-    for (const f of sheets(file)) assert.match(f, /^cams\/[a-z]{2}\/sprites\/\d+\.png$/);
+    for (const f of sheets(file))
+      assert.match(f, /^cams\/[a-z]{2}\/sprites\/[0-9a-f]{12}\/\d+\.png$/);
+  });
+
+// the worker retires a game's other sheet sets by its own rule, so the sheets
+// have to read to it as one set of their own game
+for (const [, , file] of GAMES)
+  test(`${file}: the worker reads the sheets as one set of their game`, () => {
+    const rule = new RegExp(/^const SHEET_SET = \/(.+)\/;$/m.exec(read("sw.js"))[1]);
+    const found = sheets(file).map((f) => rule.exec(`/${f}`));
+    assert.ok(found.every(Boolean), "every sheet answers the worker's set rule");
+    assert.equal(new Set(found.map(([, game, set]) => `${game}/${set}`)).size, 1);
+    assert.equal(found[0][1], /^sprites_([a-z]{2})\.json$/.exec(file)[1]);
   });
 
 for (const [file, files] of GAMES)
