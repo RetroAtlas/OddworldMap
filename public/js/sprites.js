@@ -511,9 +511,10 @@ rule("AE", "FallingItem", (c) => {
   const { t } = c;
   if (c.lvl.short === "CR") return [];
   const anim = c.lvl.short === "BW" ? "FallingCrate_Falling" : "AE_FallingRock_Falling";
-  // the item waits at the top of its camera when its rect starts above it
-  const camTop = Math.floor(t.y1 / c.geo.worldH) * c.geo.worldH + c.geo.winY;
-  return [draw(c, anim, t.x1, Math.max(t.y1, camTop), { layer: c.half ? 12 : 31 })];
+  // the item waits no lower than the top of the camera that builds it, the
+  // one holding its rect's midpoint
+  const camTop = Math.floor(midY(t) / c.geo.worldH) * c.geo.worldH + c.geo.winY;
+  return [draw(c, anim, t.x1, Math.min(t.y1, camTop), { layer: c.half ? 12 : 31 })];
 });
 rule("AO", "FallingItem", (c) => {
   const farms = c.lvl.short === "R1" || c.lvl.short === "R2";

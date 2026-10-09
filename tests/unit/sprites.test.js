@@ -406,6 +406,13 @@ test("pinned placements: a half-scale Exoddus slig stands aside by the table's s
   assert.equal(r.x, 1299); // 1300 on the half grid, plus the table's -3 halved to -1.5 and truncated to -1
 });
 
+test("pinned placements: an Exoddus falling item waits no lower than the top of the camera that builds it", () => {
+  // a BWP04C03 crate whose rect starts nine below that camera's top
+  assert.equal(recordAt("AE", "BW", 4, "FallingItem", 563, 789).y, 780);
+  // a BWP04C06 crate whose rect starts a unit above that camera, its midpoint inside it
+  assert.equal(recordAt("AE", "BW", 4, "FallingItem", 611, 1039).y, 1039);
+});
+
 // a minute of the patrol clock, longer than any pause a creature on patrol rolls
 const PATROL_MINUTE = 1800;
 function xSpan(r, set) {
