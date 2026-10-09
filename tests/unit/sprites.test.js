@@ -390,6 +390,14 @@ function recordAt(g, lv, pid, name, x1, y1) {
   return spriteDraws(data[g], lvl, path, t, sheets[g])[0];
 }
 
+test("pinned placements: an Exoddus Mudokon stands aside from the ones its camera built first, a full step even on the half plane", () => {
+  // the second of MIP01C06's three, chiselling on the half plane
+  const r = recordAt("AE", "MI", 1, "Mudokon", 1697, 1340);
+  assert.equal(r.anim, "Mudokon_Chisel");
+  assert.equal(r.scale, 0.5);
+  assert.equal(r.x, 1717); // the middle 1709 snapped to the half grid at 1714, plus the table's 3 unhalved
+});
+
 // a minute of the patrol clock, longer than any pause a creature on patrol rolls
 const PATROL_MINUTE = 1800;
 function xSpan(r, set) {

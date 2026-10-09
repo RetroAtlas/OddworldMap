@@ -1277,6 +1277,8 @@ rule("AE", "Mudokon", (c) => {
   }
   let x = mid(t);
   if (snap) x = snapAt(c, x);
+  // the constructor stacks before it sets the scale, so at full size
+  x += stackOffset({ ...c, half: false });
   const blind = f.blind === 1;
   return [
     draw(c, anim + (blind ? "@BlindMud" : ""), x, hit ? hit.y : t.y2, {

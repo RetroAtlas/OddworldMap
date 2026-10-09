@@ -2,6 +2,13 @@
  "entries": [
   {
    "date": "2026-10-09",
+   "tag": "fixed",
+   "tiny": true,
+   "title": "Crowded Mudokons stand where Exoddus draws them",
+   "detail": "In Exoddus the game nudges Mudokons that share a screen a few units sideways, as it does the Sligs, Slogs, Paramites, Fleeches and Slurgs the map already nudged. The map now nudges the Mudokons too, so 205 of them on 98 screens move by 2 to 6 units to where the game draws them. Oddysee's Mudokons get no nudge in the game and stay where they were."
+  },
+  {
+   "date": "2026-10-09",
    "tag": "improved",
    "title": "Stored screens outlast sprite updates",
    "detail": "With \"Keep the map on this device\" on, every update to the sprites threw away all the screens the map had stored, as much as 200 MB with both games downloaded, and they came down again as you browsed. An update to the sprites now fetches only the new sprite sheet, about a megabyte a game, and keeps every screen you have. This update itself still clears them once."
