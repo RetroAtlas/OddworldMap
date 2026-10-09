@@ -14,6 +14,12 @@ const LIGHT = { game: "AO", level: "R1", path: 15, x1: 4405, y1: 233, x2: 4429, 
 // of the top wheel's frame between the two ropes
 const PULLEY = { game: "AE", level: "MI", path: 1, x1: 4025, y1: 925, x2: 4049, y2: 949 };
 const WHEEL = { x1: 4032, y1: 900, x2: 4046, y2: 920 };
+// a Bonewerkz crate whose rect starts a unit above BWP04C06, the camera holding its
+// midpoint, a band of BWP04C03 its frame reaches into from that anchor, and a band of
+// the drill beside it, another hazard
+const CRATE = { game: "AE", level: "BW", path: 4, x1: 611, y1: 1039, x2: 635, y2: 1063 };
+const ABOVE_CRATE = { x1: 595, y1: 998, x2: 625, y2: 1018 };
+const DRILL = { x1: 495, y1: 957, x2: 525, y2: 973 };
 // a bird portal's exit in Necrum, pointed at by an arrow and by nothing else
 const EXIT = { game: "AE", level: "NE", path: 2, x1: 650, y1: 440, x2: 674, y2: 464 };
 // the slig's left bound, a marker with no sprite
@@ -347,6 +353,45 @@ test.describe("Objects as themselves", () => {
       sidebar.toggleShow("objects");
     });
     expect(await pixels(page, WHEEL)).not.toEqual(withWheel);
+    expect(errors).toEqual([]);
+  });
+
+  test("a falling item is drawn on the screen of the camera that builds it, not the one its anchor lies in", async ({
+    page,
+  }) => {
+    const errors = trackErrors(page);
+    // the clock stopped, so both paints draw tick 0 and the drill holds still
+    await page.addInitScript(() =>
+      localStorage.setItem("owm:settings", JSON.stringify({ animate: false })),
+    );
+    await seedView(page, { show: { objects: true }, cats: ALL_CATS });
+    await page.goto(`/?embed=1#AE/BW/4/${CRATE.x1 + 12}/${CRATE.y1 - 20}/1.00`);
+    await settle(page, CRATE);
+    await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const render = await import(u("render.js"));
+      const deadline = Date.now() + 20000;
+      while (Date.now() < deadline) {
+        await render.preloadPath(st.state.path);
+        if (render.artworkReady(st.state.path)) break;
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      render.draw();
+    });
+    const above = await pixels(page, ABOVE_CRATE);
+    const drill = await pixels(page, DRILL);
+    // the hazards hidden with the objects still shown, so the masks over the sprites stay
+    await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const config = await import(u("config.js"));
+      const render = await import(u("render.js"));
+      config.CATS.find((c) => c.key === "hazard").on = false;
+      render.draw();
+    });
+    const changed = (a, b) => a.filter((v, i) => v !== b[i]).length;
+    expect(changed(await pixels(page, DRILL), drill)).toBeGreaterThan(0);
+    expect(changed(await pixels(page, ABOVE_CRATE), above)).toBe(0);
     expect(errors).toEqual([]);
   });
 

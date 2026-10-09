@@ -818,9 +818,9 @@ function paintSprites({ ctx, data, layout, path }, sprites, set, tick, patrolAt)
         t,
         inScreens(path, layout, shown.x, shown.y) ? [shown.x - r.x, shown.y - r.y] : null,
       );
-    // a record is placed in the coordinates of the camera its anchor falls
-    // in and clipped to that window, as the game shows an object only on the
-    // screen it stands in; a rope tiled across screens is drawn once per screen
+    // a record is placed in the coordinates of the camera it names, else the
+    // one its anchor falls in, and clipped to that window, the screen the game
+    // shows it on; a rope tiled across screens is drawn once per screen
     const ax = Math.trunc(shown.x);
     const cams = [];
     if (r.tile) {
@@ -828,7 +828,8 @@ function paintSprites({ ctx, data, layout, path }, sprites, set, tick, patrolAt)
         last = Math.floor((r.tile.bottom - 1) / layout.worldH);
       for (let row = first; row <= last; row++)
         cams.push(cameraAt(layout, ax, row * layout.worldH + layout.winY));
-    } else cams.push(cameraAt(layout, ax, Math.trunc(shown.y)));
+    } else if (r.camAt) cams.push(cameraAt(layout, r.camAt.x, r.camAt.y));
+    else cams.push(cameraAt(layout, ax, Math.trunc(shown.y)));
     for (const cam of cams) {
       ctx.save();
       ctx.beginPath();

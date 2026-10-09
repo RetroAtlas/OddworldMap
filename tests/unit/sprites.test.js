@@ -406,11 +406,16 @@ test("pinned placements: a half-scale Exoddus slig stands aside by the table's s
   assert.equal(r.x, 1299); // 1300 on the half grid, plus the table's -3 halved to -1.5 and truncated to -1
 });
 
-test("pinned placements: an Exoddus falling item waits no lower than the top of the camera that builds it", () => {
+test("pinned placements: an Exoddus falling item waits no lower than the top of the camera that builds it, on that camera's screen alone", () => {
   // a BWP04C03 crate whose rect starts nine below that camera's top
   assert.equal(recordAt("AE", "BW", 4, "FallingItem", 563, 789).y, 780);
   // a BWP04C06 crate whose rect starts a unit above that camera, its midpoint inside it
-  assert.equal(recordAt("AE", "BW", 4, "FallingItem", 611, 1039).y, 1039);
+  const r = recordAt("AE", "BW", 4, "FallingItem", 611, 1039);
+  assert.equal(r.y, 1039);
+  const G = data.AE.geometry;
+  const cell = (x, y) => [Math.floor(x / G.worldW), Math.floor(y / G.worldH)];
+  assert.deepEqual(cell(r.x, r.y), [1, 3]); // its anchor in BWP04C03's cell
+  assert.deepEqual(cell(r.camAt?.x, r.camAt?.y), [1, 4]); // its screen BWP04C06's
 });
 
 // a minute of the patrol clock, longer than any pause a creature on patrol rolls

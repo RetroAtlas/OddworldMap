@@ -81,6 +81,7 @@ function draw(c, anim, x, y, o = {}) {
     swap: !!o.swap,
     cycle: o.cycle ?? null,
     tile: o.tile ?? null,
+    camAt: o.camAt ?? null,
   };
 }
 
@@ -512,9 +513,11 @@ rule("AE", "FallingItem", (c) => {
   if (c.lvl.short === "CR") return [];
   const anim = c.lvl.short === "BW" ? "FallingCrate_Falling" : "AE_FallingRock_Falling";
   // the item waits no lower than the top of the camera that builds it, the
-  // one holding its rect's midpoint
-  const camTop = Math.floor(midY(t) / c.geo.worldH) * c.geo.worldH + c.geo.winY;
-  return [draw(c, anim, t.x1, Math.min(t.y1, camTop), { layer: c.half ? 12 : 31 })];
+  // one holding its rect's midpoint, and a camera change removes it, so it
+  // shows on that camera's screen alone
+  const at = { x: mid(t), y: midY(t) };
+  const camTop = Math.floor(at.y / c.geo.worldH) * c.geo.worldH + c.geo.winY;
+  return [draw(c, anim, t.x1, Math.min(t.y1, camTop), { layer: c.half ? 12 : 31, camAt: at })];
 });
 rule("AO", "FallingItem", (c) => {
   const farms = c.lvl.short === "R1" || c.lvl.short === "R2";

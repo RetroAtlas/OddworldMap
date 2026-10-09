@@ -4,6 +4,13 @@
    "date": "2026-10-09",
    "tag": "fixed",
    "tiny": true,
+   "title": "A Bonewerkz crate stays off the screen above its own",
+   "detail": "In Exoddus a crate waiting to fall shows only on its own screen, the one holding the middle of the crate. One in Bonewerkz Annex 8 starts a unit above the top of that screen, so the map drew it on the screen above, where more than half of it showed along the bottom edge. It now hangs above its own screen like the other crates."
+  },
+  {
+   "date": "2026-10-09",
+   "tag": "fixed",
+   "tiny": true,
    "title": "Exoddus' falling rocks and crates wait out of sight",
    "detail": "In Exoddus a falling rock or crate waits at the top edge of its screen, hanging just out of sight above it until its switch lets it drop. The map drew 60 of the 93 between 1 and 21 units lower, so many of them showed the bottom of their rock or crate along the top of the screen. They now wait where the game holds them."
   },
