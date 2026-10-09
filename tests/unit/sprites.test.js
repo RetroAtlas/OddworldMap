@@ -398,6 +398,14 @@ test("pinned placements: an Exoddus Mudokon stands aside from the ones its camer
   assert.equal(r.x, 1717); // the middle 1709 snapped to the half grid at 1714, plus the table's 3 unhalved
 });
 
+test("pinned placements: a half-scale Exoddus slig stands aside by the table's step halved and truncated toward zero", () => {
+  // the third of MIP10C21's three, asleep on the half plane
+  const r = recordAt("AE", "MI", 10, "Slig", 1300, 320);
+  assert.equal(r.anim, "Slig_Sleeping");
+  assert.equal(r.scale, 0.5);
+  assert.equal(r.x, 1299); // 1300 on the half grid, plus the table's -3 halved to -1.5 and truncated to -1
+});
+
 // a minute of the patrol clock, longer than any pause a creature on patrol rolls
 const PATROL_MINUTE = 1800;
 function xSpan(r, set) {

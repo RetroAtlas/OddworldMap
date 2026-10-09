@@ -936,7 +936,7 @@ function stackOffset(c) {
     if (o.name === t.name && cell(o) === here) n++;
   }
   const s = c.game === "AE" ? (c.half ? 0.5 : 1) : 1;
-  return STACK[n % 6] * s;
+  return trunc(STACK[n % 6] * s);
 }
 const camOf = (c, t) =>
   c.path.cams.find(

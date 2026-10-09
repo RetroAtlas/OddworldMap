@@ -4,6 +4,13 @@
    "date": "2026-10-09",
    "tag": "fixed",
    "tiny": true,
+   "title": "Crowded background creatures shift a unit into place",
+   "detail": "In Exoddus the game nudges a Slig, Slog, Paramite or Fleech a few units sideways when others of its kind share its screen, and on the background plane it halves the nudge and drops any half unit. The map kept the half unit, which put 25 of them a unit to the left of where the game draws them. They now stand where it does."
+  },
+  {
+   "date": "2026-10-09",
+   "tag": "fixed",
+   "tiny": true,
    "title": "Crowded Mudokons stand where Exoddus draws them",
    "detail": "In Exoddus the game nudges Mudokons that share a screen a few units sideways, as it does the Sligs, Slogs, Paramites, Fleeches and Slurgs the map already nudged. The map now nudges the Mudokons too, so 205 of them on 98 screens move by 2 to 6 units to where the game draws them. Oddysee's Mudokons get no nudge in the game and stay where they were."
   },
