@@ -4,6 +4,13 @@
    "date": "2026-10-09",
    "tag": "fixed",
    "tiny": true,
+   "title": "Crowded Sligs and Fleeches walk from the game's spot",
+   "detail": "When several Sligs or Fleeches share a screen, the game draws all but the first a few units to one side, but walks each from where it really stands. The map walked them from where they were drawn, so 169 patrols set off up to 6 units from the game's spot. They now set off from it: each still stands where it did, and most pause, turn or crawl a little differently."
+  },
+  {
+   "date": "2026-10-09",
+   "tag": "fixed",
+   "tiny": true,
    "title": "Crowded background creatures shift a unit into place",
    "detail": "In Exoddus the game nudges a Slig, Slog, Paramite or Fleech a few units sideways when others of its kind share its screen, and on the background plane it halves the nudge and drops any half unit. The map kept the half unit, which put 25 of them a unit to the left of where the game draws them. They now stand where it does."
   },

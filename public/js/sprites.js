@@ -948,11 +948,11 @@ both("Slig", (c) => {
   const { t, f } = c;
   const ae = c.game === "AE";
   const hit = raycastDown(c.lines, t.x1, t.y1, t.y1 + 24, planeTypes(c.half, FLOOR));
-  let x = snapAt(c, t.x1);
+  const spawnX = snapAt(c, t.x1);
   // one Bonewerkz screen stands its sligs unstacked
   const unstacked =
     ae && c.lvl.short === "BW" && c.path.id === 2 && camOf(c, t)?.name?.endsWith("C05");
-  x += unstacked ? 0 : stackOffset(c);
+  const x = spawnX + (unstacked ? 0 : stackOffset(c));
   const y = hit ?? t.y1;
   const asleep = f.start_state === 2;
   const yards = !ae && AO_STOCKYARDS.has(c.lvl.short);
@@ -974,7 +974,7 @@ both("Slig", (c) => {
       rightMax: f.pause_right_max,
       zone,
     };
-    cycle = patrol(c, "slig", p, { x, y: t.y1 });
+    cycle = patrol(c, "slig", p, { x: spawnX, y: t.y1 });
   }
   return [
     draw(c, anim, x, y, { layer: c.half ? 14 : 33, flip: f.start_direction === 0, rgb, cycle }),
@@ -1121,7 +1121,8 @@ rule("AE", "ParamiteWebLine", (c) => {
 rule("AE", "Fleech", (c) => {
   const { t, f } = c;
   const hit = raycastDown(c.lines, t.x1, t.y1, t.y1 + 24, planeTypes(c.half, FLOOR));
-  let x = snapAt(c, t.x1) + stackOffset(c);
+  const spawnX = snapAt(c, t.x1);
+  let x = spawnX + stackOffset(c);
   let y = hit ?? t.y1;
   let anim = f.asleep === 1 ? "Fleech_Sleeping" : "Fleech_Idle";
   let cycle = null;
@@ -1137,7 +1138,7 @@ rule("AE", "Fleech", (c) => {
       increaser: f.attack_anger_increaser + 2,
       range: (f.patrol_range || 0) * (c.half ? 13 : 25),
     };
-    cycle = patrol(c, "fleech", p, { x, y: t.y1 });
+    cycle = patrol(c, "fleech", p, { x: spawnX, y: t.y1 });
   }
   return [
     draw(c, anim, x, y, {

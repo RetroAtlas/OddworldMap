@@ -447,6 +447,15 @@ test("pinned patrols: an Oddysee slig placed in the void beside its screen stays
   assert.ok(lo >= 565 && hi <= 673 && lo < r.x, `walks between its bounds: ${lo}..${hi}`);
 });
 
+test("pinned patrols: a stacked slig walks from its own place, its stack offset drawn on top", () => {
+  // the third of R2P04C03's sligs, drawn three left of the 1364 it walks from
+  const r = recordAt("AO", "R2", 4, "Slig", 1376, 751);
+  assert.equal(r.x, 1361);
+  assert.equal(r.cycle.world.spawn.x, 1364);
+  const [lo, hi] = xSpan(r, sheets.AO);
+  assert.deepEqual([lo, Math.round(hi)], [1361, 1461]);
+});
+
 test("patrols: a patrolling slig's pen is the zone it walks, wherever both its bounds stand", () => {
   let penned = 0;
   for (const g of GAMES) {
