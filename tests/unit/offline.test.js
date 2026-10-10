@@ -18,7 +18,7 @@ for (const [, , file] of GAMES)
   test(`${file}: the sheets sit under the cams the worker caches`, () => {
     assert.ok(read("sw.js").includes(CAM_RULE), "the worker's cam rule is the one quoted here");
     for (const f of sheets(file))
-      assert.match(f, /^cams\/[a-z]{2}\/sprites\/[0-9a-f]{12}\/\d+\.png$/);
+      assert.match(f, /^cams\/[a-z]{2}\/sprites\/[0-9a-f]{12}\/(?:\d+|font)\.png$/);
   });
 
 // the worker retires a game's other sheet sets by its own rule, so the sheets
@@ -62,7 +62,11 @@ test("the cap comment and the README quote the artwork as it ships", () => {
   const files = GAMES.map(([file, , sp]) => [camFiles(load(file)).length, sheets(sp).length]);
   const total = files.reduce((n, [c, s]) => n + c + s, 0);
   assert.equal(Number(/complete artwork \((\d+) files\)/.exec(read("sw.js"))[1]), total);
-  const mb = files.map(([c, s]) => Math.round((c * CAM_FILE_BYTES + s * SHEET_FILE_BYTES) / 1e6));
+  // the atlases are sized as sheets; the font map is a few hundred bytes
+  const atlases = GAMES.map(([, , sp]) => sheets(sp).filter((f) => /\/\d+\.png$/.test(f)).length);
+  const mb = files.map(([c], i) =>
+    Math.round((c * CAM_FILE_BYTES + atlases[i] * SHEET_FILE_BYTES) / 1e6),
+  );
   const readme = readFileSync(new URL("../../README.md", import.meta.url), "utf8");
   const quote = /~(\d+) MB for Oddysee, ~(\d+) MB for Exoddus/;
   assert.deepEqual(quote.exec(readme).slice(1).map(Number), mb);

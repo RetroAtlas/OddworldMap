@@ -4,7 +4,7 @@ import { DEFAULT_CATS, seedView, settle, trackErrors } from "./helpers.js";
 
 const pub = (name) => readFileSync(new URL(`../../public/${name}`, import.meta.url), "utf8");
 const CACHE_NAME = /^const CACHE_NAME = "([^"]+)";$/m.exec(pub("sw.js"))[1];
-const [SHEET] = JSON.parse(pub("sprites_ao.json")).sheets;
+const SHEETS = JSON.parse(pub("sprites_ao.json")).sheets;
 
 const VIEW = { game: "AO", level: "R1", path: 15 };
 // an Oddysee screen the view never shows, and a stale set of each game
@@ -28,12 +28,12 @@ test("storing a game's sprite sheet retires that game's other sets and nothing e
   // set, the camera and the other game's set have been passed by the time that
   // set is gone
   await page.evaluate(
-    async ({ name, sheet, seeded }) => {
+    async ({ name, sheets, seeded }) => {
       const cache = await caches.open(name);
-      await cache.delete(new URL(sheet, location.href).href);
+      for (const f of sheets) await cache.delete(new URL(f, location.href).href);
       for (const f of seeded) await cache.put(new URL(f, location.href).href, new Response(f));
     },
-    { name: CACHE_NAME, sheet: SHEET, seeded: [CAMERA, ...OLD_AE, ...OLD_AO] },
+    { name: CACHE_NAME, sheets: SHEETS, seeded: [CAMERA, ...OLD_AE, ...OLD_AO] },
   );
   await page.evaluate(async () => {
     const sidebar = await import(new URL("js/sidebar.js", location.href).href);
@@ -51,6 +51,6 @@ test("storing a game's sprite sheet retires that game's other sets and nothing e
       },
       { name: CACHE_NAME, camera: CAMERA },
     );
-  await expect.poll(stored, { timeout: 20000 }).toEqual([CAMERA, ...OLD_AE, SHEET].sort());
+  await expect.poll(stored, { timeout: 20000 }).toEqual([CAMERA, ...OLD_AE, ...SHEETS].sort());
   expect(errors).toEqual([]);
 });

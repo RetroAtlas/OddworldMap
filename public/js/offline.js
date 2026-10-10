@@ -22,7 +22,8 @@ const CONTROL_MS = 10000; // how long a download waits for the worker to take th
 const PROGRESS_MS = 120; // redraw pace while files land
 
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
-const bytesOf = (url) => (/\/sprites\//.test(url) ? SHEET_FILE_BYTES : CAM_FILE_BYTES);
+// an atlas is sized as a sheet; the font map beside them is a few hundred bytes
+const bytesOf = (url) => (/\/sprites\/.*\/\d+\.png$/.test(url) ? SHEET_FILE_BYTES : CAM_FILE_BYTES);
 const estimateMB = (urls) => Math.round(urls.reduce((n, u) => n + bytesOf(u), 0) / 1e6);
 
 // the worker only answers fetches on a page it controls, so nothing is worth
