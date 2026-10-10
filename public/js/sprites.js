@@ -7,9 +7,9 @@
 
 import { onBackgroundPlane } from "./fields.js";
 import { raycastDiag, raycastDown, snapX } from "./collide.js";
-import { sligBounds } from "./model.js";
+import { sligBounds, tlvCell } from "./model.js";
 import { lcdMessages } from "./messages.js";
-import { lcdIds } from "./lcd.js";
+import { AE_MUDOKONS_IN_LEVEL, AO_MUDOKONS, TALLY_EDGE, lcdIds } from "./lcd.js";
 
 // collision-line types a constructor raycasts against; the background plane's
 // copies sit four above the foreground's
@@ -1238,6 +1238,32 @@ function lcdScreen(c) {
   if (lcdIds(p).every((id) => !table[id])) return [];
   const layer = c.game === "AO" ? 22 : 24;
   return [draw(c, null, t.x1, midY(t), { yOff: 0, layer, cycle: brain(c, "lcd", false, p) })];
+}
+
+// a tally board counts as a fresh game does, nobody rescued and nobody killed.
+// The one object that writes a counter on loading, the Stockyards entrance's
+// KillUnsavedMuds, counts its kills for a board on its own screen
+const KILL_UNSAVED = 28;
+const pad = (n, width, fill) => String(n).padStart(width, fill);
+both("LCDStatusBoard", tallyBoard);
+function tallyBoard(c) {
+  const { t, f } = c;
+  if (!c.font || f.hide_board) return [];
+  let lines;
+  if (c.game === "AO") {
+    const cell = tlvCell(t, c.path, c.geo);
+    const killed = c.path.tlvs.some(
+      (o) => o.name === "KillUnsavedMuds" && tlvCell(o, c.path, c.geo) === cell,
+    )
+      ? KILL_UNSAVED
+      : 0;
+    lines = [AO_MUDOKONS - killed, killed, 0].map((n) => pad(n, 2, "0"));
+  } else {
+    const inLevel = AE_MUDOKONS_IN_LEVEL[c.lvl.id] ?? 0;
+    lines = [inLevel, f.number_of_mudokons ?? 0, 0, 0].map((n) => pad(n, 3, " "));
+  }
+  const p = { x1: t.x1, y1: t.y1, font: c.font, lines, edge: TALLY_EDGE[c.game] };
+  return [draw(c, null, t.x1, t.y1, { yOff: 0, layer: 22, cycle: brain(c, "tally", false, p) })];
 }
 rule("AO", "Honey", (c) => [
   draw(c, "Honey", c.t.x1 + trunc((c.t.x2 - c.t.x1) / 2), c.t.y1 + 24, {

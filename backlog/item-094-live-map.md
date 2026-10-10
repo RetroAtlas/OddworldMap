@@ -1,6 +1,6 @@
 # 94. Live map — the game's own sprites and animations over the artwork
 
-**Status:** open — shipped 2026-10-02 as the sprites at their spawn frame, the loops at header timing, the player-free cycles and the creatures' brains and patrols under the no-player reading, with the game's player-free effects; the Markers-for-the-rest toggle 2026-10-03; the objects as themselves and the patrols as the defaults 2026-10-04; the pulsing lights and the Scenery filter 2026-10-05; what the game shows kept unseen 2026-10-06; the LCD screens' text 2026-10-10; open: a Fleech's hoist climb, the fall at a line's end, the Elum, the per-layer foreground masks and the drop shadows · **Effort:** the open slices small to medium (a brain each for the walkers' gaps; a disc rebuild of the masks; a shadow rule per creature) · **Where:** the mask split needs a disc; the rest anywhere · **Filed:** 2026-09-17 investigation over the pinned decomp, upstream `beta` and paulsapps/alive
+**Status:** open — shipped 2026-10-02 as the sprites at their spawn frame, the loops at header timing, the player-free cycles and the creatures' brains and patrols under the no-player reading, with the game's player-free effects; the Markers-for-the-rest toggle 2026-10-03; the objects as themselves and the patrols as the defaults 2026-10-04; the pulsing lights and the Scenery filter 2026-10-05; what the game shows kept unseen 2026-10-06; the LCD screens' text and the tally boards' counts 2026-10-10; open: a Fleech's hoist climb, the fall at a line's end, the Elum, the per-layer foreground masks and the drop shadows · **Effort:** the open slices small to medium (a brain each for the walkers' gaps; a disc rebuild of the masks; a shadow rule per creature) · **Where:** the mask split needs a disc; the rest anywhere · **Filed:** 2026-09-17 investigation over the pinned decomp, upstream `beta` and paulsapps/alive
 
 ## What and why
 
@@ -116,6 +116,8 @@ What the first slice leaves out is stated in [docs/viewer-geometry.md](../docs/v
 
 **The LCD screens write their messages**, by the `lcd` brain in [public/js/lcd.js](../public/js/lcd.js) over the font read off the disc: the pen steps 2 pixels a tick in Oddysee and 3 in Exoddus, spends a character once the step has carried it off, hands a message's end to the next, the random pick after the fixed message and the fixed message after that, and swaps the screen's two palettes each time, so a board's own message scrolls green and its hint red; every glyph's colour is rolled by the engine's flicker and drawn additively, clipped to the panel; a board whose fixed message and whole random range are blank runs dark and draws nothing; at tick 0 a screen shows its lead, so an export draws the bare panel. The screens leave `KEPT_UNSEEN`, which keeps the status boards.
 
+**The tally boards count** as a fresh game shows them, by the `tally` brain in the same module over the same font: Oddysee's 99 left and none killed or rescued, the 99 being the literal the overlay's render subtracts the counters from, with the Stockyards entrance's board reading 71 and 28 because the KillUnsavedMuds on its screen writes the killed counter as the screen loads; Exoddus's the Mudokons in its level from the per-level table every overlay that links the board carries, the board's own area count, and none rescued or killed; the hidden Exoddus boards return no record. The one effect shape serves both, a run of glyphs with rows and a box the painter culls by.
+
 Where the sketch was wrong: the text is no "new animation for the collection". `LCDFONT.FNT` is a 4bpp texture whose glyph table lives in the executable, read by its shape ([tools/oddmap/sprites.py](../tools/oddmap/sprites.py)'s `glyph_table_windows`) and shipped as an index map beside the atlases; and the decomp's LCD numbers are the PC build's, which scrolls 3 PC pixels a tick on 14-wide glyphs, measures an Exoddus character two wider than it draws one and flickers by ±40, where the PS1 overlays step 2 and 3, advance by a glyph's width and the gap and flicker by ±50, as [docs/format-gotchas.md](../docs/format-gotchas.md) records with where it was read.
 
 ## What could ship, in order
@@ -127,8 +129,6 @@ Nothing before the probe. Then three tiers, each shippable alone and each true t
 3. **The player-free, random-free cycles ported from the decomp**: the UXB pattern blink, the MotionDetector sweep, the StatusLight blink, the dove orbit, the electric wall flip. Each a few dozen lines, each pinned by a unit test against the decomp's constants.
 
 Out of the tiers as planned, and in since under the no-player reading: creature patrol and roaming, moving bombs, drills and saws; still out is anything a switch starts or a player triggers. The "live map" the idea describes is tier 3's cycles over tier 2's loops over tier 1's sprites, with the brains over all three; what it is not is a simulation of a play, and the About dialog says so in one sentence.
-
-Still open after the tiers: the status boards' tallies, the three numbers Oddysee's board counts and the four rows Exoddus's stamps, written in the same font from counters the map keeps no player for.
 
 ## The disc probe
 

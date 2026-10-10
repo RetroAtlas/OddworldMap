@@ -26,6 +26,8 @@ const EXIT = { game: "AE", level: "NE", path: 2, x1: 650, y1: 440, x2: 674, y2: 
 const BOUND = { game: "AE", level: "MI", path: 1, x1: 1175, y1: 700, x2: 1199, y2: 724 };
 // the Mines board above the slig, a panel 203 wide the lcd brain writes across
 const LCD = { game: "AE", level: "MI", path: 1, x1: 1159, y1: 625, x2: 1362, y2: 645 };
+// the tally board under the zulag sign beside it, and the four rows of digits it writes
+const TALLY = { x1: 1283, y1: 539, x2: 1316, y2: 601 };
 
 // the canvas pixels under a world rectangle, as [r, g, b, a] rows
 async function pixels(page, rect) {
@@ -763,11 +765,11 @@ test.describe("Objects as themselves", () => {
     expect(errors).toEqual([]);
   });
 
-  test("the Mines LCD scrolls its message into its panel once the scene has run past the lead", async ({
+  test("the Mines LCD scrolls its message into its panel once the scene has run past the lead, the tally board beside it counting", async ({
     page,
   }) => {
     const errors = trackErrors(page);
-    await seedView(page, { show: { objects: true }, cats: { screen: true } });
+    await seedView(page, { show: { objects: true }, cats: { screen: true, board: true } });
     await page.goto(`/#AE/MI/1/${LCD.x1 + 100}/${LCD.y1}/1.00`);
     await settle(page, LCD);
     const draw = () =>
@@ -778,11 +780,19 @@ test.describe("Objects as themselves", () => {
         await render.preloadPath(st.state.path);
         render.draw();
       });
-    // with the clock stopped the panel shows its first tick, which is the lead: bare artwork
+    // with the clock stopped the panel shows its first tick, which is the lead: bare artwork,
+    // while the tally board beside it already counts, in red
     await page.click("#settingsBtn");
     await page.uncheck("#sAnimate");
     await draw();
     const bare = await pixels(page, LCD);
+    const tallyStill = await pixels(page, TALLY);
+    const red = (px) => {
+      let n = 0;
+      for (let i = 0; i < px.length; i += 4) if (px[i] > 120 && px[i] > px[i + 1] + 60) n++;
+      return n;
+    };
+    expect(red(tallyStill)).toBeGreaterThan(20);
     await page.check("#sAnimate");
     await page.click("#settingsClose");
     await page.evaluate(async () => {
@@ -802,6 +812,10 @@ test.describe("Objects as themselves", () => {
     await page.waitForFunction((was) => window.__motion.sceneTick() > was + 6, at);
     await draw();
     expect(await pixels(page, LCD)).not.toEqual(written);
+    // the board's digits stand still but flicker
+    const tallyRunning = await pixels(page, TALLY);
+    expect(red(tallyRunning)).toBeGreaterThan(20);
+    expect(tallyRunning).not.toEqual(tallyStill);
     // the record's text effect is what the painter drew: glyphs clipped to the panel
     const effect = await page.evaluate(async () => {
       const u = (m) => new URL("js/" + m, location.href).href;

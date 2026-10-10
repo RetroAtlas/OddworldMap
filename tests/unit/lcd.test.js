@@ -2,12 +2,16 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
+  AE_MUDOKONS_IN_LEVEL,
   LCD_FLICKER,
   LCD_PALETTES,
+  STATS_PALETTE,
+  TALLY_ROW,
   advanceOf,
   glyphOf,
   glyphRect,
   lcdIds,
+  measureOf,
 } from "../../public/js/lcd.js";
 import { resolveEffects, resolveRecord } from "../../public/js/motion.js";
 import { spriteDraws } from "../../public/js/sprites.js";
@@ -259,4 +263,171 @@ test("lcd: the raw table is on hand for the painter and null before it lands", (
   assert.equal(lcdMessages("AO").length, 90);
   assert.equal(lcdMessages("AE").length, 101);
   assert.equal(lcdMessages("XX"), null);
+});
+
+// ---- the tally boards ------------------------------------------------------
+
+const board = (game, p, seed = 0) => ({
+  ...screen(game, { ...p, y: p.y1 - 7 }, seed),
+  layer: 22,
+  cycle: { kind: "brain", brain: "tally", game, seed, emo: false, p },
+});
+const tally = (over = {}) => ({
+  x1: 100,
+  y1: 50,
+  font: FONT,
+  lines: ["99", "00", "00"],
+  edge: 22,
+  ...over,
+});
+const GAP = FONT.glyphs[0][2];
+
+test("tally: a string measures every glyph and its gap, a space its own width", () => {
+  assert.equal(measureOf(FONT, "AB"), 20);
+  assert.equal(measureOf(FONT, " A"), 20);
+  assert.equal(measureOf(FONT, ""), 0);
+  assert.equal(measureOf(FONT, "\x08"), 21);
+});
+
+test("tally: the rows stand right-aligned to the board's edge, one row pitch apart, unclipped", () => {
+  const r = board("AO", tally());
+  const e = textAt(r, flat(0), 5);
+  assert.equal(e.clip, null);
+  assert.equal(e.palette, STATS_PALETTE);
+  assert.equal(e.run.length, 6);
+  // the synthetic digits are 6 wide: "99" measures 18, so the row starts at x1 - 18 + 22
+  assert.deepEqual(
+    e.run.map((g) => [g.x, g.dy]),
+    [
+      [104, 0],
+      [113, 0],
+      [104, TALLY_ROW],
+      [113, TALLY_ROW],
+      [104, 2 * TALLY_ROW],
+      [113, 2 * TALLY_ROW],
+    ],
+  );
+  // the last glyph's right edge is the board's edge less the gap the measure counts after it
+  assert.equal(e.run[1].x + glyphRect(FONT, e.run[1].g)[2], 100 + 22 - GAP);
+  assert.deepEqual(e.box, [104, 50, 122, 50 + 2 * TALLY_ROW + 14]);
+  assert.deepEqual([e.x, e.y], [100, 50]);
+  assert.equal(resolveRecord(r, flat(0), 5), null);
+});
+
+test("tally: Exoddus pads to three places, a space advancing the pen without a glyph", () => {
+  const e = textAt(
+    board("AE", tally({ lines: ["  5", " 31", "  0", "  0"], edge: 33 })),
+    flat(0),
+    1,
+  );
+  assert.equal(e.run.length, 1 + 2 + 1 + 1);
+  for (const g of e.run) assert.equal(g.x + glyphRect(FONT, g.g)[2] <= 100 + 33 - GAP, true);
+  assert.equal(e.run[0].x + glyphRect(FONT, e.run[0].g)[2], 100 + 33 - GAP);
+  assert.deepEqual(
+    e.run.map((g) => g.dy),
+    [0, TALLY_ROW, TALLY_ROW, 2 * TALLY_ROW, 3 * TALLY_ROW],
+  );
+});
+
+test("tally: the flicker rolls three dice a glyph, rows in draw order, afresh each tick", () => {
+  const counted = textAt(
+    board("AO", tally()),
+    set(Array.from({ length: 256 }, (_, i) => i)),
+    1,
+  ).run;
+  assert.deepEqual(counted[0].rgb, [77, 78, 79]);
+  assert.deepEqual(counted[1].rgb, [80, 81, 82]);
+  const r = board("AO", tally());
+  const a = textAt(r, flat(0), 1),
+    b = textAt(r, flat(0), 2);
+  assert.deepEqual(
+    a.run.map((g) => [g.g, g.x, g.dy]),
+    b.run.map((g) => [g.g, g.x, g.dy]),
+    "the rows stand still",
+  );
+  for (const g of textAt(board("AO", tally()), flat(100), 1).run)
+    assert.deepEqual(g.rgb, [177, 177, 177]);
+});
+
+test("tally: the Exoddus level table is the one the relive export carries", () => {
+  assert.deepEqual(AE_MUDOKONS_IN_LEVEL, pub("relive_export_ae.json").muds_in_level);
+  // the base levels' counts are the game's 300 Mudokons, and an ender id repeats its base's
+  const base = [1, 2, 3, 4, 5, 6, 8, 9];
+  assert.equal(
+    base.reduce((n, id) => n + AE_MUDOKONS_IN_LEVEL[id], 0),
+    300,
+  );
+  assert.deepEqual(
+    [7, 10, 11, 12, 13, 14].map((id) => AE_MUDOKONS_IN_LEVEL[id]),
+    [4, 9, 3, 5, 6, 8].map((id) => AE_MUDOKONS_IN_LEVEL[id]),
+  );
+});
+
+const tallies = function* (g) {
+  for (const lvl of data[g].levels)
+    for (const path of lvl.paths)
+      for (const t of path.tlvs) if (t.name === "LCDStatusBoard") yield { lvl, path, t };
+};
+
+test("tally: every Oddysee board counts 99 and nothing killed or rescued, but the Stockyards entrance's, where the game kills the unsaved as the screen loads", () => {
+  let n = 0;
+  for (const { lvl, path, t } of tallies("AO")) {
+    const recs = spriteDraws(data.AO, lvl, path, t, sheets.AO);
+    assert.equal(recs.length, 1, `${lvl.short} P${path.id} ${t.x1},${t.y1}`);
+    const [r] = recs;
+    assert.equal(r.layer, 22);
+    assert.equal(r.cycle.brain, "tally");
+    const exit = lvl.short === "E1" && path.id === 6;
+    assert.deepEqual(
+      r.cycle.p.lines,
+      exit ? ["71", "28", "00"] : ["99", "00", "00"],
+      `${lvl.short} P${path.id}`,
+    );
+    assert.equal(r.cycle.p.edge, 22);
+    const e = textAt(r, sheets.AO, 1);
+    assert.equal(e.run.length, 6);
+    // the shipped digits: a 9 is 7 wide, so the right edge sits 3 short of x1 + 22
+    assert.equal(e.run[1].x + sheets.AO.font.glyphs[e.run[1].g][2], t.x1 + 22 - 3);
+    assert.deepEqual([e.x, e.y], [t.x1, t.y1]);
+    n++;
+  }
+  assert.equal(n, 29);
+});
+
+test("tally: an Exoddus board counts its level's Mudokons and its own area's, and a hidden one draws nothing", () => {
+  let drawn = 0,
+    hidden = 0,
+    demo = 0;
+  for (const { lvl, path, t } of tallies("AE")) {
+    const recs = spriteDraws(data.AE, lvl, path, t, sheets.AE);
+    const onDemo = path.tlvs.some((o) => o.name === "DemoSpawnPoint");
+    if (t.fields.hide_board) {
+      assert.deepEqual(recs, [], `${lvl.short} P${path.id} hidden`);
+      if (!onDemo) hidden++;
+      continue;
+    }
+    if (onDemo) demo++;
+    else drawn++;
+    const [r] = recs;
+    assert.equal(r.layer, 22);
+    assert.deepEqual(
+      r.cycle.p.lines,
+      [AE_MUDOKONS_IN_LEVEL[lvl.id], t.fields.number_of_mudokons, 0, 0].map((v) =>
+        String(v).padStart(3, " "),
+      ),
+    );
+    assert.equal(r.cycle.p.edge, 33);
+  }
+  assert.deepEqual([drawn, hidden], [79, 80]);
+  assert.ok(demo > 0);
+  const mi = data.AE.levels.find((l) => l.short === "MI");
+  const p1 = mi.paths.find((p) => p.id === 1);
+  const shown = p1.tlvs.find((o) => o.name === "LCDStatusBoard" && o.x1 === 1283);
+  const [r] = spriteDraws(data.AE, mi, p1, shown, sheets.AE);
+  assert.deepEqual(r.cycle.p.lines, [" 75", " 31", "  0", "  0"]);
+  const e = textAt(r, sheets.AE, 1);
+  assert.equal(e.run.length, 2 + 2 + 1 + 1);
+  assert.equal(e.run[1].x + sheets.AE.font.glyphs[e.run[1].g][2], 1283 + 33 - 3);
+  const anchor = p1.tlvs.find((o) => o.name === "LCDStatusBoard" && o.x1 === 991 && o.y1 === 1445);
+  assert.deepEqual(spriteDraws(data.AE, mi, p1, anchor, sheets.AE), []);
 });

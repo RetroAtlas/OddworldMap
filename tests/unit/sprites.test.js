@@ -32,7 +32,7 @@ function allRecords(g) {
 
 // the sprite-drawing types the rules cover, pinned so a rule going missing
 // shows up as a count rather than as blank screens
-const SPRITE_TYPES = { AO: 45, AE: 47 };
+const SPRITE_TYPES = { AO: 46, AE: 48 };
 
 // a brain's cycle has no period, since it rolls dice; two hundred seconds of
 // it is long past the longest timer and holds every break and turn

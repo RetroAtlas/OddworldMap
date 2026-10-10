@@ -1,9 +1,10 @@
-// The LCD screens: what the game scrolls across a board, a letter at a time,
-// in the font off the disc. A port of the LCDScreen update and render as the
-// PS1 overlays run them rather than as the decomp has them, its numbers being
-// the PC build's: the pen steps a fixed count of pixels a tick, a character is
-// spent once the step has carried it off, the message's end hands over to the
-// next, and the render rolls every glyph's colour afresh each frame.
+// The LCD screens and the Mudokon tally boards: what the game writes in the
+// font off the disc. A port of the LCDScreen and LCDStatusBoard update and
+// render as the PS1 overlays run them rather than as the decomp has them, its
+// numbers being the PC build's: a screen's pen steps a fixed count of pixels a
+// tick, a character is spent once the step has carried it off and the
+// message's end hands over to the next; a board writes its counts right-aligned
+// a row at a time; and the render rolls every glyph's colour afresh each frame.
 // No DOM, so it stays importable in bare Node.
 
 import { BRAINS, STARTS, randomRange, switchGet } from "./patrolkit.js";
@@ -38,6 +39,20 @@ export const LCD_PALETTES = {
     ],
   ],
 };
+// the tally boards' palette, one for both games, its letters red
+export const STATS_PALETTE = [
+  0x0000, 0x8001, 0x8401, 0x8420, 0x8021, 0x8420, 0x8421, 0xce65, 0x8c65, 0xb18c, 0x9413, 0xce64,
+  0xce65, 0x98d7, 0xa114, 0xd818,
+];
+// what a board counts down from: Oddysee's one total, the literal its render
+// subtracts the counters from, and Exoddus's Mudokons per level by level id,
+// the table every overlay that links the board carries, an ender id holding
+// its base level's count
+export const AO_MUDOKONS = 99;
+export const AE_MUDOKONS_IN_LEVEL = [0, 75, 10, 5, 14, 26, 49, 14, 31, 90, 90, 5, 26, 49, 31];
+// a board's rows sit this far apart and end this far right of its corner
+export const TALLY_ROW = 16;
+export const TALLY_EDGE = { AO: 22, AE: 33 };
 const NO_GLYPH = [0, 0, 0, 0];
 
 // a code point's glyph: a printable counts from 31 below it, a button code from
@@ -54,6 +69,16 @@ export function advanceOf(font, code) {
   const g = glyphOf(code);
   return g < 0 ? font.glyphs[1][2] : glyphRect(font, g)[2] + font.glyphs[0][2];
 }
+// a string's width as the engine measures one, the gap after every glyph counted
+export function measureOf(font, text) {
+  let w = 0;
+  for (let i = 0; i < text.length; i++) w += advanceOf(font, text.charCodeAt(i));
+  return w;
+}
+const fontTall = (font) => Math.max(...font.glyphs.map((g) => g[3]));
+
+const flicker = (st, rnd) =>
+  [0, 0, 0].map(() => 127 + randomRange(st, rnd, -LCD_FLICKER, LCD_FLICKER));
 
 const fixedId = (p, st) => (p.fixed2 !== null && switchGet(st, p.sw) ? p.fixed2 : p.fixed1);
 
@@ -105,8 +130,7 @@ BRAINS.lcd = (st, now, rnd) => {
       x += p.font.glyphs[1][2];
       continue;
     }
-    const rgb = [0, 0, 0].map(() => 127 + randomRange(st, rnd, -LCD_FLICKER, LCD_FLICKER));
-    run.push({ g, x, rgb });
+    run.push({ g, x, dy: 0, rgb: flicker(st, rnd) });
     x += glyphRect(p.font, g)[2] + p.font.glyphs[0][2];
   }
   st.text = {
@@ -114,7 +138,37 @@ BRAINS.lcd = (st, now, rnd) => {
     x: p.x1,
     y: p.y,
     clip: [p.x1, p.x2],
+    box: [p.x1, p.y, p.x2 + 1, p.y + fontTall(p.font)],
     palette: LCD_PALETTES[st.game][st.pal],
     run,
+  };
+};
+
+STARTS.tally = (st) => {
+  const { x1, y1, font, lines, edge } = st.p;
+  st.rows = [];
+  let left = x1 + edge;
+  lines.forEach((text, row) => {
+    let x = x1 - measureOf(font, text) + edge;
+    left = Math.min(left, x);
+    for (let i = 0; i < text.length; i++) {
+      const g = glyphOf(text.charCodeAt(i));
+      if (g >= 0) st.rows.push({ g, x, dy: row * TALLY_ROW });
+      x += advanceOf(font, text.charCodeAt(i));
+    }
+  });
+  st.box = [left, y1, x1 + edge, y1 + (lines.length - 1) * TALLY_ROW + fontTall(font)];
+};
+
+BRAINS.tally = (st, now, rnd) => {
+  const p = st.p;
+  st.text = {
+    kind: "text",
+    x: p.x1,
+    y: p.y1,
+    clip: null,
+    box: st.box,
+    palette: STATS_PALETTE,
+    run: st.rows.map((r) => ({ ...r, rgb: flicker(st, rnd) })),
   };
 };

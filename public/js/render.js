@@ -914,9 +914,9 @@ function fontMap(set) {
     }
     rects.push(tile);
   }
+  const tall = y + shelf + 1;
   const sheets = new Map();
   const made = {
-    tall: Math.max(1, ...f.glyphs.map((g) => g[3])),
     rects,
     sheetsFor(palette) {
       let three = sheets.get(palette);
@@ -924,9 +924,9 @@ function fontMap(set) {
       three = [0, 5, 10].map((shift) => {
         const c = document.createElement("canvas");
         c.width = TILE_SHEET_W;
-        c.height = y + shelf + 1;
+        c.height = tall;
         const cctx = c.getContext("2d");
-        const id = cctx.createImageData(c.width, c.height);
+        const id = cctx.createImageData(TILE_SHEET_W, tall);
         for (const [tx, ty, w, h, gx, gy] of tiles.values())
           for (let yy = 0; yy < h; yy++)
             for (let xx = 0; xx < w; xx++) {
@@ -947,27 +947,30 @@ function fontMap(set) {
   return made;
 }
 
-// a screen's run of glyphs, clipped to the panel as the game clips it; a panel
-// outside the view is skipped, every board on the path being asked every frame
+// a run of glyphs: a screen's clipped to its panel as the game clips it, a
+// board's rows unclipped; one whose box lies outside the view is skipped, every
+// board on the path being asked every frame
 function paintText(ctx, layout, cam, set, e, view) {
   const map = fontMap(set);
   if (!map) return;
-  const left = cam.dx + (e.clip[0] - cam.wx),
-    width = e.clip[1] - e.clip[0] + 1,
-    top = cam.dy + (e.y - cam.wy);
+  const [bx1, by1, bx2, by2] = e.box;
+  const left = cam.dx + (bx1 - cam.wx),
+    right = cam.dx + (bx2 - cam.wx),
+    top = cam.dy + (by1 - cam.wy),
+    bottom = cam.dy + (by2 - cam.wy);
   if (
     view &&
-    (left > view.x + view.w ||
-      left + width < view.x ||
-      top > view.y + view.h ||
-      top + map.tall < view.y)
+    (left > view.x + view.w || right < view.x || top > view.y + view.h || bottom < view.y)
   )
     return;
-  ctx.beginPath();
-  ctx.rect(left, cam.dy, width, layout.visH);
-  ctx.clip();
+  if (e.clip) {
+    ctx.beginPath();
+    ctx.rect(cam.dx + (e.clip[0] - cam.wx), cam.dy, e.clip[1] - e.clip[0] + 1, layout.visH);
+    ctx.clip();
+  }
   const sheets = map.sheetsFor(e.palette);
-  for (const { g, x, rgb } of e.run) {
+  const py = cam.dy + (e.y - cam.wy);
+  for (const { g, x, dy, rgb } of e.run) {
     const tile = map.rects[g];
     if (!tile) continue;
     const [tx, ty, w, h] = tile;
@@ -976,7 +979,7 @@ function paintText(ctx, layout, cam, set, e, view) {
       // lighter adds the source at its alpha, so a factor past one is a second pass
       for (let a = rgb[c] / 128; a > 0; a -= 1) {
         ctx.globalAlpha = Math.min(1, a);
-        ctx.drawImage(sheets[c], tx, ty, w, h, dx, top, w, h);
+        ctx.drawImage(sheets[c], tx, ty, w, h, dx, py + dy, w, h);
       }
     }
   }
