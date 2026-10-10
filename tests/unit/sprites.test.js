@@ -32,7 +32,7 @@ function allRecords(g) {
 
 // the sprite-drawing types the rules cover, pinned so a rule going missing
 // shows up as a count rather than as blank screens
-const SPRITE_TYPES = { AO: 44, AE: 46 };
+const SPRITE_TYPES = { AO: 45, AE: 47 };
 
 // a brain's cycle has no period, since it rolls dice; two hundred seconds of
 // it is long past the longest timer and holds every break and turn
@@ -201,6 +201,21 @@ test("every frame a sidecar names sits inside its sheet's declared list", () => 
       for (const f of a.frames)
         assert.ok(f[0] >= 0 && f[0] < n && f[3] > 0 && f[4] > 0, `${g} ${name} frame`);
     }
+  }
+});
+
+test("the LCD font names a listed sheet and its glyphs sit inside it, the gap and the space first", () => {
+  for (const g of GAMES) {
+    const f = sheets[g].font;
+    assert.ok(f.sheet >= 0 && f.sheet < sheets[g].sheets.length, `${g} font sheet`);
+    assert.ok(sheets[g].sheets[f.sheet].endsWith("/font.png"), `${g} font file`);
+    assert.equal(f.glyphs.length, 157, `${g} glyph count`);
+    for (const [x, y, w, h] of f.glyphs) assert.ok(x + w <= f.w && y + h <= f.h, `${g} glyph`);
+    const [gap, space] = f.glyphs;
+    assert.ok(
+      gap[2] > 0 && gap[3] === 0 && space[2] > gap[2] && space[3] === 0,
+      `${g} gap and space`,
+    );
   }
 });
 

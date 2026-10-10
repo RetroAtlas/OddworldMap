@@ -288,8 +288,7 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
   return { name: anim, anim: a, frame, x, y, flip, moved, bright, rgb };
 }
 
-// what a record's brain has given off at a tick: sprites with their frame,
-// the Z shapes, the spark lines, each with its place and layer
+// what a record's brain has given off at a tick, each with its place and layer
 export function resolveEffects(r, set, tick, patrolAt = tick) {
   const cy = r.cycle;
   if (!cy || cy.kind !== "brain" || (cy.patrol && patrolAt === null)) return [];
@@ -329,5 +328,6 @@ export function resolveEffects(r, set, tick, patrolAt = tick) {
       out.push({ kind: "lines", x: p.x, y: p.y, scale: p.scale, segs: p.segs, layer: p.layer });
     }
   }
+  if (st.text) out.push({ ...st.text, layer: r.layer });
   return out;
 }

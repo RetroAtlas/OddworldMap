@@ -1,6 +1,12 @@
 {
  "entries": [
   {
+   "date": "2026-10-10",
+   "tag": "new",
+   "title": "The LCD screens scroll their messages",
+   "detail": "Every LCD screen in both games now writes its messages across its panel in the game's own LCD font, read off the disc like the camera art, while \"Objects as themselves\" is on. The text scrolls at the PlayStation's pace, Oddysee's a third slower than Exoddus's, with a board's own message in green and the hint it draws from its range in red. Each glyph flickers as the game's do, and the PlayStation's buttons are drawn where a hint names one. A message scrolls in from the right a second or two after its screen is reached, as in the game, so a board stands blank at first and in an export. A board the game leaves dark stays dark here too, present to hover and click. The messages themselves were already on the hover and in the screen list; this is the board saying them."
+  },
+  {
    "date": "2026-10-09",
    "tag": "fixed",
    "tiny": true,

@@ -8,6 +8,8 @@
 import { onBackgroundPlane } from "./fields.js";
 import { raycastDiag, raycastDown, snapX } from "./collide.js";
 import { sligBounds } from "./model.js";
+import { lcdMessages } from "./messages.js";
+import { lcdIds } from "./lcd.js";
 
 // collision-line types a constructor raycasts against; the background plane's
 // copies sit four above the foreground's
@@ -1212,6 +1214,31 @@ rule("AO", "Bat", (c) => {
 rule("AO", "HintFly", (c) => [
   draw(c, null, c.t.x1, c.t.y1, { cycle: brain(c, "hintfly"), yOff: 0 }),
 ]);
+
+// an LCD screen scrolls its messages in the game's font, by the lcd brain; one
+// whose fixed message and whole random range are blank runs dark and draws
+// nothing
+rule("AO", "LCDScreen", lcdScreen);
+rule("AE", "LCD", lcdScreen);
+function lcdScreen(c) {
+  const table = lcdMessages(c.game);
+  if (!table || !c.font) return [];
+  const { t, f } = c;
+  const p = {
+    x1: t.x1,
+    x2: t.x2,
+    y: midY(t) - 7,
+    font: c.font,
+    table,
+    fixed1: f.message_1_id ?? 0,
+    fixed2: f.message_2_id ?? null,
+    sw: f.toggle_message_switch_id ?? 0,
+    pool: [f.random_message_min_id ?? 0, f.random_message_max_id ?? 0],
+  };
+  if (lcdIds(p).every((id) => !table[id])) return [];
+  const layer = c.game === "AO" ? 22 : 24;
+  return [draw(c, null, t.x1, midY(t), { yOff: 0, layer, cycle: brain(c, "lcd", false, p) })];
+}
 rule("AO", "Honey", (c) => [
   draw(c, "Honey", c.t.x1 + trunc((c.t.x2 - c.t.x1) / 2), c.t.y1 + 24, {
     scale: 1,
@@ -1420,6 +1447,7 @@ export function spriteDraws(data, lvl, path, t, set) {
     half: onBackgroundPlane(data.id, t),
     yOff: data.id === "AO" ? 5 : 0,
     anims: set.anims,
+    font: set.font ?? null,
     abeStart: set.abe?.[lvl.short]?.[path.id],
   };
   return fn(c) || [];

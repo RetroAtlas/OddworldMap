@@ -549,6 +549,7 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
     path,
     layout: LAYOUT,
     origin: cellOrigin(),
+    view: { x: cam.x, y: cam.y, w: w / cam.z, h: h / cam.z },
     showLabels: show.labels && cam.z > 0.45,
   };
   paintScreens(f, show.dim);
@@ -783,7 +784,8 @@ function noteBox(t, b, cam, layout) {
 // layer, the later-constructed under the earlier; each clipped to its own
 // camera's window, where the game clips too, so a frame reaching past it
 // never paints over a neighbouring screen
-function paintSprites({ ctx, data, layout, path }, sprites, set, tick, patrolAt) {
+function paintSprites(f, sprites, set, tick, patrolAt) {
+  const { ctx, data, layout, path } = f;
   movedBy.clear();
   spriteBoxes.clear();
   const recs = [];
@@ -805,7 +807,7 @@ function paintSprites({ ctx, data, layout, path }, sprites, set, tick, patrolAt)
   const ae = data.id === "AE";
   for (const [r, , , t, isFx] of recs) {
     if (isFx) {
-      paintEffect(ctx, layout, set, r, ae);
+      paintEffect(ctx, layout, set, r, ae, f.view);
       continue;
     }
     const shown = resolveRecord(r, set, tick, patrolAt);
@@ -867,10 +869,122 @@ function cameraAt(layout, x, y) {
   return cam;
 }
 
-// an effect a brain gave off: a particle sprite drawn additively, a sleeper's
-// Z or a spark's lines drawn as the engine's gouraud lines, clipped to the
-// camera the point falls in
-function paintEffect(ctx, layout, set, e, ae) {
+// the LCD font as the painter draws it: per palette, a sheet per colour channel
+// of the glyphs cut alone, every texel that channel of its palette colour, built
+// once off the index map when its sheet arrives. A glyph drawn from the three
+// additively, each at the factor the engine rolled for that channel, is the
+// texel modulated channel by channel, the way a scratch canvas rewritten a glyph
+// at a time would be, without the upload every rewrite costs; cut alone, a
+// smoothed draw repeats a glyph's own edge rather than the glyph packed beside it
+const fontMaps = new WeakMap();
+const TILE_SHEET_W = 256;
+function fontMap(set) {
+  const map = fontMaps.get(set);
+  if (map) return map;
+  const f = set.font;
+  if (!f) return null;
+  const im = img(set.sheets[f.sheet]);
+  if (!im.complete || !im.naturalWidth) return null;
+  const oc = document.createElement("canvas");
+  oc.width = f.w;
+  oc.height = f.h;
+  const octx = oc.getContext("2d");
+  if (!octx) return null;
+  octx.drawImage(im, 0, 0);
+  const idx = octx.getImageData(0, 0, f.w, f.h).data;
+  // one tile per distinct glyph rectangle, shelf-packed a texel apart
+  const tiles = new Map();
+  const rects = [];
+  let x = 1,
+    y = 1,
+    shelf = 0;
+  for (const [gx, gy, w, h] of f.glyphs) {
+    const key = `${gx},${gy},${w},${h}`;
+    let tile = w && h ? tiles.get(key) : null;
+    if (w && h && !tile) {
+      if (x + w + 1 > TILE_SHEET_W) {
+        x = 1;
+        y += shelf + 1;
+        shelf = 0;
+      }
+      tile = [x, y, w, h, gx, gy];
+      tiles.set(key, tile);
+      x += w + 1;
+      shelf = Math.max(shelf, h);
+    }
+    rects.push(tile);
+  }
+  const sheets = new Map();
+  const made = {
+    tall: Math.max(1, ...f.glyphs.map((g) => g[3])),
+    rects,
+    sheetsFor(palette) {
+      let three = sheets.get(palette);
+      if (three) return three;
+      three = [0, 5, 10].map((shift) => {
+        const c = document.createElement("canvas");
+        c.width = TILE_SHEET_W;
+        c.height = y + shelf + 1;
+        const cctx = c.getContext("2d");
+        const id = cctx.createImageData(c.width, c.height);
+        for (const [tx, ty, w, h, gx, gy] of tiles.values())
+          for (let yy = 0; yy < h; yy++)
+            for (let xx = 0; xx < w; xx++) {
+              const k = idx[((gy + yy) * f.w + gx + xx) * 4];
+              if (!k) continue;
+              const o = ((ty + yy) * TILE_SHEET_W + tx + xx) * 4;
+              id.data[o + shift / 5] = ((palette[k] >> shift) & 31) << 3;
+              id.data[o + 3] = 255;
+            }
+        cctx.putImageData(id, 0, 0);
+        return c;
+      });
+      sheets.set(palette, three);
+      return three;
+    },
+  };
+  fontMaps.set(set, made);
+  return made;
+}
+
+// a screen's run of glyphs, clipped to the panel as the game clips it; a panel
+// outside the view is skipped, every board on the path being asked every frame
+function paintText(ctx, layout, cam, set, e, view) {
+  const map = fontMap(set);
+  if (!map) return;
+  const left = cam.dx + (e.clip[0] - cam.wx),
+    width = e.clip[1] - e.clip[0] + 1,
+    top = cam.dy + (e.y - cam.wy);
+  if (
+    view &&
+    (left > view.x + view.w ||
+      left + width < view.x ||
+      top > view.y + view.h ||
+      top + map.tall < view.y)
+  )
+    return;
+  ctx.beginPath();
+  ctx.rect(left, cam.dy, width, layout.visH);
+  ctx.clip();
+  const sheets = map.sheetsFor(e.palette);
+  for (const { g, x, rgb } of e.run) {
+    const tile = map.rects[g];
+    if (!tile) continue;
+    const [tx, ty, w, h] = tile;
+    const dx = cam.dx + (x - cam.wx);
+    for (let c = 0; c < 3; c++) {
+      // lighter adds the source at its alpha, so a factor past one is a second pass
+      for (let a = rgb[c] / 128; a > 0; a -= 1) {
+        ctx.globalAlpha = Math.min(1, a);
+        ctx.drawImage(sheets[c], tx, ty, w, h, dx, top, w, h);
+      }
+    }
+  }
+}
+
+// an effect a brain gave off, drawn additively, any lines as the engine's
+// gouraud lines, and clipped to the camera the point falls in
+function paintEffect(ctx, layout, set, e, ae, view) {
   const cam = cameraAt(layout, Math.trunc(e.x), Math.trunc(e.y));
   ctx.save();
   ctx.beginPath();
@@ -884,7 +998,8 @@ function paintEffect(ctx, layout, set, e, ae) {
       const r = { scale: e.scale, flipY: false, swap: false };
       drawFrame(ctx, cam, tile, frame, r, { flip: false }, ae, e.x, e.y);
     }
-  } else {
+  } else if (e.kind === "text") paintText(ctx, layout, cam, set, e, view);
+  else {
     const px = cam.dx + (e.x - cam.wx),
       py = cam.dy + (e.y - cam.wy);
     const segs =

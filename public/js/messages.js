@@ -47,6 +47,8 @@ export function setMessages(byGame) {
   MESSAGES = byGame || {};
 }
 
+export const lcdMessages = (game) => MESSAGES[game]?.lcd ?? null;
+
 // a stored message as words: button codes become the command they name
 export function messageText(raw) {
   let out = "";

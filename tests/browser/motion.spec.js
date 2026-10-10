@@ -24,6 +24,8 @@ const DRILL = { x1: 495, y1: 957, x2: 525, y2: 973 };
 const EXIT = { game: "AE", level: "NE", path: 2, x1: 650, y1: 440, x2: 674, y2: 464 };
 // the slig's left bound, a marker with no sprite
 const BOUND = { game: "AE", level: "MI", path: 1, x1: 1175, y1: 700, x2: 1199, y2: 724 };
+// the Mines board above the slig, a panel 203 wide the lcd brain writes across
+const LCD = { game: "AE", level: "MI", path: 1, x1: 1159, y1: 625, x2: 1362, y2: 645 };
 
 // the canvas pixels under a world rectangle, as [r, g, b, a] rows
 async function pixels(page, rect) {
@@ -663,7 +665,7 @@ test.describe("Objects as themselves", () => {
       return t && render.objectShown(t);
     });
     expect(stone).toBe(true);
-    // a screen the game writes on stays too, though the map cannot draw it yet
+    // a screen the game writes on stays too, drawn as its text
     const lcd = await page.evaluate(async () => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("state.js"));
@@ -758,6 +760,64 @@ test.describe("Objects as themselves", () => {
     await page.keyboard.press("]");
     await page.waitForFunction(() => location.hash.startsWith("#AE/MI/2"));
     await page.waitForFunction((was) => window.__motion.sceneTick() < was, before.scene);
+    expect(errors).toEqual([]);
+  });
+
+  test("the Mines LCD scrolls its message into its panel once the scene has run past the lead", async ({
+    page,
+  }) => {
+    const errors = trackErrors(page);
+    await seedView(page, { show: { objects: true }, cats: { screen: true } });
+    await page.goto(`/#AE/MI/1/${LCD.x1 + 100}/${LCD.y1}/1.00`);
+    await settle(page, LCD);
+    const draw = () =>
+      page.evaluate(async () => {
+        const u = (m) => new URL("js/" + m, location.href).href;
+        const st = await import(u("state.js"));
+        const render = await import(u("render.js"));
+        await render.preloadPath(st.state.path);
+        render.draw();
+      });
+    // with the clock stopped the panel shows its first tick, which is the lead: bare artwork
+    await page.click("#settingsBtn");
+    await page.uncheck("#sAnimate");
+    await draw();
+    const bare = await pixels(page, LCD);
+    await page.check("#sAnimate");
+    await page.click("#settingsClose");
+    await page.evaluate(async () => {
+      window.__motion = await import(new URL("js/motion.js", location.href).href);
+    });
+    // the first letter enters the right edge on tick 36; by 90 a few words are across the panel
+    await page.waitForFunction(() => window.__motion.sceneTick() > 90);
+    await draw();
+    const written = await pixels(page, LCD);
+    expect(written).not.toEqual(bare);
+    // the glyphs are green, drawn additively over the panel's dark art
+    const lit = [];
+    for (let i = 0; i < written.length; i += 4)
+      if (written[i + 1] > bare[i + 1] + 40 && written[i + 1] > written[i] + 20) lit.push(i / 4);
+    expect(lit.length).toBeGreaterThan(20);
+    const at = await page.evaluate(() => window.__motion.sceneTick());
+    await page.waitForFunction((was) => window.__motion.sceneTick() > was + 6, at);
+    await draw();
+    expect(await pixels(page, LCD)).not.toEqual(written);
+    // the record's text effect is what the painter drew: glyphs clipped to the panel
+    const effect = await page.evaluate(async () => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const sprites = await import(u("sprites.js"));
+      const motion = await import(u("motion.js"));
+      const set = await (await fetch(new URL("sprites_ae.json", location.href))).json();
+      const t = st.state.path.tlvs.find((o) => o.name === "LCD" && o.x1 === 1159);
+      const [r] = sprites.spriteDraws(st.state.data, st.state.lvl, st.state.path, t, set);
+      const [e] = motion.resolveEffects(r, set, motion.sceneTick());
+      return { kind: e.kind, glyphs: e.run.length, clip: e.clip, layer: e.layer };
+    });
+    expect(effect.kind).toBe("text");
+    expect(effect.glyphs).toBeGreaterThan(0);
+    expect(effect.clip).toEqual([LCD.x1, LCD.x2]);
+    expect(effect.layer).toBe(24);
     expect(errors).toEqual([]);
   });
 

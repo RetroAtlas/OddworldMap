@@ -19,3 +19,4 @@ import "./greeter.js";
 import "./bat.js";
 import "./glukkon.js";
 import "./flyingslig.js";
+import "./lcd.js";
