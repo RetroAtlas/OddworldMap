@@ -1,7 +1,8 @@
 """Tests for the sprite stage's pure functions: the animation-table walk over a
 synthetic chunk, each frame codec against a frame lifted off a disc with the
-rows it decodes to, the texel alpha states, the deterministic packing and the
-sheet set's name, in a build and in the committed tree."""
+rows it decodes to, the texel alpha states, the deterministic packing, the
+sheet set's name, in a build and in the committed tree, and the LCD font's
+texture and glyph table."""
 
 import contextlib
 import hashlib
@@ -145,15 +146,18 @@ class Pack(unittest.TestCase):
 class SheetSet(unittest.TestCase):
     """a game's sheets are one set, named for their pixels, alone in their directory"""
 
+    FONT = {"w": 1, "h": 1, "texels": b"\x07", "glyphs": [[0, 0, 3, 0], [0, 0, 10, 0]]}
+
     def write(self, out, px):
         frames, entries = [(1, 1, px)], {"A": {"frames": [(0, 0, 0)]}}
         with mock.patch.object(sprites, "build_sprites", return_value=(frames, entries, [])), \
                 mock.patch.object(sprites, "read_dice", return_value=list(range(256))), \
+                mock.patch.object(sprites, "read_font", return_value=dict(self.FONT)), \
                 mock.patch.object(sprites, "write_png",
                                   side_effect=lambda path, w, h, rgba, keep_alpha: Path(path).write_bytes(rgba)), \
                 contextlib.redirect_stdout(io.StringIO()):
             dst = sprites.write_sprites("AO", [("R1", SimpleNamespace(disc="d"))], out, "cams/ao/sprites")
-        return json.loads(dst.read_text())["sheets"]
+        return json.loads(dst.read_text())
 
     def test_a_set_is_named_for_its_pixels_and_their_shape(self):
         a = (2, 1, bytes(8))
@@ -173,14 +177,24 @@ class SheetSet(unittest.TestCase):
 
             def shipped():
                 return sorted(p.relative_to(out).as_posix() for p in sheets.rglob("*") if p.is_file())
-            first = self.write(out, bytes([1, 2, 3, 255]))
+            first = self.write(out, bytes([1, 2, 3, 255]))["sheets"]
             self.assertEqual(shipped(), first)
             self.assertEqual(len(list(sheets.iterdir())), 1)
-            self.assertEqual(self.write(out, bytes([1, 2, 3, 255])), first)
-            second = self.write(out, bytes([1, 2, 4, 255]))
+            self.assertEqual(self.write(out, bytes([1, 2, 3, 255]))["sheets"], first)
+            second = self.write(out, bytes([1, 2, 4, 255]))["sheets"]
             self.assertNotEqual(second, first)
             self.assertEqual(shipped(), second)
             self.assertEqual(len(list(sheets.iterdir())), 1)
+
+    def test_the_font_is_the_set_s_last_sheet_as_an_index_map(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            side = self.write(out, bytes([1, 2, 3, 255]))
+            font = side["font"]
+            self.assertEqual(font["sheet"], len(side["sheets"]) - 1)
+            self.assertEqual(Path(side["sheets"][font["sheet"]]).name, "font.png")
+            self.assertEqual((font["w"], font["h"], font["glyphs"]), (1, 1, self.FONT["glyphs"]))
+            self.assertEqual((out / side["sheets"][font["sheet"]]).read_bytes(), bytes([7, 7, 7, 255]))
 
     def test_each_game_ships_the_one_set_its_sidecar_names(self):
         for game in ("ao", "ae"):
@@ -276,6 +290,72 @@ class AnimTable(unittest.TestCase):
         self.assertTrue(ao and ae)
         self.assertEqual(set(ao), {n for n, g in self.table.items() if "ao" in g})
         self.assertEqual(set(ae), {n for n, g in self.table.items() if "ae" in g})
+
+
+class Font(unittest.TestCase):
+    """the LCD font: the texture off a level's LCDFONT.FNT and the glyph table off the executable"""
+
+    @staticmethod
+    def table(lower_differs=False, end=b"\0\0\0\0"):
+        ents = [b"\0\0\x03\0", b"\0\0\x0a\0"] + [bytes([0, 0, 6, 14])] * (sprites.GLYPH_COUNT - 2)
+        for k in range(26):
+            glyph = bytes([9 * (k % 12), 9 + 14 * (k // 12), 7, 14])
+            ents[sprites.glyph_index(ord("A") + k)] = glyph
+            ents[sprites.glyph_index(ord("a") + k)] = bytes([glyph[0], 60, 7, 14]) if lower_differs else glyph
+        for i, code in enumerate(sprites.MESSAGE_BUTTONS):
+            ents[sprites.glyph_index(code)] = bytes([18 * (i % 6), 72 + 16 * (i // 6), 18, 14])
+        return b"".join(ents) + end
+
+    def test_a_code_s_glyph_follows_the_engine_s_rule(self):
+        self.assertEqual([sprites.glyph_index(c) for c in (0x21, ord("A"), ord("a"), 0xAF)], [2, 34, 66, 144])
+        self.assertEqual([sprites.glyph_index(c) for c in (0x07, 0x08, 0x13, 0x1F)], [144, 145, 156, 168])
+        self.assertEqual([sprites.glyph_index(c) for c in (0, 0x06, 0x20, 0xB0, 0xFF)], [None] * 5)
+        self.assertEqual(sprites.GLYPH_COUNT, 157)
+
+    def test_finds_the_one_window_shaped_like_the_table(self):
+        decoy, real = self.table(lower_differs=True), self.table()
+        exe = bytes(range(200)) + decoy + bytes(41) + real + bytes(300)
+        at = 200 + len(decoy) + 41
+        self.assertEqual(sprites.glyph_table_windows(exe, 112, 109), [at], "a table of bytes promises no alignment")
+        self.assertEqual(sprites.glyph_table_windows(exe, 100, 109), [], "a glyph past the texture's edge")
+        self.assertEqual(sprites.glyph_table_windows(bytes(100) + self.table(end=b"\0\0\x09\0"), 112, 109), [],
+                         "a table that runs on past its end")
+
+    def test_the_glyph_table_is_read_off_every_disc_and_they_must_agree(self):
+        def disc(table):
+            exe = bytes(64) + table + bytes(64)
+            return SimpleNamespace(files={"SLUS_001.90": (24, len(exe))}, read=lambda lba, size: exe)
+        glyphs = sprites.read_glyph_table([disc(self.table())], 112, 109)
+        self.assertEqual(len(glyphs), sprites.GLYPH_COUNT)
+        self.assertEqual(glyphs[:2], [[0, 0, 3, 0], [0, 0, 10, 0]])
+        self.assertEqual(glyphs[sprites.glyph_index(ord("B"))], [9, 9, 7, 14])
+        with self.assertRaises(SystemExit) as caught:
+            sprites.read_glyph_table([disc(self.table()), disc(self.table(end=b"\0\0\x09\0"))], 112, 109)
+        self.assertIn("0 candidate LCD glyph tables", str(caught.exception))
+        other = self.table()[:4 * 34] + bytes([1, 9, 7, 14]) + self.table()[4 * 35:]
+        other = other[:4 * 66] + bytes([1, 9, 7, 14]) + other[4 * 67:]
+        with self.assertRaises(SystemExit) as caught:
+            sprites.read_glyph_table([disc(self.table()), disc(other)], 112, 109)
+        self.assertIn("disagree", str(caught.exception))
+
+    def test_the_texture_reads_its_header_then_the_texels_low_nibble_first(self):
+        chunk = struct.pack("<hhhh", 4, 1, 4, 16) + bytes(32) + bytes([0x21, 0x43])
+        lvl = Level(**{sprites.FONT_FILE: container(("Font", sprites.FONT_RID, chunk))})
+        self.assertEqual(sprites.read_font_texture([("R1", lvl), ("CR", Level()), ("R2", lvl)]),
+                         (4, 1, bytes([1, 2, 3, 4])))
+
+    def test_copies_must_agree_and_one_must_exist(self):
+        a = struct.pack("<hhhh", 2, 1, 4, 16) + bytes(32) + bytes([0x21])
+        b = struct.pack("<hhhh", 2, 1, 4, 16) + bytes(32) + bytes([0x12])
+        with self.assertRaises(SystemExit) as caught:
+            sprites.read_font_texture([("R1", Level(**{sprites.FONT_FILE: container(("Font", 2, a))})),
+                                       ("R2", Level(**{sprites.FONT_FILE: container(("Font", 2, b))}))])
+        self.assertIn("LCDFONT.FNT differs between R1 and R2", str(caught.exception))
+        with self.assertRaises(SystemExit):
+            sprites.read_font_texture([("CR", Level())])
+
+    def test_an_index_map_carries_the_index_in_every_channel(self):
+        self.assertEqual(sprites.index_map_rgba(bytes([0, 5])), bytes([0, 0, 0, 255, 5, 5, 5, 255]))
 
 
 class Dice(unittest.TestCase):

@@ -8,7 +8,11 @@ contiguously after the last frame-info record; the file header names one table
 (the last one), so the region is found by stepping back from that table's own
 frame infos and walking forward. Every offset is from byte 0 of the chunk data.
 Exoddus ships 260 chunks in a second shape, one pre-rendered sheet whose frame
-infos carry sub-rectangles in the slot a frame-header offset usually fills."""
+infos carry sub-rectangles in the slot a frame-header offset usually fills.
+
+The LCD screens' font rides in the same set: LCDFONT.FNT is one Font chunk per
+level archive, a header, a CLUT the screens never read and the 4bpp texels, and
+its glyph rectangles are a table in the executable, found by its shape."""
 import hashlib
 import json
 import shutil
@@ -16,6 +20,7 @@ import struct
 
 from oddmap.disc import parse_chunks
 from oddmap.image import decompress_4or5, write_png
+from oddmap.messages import MESSAGE_BUTTONS
 from oddmap.paths import HERE
 
 SPRITE_ANIMS = HERE / "data" / "sprite_anims.json"
@@ -28,6 +33,19 @@ SHEETS_DIR = "sprites"  # under a game's cams directory, one set of sheets in it
 # only where the object's polygon is semi-transparent, which is the object's
 # rule rather than the texel's
 ALPHA_CLEAR, ALPHA_STP, ALPHA_OPAQUE = 0, 254, 255
+
+FONT_FILE, FONT_RID = "LCDFONT.FNT", 2
+
+def glyph_index(code):
+    """the engine's glyph for a code point: a printable counts from 31 below it, a
+    button code from 137 above, and anything else is drawn as a space"""
+    if 0x21 <= code <= 0xAF:
+        return code - 31
+    if 0x07 <= code <= 0x1F:
+        return code + 137
+    return None
+
+GLYPH_COUNT = glyph_index(max(MESSAGE_BUTTONS)) + 1
 
 def file_header(data):
     max_w, max_h, fto, word8 = struct.unpack_from("<hhII", data, 0)
@@ -435,15 +453,95 @@ def permutation_windows(data):
             hits.append(i - 255)
     return hits
 
+def executable(disc):
+    """(name, bytes) of the disc's executable"""
+    name = next(n for n in sorted(disc.files) if n.startswith("SLUS_"))
+    return name, disc.read(*disc.files[name])
+
 def read_dice(disc):
     """the engine's random table, read off the disc's executable: Math_NextRandom
     walks a 256-byte permutation of 0..255, and the executable holds exactly one"""
-    name = next(n for n in sorted(disc.files) if n.startswith("SLUS_"))
-    exe = disc.read(*disc.files[name])
+    name, exe = executable(disc)
     hits = permutation_windows(exe)
     if len(hits) != 1:
         raise SystemExit(f"sprites: {name} holds {len(hits)} candidate random tables, expected one")
     return list(exe[hits[0]:hits[0] + 256])
+
+def glyph_table_windows(exe, w, h):
+    """offsets of every window of GLYPH_COUNT {u8 x, y, w, h} entries shaped like the
+    LCD font's table: the glyph gap and then the space width, each a width alone and
+    the gap the narrower; a glyph for every letter, the lowercase entries repeating
+    the uppercase ones; the twelve button glyphs; every entry inside the w x h
+    texture; and nothing in the slot past the end"""
+    upper = [glyph_index(c) for c in range(ord("A"), ord("Z") + 1)]
+    lower = [glyph_index(c) for c in range(ord("a"), ord("z") + 1)]
+    buttons = [glyph_index(c) for c in MESSAGE_BUTTONS]
+    def entry(off, i):
+        return exe[off + 4 * i:off + 4 * i + 4]
+    hits = []
+    for off in range(len(exe) - 4 * (GLYPH_COUNT + 1)):
+        gap, space = entry(off, 0), entry(off, 1)
+        if gap[0] or gap[1] or gap[3] or space[0] or space[1] or space[3] or not 0 < gap[2] < space[2]:
+            continue
+        if any(entry(off, u) != entry(off, l) for u, l in zip(upper, lower)):
+            continue
+        if any(not (entry(off, i)[2] and entry(off, i)[3]) for i in upper + buttons):
+            continue
+        if any(e[0] + e[2] > w or e[1] + e[3] > h for e in (entry(off, i) for i in range(GLYPH_COUNT))):
+            continue
+        if entry(off, GLYPH_COUNT) == b"\0\0\0\0":
+            hits.append(off)
+    return hits
+
+def read_font_texture(levels):
+    """(w, h, texels) of the LCD font, every level's copy held to the first: its 4bpp
+    texels, low nibble first, unpacked to one palette index a texel"""
+    first = None
+    for short, lvl in levels:
+        if FONT_FILE not in lvl.files:
+            continue
+        data = parse_chunks(lvl.read(FONT_FILE)).get(("Font", FONT_RID))
+        if data is None:
+            raise SystemExit(f"sprites: {short}'s {FONT_FILE} holds no Font chunk {FONT_RID}")
+        if first is None:
+            first = (short, data)
+        elif first[1] != data:
+            raise SystemExit(f"sprites: {FONT_FILE} differs between {first[0]} and {short}")
+    if first is None:
+        raise SystemExit(f"sprites: no level carries {FONT_FILE}")
+    data = first[1]
+    w, h, depth, colours = struct.unpack_from("<hhhh", data, 0)
+    if depth != 4 or w % 2:
+        raise SystemExit(f"sprites: {FONT_FILE} is {w} wide at {depth} bits a texel, expected an even width at 4")
+    packed = data[8 + 2 * colours:8 + 2 * colours + w * h // 2]
+    texels = bytearray(w * h)
+    for i, b in enumerate(packed):
+        texels[2 * i] = b & 0xF
+        texels[2 * i + 1] = b >> 4
+    return w, h, bytes(texels)
+
+def read_glyph_table(discs, w, h):
+    """the LCD font's glyph table, read off every disc's executable, which must agree"""
+    tables = set()
+    for disc in discs:
+        name, exe = executable(disc)
+        hits = glyph_table_windows(exe, w, h)
+        if len(hits) != 1:
+            raise SystemExit(f"sprites: {name} holds {len(hits)} candidate LCD glyph tables, expected one")
+        tables.add(tuple(bytes(exe[hits[0] + 4 * i:hits[0] + 4 * i + 4]) for i in range(GLYPH_COUNT)))
+    if len(tables) != 1:
+        raise SystemExit("sprites: the discs disagree on the LCD glyph table")
+    return [list(e) for e in tables.pop()]
+
+def read_font(levels):
+    """the LCD font: its texture and the glyph table the file does not hold"""
+    w, h, texels = read_font_texture(levels)
+    return {"w": w, "h": h, "texels": texels,
+            "glyphs": read_glyph_table({lvl.disc for _, lvl in levels}, w, h)}
+
+def index_map_rgba(texels):
+    """a texture of palette indices as RGBA8: the index in every channel, opaque"""
+    return bytes(b for i in texels for b in (i, i, i, 255))
 
 def sheet_set_name(sheets):
     """a game's sheets are named as one set for their pixels, so a changed sheet is a
@@ -455,11 +553,12 @@ def sheet_set_name(sheets):
     return h.hexdigest()[:12]
 
 def write_sprites(game_key, levels, out, sheets_rel, abe=None, links=None):
-    """the game's sprite atlases as the one set under `sheets_rel` and its sprites
-    sidecar beside the data file, carrying the per-path Abe start where the game
-    places a device by it and each collision line's previous and next links, which
-    the engine's line following walks; misses fail the build, since a name the
-    viewer may ask for must not be left out silently"""
+    """the game's sprite atlases and the LCD font's index map as the one set under
+    `sheets_rel`, and its sprites sidecar beside the data file, carrying the font's
+    glyph table, the per-path Abe start where the game places a device by it and
+    each collision line's previous and next links, which the engine's line following
+    walks; misses fail the build, since a name the viewer may ask for must not be
+    left out silently"""
     frames, entries, misses = build_sprites(game_key, levels)
     if misses:
         raise SystemExit(f"sprites: {len(misses)} listed animations not found on the discs: "
@@ -472,12 +571,14 @@ def write_sprites(game_key, levels, out, sheets_rel, abe=None, links=None):
             at = ((y + yy) * SHEET_W + x) * 4
             img[at:at + w * 4] = px[yy * w * 4:(yy + 1) * w * 4]
     sheets = [(SHEET_W, hh, bytes(img)) for img, hh in zip(images, heights)]
+    font = read_font(levels)
+    sheets.append((font["w"], font["h"], index_map_rgba(font["texels"])))
     name = sheet_set_name(sheets)
     sheets_dir = out / sheets_rel
     (sheets_dir / name).mkdir(parents=True, exist_ok=True)
     sheet_files = []
     for s, (w, hh, rgba) in enumerate(sheets):
-        rel = f"{sheets_rel}/{name}/{s}.png"
+        rel = f"{sheets_rel}/{name}/{'font' if s == len(sheets) - 1 else s}.png"
         write_png(out / rel, w, hh, rgba, keep_alpha=True)
         sheet_files.append(rel)
     for entry in entries.values():
@@ -485,7 +586,8 @@ def write_sprites(game_key, levels, out, sheets_rel, abe=None, links=None):
     dice = {tuple(read_dice(disc)) for disc in {lvl.disc for _, lvl in levels}}
     if len(dice) != 1:
         raise SystemExit("sprites: the discs disagree on the random table")
-    sidecar = {"sheets": sheet_files, "anims": entries, "dice": list(dice.pop())}
+    sidecar = {"sheets": sheet_files, "anims": entries, "dice": list(dice.pop()),
+               "font": {"sheet": len(sheet_files) - 1, "w": font["w"], "h": font["h"], "glyphs": font["glyphs"]}}
     if abe:
         sidecar["abe"] = abe
     if links:
