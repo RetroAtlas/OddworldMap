@@ -16,7 +16,6 @@ function standUp(st, now) {
 const SAD_SPEAK = "Mudokon_SpeakFart@SadMud",
   ANGRY_SPEAK = "Mudokon_Speak3@AngryMud";
 const MOOD_GREY = [63, 63, 63];
-// a speak ends standing, the mood's palette and grey given back
 const speakEnds = (st, last) => {
   if (!last) return;
   st.rgb = null;
@@ -32,10 +31,9 @@ function moodSpeaks(st) {
   } else st.listen = 0;
 }
 
-// the listening brain with nobody to answer: the angry worker has its say and
-// returns to the job it left by the motion that leads back into it
-// (ListeningToAbe's states 0, 1, 10 and 22); its turn to face Abe is left out,
-// Abe being nowhere
+// the listening brain (ListeningToAbe's states) with nobody to answer: the
+// angry worker has its say and returns to the job it left by the motion that
+// leads back into it; its turn to face Abe is left out, Abe being nowhere
 function listen(st, back) {
   switch (st.listen) {
     case 0:
@@ -456,8 +454,6 @@ Object.assign(MOTIONS, {
   Mudokon_CrouchToStand(st, last) {
     if (last) st.cur = "Mudokon_Idle";
   },
-  // standing, a motion done crouched goes down first, keeping its own turn
-  // unless it is the crouch itself
   Mudokon_Idle(st) {
     const next = st.next;
     if (!next) return;

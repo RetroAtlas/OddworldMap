@@ -110,9 +110,8 @@ export function loadEditorData(id, low) {
   return p;
 }
 
-// the sprite sheets and their animation table are fetched on the first ask, which a
-// view opening with the objects shown makes at boot; one fetch per game, a failed
-// one forgotten so the next ask retries
+// the sprite sheets and their animation table are fetched on the first ask, one
+// fetch per game, a failed one forgotten so the next ask retries
 const spriteData = new Map();
 export function loadSprites(id, low) {
   let p = spriteData.get(id);

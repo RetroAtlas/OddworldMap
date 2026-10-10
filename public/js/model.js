@@ -436,9 +436,8 @@ export function sligBounds(t, path, geo, gameId) {
 }
 
 // the pen a Slig or SligSpawner patrols: the x-span between its bound pair, read
-// by each bound's top-left x, wherever the pair stands. A side without a bound
-// or an inside-out pair pens nothing, and Scrab bounds ship no ids, so scrabs
-// get no pen. Returns a draw-space rect, or null.
+// by each bound's top-left x, wherever the pair stands. Scrab bounds ship no
+// ids, so scrabs get no pen. Returns a draw-space rect, or null.
 export function patrolZone(t, path, layout, gameId) {
   const { left: L, right: R } = sligBounds(t, path, layout, gameId);
   if ((t.name !== "Slig" && t.name !== "SligSpawner") || !L || !R) return null;

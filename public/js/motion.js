@@ -219,8 +219,8 @@ export function lightLevel(set, tick) {
 }
 const roll = (p, dice, min, max) => min + (dice[p.seed++ & 255] % (max - min + 1));
 
-// what a record shows at a tick: its animation, frame, place, facing and
-// colour, after the cycles the game runs without a player
+// what a record shows at a tick, after the cycles the game runs
+// without a player
 export function resolveRecord(r, set, tick, patrolAt = tick) {
   const anims = set.anims;
   let anim = r.anim,

@@ -382,7 +382,6 @@ test("pinned placements: each game's first Abe stands on the floor inside his ow
   assert.equal(ae.y, 1500);
 });
 
-// the record a placed object draws, found by its place
 function recordAt(g, lv, pid, name, x1, y1) {
   const lvl = data[g].levels.find((l) => l.short === lv);
   const path = lvl.paths.find((p) => p.id === pid);
