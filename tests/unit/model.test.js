@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   camCell,
   camCenter,
@@ -40,6 +41,9 @@ import {
   pitches,
   tlv,
 } from "./fixtures.js";
+
+const load = (name) =>
+  JSON.parse(readFileSync(new URL(`../../public/${name}`, import.meta.url), "utf8"));
 
 // the dataset destOf looks a destination's partner up in, with the level and
 // path it stands on. The dataset holds nothing but that path, and the path
@@ -803,6 +807,49 @@ test("computeConnections: off-path destinations become labelled stubs", () => {
   const door = at(tlv("Door", { to_level: "R2", to_path: 1, to_cam: 3 }), 50, 20);
   const P = path(15, [door], CONN_CAMS, 2, 1);
   assert.deepEqual(conn(P, level("R2", path(1, []))), [{ src: door, label: "R2 P1" }]);
+});
+
+test("computeConnections: a path transition's stub points out of its screen", () => {
+  const away = level("R2", path(1, []));
+  // in its own screen's slack, left of the window
+  const left = at(tlv("PathTransition", { to_level: "R2", to_path: 1 }), 10, 60);
+  const P = path(15, [left], CONN_CAMS, 2, 1);
+  assert.deepEqual(conn(P, away), [{ src: left, label: "R2 P1", dir: [-1, 0] }]);
+  // in an empty cell under the path's one camera, which is then the screen it leaves
+  const below = at(tlv("PathTransition", { to_level: "R2", to_path: 1 }), 135, 205);
+  const P2 = path(15, [below], [CONN_CAMS[0]], 1, 2);
+  assert.deepEqual(conn(P2, away), [{ src: below, label: "R2 P1", dir: [0, 1] }]);
+});
+
+// the shipped transitions by the way their stubs point, so a geometry change
+// shows: an Oddysee transition sits in its screen's slack on the side it leads
+// to, an Exoddus one in the empty cell beside its screen
+test("computeConnections: the shipped path transitions point out of their screens", () => {
+  const name = ([dx, dy]) => (dx < 0 ? "left" : dx > 0 ? "right" : dy < 0 ? "up" : "down");
+  const found = {};
+  const where = {};
+  for (const file of ["map_data_ao.json", "map_data_ae.json"]) {
+    const data = load(file);
+    const counts = { left: 0, right: 0, up: 0, down: 0 };
+    for (const L of data.levels)
+      for (const P of L.paths)
+        for (const e of computeConnections(data, L, P)) {
+          if (e.label === undefined) continue;
+          const id = `${L.short} P${P.id} ${e.src.name} -> ${e.label}`;
+          assert.equal("dir" in e, e.src.name === "PathTransition", id);
+          if (!e.dir) continue;
+          counts[name(e.dir)]++;
+          (where[`${L.short} P${P.id} -> ${e.label}`] ??= []).push(name(e.dir));
+        }
+    found[data.id] = counts;
+  }
+  assert.deepEqual(found, {
+    AO: { left: 27, right: 24, up: 3, down: 1 },
+    AE: { left: 0, right: 2, up: 0, down: 1 },
+  });
+  assert.deepEqual(where["R1 P18 -> R1 P16"], ["left"]); // the slack left of its screen
+  assert.deepEqual(where["E1 P4 -> L1 P1"], ["down"]); // the slack under its screen
+  assert.deepEqual(where["MI P3 -> MI P4"], ["right"]); // the empty cell right of its screen
 });
 
 test("computeConnections: a cross-level destination without its partner draws nothing", () => {

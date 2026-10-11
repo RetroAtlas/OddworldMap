@@ -492,10 +492,41 @@ export function isLoopback(t, data, lvl, path) {
   );
 }
 
+// the world point at the middle of a cell's window
+const windowCentre = (cell, path, geo) => [
+  (cell % path.w) * geo.worldW + geo.winX + geo.visW / 2,
+  Math.floor(cell / path.w) * geo.worldH + geo.winY + geo.visH / 2,
+];
+
+// which way a path transition's stub points: from the centre of the screen it
+// leaves toward its own centre, along the axis it lies farther out on. The
+// screen is its own cell's camera, or the nearest camera where its cell has
+// none: a transition sits in its screen's slack where the cell has room for
+// one, and in an empty cell beside the screen where it has not
+function transitionDir(t, path, geo) {
+  const mx = (t.x1 + t.x2) / 2,
+    my = (t.y1 + t.y2) / 2;
+  const dist = (c) => {
+    const [cx, cy] = windowCentre(c.cell, path, geo);
+    return (mx - cx) ** 2 + (my - cy) ** 2;
+  };
+  const own = tlvCell(t, path, geo);
+  const cam =
+    path.cams.find((c) => c.cell === own) ??
+    path.cams.reduce((a, c) => (a && dist(a) <= dist(c) ? a : c), null);
+  if (!cam) return null;
+  const [cx, cy] = windowCentre(cam.cell, path, geo);
+  const dx = mx - cx,
+    dy = my - cy;
+  return Math.abs(dx) >= Math.abs(dy) ? [Math.sign(dx) || 1, 0] : [0, Math.sign(dy)];
+}
+
 // consolidated connection edges for the circulation overlay:
 //   {src, dst, twoWay} — resolved same-path pair (dst is the partner TLV)
 //   {src, cell}        — same-path destination without a resolvable partner
-//   {src, label}       — off-path destination, labelled "LV Pn"
+//   {src, label}       — off-path destination, labelled "LV Pn"; a path
+//                        transition carries dir too, the unit vector its stub
+//                        points along
 // Hand-stone views (sights, not transitions), untrusted destinations and
 // loopbacks are skipped; a destination that resolves back to its own source
 // (dangling camera plus the path-wide fallback) or names a camera missing from
@@ -510,7 +541,10 @@ export function computeConnections(data, lvl, path) {
     const d = wayThrough(t, data, lvl, path);
     if (!d || isLoopback(t, data, lvl, path)) continue;
     if (d.lv !== lvl.short || d.pa !== path.id) {
-      stubs.push({ src: t, label: `${d.lv} P${d.pa}` });
+      const stub = { src: t, label: `${d.lv} P${d.pa}` };
+      const dir = t.name === "PathTransition" && transitionDir(t, path, data.geometry);
+      if (dir) stub.dir = dir;
+      stubs.push(stub);
       continue;
     }
     const g = resolveTarget(d, path, data.geometry);

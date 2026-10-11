@@ -17,3 +17,7 @@ A path's circulation — which door leads where, which well comes out on which s
 ## Shipped
 
 `computeConnections` in [js/model.js](../public/js/model.js) — unit-tested, consolidating mutual pairs into two-way edges, keeping asymmetric ones directed, and dashing camera-fallback edges — drawn as Bézier arrows in [js/render.js](../public/js/render.js) behind a persisted `tConn` toggle and an `a` shortcut.
+
+## Grown since filing
+
+**A transition's stub points the way it leads, 2026-10-11.** A path transition only ever hands over to the neighbouring screen, so its stub leaves the screen by the edge it sits at, left, right, up or down, which `computeConnections` reads off the dataset's geometry as the stub's `dir`; a transition's marker spans its whole edge zone, so the stub runs out to the marker's edge rather than ending inside it. The fixed 45° stub stays for doors, wells, portals and teleporters, whose far end can be anywhere.

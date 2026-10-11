@@ -1204,15 +1204,16 @@ function paintWires({ ctx, cam, data, path, layout }, focus) {
 }
 
 // connection arrows: the path's circulation — curves between resolved
-// pairs (double-headed when mutual), dashed to a bare camera, and fixed
-// 45° labelled stubs for destinations on other paths
+// pairs (double-headed when mutual), dashed to a bare camera, and labelled
+// stubs for destinations on other paths
 function paintConnections({ ctx, cam, data, lvl, path, layout, showLabels }, focus) {
   const edges = connections(data, lvl, path);
   // focus only dims the rest when the hovered object actually has edges
   const focusActive = focus && edges.some((e) => e.src === focus || e.dst === focus);
   const headLen = 12 / cam.z;
   const stubLen = Math.min(Math.max(56 / cam.z, 60), 150);
-  const S = Math.SQRT1_2;
+  const pad = 8 / cam.z;
+  const diagonal = [Math.SQRT1_2, -Math.SQRT1_2];
   ctx.font = `${11 / cam.z}px sans-serif`;
   for (const e of edges) {
     if (!catOf(e.src).on) continue; // hidden markers keep their arrows hidden too
@@ -1222,19 +1223,31 @@ function paintConnections({ ctx, cam, data, lvl, path, layout, showLabels }, foc
     ctx.strokeStyle = ctx.fillStyle = CONN_COLORS[e.src.name] || "#ffffff";
     const [sx, sy] = markerCentre(e.src, layout);
     if (e.label !== undefined) {
-      // off-path stub: a constant diagonal reads as "leaves this path"
-      // without pretending to know the direction
-      const tx = sx + stubLen * S,
-        ty = sy - stubLen * S;
+      // off-path stub, along the direction the graph gives it or a constant
+      // diagonal, which reads as "leaves this path" without pretending to know
+      // which way an off-path door leads; it runs at least to the marker's edge,
+      // since a transition's marker spans its whole edge zone
+      const [dx, dy] = e.dir ?? diagonal;
+      const b = drawBox(e.src, layout);
+      const edge = Math.min(
+        dx ? b.w / 2 / Math.abs(dx) : Infinity,
+        dy ? b.h / 2 / Math.abs(dy) : Infinity,
+      );
+      const len = Math.max(stubLen, edge);
+      const tx = sx + len * dx,
+        ty = sy + len * dy;
       ctx.beginPath();
       ctx.moveTo(sx, sy);
       ctx.lineTo(tx, ty);
       ctx.stroke();
-      arrowhead(ctx, tx, ty, S, -S, Math.min(headLen, 0.25 * stubLen));
+      arrowhead(ctx, tx, ty, dx, dy, Math.min(headLen, 0.25 * stubLen));
       if (showLabels) {
         ctx.shadowColor = "rgba(0,0,0,.9)";
         ctx.shadowBlur = 3 / cam.z;
-        ctx.fillText(`→ ${e.label}`, tx + 8 / cam.z, ty - 4 / cam.z);
+        ctx.textAlign = dx < 0 ? "right" : dx > 0 ? "left" : "center";
+        ctx.textBaseline = dy < 0 ? "bottom" : dy > 0 ? "top" : "middle";
+        const glyph = dx ? (dx > 0 ? "→" : "←") : dy > 0 ? "↓" : "↑";
+        ctx.fillText(`${glyph} ${e.label}`, tx + pad * dx, ty + pad * dy);
         ctx.shadowBlur = 0;
       }
       continue;
@@ -1260,6 +1273,8 @@ function paintConnections({ ctx, cam, data, lvl, path, layout, showLabels }, foc
     if (e.twoWay) arrowhead(ctx, sx, sy, sx - cpx, sy - cpy, h);
   }
   ctx.globalAlpha = 1;
+  ctx.textAlign = "start";
+  ctx.textBaseline = "alphabetic";
 }
 
 function paintHighlight({ ctx, cam, layout }, t) {

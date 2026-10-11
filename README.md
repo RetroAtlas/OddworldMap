@@ -66,7 +66,7 @@ Every toggle in the Display section explains itself, as do the sidebar's own but
 
 - **Object labels**: names each object beside its marker, from about half zoom in
 - **Connection arrows**: draws the path's whole circulation — every door, express well, bird portal, teleporter and path transition linked to where it leads
-  - a double-headed arrow is a two-way pair; a dashed arrow points at the arrival camera when the exact arrival object isn't resolvable; short 45° stubs labelled `→ MI P7` lead to other paths (stub labels appear zoomed in with object labels on)
+  - a double-headed arrow is a two-way pair; a dashed arrow points at the arrival camera when the exact arrival object isn't resolvable; a labelled stub (`→ MI P7`) leads to another path: a path transition's stub points out of the screen the way it leads, running to the edge of its marker toward the neighbouring screen, while the other kinds' stubs keep a short 45° diagonal, since the map cannot know which way an off-path door leads (stub labels appear zoomed in with object labels on)
   - colours tell the kinds apart: doors and the level loader yellow, wells pink, bird portals lavender, teleporters teal, path transitions white
   - hovering an object spotlights just its own arrows
 - **Switch wiring** (on by default, or press **`w`**): what a lever actually does — green dotted lines from everything that writes a switch id (levers, buttons, work wheels, pressure plates, pull rings) to everything on the path answering that id (doors, drills, electric walls, trapdoors, bird portals, spawners, status lights), through the logic gates Exoddus wires between them and the hub doors Oddysee opens only when every zulag id they watch is set

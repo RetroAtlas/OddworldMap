@@ -2,6 +2,13 @@
  "entries": [
   {
    "date": "2026-10-11",
+   "tag": "improved",
+   "tiny": true,
+   "title": "A path transition's arrow points the way it leads",
+   "detail": "Where a path hands over to another, the short arrow from the transition pointed up and to the right whichever side of the screen it sat at, like a door's. A transition only ever leads to the neighbouring screen, so its arrow now points out of the screen the way you leave. It points left from a transition at the left edge, right at the right edge, and up or down for the few above or below their screen. The arrow runs out to the edge of the transition's marker, with its label just beyond. The arrows from doors, wells, portals and teleporters keep their diagonal, since the map cannot know which way an off-path door leads."
+  },
+  {
+   "date": "2026-10-11",
    "tag": "fixed",
    "tiny": true,
    "title": "The keys keep working after a click on a toggle",
