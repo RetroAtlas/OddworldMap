@@ -25,6 +25,7 @@ import {
   copyLinkBtn,
   openSiteBtn,
   narrowMQ,
+  typingIn,
 } from "./dom.js";
 import { toast } from "./toast.js";
 import { state, GEO, LAYOUT, wX, wY, gX, gY } from "./state.js";
@@ -407,7 +408,7 @@ window.addEventListener("blur", () => {
   for (const key of Object.values(SHOW_KEY)) markKeyHeld(key, false);
 });
 window.addEventListener("keydown", (e) => {
-  if (e.ctrlKey || e.metaKey || e.target.matches?.("input, textarea, select")) return;
+  if (e.ctrlKey || e.metaKey || typingIn(e.target)) return;
   // brackets before the Alt guard: several layouts type them via Option/AltGr
   if (e.key === "[" || e.key === "]") {
     cyclePath(e.key === "]" ? 1 : -1);

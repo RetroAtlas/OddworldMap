@@ -6,7 +6,7 @@ import { objectMessages } from "./messages.js";
 import { parseQuery, queryTerms, matchesQuery, rankFor } from "./searchquery.js";
 import { matchPlaces } from "./placesearch.js";
 import { pendingGames } from "./data.js";
-import { searchClear, searchInput, searchResults, scopeBar } from "./dom.js";
+import { searchClear, searchInput, searchResults, scopeBar, typingIn } from "./dom.js";
 import { CLOSE_SVG } from "./icons.js";
 import { pathVisible } from "./pathvisible.js";
 import { state } from "./state.js";
@@ -331,7 +331,7 @@ searchClear.onclick = () => {
 };
 
 window.addEventListener("keydown", (e) => {
-  if (e.key === "/" && document.activeElement !== searchInput) {
+  if (e.key === "/" && !typingIn(e.target)) {
     e.preventDefault();
     toggleMenu(true);
     searchInput.focus();

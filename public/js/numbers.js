@@ -2,7 +2,7 @@
 // granularity at once — the screen under the view center, the path, the
 // level, the game — re-derived as the selection and the view move.
 
-import { $, cv, narrowMQ } from "./dom.js";
+import { $, cv, narrowMQ, typingIn } from "./dom.js";
 import { esc } from "./util.js";
 import { LAYOUT, state } from "./state.js";
 import { camCenter, cellAt } from "./model.js";
@@ -160,6 +160,5 @@ window.addEventListener("graph-changed", () => {
 });
 
 window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !panel.hidden && !e.target.matches?.("input, textarea, select"))
-    closeNumbers();
+  if (e.key === "Escape" && !panel.hidden && !typingIn(e.target)) closeNumbers();
 });

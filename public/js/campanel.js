@@ -7,7 +7,7 @@ import { esc } from "./util.js";
 import { fieldEntries, fieldHelp } from "./fields.js";
 import { DARK_NOTE, objectMessages } from "./messages.js";
 import { CATS, EDITED_NOTE, OFFSCREEN_NOTE, catOf } from "./config.js";
-import { $, narrowMQ } from "./dom.js";
+import { $, narrowMQ, typingIn } from "./dom.js";
 import { GEO, LAYOUT, state } from "./state.js";
 import { cellAt, nearestCam, offScreen, tlvCell } from "./model.js";
 import { setHighlight } from "./render.js";
@@ -214,6 +214,5 @@ window.addEventListener("settings-changed", (e) => {
 });
 
 window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !panel.hidden && !e.target.matches?.("input, textarea, select"))
-    closeCamPanel();
+  if (e.key === "Escape" && !panel.hidden && !typingIn(e.target)) closeCamPanel();
 });

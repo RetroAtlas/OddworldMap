@@ -8,6 +8,10 @@ export const narrowMQ = window.matchMedia("(max-width: 720px)"); // keep in sync
 export const cssVar = (name) =>
   getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
+// a field keeps the keys it types with; a checkbox types nothing, and a click leaves it focused
+export const typingIn = (el) =>
+  /^(INPUT|TEXTAREA|SELECT)$/.test(el?.tagName) && el.type !== "checkbox";
+
 // cvCtx, not ctx: a painter missing its ctx parameter must fail lint, not draw on screen
 export const cv = $("cv"),
   cvCtx = cv.getContext("2d");

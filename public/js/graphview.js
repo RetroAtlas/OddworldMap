@@ -4,7 +4,7 @@
 // click travels there and the keyboard reaches every path in the game.
 
 import { CONN_COLORS, DEMO_NOTE, EDITED_NOTE, ENTRY_NOTE, GRAPH, KEY_PAN_PX } from "./config.js";
-import { $, cv, menuBtn } from "./dom.js";
+import { $, cv, menuBtn, typingIn } from "./dom.js";
 import { esc } from "./util.js";
 import { state } from "./state.js";
 import { pathDisplayName, pathNickname, pathNote } from "./annotations.js";
@@ -297,8 +297,7 @@ const PAN = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDow
 window.addEventListener(
   "keydown",
   (e) => {
-    if (!state.graph || e.ctrlKey || e.metaKey || e.target.matches?.("input, textarea, select"))
-      return;
+    if (!state.graph || e.ctrlKey || e.metaKey || typingIn(e.target)) return;
     // a dialog opened from the sidebar stands over the diagram, and its own trap
     // registers after this one, so Escape has to be left to it
     if (document.querySelector(".overlay.open")) return;

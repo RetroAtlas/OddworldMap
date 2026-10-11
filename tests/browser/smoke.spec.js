@@ -138,6 +138,37 @@ test("the box's clear button shows for as long as it holds text, and the keyboar
   expect(errors).toEqual([]);
 });
 
+test("a switch clicked leaves the keys to the map, and a text field keeps its own", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await page.goto(`/${TRIP_HASH}`);
+  await settle(page, { game: "AO", level: "R1", path: 15 });
+  await page.locator("#tGrid").click();
+  await expect(page.locator("#tGrid")).toBeFocused();
+  await page.keyboard.press("c");
+  await expect(page.locator("#tColl")).toBeChecked();
+  const cam = () =>
+    page.evaluate(async () => {
+      const st = await import(new URL("js/state.js", location.href).href);
+      return { ...st.state.cam };
+    });
+  const before = await cam();
+  await page.keyboard.press("ArrowLeft");
+  expect((await cam()).x).toBeLessThan(before.x);
+  await page.locator("#searchInput").focus();
+  await page.keyboard.type("c");
+  await expect(page.locator("#tColl")).toBeChecked();
+  await expect(page.locator("#searchInput")).toHaveValue("c");
+  // a / typed in another field stays typing rather than reaching for the search box
+  await page.locator("#numbersBtn").click();
+  await page.locator("#numbersFilter").focus();
+  await page.keyboard.press("/");
+  await expect(page.locator("#numbersFilter")).toHaveValue("/");
+  await expect(page.locator("#searchInput")).not.toBeFocused();
+  expect(errors).toEqual([]);
+});
+
 test("a settings toggle survives a reload", async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto("/");

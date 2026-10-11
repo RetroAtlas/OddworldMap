@@ -3,7 +3,7 @@
 // archive holds for the selection as a control writing a delta through the edit
 // model; the map follows through data-changed like every other surface.
 
-import { $, cv, narrowMQ } from "./dom.js";
+import { $, cv, narrowMQ, typingIn } from "./dom.js";
 import { esc } from "./util.js";
 import { GEO, state } from "./state.js";
 import { tlvCell } from "./model.js";
@@ -306,7 +306,7 @@ window.addEventListener("float-opened", (e) => {
 // a form field keeps its own keys: Escape there is the field's, and the undo
 // chord is the browser's own undo of the typing
 window.addEventListener("keydown", (e) => {
-  const inField = e.target.matches?.("input, textarea, select");
+  const inField = typingIn(e.target);
   if (e.key === "Escape" && !panel.hidden && !inField) selectObject(null);
   if (!state.edit || !state.path || inField || e.altKey || !(e.ctrlKey || e.metaKey)) return;
   const k = e.key.toLowerCase();

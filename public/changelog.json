@@ -2,6 +2,13 @@
  "entries": [
   {
    "date": "2026-10-11",
+   "tag": "fixed",
+   "tiny": true,
+   "title": "The keys keep working after a click on a toggle",
+   "detail": "Clicking a Display toggle or an Objects filter left it holding the keyboard, so every key the map answers did nothing until the map itself was clicked. That went for the arrows and the zoom, [ and ] through the level's paths, the toggles' own letters and Escape. The keys now work whatever switch holds the focus, so you can click one toggle and press another's letter straight after. Only a box you type into keeps them, the search box or the object type filter in \"By the numbers\", where a / typed now stays in the box instead of jumping to the search."
+  },
+  {
+   "date": "2026-10-11",
    "tag": "improved",
    "tiny": true,
    "title": "The path buttons list a level in the order you play it",
