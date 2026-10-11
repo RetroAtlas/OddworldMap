@@ -1,6 +1,13 @@
 {
  "entries": [
   {
+   "date": "2026-10-11",
+   "tag": "improved",
+   "tiny": true,
+   "title": "Every Display note opens with what its toggle does",
+   "detail": "Hover a Display toggle and a short note says what it does: draws the camera grid, names the objects, fades the artwork. The notes on \"Gaps between screens\", \"Connection arrows\", \"Switch wiring\" and \"Collision lines\" described what you would see instead, opening on the games' camera grid, on every door and well, on the wires themselves, and on the level's walkable geometry. They now open with what the toggle does (as the rest do) and keep every fact they carried. \"Ruler\" and \"Route planner\" are tools, so their notes still tell you how to use them."
+  },
+  {
    "date": "2026-10-10",
    "tag": "new",
    "title": "The Mudokon tally boards count",
