@@ -51,3 +51,7 @@ Both preconditions this needed have cleared: [40](item-040-validate-destinations
 ## Ships with
 
 The setting's README bullets, a `changelog.json` entry tagged `improved`, and a [CLAUDE.md](../CLAUDE.md) group under *Viewer surfaces* recording the seam, the walk's three tie-breaks and the entrance election.
+
+## Grown since filing
+
+**On by default, 2026-10-11.** The order a player meets a level's paths in is the order the game plays them, so it is what the buttons show unless the setting is turned off.

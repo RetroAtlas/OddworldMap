@@ -175,6 +175,27 @@ test("SHOW_KEYS: every sidebar Display toggle is remembered, ruler and route exc
   );
 });
 
+test("SETTINGS_DEFAULTS: a Settings row carries checked exactly when its default is on", () => {
+  const src = readFileSync(new URL("../../public/js/settings.js", import.meta.url), "utf8");
+  const bound = [...src.matchAll(/bind\("(\w+)", "(\w+)"/g)].map(([, id, key]) => [id, key]);
+  assert.deepEqual(
+    bound.map(([, key]) => key).sort(),
+    Object.keys(SETTINGS_DEFAULTS).sort(),
+    "every boolean setting is bound to a row",
+  );
+  const html = readFileSync(new URL("../../public/index.html", import.meta.url), "utf8");
+  const checked = new Map(
+    [...html.matchAll(/<input\b([^>]*)>/g)].map(([, attrs]) => [
+      attrs.match(/\bid="(\w+)"/)?.[1],
+      /\bchecked\b/.test(attrs),
+    ]),
+  );
+  for (const [id, key] of bound) {
+    assert.ok(checked.has(id), `${id} is in the markup`);
+    assert.equal(checked.get(id), SETTINGS_DEFAULTS[key], `${id} is checked as ${key} defaults`);
+  }
+});
+
 test("displayLabel: code alone by default, code — name in full-names mode", () => {
   assert.equal(displayLabel("MI", "Necrum Mines", false), "MI");
   assert.equal(displayLabel("MI", "Necrum Mines", true), "MI — Necrum Mines");

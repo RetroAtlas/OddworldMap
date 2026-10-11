@@ -19,7 +19,7 @@ export const SETTINGS_DEFAULTS = {
   rememberView: true,
   rememberLoc: false,
   fullNames: true,
-  playOrder: false,
+  playOrder: true,
   showDemoPaths: false,
   screenList: true,
   cacheMap: false,

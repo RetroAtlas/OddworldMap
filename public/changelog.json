@@ -4,6 +4,13 @@
    "date": "2026-10-11",
    "tag": "improved",
    "tiny": true,
+   "title": "The path buttons list a level in the order you play it",
+   "detail": "\"Paths in play order\" started off, so the path buttons listed a level's paths in the order the games store them, which has little to do with walking the level. The Stock Yards kept their entrance last, and Rupture Farms Return opened on Zulag 2 with Zulag 1 at the end of the list. The setting is now on from the first visit, so the buttons list a level's paths in the order a player meets them, the way in first. The Stock Yards open on their entrance, Rupture Farms Return reads Zulag 1 through 4, and Necrum Mines opens on Tunnel 1 with its secret area beside it. The [ and ] keys step through the same order. The setting is still there, under Buttons and names in Settings, for the order the games store them."
+  },
+  {
+   "date": "2026-10-11",
+   "tag": "improved",
+   "tiny": true,
    "title": "A setting you never touched follows the map's defaults",
    "detail": "Settings are kept on this device from the moment you change one. The map kept every one of them as they stood that moment, so a default that changed later never reached you. A setting the map turned on for everyone stayed off for anyone who had ever changed another. Only the settings you have set are kept now. One you set stays as you set it, whatever its default does; one you left alone follows the map's defaults as they change. Every setting the map remembered before this counts as set, so setting one back to its default is what lets it follow them again."
   },

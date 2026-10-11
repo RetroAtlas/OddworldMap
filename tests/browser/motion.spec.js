@@ -760,7 +760,7 @@ test.describe("Objects as themselves", () => {
     expect(after.scene).toBeGreaterThanOrEqual(before.scene);
     // a path change starts the scene over
     await page.keyboard.press("]");
-    await page.waitForFunction(() => location.hash.startsWith("#AE/MI/2"));
+    await page.waitForFunction(() => location.hash.startsWith("#AE/MI/7"));
     await page.waitForFunction((was) => window.__motion.sceneTick() < was, before.scene);
     expect(errors).toEqual([]);
   });
