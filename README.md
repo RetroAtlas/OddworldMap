@@ -149,7 +149,7 @@ The **World graph** button under the path buttons (or **`v`**) puts the map away
 The gear button at the top of the sidebar opens them, in three groups. A setting you have changed from its default says so on its row, so "off by default" reads apart from "I turned this off".
 
 - **Saved on this device**
-  - "Remember display & object filters" (on by default) keeps the Display toggles and Objects filters across visits; turn it off to start from the defaults every time
+  - "Remember display & object filters" (on by default) keeps the Display toggles and Objects filters across visits: only the switches you have set are kept, so a default that changes later still reaches the ones you left alone; turn it off to start from the defaults every time
   - "Remember last location" (off by default) reopens the map where you left off when the URL carries no permalink — a shared link always wins
   - "Keep the map on this device" (off by default) stores the app itself and every screen you visit, so the map opens and works offline, the places you've browsed included; everything refreshes automatically while you're online, and switching it off frees the storage
     - switching it on offers each game's artwork as one download (~66 MB for Oddysee, ~137 MB for Exoddus, or both in one go), so places you have never opened work offline too; a download resumes where it left off, and the rows report what is stored rather than what was clicked

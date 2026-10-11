@@ -4,6 +4,13 @@
    "date": "2026-10-11",
    "tag": "improved",
    "tiny": true,
+   "title": "A switch you never touched follows the map's defaults",
+   "detail": "With \"Remember display & object filters\" on, the map keeps your Display toggles and Objects filters across visits. It kept every one of them as they stood the moment you changed any, so a default that changed later never reached you. A toggle the map turned on for everyone stayed off for anyone who had ever flipped another. Only the switches you have set are kept now. One you set stays as you set it, whatever its default does; one you left alone follows the map's defaults as they change. Every switch the map remembered before this counts as set, so setting one back to its default, or resetting its section, is what lets it follow the defaults again."
+  },
+  {
+   "date": "2026-10-11",
+   "tag": "improved",
+   "tiny": true,
    "title": "A × clears the search box",
    "detail": "The search box now has a × of its own at its right, shown for as long as the box holds text. Clicking it clears the search and puts the cursor back in the box for the next one. The clear button the browser drew showed only while the box was focused or under the pointer, so it was gone as soon as you clicked on the map. Some browsers never drew one at all, and no keyboard reached it. Tab from the box reaches the ×, and Enter or Space clears; Escape clears the box and leaves it, as before."
   },

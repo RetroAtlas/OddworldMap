@@ -4,7 +4,6 @@
 // the DOM wiring.
 
 import { CATS } from "./config.js";
-import { state } from "./state.js";
 import { parseHash } from "./model.js";
 import { GEAR_SVG } from "./icons.js";
 import { closeDialog, openDialog, trapDialogKeys } from "./dialog.js";
@@ -123,6 +122,7 @@ export function sanitizeView(raw) {
 }
 
 let settings = null;
+let view = null;
 
 export function getSettings() {
   if (!settings) settings = sanitizeSettings(store.get(SETTINGS_KEY));
@@ -146,16 +146,17 @@ export function fieldPrefsFor(gameId) {
   };
 }
 
-// the persisted display/filter snapshot, or null when off/absent/corrupt
+// the Display switches and Objects filters the visitor has set
 export function getViewSnapshot() {
-  return getSettings().rememberView ? sanitizeView(store.get(VIEW_KEY)) : null;
+  if (!view) {
+    const stored = getSettings().rememberView ? sanitizeView(store.get(VIEW_KEY)) : null;
+    view = stored || { show: {}, cats: {} };
+  }
+  return view;
 }
 
 export function viewChanged() {
-  if (!getSettings().rememberView) return;
-  const cats = {};
-  CATS.forEach((c) => (cats[c.key] = c.on));
-  store.set(VIEW_KEY, JSON.stringify({ show: state.show, cats }));
+  if (getSettings().rememberView) store.set(VIEW_KEY, JSON.stringify(getViewSnapshot()));
 }
 
 // a selector-button label: the short code alone, or "code — full name" in

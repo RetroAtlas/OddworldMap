@@ -154,3 +154,62 @@ test("a settings toggle survives a reload", async ({ page }) => {
   await expect(page.locator("#sFullNames")).not.toBeChecked();
   expect(errors).toEqual([]);
 });
+
+test("the display keeps only the switches set away from their defaults", async ({ page }) => {
+  const errors = trackErrors(page);
+  await page.goto(`/${TRIP_HASH}`);
+  await settle(page, { game: "AO", level: "R1", path: 15 });
+  const kept = () => page.evaluate(() => JSON.parse(localStorage.getItem("owm:view")));
+  const hoists = page.locator("#filterBox label", { hasText: "Hoists / edges" });
+  await page.keyboard.press("g");
+  expect(await kept()).toEqual({ show: { grid: false }, cats: {} });
+  await page.keyboard.press("c");
+  expect(await kept()).toEqual({ show: { grid: false, coll: true }, cats: {} });
+  await page.keyboard.press("g");
+  expect(await kept()).toEqual({ show: { coll: true }, cats: {} });
+  await page.keyboard.press("m"); // the ruler is a tool, never kept
+  expect(await kept()).toEqual({ show: { coll: true }, cats: {} });
+  await hoists.click();
+  expect(await kept()).toEqual({ show: { coll: true }, cats: { nav: true } });
+  await page.reload();
+  await settle(page, { game: "AO", level: "R1", path: 15 });
+  // the untouched switches stand at their defaults, the chosen ones as chosen
+  await expect(page.locator("#tGrid")).toBeChecked();
+  await expect(page.locator("#tLabels")).toBeChecked();
+  await expect(page.locator("#tColl")).toBeChecked();
+  await expect(hoists.locator("input")).toBeChecked();
+  expect(await kept()).toEqual({ show: { coll: true }, cats: { nav: true } });
+  await page.locator("#tReset").click();
+  expect(await kept()).toEqual({ show: {}, cats: { nav: true } });
+  await page.locator("#fAll").click();
+  expect(await kept()).toEqual({ show: {}, cats: { nav: true, meta: true } });
+  await page.locator("#fReset").click();
+  expect(await kept()).toEqual({ show: {}, cats: {} });
+  expect(errors).toEqual([]);
+});
+
+test("a saved switch stays saved until it is set again, though it matches the default", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await page.goto(`/${TRIP_HASH}`);
+  await settle(page, { game: "AO", level: "R1", path: 15 });
+  const kept = () => page.evaluate(() => JSON.parse(localStorage.getItem("owm:view")));
+  // a switch saved at its default, which is what a choice made against another
+  // default leaves
+  await page.evaluate(() =>
+    localStorage.setItem("owm:view", JSON.stringify({ show: { grid: true }, cats: {} })),
+  );
+  await page.reload();
+  await settle(page, { game: "AO", level: "R1", path: 15 });
+  await expect(page.locator("#tGrid")).toBeChecked();
+  await page.keyboard.press("c");
+  expect(await kept()).toEqual({ show: { grid: true, coll: true }, cats: {} });
+  await page.keyboard.press("g");
+  expect(await kept()).toEqual({ show: { grid: false, coll: true }, cats: {} });
+  await page.keyboard.press("g");
+  expect(await kept()).toEqual({ show: { coll: true }, cats: {} });
+  await page.locator("#tReset").click();
+  expect(await kept()).toEqual({ show: {}, cats: {} });
+  expect(errors).toEqual([]);
+});

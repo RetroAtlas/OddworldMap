@@ -6,17 +6,24 @@ import { $, cv, filterBox } from "./dom.js";
 import { state } from "./state.js";
 import { setPitch } from "./navigate.js";
 import { draw, syncMotion } from "./render.js";
-import { getViewSnapshot, viewChanged } from "./settings.js";
+import { SHOW_KEYS, getViewSnapshot, viewChanged } from "./settings.js";
 import { toast } from "./toast.js";
 
-// persisted view options (when "remember" is on) override the HTML/config defaults
-const snap = getViewSnapshot();
+// the switches the visitor has set (kept across visits when "remember" is on)
+// override the HTML/config defaults
+const chosen = getViewSnapshot();
+
+function choose(set, key, value, fallback) {
+  if (value === fallback) delete set[key];
+  else set[key] = value;
+  viewChanged();
+}
 
 // filters
 const catDefaults = new Map(CATS.map((c) => [c.key, c.on])); // config defaults, captured before the snapshot merge
 const catUI = new Map(); // category -> its checkbox and count elements
 CATS.forEach((c) => {
-  if (snap && c.key in snap.cats) c.on = snap.cats[c.key];
+  if (c.key in chosen.cats) c.on = chosen.cats[c.key];
   const lab = document.createElement("label");
   lab.className = "checkrow";
   if (c.tip) lab.dataset.tip = c.tip;
@@ -26,7 +33,7 @@ CATS.forEach((c) => {
   const cb = lab.querySelector("input");
   cb.onchange = () => {
     c.on = cb.checked;
-    viewChanged();
+    choose(chosen.cats, c.key, c.on, catDefaults.get(c.key));
     draw();
   };
   catUI.set(c, { cb, cnt: lab.querySelector(".cnt") });
@@ -36,8 +43,8 @@ function setFilters(onFor) {
   CATS.forEach((c) => {
     c.on = onFor(c);
     catUI.get(c).cb.checked = c.on;
+    choose(chosen.cats, c.key, c.on, catDefaults.get(c.key));
   });
-  viewChanged();
   draw();
 }
 $("fAll").onclick = () => setFilters(() => true);
@@ -91,11 +98,11 @@ for (const [key, id] of Object.entries({
   route: "tRoute",
 })) {
   const cb = $(id);
-  if (snap && key in snap.show) cb.checked = snap.show[key];
+  if (key in chosen.show) cb.checked = chosen.show[key];
   state.show[key] = cb.checked;
   cb.onchange = () => {
     syncShow(key, cb);
-    viewChanged();
+    if (SHOW_KEYS.includes(key)) choose(chosen.show, key, cb.checked, cb.defaultChecked);
     draw();
   };
   showUI.set(key, cb);
@@ -143,7 +150,7 @@ export function toggleShow(key) {
   }
   cb.checked = !cb.checked;
   syncShow(key, cb);
-  viewChanged();
+  if (SHOW_KEYS.includes(key)) choose(chosen.show, key, cb.checked, cb.defaultChecked);
   draw();
 }
 
@@ -156,6 +163,7 @@ $("tReset").onclick = () => {
   for (const [key, cb] of showUI) {
     cb.checked = cb.defaultChecked; // the HTML checked attribute is the source of the defaults
     syncShow(key, cb);
+    delete chosen.show[key];
   }
   syncNeeds();
   viewChanged();

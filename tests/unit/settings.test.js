@@ -83,6 +83,34 @@ test("sanitizeView: unknown keys and wrong-typed values are dropped", () => {
   assert.deepEqual(v, { show: { grid: false }, cats: { mud: false } });
 });
 
+test("getViewSnapshot: the stored snapshot seeds the kept set, which viewChanged writes back", async () => {
+  // an instance of its own, the view being memoised on the first ask
+  const { getViewSnapshot, viewChanged } = await import(
+    new URL("../../public/js/settings.js?view", import.meta.url)
+  );
+  const stored = new Map([
+    ["owm:view", JSON.stringify({ show: { grid: false, coll: "yes" }, cats: { nav: true } })],
+  ]);
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: { getItem: (k) => stored.get(k) ?? null, setItem: (k, v) => stored.set(k, v) },
+  });
+  try {
+    const view = getViewSnapshot();
+    assert.deepEqual(view, { show: { grid: false }, cats: { nav: true } }); // a value not of its switch's kind is left behind
+    assert.equal(getViewSnapshot(), view); // one live object, recorded into rather than rebuilt
+    view.show.coll = true;
+    delete view.cats.nav;
+    viewChanged();
+    assert.deepEqual(JSON.parse(stored.get("owm:view")), {
+      show: { grid: false, coll: true },
+      cats: {},
+    });
+  } finally {
+    delete globalThis.localStorage;
+  }
+});
+
 test("SHOW_KEYS: every sidebar Display toggle is remembered, ruler and route excepted", () => {
   const src = readFileSync(new URL("../../public/js/sidebar.js", import.meta.url), "utf8");
   const body = src.split("Object.entries({")[1].split("})")[0];
