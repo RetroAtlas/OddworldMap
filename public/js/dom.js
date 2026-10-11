@@ -23,6 +23,7 @@ export const gameBtns = $("gameBtns"),
   pathBtns = $("pathBtns");
 export const filterBox = $("filterBox");
 export const searchInput = $("searchInput"),
+  searchClear = $("searchClear"),
   searchResults = $("searchResults"),
   scopeBar = $("scopeBar");
 export const toastStack = $("toastStack");

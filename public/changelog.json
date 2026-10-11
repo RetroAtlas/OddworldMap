@@ -4,6 +4,13 @@
    "date": "2026-10-11",
    "tag": "improved",
    "tiny": true,
+   "title": "A × clears the search box",
+   "detail": "The search box now has a × of its own at its right, shown for as long as the box holds text. Clicking it clears the search and puts the cursor back in the box for the next one. The clear button the browser drew showed only while the box was focused or under the pointer, so it was gone as soon as you clicked on the map. Some browsers never drew one at all, and no keyboard reached it. Tab from the box reaches the ×, and Enter or Space clears; Escape clears the box and leaves it, as before."
+  },
+  {
+   "date": "2026-10-11",
+   "tag": "improved",
+   "tiny": true,
    "title": "Every Display note opens with what its toggle does",
    "detail": "Hover a Display toggle and a short note says what it does: draws the camera grid, names the objects, fades the artwork. The notes on \"Gaps between screens\", \"Connection arrows\", \"Switch wiring\" and \"Collision lines\" described what you would see instead, opening on the games' camera grid, on every door and well, on the wires themselves, and on the level's walkable geometry. They now open with what the toggle does (as the rest do) and keep every fact they carried. \"Ruler\" and \"Route planner\" are tools, so their notes still tell you how to use them."
   },

@@ -6,7 +6,8 @@ import { objectMessages } from "./messages.js";
 import { parseQuery, queryTerms, matchesQuery, rankFor } from "./searchquery.js";
 import { matchPlaces } from "./placesearch.js";
 import { pendingGames } from "./data.js";
-import { searchInput, searchResults, scopeBar } from "./dom.js";
+import { searchClear, searchInput, searchResults, scopeBar } from "./dom.js";
+import { CLOSE_SVG } from "./icons.js";
 import { pathVisible } from "./pathvisible.js";
 import { state } from "./state.js";
 import { fieldPrefsFor, getSettings } from "./settings.js";
@@ -274,6 +275,7 @@ function runSearch(q) {
 }
 
 searchInput.addEventListener("input", () => {
+  searchClear.hidden = !searchInput.value;
   clearTimeout(searchTimer);
   searchTimer = setTimeout(() => runSearch(searchInput.value), 160);
 });
@@ -315,6 +317,19 @@ function setActiveHit(i) {
     hits[activeHit].scrollIntoView({ block: "nearest" });
   }
 }
+function clearSearch() {
+  searchInput.value = "";
+  searchClear.hidden = true;
+  runSearch("");
+  setActiveHit(-1);
+}
+
+searchClear.innerHTML = CLOSE_SVG;
+searchClear.onclick = () => {
+  clearSearch();
+  searchInput.focus();
+};
+
 window.addEventListener("keydown", (e) => {
   if (e.key === "/" && document.activeElement !== searchInput) {
     e.preventDefault();
@@ -325,10 +340,8 @@ window.addEventListener("keydown", (e) => {
   }
   if (document.activeElement !== searchInput) return;
   if (e.key === "Escape") {
-    searchInput.value = "";
-    runSearch("");
+    clearSearch();
     searchInput.blur();
-    setActiveHit(-1);
   } else if (e.key === "ArrowDown") {
     e.preventDefault();
     setActiveHit(activeHit + 1);

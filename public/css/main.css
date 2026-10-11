@@ -1091,6 +1091,7 @@ body.page-zoomed #minimap {
   color: var(--dim);
 }
 #searchBox {
+  position: relative;
   margin: 4px 12px 2px;
 }
 #searchBox input {
@@ -1099,12 +1100,36 @@ body.page-zoomed #minimap {
   border: 1px solid var(--line);
   border-radius: 6px;
   color: var(--text);
-  padding: 6px 9px;
+  padding: 6px 28px 6px 9px;
   font-size: 12px;
   outline: none;
 }
 #searchBox input:focus {
   border-color: var(--accent);
+}
+#searchBox input::-webkit-search-cancel-button {
+  display: none;
+}
+#searchBox .x {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 3px;
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  color: var(--dim);
+  cursor: pointer;
+}
+#searchBox .x svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+#searchBox .x:hover,
+#searchBox .x:focus-visible {
+  color: var(--text);
 }
 #searchResults {
   padding: 2px 6px 10px;
