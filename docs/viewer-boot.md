@@ -27,3 +27,4 @@
   - Progress is a `progressbar` and deliberately not a live region: the percent moves several times a second, and the finishing toast is what announces.
 - `initSettings`'s `bind` is the funnel for the boolean settings: seeding the checkbox, persisting, marking a row whose value isn't its default, and the apply callback all hang off one call, so a new boolean setting gets the lot by being bound.
   - The show-more checkbox flips `fieldPrefs.mode` rather than a boolean, so it is wired by hand and is the one control that has to be updated alongside `bind`.
+  - The settings are a kept set like the snapshot: `chooseSetting` records a boolean the visitor sets and drops one set back to its default, and `persistSettings` writes that set, and the field picks with it only while their mode is set away from its default or a type carries a pick, so a default that changes reaches whoever left the setting alone; a boolean loaded from storage counts as set.

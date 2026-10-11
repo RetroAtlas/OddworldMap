@@ -213,3 +213,54 @@ test("a saved switch stays saved until it is set again, though it matches the de
   expect(await kept()).toEqual({ show: {}, cats: {} });
   expect(errors).toEqual([]);
 });
+
+test("the settings keep only the switches set away from their defaults", async ({ page }) => {
+  const errors = trackErrors(page);
+  await page.goto("/");
+  await settleAny(page);
+  const kept = () => page.evaluate(() => JSON.parse(localStorage.getItem("owm:settings")));
+  await page.click("#settingsBtn");
+  await page.uncheck("#sFullNames");
+  expect(await kept()).toEqual({ fullNames: false });
+  await page.check("#sDemoPaths");
+  expect(await kept()).toEqual({ fullNames: false, showDemoPaths: true });
+  await page.check("#sFullNames");
+  expect(await kept()).toEqual({ showDemoPaths: true });
+  await page.check("#sShowMore");
+  expect((await kept()).fieldPrefs.mode).toBe("more");
+  await page.uncheck("#sShowMore");
+  expect(await kept()).toEqual({ showDemoPaths: true });
+  await page.click("#settingsClose");
+  await page.reload();
+  await settleAny(page);
+  await page.click("#settingsBtn");
+  // the untouched settings stand at their defaults, the chosen one as chosen
+  await expect(page.locator("#sFullNames")).toBeChecked();
+  await expect(page.locator("#sAnimate")).toBeChecked();
+  await expect(page.locator("#sDemoPaths")).toBeChecked();
+  expect(await kept()).toEqual({ showDemoPaths: true });
+  expect(errors).toEqual([]);
+});
+
+test("a saved setting stays saved until it is set again, though it matches the default", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  // a setting saved at its default, which is what a choice made against another
+  // default leaves
+  await page.addInitScript(() =>
+    localStorage.setItem("owm:settings", JSON.stringify({ animate: true })),
+  );
+  await page.goto("/");
+  await settleAny(page);
+  const kept = () => page.evaluate(() => JSON.parse(localStorage.getItem("owm:settings")));
+  await page.click("#settingsBtn");
+  await expect(page.locator("#sAnimate")).toBeChecked();
+  await page.uncheck("#sFullNames");
+  expect(await kept()).toEqual({ animate: true, fullNames: false });
+  await page.uncheck("#sAnimate");
+  expect(await kept()).toEqual({ animate: false, fullNames: false });
+  await page.check("#sAnimate");
+  expect(await kept()).toEqual({ fullNames: false });
+  expect(errors).toEqual([]);
+});

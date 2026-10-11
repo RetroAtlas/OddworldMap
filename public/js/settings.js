@@ -90,19 +90,34 @@ function sanitizeFieldPrefs(p) {
   return out;
 }
 
-// copy only known keys with the expected type; anything else keeps its default
-export function sanitizeSettings(raw) {
-  const s = { ...SETTINGS_DEFAULTS, fieldPrefs: sanitizeFieldPrefs(null) };
+// the stored settings the visitor has set: only known keys of the boolean kind
+export function sanitizeChosen(raw) {
   let p;
   try {
     p = JSON.parse(raw);
   } catch {
-    return s;
+    return {};
   }
-  if (!p || typeof p !== "object") return s;
-  for (const k of Object.keys(SETTINGS_DEFAULTS)) if (typeof p[k] === "boolean") s[k] = p[k];
-  s.fieldPrefs = sanitizeFieldPrefs(p.fieldPrefs);
-  return s;
+  const chosen = {};
+  if (p && typeof p === "object")
+    for (const k of Object.keys(SETTINGS_DEFAULTS)) if (typeof p[k] === "boolean") chosen[k] = p[k];
+  return chosen;
+}
+
+// every setting as it stands: the defaults under what the visitor has set,
+// and the field picks
+export function sanitizeSettings(raw) {
+  let p;
+  try {
+    p = JSON.parse(raw);
+  } catch {
+    p = null;
+  }
+  return {
+    ...SETTINGS_DEFAULTS,
+    ...sanitizeChosen(raw),
+    fieldPrefs: sanitizeFieldPrefs(p?.fieldPrefs),
+  };
 }
 
 // stored display/filter snapshot -> { show, cats } with only known boolean keys
@@ -122,15 +137,34 @@ export function sanitizeView(raw) {
 }
 
 let settings = null;
+let chosen = null;
 let view = null;
 
 export function getSettings() {
-  if (!settings) settings = sanitizeSettings(store.get(SETTINGS_KEY));
+  if (!settings) {
+    const raw = store.get(SETTINGS_KEY);
+    settings = sanitizeSettings(raw);
+    chosen = sanitizeChosen(raw);
+  }
   return settings;
 }
 
+// the kept set: the Settings the visitor has set, each held until it is set
+// back to its default, so a default that changes reaches whoever left that
+// setting alone and no one who set it; a setting loaded from storage counts
+// as set
+export function chooseSetting(key, value) {
+  getSettings()[key] = value;
+  if (value === SETTINGS_DEFAULTS[key]) delete chosen[key];
+  else chosen[key] = value;
+  persistSettings();
+}
+
 export function persistSettings() {
-  store.set(SETTINGS_KEY, JSON.stringify(getSettings()));
+  const { fieldPrefs } = getSettings();
+  const picked = Object.values(fieldPrefs.byType).some((types) => Object.keys(types).length);
+  const kept = fieldPrefs.mode !== "default" || picked ? { ...chosen, fieldPrefs } : chosen;
+  store.set(SETTINGS_KEY, JSON.stringify(kept));
 }
 
 // the field-display policy for one game's objects: the mode plus that game's
@@ -226,8 +260,7 @@ export function initSettings() {
     cb.checked = s[key];
     markDefault(cb, SETTINGS_DEFAULTS[key]);
     cb.onchange = () => {
-      s[key] = cb.checked;
-      persistSettings();
+      chooseSetting(key, cb.checked);
       markDefault(cb, SETTINGS_DEFAULTS[key]);
       apply(cb.checked);
     };

@@ -146,7 +146,7 @@ The **World graph** button under the path buttons (or **`v`**) puts the map away
 
 ### Settings
 
-The gear button at the top of the sidebar opens them, in three groups. A setting you have changed from its default says so on its row, so "off by default" reads apart from "I turned this off".
+The gear button at the top of the sidebar opens them, in three groups. A setting you have changed from its default says so on its row, so "off by default" reads apart from "I turned this off". Only the settings you have set are kept on this device, so a default that changes later still reaches the ones you left alone; set one back to its default and it follows the defaults again.
 
 - **Saved on this device**
   - "Remember display & object filters" (on by default) keeps the Display toggles and Objects filters across visits: only the switches you have set are kept, so a default that changes later still reaches the ones you left alone; turn it off to start from the defaults every time

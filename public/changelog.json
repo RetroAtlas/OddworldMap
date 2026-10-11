@@ -4,6 +4,13 @@
    "date": "2026-10-11",
    "tag": "improved",
    "tiny": true,
+   "title": "A setting you never touched follows the map's defaults",
+   "detail": "Settings are kept on this device from the moment you change one. The map kept every one of them as they stood that moment, so a default that changed later never reached you. A setting the map turned on for everyone stayed off for anyone who had ever changed another. Only the settings you have set are kept now. One you set stays as you set it, whatever its default does; one you left alone follows the map's defaults as they change. Every setting the map remembered before this counts as set, so setting one back to its default is what lets it follow them again."
+  },
+  {
+   "date": "2026-10-11",
+   "tag": "improved",
+   "tiny": true,
    "title": "A switch you never touched follows the map's defaults",
    "detail": "With \"Remember display & object filters\" on, the map keeps your Display toggles and Objects filters across visits. It kept every one of them as they stood the moment you changed any, so a default that changed later never reached you. A toggle the map turned on for everyone stayed off for anyone who had ever flipped another. Only the switches you have set are kept now. One you set stays as you set it, whatever its default does; one you left alone follows the map's defaults as they change. Every switch the map remembered before this counts as set, so setting one back to its default, or resetting its section, is what lets it follow the defaults again."
   },

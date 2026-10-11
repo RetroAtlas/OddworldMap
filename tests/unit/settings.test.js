@@ -5,6 +5,7 @@ import {
   SETTINGS_DEFAULTS,
   SHOW_KEYS,
   displayLabel,
+  sanitizeChosen,
   sanitizeLocationHash,
   sanitizeSettings,
   sanitizeView,
@@ -81,6 +82,58 @@ test("sanitizeView: unknown keys and wrong-typed values are dropped", () => {
     }),
   );
   assert.deepEqual(v, { show: { grid: false }, cats: { mud: false } });
+});
+
+test("sanitizeChosen: the stored booleans of known keys, one at its default included", () => {
+  assert.deepEqual(sanitizeChosen(null), {});
+  assert.deepEqual(sanitizeChosen("{not json"), {});
+  assert.deepEqual(sanitizeChosen("42"), {});
+  assert.deepEqual(
+    sanitizeChosen('{"fullNames":true,"showDemoPaths":true,"animate":"yes","bogus":false}'),
+    { fullNames: true, showDemoPaths: true },
+  );
+});
+
+test("chooseSetting: records what the visitor has set, which persistSettings writes with the field picks", async () => {
+  // an instance of its own, the settings being memoised on the first ask
+  const { chooseSetting, getSettings, persistSettings } = await import(
+    new URL("../../public/js/settings.js?fresh", import.meta.url)
+  );
+  const stored = new Map([
+    ["owm:settings", JSON.stringify({ fullNames: true, showDemoPaths: true, animate: "yes" })],
+  ]);
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: { getItem: (k) => stored.get(k) ?? null, setItem: (k, v) => stored.set(k, v) },
+  });
+  const kept = () => JSON.parse(stored.get("owm:settings"));
+  try {
+    const s = getSettings();
+    assert.equal(s.animate, true); // a value not of its setting's kind is left behind
+    persistSettings();
+    assert.deepEqual(kept(), { fullNames: true, showDemoPaths: true }); // saved at its default, fullNames counts as set
+    chooseSetting("fullNames", false);
+    assert.equal(s.fullNames, false);
+    assert.deepEqual(kept(), { fullNames: false, showDemoPaths: true });
+    chooseSetting("fullNames", true); // set back to its default, it leaves the kept set
+    assert.deepEqual(kept(), { showDemoPaths: true });
+    chooseSetting("showDemoPaths", false);
+    assert.deepEqual(kept(), {});
+    s.fieldPrefs.mode = "more";
+    persistSettings();
+    assert.deepEqual(kept(), { fieldPrefs: { mode: "more", byType: {} } });
+    s.fieldPrefs.mode = "default";
+    s.fieldPrefs.byType.AO = { Slig: ["start_state"] };
+    persistSettings();
+    assert.deepEqual(kept(), {
+      fieldPrefs: { mode: "default", byType: { AO: { Slig: ["start_state"] } } },
+    });
+    s.fieldPrefs.byType.AO = {};
+    persistSettings();
+    assert.deepEqual(kept(), {});
+  } finally {
+    delete globalThis.localStorage;
+  }
 });
 
 test("getViewSnapshot: the stored snapshot seeds the kept set, which viewChanged writes back", async () => {
