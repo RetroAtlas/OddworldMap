@@ -32,8 +32,9 @@ export const setEnabled = (on) => {
 };
 
 // {game: {"LV/PA": {objects: {key: {fields: {name: value}, rect: [x1, y1, x2,
-// y2]}}}}}, each part optional, read from the device once and written back on
-// every change; shape is all the read checks, each delta answering to its object
+// y2], removed: true}}}}}, each part optional, read from the device once and
+// written back on every change; shape is all the read checks, each delta
+// answering to its object
 const EDITS_KEY = "owm:edits";
 let edits = null;
 const all = () => (edits ??= sanitizeEdits(store.get(EDITS_KEY)));
@@ -69,6 +70,7 @@ export function sanitizeEdits(raw) {
           if (Object.keys(fields).length) delta.fields = fields;
         }
         if (rectShaped(d.rect)) delta.rect = d.rect;
+        if (d.removed === true) delta.removed = true;
         if (Object.keys(delta).length)
           ((out[game] ??= {})[pk] ??= { objects: {} }).objects[key] = delta;
       }
@@ -139,6 +141,9 @@ export const objectKey = (pristinePath, t) => objectKeys(pristinePath).get(t) ??
 const origin = new WeakMap();
 // the paths standing as deltas
 const edited = new WeakSet();
+// a standing path -> the objects removed from it, each as its deltas left it
+const removedOf = new WeakMap();
+const ghosts = new WeakSet();
 // what stood in a dataset before a swap: per dataset, its levels and paths by place
 const pristine = new WeakMap();
 function shipped(G) {
@@ -167,12 +172,20 @@ export function editNotes(t) {
 }
 export const isEdited = (t) => editNotes(t).length > 0;
 export const pathEdited = (path) => edited.has(path);
+export const removedObjects = (path) => removedOf.get(path) ?? [];
+export const isRemoved = (t) => ghosts.has(t);
 
 // the object now standing in `path` for a pristine or stale TLV
 export function currentOf(t, path = state.path) {
   const p = pristineOf(t);
   if (!path) return null;
   return path.tlvs.find((c) => c === p || origin.get(c)?.pristine === p) ?? null;
+}
+
+// the ghost standing in `path` for a TLV removed from it
+export function ghostOf(t, path = state.path) {
+  const p = pristineOf(t);
+  return removedObjects(path).find((g) => origin.get(g).pristine === p) ?? null;
 }
 
 export const hasStoredEdits = (gameId) => enabled && Object.keys(all()[gameId] ?? {}).length > 0;
@@ -241,9 +254,10 @@ export function fitRect(path, geo, [x1, y1, x2, y2]) {
   return [nx, ny, nx + w, ny + h];
 }
 
-const liveDelta = (d) => Object.keys(d.fields ?? {}).length > 0 || !!d.rect;
+const liveDelta = (d) => Object.keys(d.fields ?? {}).length > 0 || !!d.rect || d.removed === true;
 
-// the path as its deltas make it: the pristine object itself when there are none
+// the path as its deltas make it: the pristine object itself when there are
+// none, else a fresh path whose removed objects stand in a list of their own
 export function materializePath(gameId, pristine, pathEdits) {
   const objects = pathEdits?.objects ?? {};
   const live = Object.entries(objects).filter(([, d]) => liveDelta(d));
@@ -252,9 +266,14 @@ export function materializePath(gameId, pristine, pathEdits) {
     throw new Error(`${gameId}: no level map to derive destinations with`);
   const keys = objectKeys(pristine);
   const byKey = new Map(live);
-  const tlvs = pristine.tlvs.map((t) => {
+  const removed = [];
+  const tlvs = [];
+  for (const t of pristine.tlvs) {
     const delta = byKey.get(keys.get(t));
-    if (!delta) return t;
+    if (!delta) {
+      tlvs.push(t);
+      continue;
+    }
     const fresh = { ...t };
     if (delta.rect) [fresh.x1, fresh.y1, fresh.x2, fresh.y2] = delta.rect;
     // a type that archives no fields stays without the key, which the surfaces fork on
@@ -262,10 +281,14 @@ export function materializePath(gameId, pristine, pathEdits) {
     fresh.extra = deriveExtra(gameId, fresh, LEVEL_SHORT[gameId]);
     // the delta as materialized, not the live entry a later step writes into
     origin.set(fresh, { pristine: t, delta: clone(delta) });
-    return fresh;
-  });
+    if (delta.removed) {
+      ghosts.add(fresh);
+      removed.push(fresh);
+    } else tlvs.push(fresh);
+  }
   const fresh = { ...pristine, tlvs };
   edited.add(fresh);
+  removedOf.set(fresh, removed);
   return fresh;
 }
 
@@ -289,9 +312,11 @@ function rebuildLevel(G, j) {
 
 // two materializations of one path over equal deltas draw the same
 const sameDeltas = (a, b) =>
-  a.tlvs.length === b.tlvs.length &&
-  a.tlvs.every((t, i) => {
-    const u = b.tlvs[i];
+  sameObjects(a.tlvs, b.tlvs) && sameObjects(removedObjects(a), removedObjects(b));
+const sameObjects = (as, bs) =>
+  as.length === bs.length &&
+  as.every((t, i) => {
+    const u = bs[i];
     if (t === u) return true;
     const da = origin.get(t),
       db = origin.get(u);
@@ -315,7 +340,9 @@ export function swapLevel(G, j, L2, pa) {
   if (state.data === G && state.lvl?.short === L2.short) {
     state.lvl = L2;
     if (state.path) state.path = L2.paths.find((P) => P.id === state.path.id) ?? null;
-    if (state.sel) state.sel = currentOf(state.sel, state.path);
+    // a selected ghost stays selected while its object stays removed
+    if (state.sel)
+      state.sel = currentOf(state.sel, state.path) ?? ghostOf(state.sel, state.path) ?? null;
   }
   invalidateEntry(G);
   if (typeof window !== "undefined")
@@ -334,7 +361,7 @@ const gameOf = (gameId) => state.games.find((g) => g.id === gameId) ?? null;
 
 // what a funnel works on: the place, its dataset, the pristine path and the
 // object's key there, with the level map every materialization needs
-function locate(t, where) {
+function locate(t, where, { ghost = false } = {}) {
   const gameId = where.game ?? state.data.id,
     lv = where.lv ?? state.lvl.short,
     pa = where.pa ?? state.path.id;
@@ -347,7 +374,10 @@ function locate(t, where) {
   const P = shipped(G).paths.get(pk) ?? standingPath();
   const key = objectKey(P, pristine);
   if (!key) throw new Error(`${pristine.name} is not on ${lv} P${pa}`);
-  return { gameId, lv, pa, G, pristine, pk, P, key, standingPath };
+  // a ghost by identity, or a handle taken before the store removed its object
+  const removed = isRemoved(t) || !!all()[gameId]?.[pk]?.objects?.[key]?.removed;
+  if (!ghost && removed) throw new Error(`${pristine.name} is removed on this device`);
+  return { gameId, lv, pa, G, pristine, pk, P, key, standingPath, removed };
 }
 
 // the entry a funnel writes into, minted on the way; a delta left with nothing
@@ -398,6 +428,31 @@ export function applyRectEdit(t, rect, { merge = false, ...where } = {}) {
   const delta = deltaOf(gameId, pk, key);
   if (sameRect(rect, was)) delete delta.rect;
   else delta.rect = [...rect];
+  prune(gameId, pk, key);
+  persist();
+  swapPath(G, lv, pa);
+  return currentOf(pristine, standingPath());
+}
+
+// one object off the path, its deltas kept for a restore; a ghost is no step
+export function removeObject(t, where = {}) {
+  const { gameId, lv, pa, G, pk, key, removed } = locate(t, where, { ghost: true });
+  if (removed) return null;
+  record(gameId, pk, clone(all()[gameId]?.[pk] ?? null));
+  deltaOf(gameId, pk, key).removed = true;
+  persist();
+  swapPath(G, lv, pa);
+  return null;
+}
+
+// a removed object back on the path, as its deltas left it. Returns the
+// object now standing for it.
+export function restoreObject(t, where = {}) {
+  const { gameId, lv, pa, G, pristine, pk, key, standingPath } = locate(t, where, { ghost: true });
+  const delta = all()[gameId]?.[pk]?.objects?.[key];
+  if (!delta?.removed) return currentOf(pristine, standingPath());
+  record(gameId, pk, clone(all()[gameId][pk]));
+  delete delta.removed;
   prune(gameId, pk, key);
   persist();
   swapPath(G, lv, pa);
@@ -509,6 +564,10 @@ export function applyStoredEdits(G) {
           delete delta.rect;
         }
       }
+      if (delta.removed) {
+        if (t) applied++;
+        else dropped++;
+      }
       if (!t || !liveDelta(delta)) delete pe.objects[key];
     }
     if (!Object.keys(pe.objects).length) delete game[pk];
@@ -527,7 +586,7 @@ export function applyStoredEdits(G) {
 // a dataset whose level map never arrived: nothing applies, the store stays as
 // it is, and the page is told how much it is not seeing
 export function reportUnapplied(gameId) {
-  const parts = (d) => Object.keys(d.fields ?? {}).length + (d.rect ? 1 : 0);
+  const parts = (d) => Object.keys(d.fields ?? {}).length + (d.rect ? 1 : 0) + (d.removed ? 1 : 0);
   const unapplied = Object.values(all()[gameId] ?? {}).reduce(
     (n, pe) => n + Object.values(pe.objects).reduce((m, d) => m + parts(d), 0),
     0,

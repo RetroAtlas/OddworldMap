@@ -25,15 +25,20 @@ import {
   fitRect,
   forgetAll,
   gameEdits,
+  ghostOf,
   hasStoredEdits,
   isEdited,
+  isRemoved,
   materializePath,
   objectKeys,
   pathEdited,
   pristineOf,
   redoEdit,
   editStore,
+  removeObject,
+  removedObjects,
   restoreEdits,
+  restoreObject,
   revertObject,
   revertPath,
   sanitizeEdits,
@@ -699,4 +704,133 @@ test("one object goes back as shipped in one step, fields and rect alike", () =>
   assert.equal(state.path, before);
   assert.equal(revertObject(state.path.tlvs[1]), P1.tlvs[1]);
   assert.equal(state.path, P1);
+});
+
+test("a removed object leaves the standing path as a ghost carrying its deltas, and comes back as edited", () => {
+  restoreEdits({});
+  const G = world();
+  const [L0] = G.levels,
+    P1 = L0.paths[0],
+    d = P1.tlvs[0];
+  stand(G);
+  const n = applyRectEdit(d, [20, 15, 44, 39]);
+  state.sel = n;
+  assert.equal(removeObject(n), null);
+  assert.equal(state.path.tlvs.length, 2);
+  assert.equal(
+    state.path.tlvs.find((t) => pristineOf(t) === d),
+    undefined,
+  );
+  assert.equal(state.path.tlvs[0], P1.tlvs[1]);
+  assert.equal(state.path.tlvs[1], P1.tlvs[2]);
+  const [g] = removedObjects(state.path);
+  assert.equal(removedObjects(state.path).length, 1);
+  assert.ok(isRemoved(g));
+  assert.equal(isRemoved(d), false);
+  assert.equal(pristineOf(g), d);
+  assert.deepEqual([g.x1, g.y1, g.x2, g.y2], [20, 15, 44, 39]);
+  assert.deepEqual(editNotes(g), ["moved"]);
+  assert.equal(state.sel, g);
+  assert.equal(currentOf(d), null);
+  assert.equal(ghostOf(d, state.path), g);
+  assert.ok(pathEdited(state.path));
+  assert.deepEqual(editStore().AE["MI/1"].objects["Door@10,10"], {
+    rect: [20, 15, 44, 39],
+    removed: true,
+  });
+  assert.deepEqual(removedObjects(P1), []);
+  // a ghost takes no edit but its restore, and removing it again is no step
+  assert.throws(() => applyFieldEdit(g, "camera", 18), /removed/);
+  assert.throws(() => applyRectEdit(g, [30, 15, 54, 39]), /removed/);
+  assert.throws(() => revertObject(g), /removed/);
+  const standing = state.path;
+  assert.equal(removeObject(g), null);
+  assert.equal(state.path, standing);
+  // a handle taken before the removal is refused like the ghost, and removing it again is no step
+  assert.throws(() => applyRectEdit(n, [60, 10, 84, 34]), /removed/);
+  assert.throws(() => applyFieldEdit(n, "camera", 18), /removed/);
+  assert.throws(() => revertObject(n), /removed/);
+  assert.equal(removeObject(n), null);
+  assert.equal(state.path, standing);
+  assert.deepEqual(gameEdits("AE"), { objects: 1, paths: 1 });
+  // another path's edit leaves this one standing as it is
+  stand(G, 2);
+  applyFieldEdit(state.path.tlvs[1], "camera", 19);
+  assert.equal(state.lvl.paths[0], standing);
+  stand(G);
+  state.sel = ghostOf(d, state.path);
+  // an edit on the path stands a fresh ghost, and the selection follows it
+  applyFieldEdit(state.path.tlvs[0], "camera", 3);
+  assert.notEqual(state.sel, g);
+  assert.ok(isRemoved(state.sel));
+  assert.equal(pristineOf(state.sel), d);
+  // the restore stands the object back where its deltas left it
+  const back = restoreObject(state.sel);
+  assert.deepEqual([back.x1, back.y1], [20, 15]);
+  assert.deepEqual(editNotes(back), ["moved"]);
+  assert.equal(isRemoved(back), false);
+  assert.equal(state.sel, back);
+  assert.equal(state.path.tlvs[0], back);
+  assert.deepEqual(removedObjects(state.path), []);
+  assert.equal(restoreObject(back), back); // nothing to restore: no step
+  // undo removes it again and the ghost is selected once more
+  assert.ok(undoEdit("AE", "MI", 1));
+  assert.ok(isRemoved(state.sel));
+  assert.equal(state.sel, removedObjects(state.path)[0]);
+  undoEdit("AE", "MI", 1); // the other door's camera
+  undoEdit("AE", "MI", 1); // the removal
+  assert.equal(state.path.tlvs[0].x1, 20);
+  undoEdit("AE", "MI", 1); // the move
+  assert.equal(state.path, P1);
+  assert.equal(state.sel, d);
+  // a field-less object removed and the path reverted
+  removeObject(P1.tlvs[2]);
+  const [h] = removedObjects(state.path);
+  assert.equal("fields" in h, false);
+  assert.deepEqual(editNotes(h), []);
+  revertPath("AE", "MI", 1);
+  assert.equal(state.path, P1);
+  restoreEdits({});
+});
+
+test("a stored removal applies to an object that exists and is dropped with one that does not", () => {
+  restoreEdits({
+    AE: {
+      "MI/1": {
+        objects: {
+          "Door@10,10": { removed: true, fields: { camera: 5 } },
+          "Door@999,999": { removed: true },
+        },
+      },
+    },
+  });
+  const G = world();
+  assert.deepEqual(applyStoredEdits(G), { applied: 2, dropped: 1 });
+  const P = G.levels[0].paths[0];
+  assert.equal(P.tlvs.length, 2);
+  const [g] = removedObjects(P);
+  assert.equal(g.fields.camera, 5);
+  assert.deepEqual(Object.keys(editStore().AE["MI/1"].objects), ["Door@10,10"]);
+  restoreEdits({});
+  const kept = {
+    AE: {
+      "MI/1": {
+        objects: {
+          "Door@10,10": { removed: true },
+          "Hoist@50,50": { removed: true, rect: [60, 50, 70, 60] },
+        },
+      },
+    },
+  };
+  assert.deepEqual(sanitizeEdits(JSON.stringify(kept)), kept);
+  assert.deepEqual(
+    sanitizeEdits(
+      JSON.stringify({
+        AE: {
+          "MI/1": { objects: { "Door@10,10": { removed: 1 }, "Door@400,10": { removed: "yes" } } },
+        },
+      }),
+    ),
+    {},
+  );
 });
