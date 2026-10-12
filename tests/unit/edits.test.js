@@ -14,14 +14,19 @@ import { deriveExtra } from "../../public/js/extra.js";
 import { exportPath, canonical } from "../../public/js/reliveexport.js";
 import {
   applyFieldEdit,
+  applyRectEdit,
   applyStoredEdits,
   canRedo,
   canUndo,
   currentOf,
+  editNotes,
   editedFields,
+  editedRect,
+  fitRect,
   forgetAll,
   gameEdits,
   hasStoredEdits,
+  isEdited,
   materializePath,
   objectKeys,
   pathEdited,
@@ -36,6 +41,7 @@ import {
   setLevelShort,
   takeReport,
   validDelta,
+  validRect,
 } from "../../public/js/edits.js";
 import { AE_GEOMETRY } from "./fixtures.js";
 
@@ -215,6 +221,172 @@ test("one guard decides a delta: the field, the word's range and the labels", ()
   assert.equal(G.levels[0], state.lvl); // nothing swapped
 });
 
+test("a rect delta moves or resizes the object and keeps the rest of the path by identity", () => {
+  restoreEdits({});
+  const G = world();
+  const [L0] = G.levels,
+    P1 = L0.paths[0],
+    d = P1.tlvs[0];
+  stand(G);
+  const n = applyRectEdit(d, [20, 15, 44, 39]);
+  assert.deepEqual([n.x1, n.y1, n.x2, n.y2], [20, 15, 44, 39]);
+  assert.deepEqual([d.x1, d.y1, d.x2, d.y2], [10, 10, 34, 34]); // the fetched object is untouched
+  assert.equal(n.fields, d.fields); // nothing of the archive changed
+  assert.deepEqual(n.extra, d.extra);
+  assert.equal(state.path.tlvs[1], P1.tlvs[1]);
+  assert.equal(state.path.tlvs[2], P1.tlvs[2]);
+  assert.deepEqual(editedRect(n), [10, 10, 34, 34]);
+  assert.deepEqual(editNotes(n), ["moved"]);
+  assert.ok(isEdited(n));
+  assert.deepEqual(editedFields(n), {});
+  assert.equal(pristineOf(n), d);
+  assert.equal(currentOf(d), n);
+  assert.ok(pathEdited(state.path));
+  assert.deepEqual(editStore().AE["MI/1"].objects["Door@10,10"], { rect: [20, 15, 44, 39] });
+  // a resize keeps the corner and says so; a field edit joins the notes, names first
+  const r = applyRectEdit(n, [20, 15, 60, 39]);
+  assert.deepEqual(editNotes(r), ["moved", "resized"]);
+  const f = applyFieldEdit(r, "camera", 18);
+  assert.deepEqual(editNotes(f), ["camera", "moved", "resized"]);
+  assert.equal(f.extra.to_cam, 18);
+  assert.deepEqual([f.x1, f.y1, f.x2, f.y2], [20, 15, 60, 39]);
+  // the shipped rect takes the delta away; the field delta stands alone
+  const back = applyRectEdit(f, [10, 10, 34, 34]);
+  assert.deepEqual(editNotes(back), ["camera"]);
+  assert.equal(editedRect(back), null);
+  assert.deepEqual(editStore().AE["MI/1"].objects["Door@10,10"], { fields: { camera: 18 } });
+  assert.equal(applyFieldEdit(back, "camera", 17), d);
+  assert.equal(state.path, P1);
+  // the rect already standing is no step and no swap
+  const again = applyRectEdit(d, [20, 15, 44, 39]);
+  const before = state.path;
+  assert.equal(applyRectEdit(again, [20, 15, 44, 39]), again);
+  assert.equal(state.path, before);
+});
+
+test("a rect delta on an object that archives no fields leaves it without the key", () => {
+  restoreEdits({});
+  const G = world();
+  const h = G.levels[0].paths[0].tlvs[2];
+  stand(G);
+  const n = applyRectEdit(h, [60, 50, 70, 60]);
+  assert.equal("fields" in n, false);
+  assert.deepEqual(n.extra, {});
+  assert.deepEqual(editNotes(n), ["moved"]);
+  assert.equal(validDelta("AE", n, "camera", 1), false);
+});
+
+test("a rect is a place on the grid by column and row, and the shipped one passes whatever it is", () => {
+  const P = world().levels[0].paths[0]; // two cells across, one down: 750 by 260
+  const geo = AE_GEOMETRY;
+  assert.ok(validRect(P, geo, [0, 0, 24, 24]));
+  assert.ok(validRect(P, geo, [700, 200, 724, 224]));
+  assert.ok(validRect(P, geo, [10, 10, 10, 10])); // the data ships zero sizes
+  assert.equal(validRect(P, geo, [750, 0, 774, 24]), false); // the corner a column past the edge
+  assert.equal(validRect(P, geo, [740, 0, 764, 24]), false); // the midpoint past it
+  assert.equal(validRect(P, geo, [700, 250, 724, 274]), false); // the midpoint a row down
+  assert.equal(validRect(P, geo, [-1, 0, 24, 24]), false);
+  assert.equal(validRect(P, geo, [0, -1, 24, 24]), false);
+  assert.equal(validRect(P, geo, [10, 10, 5, 34]), false); // inside out
+  assert.equal(validRect(P, geo, [10, 10, 34.5, 34]), false);
+  assert.equal(validRect(P, geo, [10, 10, 34]), false);
+  assert.equal(validRect(P, geo, [10, 10, 40000, 34]), false);
+  assert.ok(validRect(P, geo, [800, 10, 824, 34], [800, 10, 824, 34])); // the way back
+  // on a path of two rows a column past the edge folds into the next row's first cell, and is refused all the same
+  const P2 = { id: 3, w: 2, h: 2, cams: [], tlvs: [], lines: [] };
+  assert.equal(validRect(P2, geo, [750, 0, 774, 24]), false);
+  assert.equal(validRect(P2, geo, [740, 0, 764, 24]), false);
+  assert.ok(validRect(P2, geo, [0, 260, 24, 284]));
+  assert.ok(validRect(P2, geo, [740, 260, 749, 284]));
+  assert.deepEqual(fitRect(P2, geo, [750, 0, 774, 24]), [737, 0, 761, 24]);
+  assert.deepEqual(fitRect(P, geo, [750, 0, 774, 24]), [737, 0, 761, 24]);
+  assert.deepEqual(fitRect(P, geo, [-5, -5, 19, 19]), [0, 0, 24, 24]);
+  assert.deepEqual(fitRect(P, geo, [100, 100, 124, 124]), [100, 100, 124, 124]);
+  assert.deepEqual(fitRect(P, geo, [700, 250, 724, 274]), [700, 247, 724, 271]);
+  assert.equal(fitRect(P, geo, [0, 0, 1500, 24]), null);
+  for (const r of [
+    [750, 0, 774, 24],
+    [-5, -5, 19, 19],
+    [700, 250, 724, 274],
+  ])
+    assert.ok(validRect(P, geo, fitRect(P, geo, r)));
+  const G = world();
+  stand(G);
+  assert.throws(() => applyRectEdit(G.levels[0].paths[0].tlvs[0], [750, 0, 774, 24]), /grid/);
+  assert.equal(G.levels[0], state.lvl); // nothing swapped
+});
+
+test("a run of nudges is one step, which a drag, another edit, an undo or a redo ends", () => {
+  restoreEdits({});
+  const G = world();
+  const P1 = G.levels[0].paths[0],
+    d = P1.tlvs[0];
+  stand(G);
+  const nudge = (t, dx) => applyRectEdit(t, [t.x1 + dx, t.y1, t.x2 + dx, t.y2], { merge: true });
+  let n = nudge(d, 1);
+  n = nudge(n, 1);
+  n = nudge(n, 1);
+  assert.equal(n.x1, 13);
+  assert.ok(undoEdit("AE", "MI", 1));
+  assert.equal(state.path, P1); // three nudges, one step
+  assert.equal(canUndo("AE", "MI", 1), false);
+  // a drag's step stands apart from the nudges after it
+  n = applyRectEdit(d, [30, 10, 54, 34]);
+  n = nudge(n, 1);
+  nudge(n, 1);
+  undoEdit("AE", "MI", 1);
+  assert.equal(state.path.tlvs[0].x1, 30);
+  undoEdit("AE", "MI", 1);
+  assert.equal(state.path, P1);
+  // a step of another kind ends a run, and undoing it does not reopen the run
+  n = nudge(d, 1);
+  n = nudge(n, 1);
+  applyFieldEdit(n, "camera", 18);
+  undoEdit("AE", "MI", 1);
+  assert.equal(state.path.tlvs[0].fields.camera, 17);
+  assert.equal(state.path.tlvs[0].x1, 12);
+  nudge(state.path.tlvs[0], 1);
+  assert.equal(canRedo("AE", "MI", 1), false);
+  undoEdit("AE", "MI", 1);
+  assert.equal(state.path.tlvs[0].x1, 12); // the nudge after the undo was its own step
+  undoEdit("AE", "MI", 1);
+  assert.equal(state.path, P1);
+  // a redo ends a run too
+  nudge(d, 1);
+  undoEdit("AE", "MI", 1);
+  redoEdit("AE", "MI", 1);
+  assert.equal(state.path.tlvs[0].x1, 11);
+  nudge(state.path.tlvs[0], 1);
+  undoEdit("AE", "MI", 1);
+  assert.equal(state.path.tlvs[0].x1, 11);
+});
+
+test("a stored rect applies where it is a place on the grid and differs from the shipped one", () => {
+  restoreEdits({
+    AE: {
+      "MI/1": {
+        objects: {
+          "Door@10,10": { rect: [20, 15, 44, 39] },
+          "Door@400,10": { rect: [400, 10, 424, 34], fields: { camera: 3 } }, // the rect as shipped
+          "Hoist@50,50": { rect: [750, 50, 760, 60] }, // off the grid
+        },
+      },
+    },
+  });
+  const G = world();
+  assert.deepEqual(applyStoredEdits(G), { applied: 2, dropped: 2 });
+  const P = G.levels[0].paths[0];
+  assert.equal(P.tlvs[0].x1, 20);
+  assert.equal(P.tlvs[1].fields.camera, 3);
+  assert.equal(P.tlvs[1].x1, 400);
+  assert.equal(P.tlvs[2].x1, 50);
+  assert.deepEqual(editStore().AE["MI/1"].objects, {
+    "Door@10,10": { rect: [20, 15, 44, 39] },
+    "Door@400,10": { fields: { camera: 3 } },
+  });
+  restoreEdits({});
+});
+
 test("objects with one origin are told apart by their order", () => {
   const P = { id: 1, tlvs: [door(10, 10), door(400, 10), door(10, 10, { door_number: 7 })] };
   assert.deepEqual([...objectKeys(P).values()], ["Door@10,10#1", "Door@400,10", "Door@10,10#2"]);
@@ -276,6 +448,31 @@ test("the stored shape is read by shape alone, and anything else in it is droppe
   };
   assert.deepEqual(sanitizeEdits(JSON.stringify(noisy)), {
     AE: { "MI/1": { objects: { "Door@10,10": { fields: { camera: 20 } } } } },
+  });
+  const rects = {
+    AE: {
+      "MI/1": {
+        objects: {
+          "Door@10,10": { rect: [20, 15, 44, 39] },
+          "Door@400,10": { fields: { camera: 3 }, rect: [1, 2, 3] },
+          "Hoist@50,50": { rect: [10, 10, 5, 34] },
+          "Hoist@1,1": { rect: [0, 0, 1.5, 2] },
+          "Hoist@2,2": { rect: [0, 0, 40000, 2] },
+          "Zone@0,0": {},
+          "Zone@1,1": "junk",
+        },
+      },
+    },
+  };
+  assert.deepEqual(sanitizeEdits(JSON.stringify(rects)), {
+    AE: {
+      "MI/1": {
+        objects: {
+          "Door@10,10": { rect: [20, 15, 44, 39] },
+          "Door@400,10": { fields: { camera: 3 } },
+        },
+      },
+    },
   });
 });
 
@@ -411,4 +608,52 @@ test("on the shipped data an edited export carries the edit and the reverted one
   assert.equal(state.path, P);
   const { doc: fixture } = exportPath("AE", G.geometry, state.lvl, state.path, side);
   assert.equal(createHash("sha256").update(canonical(fixture)).digest("hex"), digests.AE["MI P1"]);
+});
+
+test("a moved object exports where it now stands, listed under the camera its midpoint falls in", () => {
+  restoreEdits({});
+  const G = load("map_data_ae.json"),
+    side = load("relive_export_ae.json");
+  setLevelShort("AE", side.level_short);
+  const L = G.levels.find((l) => l.short === "MI"),
+    P = L.paths.find((p) => p.id === 1);
+  state.games = [G];
+  state.data = G;
+  state.lvl = L;
+  state.path = P;
+  state.sel = null;
+  const d = P.tlvs.find((t) => t.name === "Door");
+  const { worldW } = G.geometry;
+  const rect = fitRect(P, G.geometry, [d.x1 + worldW, d.y1, d.x2 + worldW, d.y2]);
+  assert.notEqual(rect[0], d.x1);
+  applyRectEdit(d, rect);
+  const { doc, manifest } = exportPath("AE", G.geometry, state.lvl, state.path, side);
+  assert.equal(manifest.missing.size, 0);
+  const holds = (c) =>
+    c.map_objects.some(
+      (o) =>
+        o.object_structures_type === "Door" &&
+        o.properties.xpos === rect[0] &&
+        o.properties.ypos === rect[1] &&
+        o.properties.width === d.x2 - d.x1,
+    );
+  const cam = doc.map.cameras.find(holds);
+  assert.ok(cam, "the moved door is in the document once");
+  assert.equal(doc.map.cameras.filter(holds).length, 1);
+  assert.equal(cam.x, Math.floor(Math.floor((rect[0] + rect[2]) / 2) / worldW));
+  assert.equal(cam.y, Math.floor(Math.floor((rect[1] + rect[3]) / 2) / G.geometry.worldH));
+  assert.equal(
+    doc.map.cameras.some((c) =>
+      c.map_objects.some((o) => o.properties.xpos === d.x1 && o.properties.ypos === d.y1),
+    ),
+    false,
+    "nothing stands at the shipped spot",
+  );
+  revertPath("AE", "MI", 1);
+  assert.equal(state.path, P);
+  const digests = JSON.parse(
+    readFileSync(new URL("../fixtures/relive-digests.json", import.meta.url), "utf8"),
+  );
+  const { doc: back } = exportPath("AE", G.geometry, state.lvl, state.path, side);
+  assert.equal(createHash("sha256").update(canonical(back)).digest("hex"), digests.AE["MI P1"]);
 });

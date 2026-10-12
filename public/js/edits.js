@@ -1,12 +1,13 @@
-// Edits to the shipped data as a local sandbox. An edit is a per-field delta
-// keyed by the object's pristine origin; a path carrying deltas stands in the
-// dataset as a new object built over the pristine one, its unedited TLVs kept by
-// identity and its edited ones fresh, with their navigation bucket derived
-// again; a path whose deltas are all gone stands as the pristine object itself.
-// A path's trail of steps is a trail of its store entry, kept for the session.
-// Nothing here writes into a fetched object. Importable in bare Node: no DOM.
+// Edits to the shipped data as a local sandbox. An edit is a delta (fields and
+// rect) keyed by the object's pristine origin; a path carrying deltas stands in
+// the dataset as a new object built over the pristine one, its unedited TLVs
+// kept by identity and its edited ones fresh, with their navigation bucket
+// derived again; a path whose deltas are all gone stands as the pristine object
+// itself. A path's trail of steps is a trail of its store entry, kept for the
+// session. Nothing here writes into a fetched object. Importable in bare Node.
 
 import { state } from "./state.js";
+import { clamp } from "./util.js";
 import { deriveExtra } from "./extra.js";
 import { pathVisible, revealPath } from "./pathvisible.js";
 import { invalidateEntry } from "./pathorder.js";
@@ -29,9 +30,9 @@ export const setEnabled = (on) => {
   enabled = on;
 };
 
-// {game: {"LV/PA": {objects: {key: {fields: {name: value}}}}}}, read from the
-// device once and written back on every change; shape is the only thing the
-// read checks, each delta answering to its object when its dataset arrives
+// {game: {"LV/PA": {objects: {key: {fields: {name: value}, rect: [x1, y1, x2,
+// y2]}}}}}, each part optional, read from the device once and written back on
+// every change; shape is all the read checks, each delta answering to its object
 const EDITS_KEY = "owm:edits";
 let edits = null;
 const all = () => (edits ??= sanitizeEdits(store.get(EDITS_KEY)));
@@ -59,23 +60,33 @@ export function sanitizeEdits(raw) {
     for (const [pk, pe] of Object.entries(paths)) {
       if (!/^[A-Z0-9]+\/\d+$/.test(pk) || !pe?.objects || typeof pe.objects !== "object") continue;
       for (const [key, d] of Object.entries(pe.objects)) {
-        if (!/^\w+@-?\d+,-?\d+(#\d+)?$/.test(key) || !d?.fields || typeof d.fields !== "object")
-          continue;
-        const fields = {};
-        for (const [f, v] of Object.entries(d.fields))
-          if (Number.isInteger(v) && v >= S16_MIN && v <= S16_MAX) fields[f] = v;
-        if (Object.keys(fields).length)
-          ((out[game] ??= {})[pk] ??= { objects: {} }).objects[key] = { fields };
+        if (!/^\w+@-?\d+,-?\d+(#\d+)?$/.test(key) || !d || typeof d !== "object") continue;
+        const delta = {};
+        if (d.fields && typeof d.fields === "object") {
+          const fields = {};
+          for (const [f, v] of Object.entries(d.fields)) if (s16(v)) fields[f] = v;
+          if (Object.keys(fields).length) delta.fields = fields;
+        }
+        if (rectShaped(d.rect)) delta.rect = d.rect;
+        if (Object.keys(delta).length)
+          ((out[game] ??= {})[pk] ??= { objects: {} }).objects[key] = delta;
       }
     }
   }
   return out;
 }
 
+const s16 = (v) => Number.isInteger(v) && v >= S16_MIN && v <= S16_MAX;
+const rectShaped = (r) =>
+  Array.isArray(r) && r.length === 4 && r.every(s16) && r[2] >= r[0] && r[3] >= r[1];
+const sameRect = (a, b) => a.every((v, i) => v === b[i]);
+const rectOf = (t) => [t.x1, t.y1, t.x2, t.y2];
+
 const pathKey = (lv, pa) => `${lv}/${pa}`;
 
 // the trail of a path's deltas, per place and for the session: its store entry
-// as it stood before each step, cloned since the funnels write into the live one
+// as it stood before each step, cloned since the funnels write into the live
+// one; steps sharing a tag join into one until another kind of step ends the run
 const histories = new Map();
 const clone = (pe) => (pe ? JSON.parse(JSON.stringify(pe)) : null);
 function trail(gameId, pk) {
@@ -84,9 +95,10 @@ function trail(gameId, pk) {
   if (!h) histories.set(k, (h = { undo: [], redo: [] }));
   return h;
 }
-function record(gameId, pk, before) {
+function record(gameId, pk, before, tag = null) {
   const h = trail(gameId, pk);
-  h.undo.push(before);
+  const top = h.undo[h.undo.length - 1];
+  if (!tag || !top || top.tag !== tag) h.undo.push({ snap: before, tag });
   h.redo.length = 0;
 }
 export const canUndo = (gameId, lv, pa) =>
@@ -136,6 +148,23 @@ function shipped(G) {
 
 export const pristineOf = (t) => origin.get(t)?.pristine ?? t;
 export const editedFields = (t) => origin.get(t)?.delta.fields ?? {};
+// the rect the object shipped with, while its own differs
+export const editedRect = (t) => {
+  const o = origin.get(t);
+  return o?.delta.rect ? rectOf(o.pristine) : null;
+};
+// what an object's delta changes, as the surfaces name it: the fields, then
+// where it stands and how big it is
+export function editNotes(t) {
+  const notes = Object.keys(editedFields(t)).sort();
+  const was = editedRect(t);
+  if (was) {
+    if (was[0] !== t.x1 || was[1] !== t.y1) notes.push("moved");
+    if (was[2] - was[0] !== t.x2 - t.x1 || was[3] - was[1] !== t.y2 - t.y1) notes.push("resized");
+  }
+  return notes;
+}
+export const isEdited = (t) => editNotes(t).length > 0;
 export const pathEdited = (path) => edited.has(path);
 
 // the object now standing in `path` for a pristine or stale TLV
@@ -164,15 +193,51 @@ export function gameEdits(gameId) {
 export function validDelta(gameId, pristine, field, value) {
   if (!pristine.fields || !(field in pristine.fields)) return false;
   if (value === pristine.fields[field]) return true;
-  if (!Number.isInteger(value) || value < S16_MIN || value > S16_MAX) return false;
+  if (!s16(value)) return false;
   const map = valueMap(gameId, pristine.name, field);
   return !map || map[value] !== undefined;
 }
 
+// a point's column and row on the path's grid, each judged on its own axis: the
+// folded cell index would let a column past the edge wrap into the next row
+const onGrid = (path, geo, x, y) => {
+  const col = Math.floor(x / geo.worldW),
+    row = Math.floor(y / geo.worldH);
+  return col >= 0 && col < path.w && row >= 0 && row < path.h;
+};
+
+// the one rule a rect answers to: s16 words, no negative size, and its corner
+// and midpoint both on the grid (either game's camera index); the shipped rect passes
+export function validRect(path, geo, rect, shipped = null) {
+  if (!Array.isArray(rect) || rect.length !== 4 || !rect.every(s16)) return false;
+  if (shipped && sameRect(rect, shipped)) return true;
+  const [x1, y1, x2, y2] = rect;
+  if (x2 < x1 || y2 < y1) return false;
+  return (
+    onGrid(path, geo, x1, y1) &&
+    onGrid(path, geo, Math.floor((x1 + x2) / 2), Math.floor((y1 + y2) / 2))
+  );
+}
+
+// the rect shifted onto the grid, its size kept, or null where no shift puts
+// both its corner and its midpoint there
+export function fitRect(path, geo, [x1, y1, x2, y2]) {
+  const w = x2 - x1,
+    h = y2 - y1;
+  const maxX = path.w * geo.worldW - 1 - Math.floor(w / 2),
+    maxY = path.h * geo.worldH - 1 - Math.floor(h / 2);
+  if (maxX < 0 || maxY < 0) return null;
+  const nx = clamp(x1, 0, maxX),
+    ny = clamp(y1, 0, maxY);
+  return [nx, ny, nx + w, ny + h];
+}
+
+const liveDelta = (d) => Object.keys(d.fields ?? {}).length > 0 || !!d.rect;
+
 // the path as its deltas make it: the pristine object itself when there are none
 export function materializePath(gameId, pristine, pathEdits) {
   const objects = pathEdits?.objects ?? {};
-  const live = Object.entries(objects).filter(([, d]) => Object.keys(d.fields ?? {}).length);
+  const live = Object.entries(objects).filter(([, d]) => liveDelta(d));
   if (!live.length) return pristine;
   if (!hasLevelShort(gameId))
     throw new Error(`${gameId}: no level map to derive destinations with`);
@@ -181,12 +246,11 @@ export function materializePath(gameId, pristine, pathEdits) {
   const tlvs = pristine.tlvs.map((t) => {
     const delta = byKey.get(keys.get(t));
     if (!delta) return t;
-    const fields = { ...t.fields, ...delta.fields };
-    const fresh = {
-      ...t,
-      fields,
-      extra: deriveExtra(gameId, { ...t, fields }, LEVEL_SHORT[gameId]),
-    };
+    const fresh = { ...t };
+    if (delta.rect) [fresh.x1, fresh.y1, fresh.x2, fresh.y2] = delta.rect;
+    // a type that archives no fields stays without the key, which the surfaces fork on
+    if (t.fields && delta.fields) fresh.fields = { ...t.fields, ...delta.fields };
+    fresh.extra = deriveExtra(gameId, fresh, LEVEL_SHORT[gameId]);
     // the delta as materialized, not the live entry a later step writes into
     origin.set(fresh, { pristine: t, delta: clone(delta) });
     return fresh;
@@ -259,9 +323,9 @@ function swapPath(G, lv, pa) {
 
 const gameOf = (gameId) => state.games.find((g) => g.id === gameId) ?? null;
 
-// one field of one object, on the path in hand; the value it had shipped with
-// takes the delta away again. Returns the object now standing for it.
-export function applyFieldEdit(t, field, value, where = {}) {
+// what a funnel works on: the place, its dataset, the pristine path and the
+// object's key there, with the level map every materialization needs
+function locate(t, where) {
   const gameId = where.game ?? state.data.id,
     lv = where.lv ?? state.lvl.short,
     pa = where.pa ?? state.path.id;
@@ -269,34 +333,66 @@ export function applyFieldEdit(t, field, value, where = {}) {
   const pristine = pristineOf(t);
   if (!hasLevelShort(gameId))
     throw new Error(`${gameId}: no level map to derive destinations with`);
-  if (!validDelta(gameId, pristine, field, value))
-    throw new Error(`${pristine.name}.${field}: ${value} is not a value the archive holds`);
   const pk = pathKey(lv, pa);
-  const P =
-    shipped(G).paths.get(pk) ?? G.levels.find((L) => L.short === lv).paths.find((p) => p.id === pa);
+  const standingPath = () => G.levels.find((L) => L.short === lv).paths.find((p) => p.id === pa);
+  const P = shipped(G).paths.get(pk) ?? standingPath();
   const key = objectKey(P, pristine);
   if (!key) throw new Error(`${pristine.name} is not on ${lv} P${pa}`);
-  const standing = all()[gameId]?.[pk]?.objects?.[key]?.fields?.[field] ?? pristine.fields[field];
-  if (standing === value)
-    return currentOf(
-      pristine,
-      G.levels.find((L) => L.short === lv).paths.find((p) => p.id === pa),
-    );
-  record(gameId, pk, clone(all()[gameId]?.[pk] ?? null));
-  const game = (all()[gameId] ??= {});
-  const path = (game[pk] ??= { objects: {} });
-  const delta = (path.objects[key] ??= { fields: {} });
-  if (value === pristine.fields[field]) delete delta.fields[field];
-  else delta.fields[field] = value;
-  if (!Object.keys(delta.fields).length) delete path.objects[key];
+  return { gameId, lv, pa, G, pristine, pk, P, key, standingPath };
+}
+
+// the entry a funnel writes into, minted on the way; a delta left with nothing
+// in it goes, and the path's and the game's entries with it
+const deltaOf = (gameId, pk, key) =>
+  (((all()[gameId] ??= {})[pk] ??= { objects: {} }).objects[key] ??= {});
+function prune(gameId, pk, key) {
+  const game = all()[gameId],
+    path = game?.[pk],
+    delta = path?.objects[key];
+  if (!delta) return;
+  if (delta.fields && !Object.keys(delta.fields).length) delete delta.fields;
+  if (!liveDelta(delta)) delete path.objects[key];
   if (!Object.keys(path.objects).length) delete game[pk];
   if (!Object.keys(game).length) delete edits[gameId];
+}
+
+// one field of one object, on the path in hand; the value it had shipped with
+// takes the delta away again. Returns the object now standing for it.
+export function applyFieldEdit(t, field, value, where = {}) {
+  const { gameId, lv, pa, G, pristine, pk, key, standingPath } = locate(t, where);
+  if (!validDelta(gameId, pristine, field, value))
+    throw new Error(`${pristine.name}.${field}: ${value} is not a value the archive holds`);
+  const standing = all()[gameId]?.[pk]?.objects?.[key]?.fields?.[field] ?? pristine.fields[field];
+  if (standing === value) return currentOf(pristine, standingPath());
+  record(gameId, pk, clone(all()[gameId]?.[pk] ?? null));
+  const delta = deltaOf(gameId, pk, key);
+  delta.fields ??= {};
+  if (value === pristine.fields[field]) delete delta.fields[field];
+  else delta.fields[field] = value;
+  prune(gameId, pk, key);
   persist();
   swapPath(G, lv, pa);
-  return currentOf(
-    pristine,
-    G.levels.find((L) => L.short === lv).paths.find((p) => p.id === pa),
-  );
+  return currentOf(pristine, standingPath());
+}
+
+// where one object stands and how big it is, on the path in hand; the rect it
+// shipped with takes the delta away again, and a merging call (a nudge) joins
+// the merging step before it on the same object. Returns the object now standing for it.
+export function applyRectEdit(t, rect, { merge = false, ...where } = {}) {
+  const { gameId, lv, pa, G, pristine, pk, P, key, standingPath } = locate(t, where);
+  const was = rectOf(pristine);
+  if (!validRect(P, G.geometry, rect, was))
+    throw new Error(`${pristine.name}: ${rect.join(",")} is not a place on the path's grid`);
+  const standing = all()[gameId]?.[pk]?.objects?.[key]?.rect ?? was;
+  if (sameRect(rect, standing)) return currentOf(pristine, standingPath());
+  record(gameId, pk, clone(all()[gameId]?.[pk] ?? null), merge ? `rect:${key}` : null);
+  const delta = deltaOf(gameId, pk, key);
+  if (sameRect(rect, was)) delete delta.rect;
+  else delta.rect = [...rect];
+  prune(gameId, pk, key);
+  persist();
+  swapPath(G, lv, pa);
+  return currentOf(pristine, standingPath());
 }
 
 export function revertPath(gameId, lv, pa) {
@@ -342,8 +438,10 @@ export function undoEdit(gameId, lv, pa) {
   const pk = pathKey(lv, pa),
     h = trail(gameId, pk);
   if (!h.undo.length) return false;
-  h.redo.push(clone(all()[gameId]?.[pk] ?? null));
-  restore(gameId, lv, pa, h.undo.pop());
+  h.redo.push({ snap: clone(all()[gameId]?.[pk] ?? null), tag: null });
+  restore(gameId, lv, pa, h.undo.pop().snap);
+  // the step left on top is a run no later nudge may join
+  if (h.undo.length) h.undo[h.undo.length - 1].tag = null;
   return true;
 }
 
@@ -351,15 +449,15 @@ export function redoEdit(gameId, lv, pa) {
   const pk = pathKey(lv, pa),
     h = trail(gameId, pk);
   if (!h.redo.length) return false;
-  h.undo.push(clone(all()[gameId]?.[pk] ?? null));
-  restore(gameId, lv, pa, h.redo.pop());
+  h.undo.push({ snap: clone(all()[gameId]?.[pk] ?? null), tag: null });
+  restore(gameId, lv, pa, h.redo.pop().snap);
   return true;
 }
 
 // the stored deltas over a dataset that has not reached the page yet: each is
 // applied where it still answers to its object and dropped where it does not,
 // a delta the disc has caught up with among the dropped (it no longer differs,
-// and could never be taken away field by field), and the count of both waits
+// and could never be taken away part by part), and the count of both waits
 // for the page to say it
 const reports = new Map();
 export function applyStoredEdits(G) {
@@ -380,7 +478,15 @@ export function applyStoredEdits(G) {
           delete delta.fields[field];
         }
       }
-      if (!t || !Object.keys(delta.fields ?? {}).length) delete pe.objects[key];
+      if (delta.rect) {
+        const was = t && rectOf(t);
+        if (t && validRect(P, G.geometry, delta.rect, was) && !sameRect(delta.rect, was)) applied++;
+        else {
+          dropped++;
+          delete delta.rect;
+        }
+      }
+      if (!t || !liveDelta(delta)) delete pe.objects[key];
     }
     if (!Object.keys(pe.objects).length) delete game[pk];
   }
@@ -398,8 +504,9 @@ export function applyStoredEdits(G) {
 // a dataset whose level map never arrived: nothing applies, the store stays as
 // it is, and the page is told how much it is not seeing
 export function reportUnapplied(gameId) {
+  const parts = (d) => Object.keys(d.fields ?? {}).length + (d.rect ? 1 : 0);
   const unapplied = Object.values(all()[gameId] ?? {}).reduce(
-    (n, pe) => n + Object.values(pe.objects).reduce((m, d) => m + Object.keys(d.fields).length, 0),
+    (n, pe) => n + Object.values(pe.objects).reduce((m, d) => m + parts(d), 0),
     0,
   );
   reports.set(gameId, { applied: 0, dropped: 0, unapplied });
