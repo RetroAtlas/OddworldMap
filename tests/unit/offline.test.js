@@ -58,7 +58,7 @@ test("both games' artwork fits the worker's cache cap", () => {
 
 // the figures are hand-written where they are quoted, so a rebuild that adds
 // artwork has to move them
-test("the cap comment and the README quote the artwork as it ships", () => {
+test("the cap comment and the viewer doc quote the artwork as it ships", () => {
   const files = GAMES.map(([file, , sp]) => [camFiles(load(file)).length, sheets(sp).length]);
   const total = files.reduce((n, [c, s]) => n + c + s, 0);
   assert.equal(Number(/complete artwork \((\d+) files\)/.exec(read("sw.js"))[1]), total);
@@ -67,7 +67,7 @@ test("the cap comment and the README quote the artwork as it ships", () => {
   const mb = files.map(([c], i) =>
     Math.round((c * CAM_FILE_BYTES + atlases[i] * SHEET_FILE_BYTES) / 1e6),
   );
-  const readme = readFileSync(new URL("../../README.md", import.meta.url), "utf8");
+  const doc = readFileSync(new URL("../../docs/viewer.md", import.meta.url), "utf8");
   const quote = /~(\d+) MB for Oddysee, ~(\d+) MB for Exoddus/;
-  assert.deepEqual(quote.exec(readme).slice(1).map(Number), mb);
+  assert.deepEqual(quote.exec(doc).slice(1).map(Number), mb);
 });
