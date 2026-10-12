@@ -4,6 +4,13 @@
    "date": "2026-10-12",
    "tag": "fixed",
    "tiny": true,
+   "title": "An Oddysee lift's right-hand rope reaches its platform",
+   "detail": "On every Oddysee lift outside Rupture Farms, the rope on the right stopped a little above the platform, as if bitten off, while the one on the left ran down behind it. The map hung it where the game first puts it as the lift is built, but the game hangs both ropes again before the lift is ever drawn, and there the right one reaches the platform too. Both ropes now run down behind the platform in Paramonia, the Monsaic Lines and Scrabania, their temples and escapes included."
+  },
+  {
+   "date": "2026-10-12",
+   "tag": "fixed",
+   "tiny": true,
    "title": "A lift's wheels stay still until it moves",
    "detail": "Every lift on the map kept turning its wheels, the one under its platform and the one at the pulley above, though none of them ever goes anywhere. The game turns them only while a lift is going up or down, so a lift now waits at its stop with both wheels still, as you find it when you reach its screen."
   },

@@ -316,16 +316,22 @@ test("pinned placements: a rolling ball snaps to the grid, and a lift's two rope
       .sort((a, b) => a.x - b.x)
       .map((r) => [r.x, r.y]);
   };
-  // Oddysee: the far rope 25 above the lift and the near one 25 below, each the rope's length on
+  // both games: 25 below the lift and the rope's length on, the right-hand one a unit higher
   assert.deepEqual(ropesOf(ao, "R1", 9670, 313), [
     [9696, 366],
-    [9719, 316],
+    [9719, 365],
   ]);
-  // Exoddus: both 25 below, the near rope a unit higher for the phase taken off it
   assert.deepEqual(ropesOf(data.AE, "MI", 4000, 1500), [
     [4027, 1606],
     [4050, 1605],
   ]);
+  for (const g of GAMES)
+    for (const { lvl, path, t, r } of allRecords(g))
+      if (t.name === "LiftPoint" && r.tile)
+        assert.ok(
+          r.y >= r.tile.bottom,
+          `${g} ${lvl.short} P${path.id} (${t.x1},${t.y1}) rope at ${r.x} ends above its foot`,
+        );
 });
 
 test("pinned placements: of two start points on one lift shaft in a camera, the first its list reaches builds the lift", () => {

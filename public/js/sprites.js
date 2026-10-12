@@ -459,8 +459,8 @@ function liftPoint(c) {
   const [n1, n2] = AO_ROPE_NUDGE[c.lvl.short] || [0, 0];
   const bottom = Math.floor(t.y1 + 25 * s);
   const step = s === 1 ? 15 : 7;
-  // the engine's phase: a 16.16 remainder read raw, so a fraction of a unit;
-  // Exoddus takes it off the near rope and Oddysee adds it to both
+  // the ropes hang as the update rehangs them each tick, the phase a 16.16
+  // remainder read raw
   const v = Math.trunc(y * 1.5 * s) / 65536;
   const ropeName = ae ? aeRope(c) : aoRope(c);
   const ropeRgb = ae ? [127, 127, 127] : [128, 128, 128];
@@ -469,7 +469,7 @@ function liftPoint(c) {
       c,
       ropeName,
       Math.floor(x + 13 * s + (ae ? 0 : n2)),
-      trunc(ae ? 25 * s + y + step - v : y + v - 25 * s + step),
+      trunc(25 * s + y + step - v),
       top,
       bottom,
       s,
