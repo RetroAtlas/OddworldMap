@@ -11,7 +11,8 @@ import { clamp } from "./util.js";
 import { deriveExtra } from "./extra.js";
 import { pathVisible, revealPath } from "./pathvisible.js";
 import { invalidateEntry } from "./pathorder.js";
-import { valueMap } from "./fields.js";
+import { onBackgroundPlane, valueMap } from "./fields.js";
+import { snapAt } from "./collide.js";
 import { store } from "./settings.js";
 
 const S16_MIN = -32768,
@@ -217,6 +218,14 @@ export function validRect(path, geo, rect, shipped = null) {
     onGrid(path, geo, x1, y1) &&
     onGrid(path, geo, Math.floor((x1 + x2) / 2), Math.floor((y1 + y2) / 2))
   );
+}
+
+// the rect shifted along x so its midpoint lands where the engine's grid would
+// stand a sprite anchored there, by the object's scale and, in Oddysee, its camera
+export function snapRect(gameId, geo, t, [x1, y1, x2, y2]) {
+  const mid = Math.trunc((x1 + x2) / 2);
+  const dx = snapAt(gameId, geo, mid, onBackgroundPlane(gameId, t)) - mid;
+  return [x1 + dx, y1, x2 + dx, y2];
 }
 
 // the rect shifted onto the grid, its size kept, or null where no shift puts

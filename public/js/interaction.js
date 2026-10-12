@@ -1,7 +1,8 @@
 // Pointer input on the map (mouse, touch, pen), hover inspection, and the menu toggle.
 
 import { esc, formatDist, segDist } from "./util.js";
-import { fieldEntries } from "./fields.js";
+import { fieldEntries, onBackgroundPlane } from "./fields.js";
+import { gridSize } from "./collide.js";
 import { hideAnchorTip } from "./anchortip.js";
 import {
   KEY_PAN_PX,
@@ -72,7 +73,7 @@ import { getSettings, fieldPrefsFor } from "./settings.js";
 import { focusCamPanel, openCamPanel, openCamPanelNear } from "./campanel.js";
 import { togglePlace } from "./place.js";
 import { selectObject, setEditMode } from "./editpanel.js";
-import { applyRectEdit, currentOf, editNotes, fitRect, isEdited } from "./edits.js";
+import { applyRectEdit, currentOf, editNotes, fitRect, isEdited, snapRect } from "./edits.js";
 import { toggleGraph } from "./graphview.js";
 import { addRoutePoint, routeArrive, routeSeam, undoRoutePoint } from "./route.js";
 import { closeDialog, openDialog, trapDialogKeys } from "./dialog.js";
@@ -252,7 +253,9 @@ cv.addEventListener("pointermove", (e) => {
       const [x1, y1, x2, y2] = moving.rect;
       const nx = Math.round(wX(pt.x) - moving.grab.x),
         ny = Math.round(wY(pt.y) - moving.grab.y);
-      moving.preview = fitRect(state.path, GEO, [nx, ny, nx + x2 - x1, ny + y2 - y1]);
+      let rect = [nx, ny, nx + x2 - x1, ny + y2 - y1];
+      if (e.shiftKey) rect = snapRect(state.data.id, GEO, moving.t, rect);
+      moving.preview = fitRect(state.path, GEO, rect);
       setMoveGhost(moving.preview);
       cv.style.cursor = "grabbing";
     }
@@ -496,7 +499,11 @@ window.addEventListener("keydown", (e) => {
     e.preventDefault();
     return;
   }
-  if (e.altKey) return;
+  const pan = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[
+    e.key
+  ];
+  // Alt is let through for the one chord that reads it, the grid-square nudge of a selection
+  if (e.altKey && !(pan && e.shiftKey && state.edit && state.sel)) return;
   const show = SHOW_KEY[e.key];
   if (show) {
     markKeyHeld(show, true);
@@ -534,12 +541,9 @@ window.addEventListener("keydown", (e) => {
     e.preventDefault();
     return;
   }
-  const pan = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[
-    e.key
-  ];
   if (pan && moving) return; // the hand has the object
   if (pan && e.shiftKey && state.edit && state.sel) {
-    nudge(pan);
+    nudge(pan, e.altKey);
     e.preventDefault();
     return;
   }
@@ -556,11 +560,17 @@ window.addEventListener("keydown", (e) => {
   scheduleHash(false);
 });
 
-// the selection one world unit along, kept on the grid; every press of a run
-// joins the one undo step
-function nudge([dx, dy]) {
+// the selection one world unit along, or a grid square with Alt, kept on the
+// grid; every press of a run joins the one undo step
+function nudge([dx, dy], square) {
   const t = state.sel;
-  const rect = fitRect(state.path, GEO, [t.x1 + dx, t.y1 + dy, t.x2 + dx, t.y2 + dy]);
+  const u = square ? gridSize(onBackgroundPlane(state.data.id, t)) : 1;
+  const rect = fitRect(state.path, GEO, [
+    t.x1 + dx * u,
+    t.y1 + dy * u,
+    t.x2 + dx * u,
+    t.y2 + dy * u,
+  ]);
   if (!rect) return;
   try {
     applyRectEdit(t, rect, { merge: true });

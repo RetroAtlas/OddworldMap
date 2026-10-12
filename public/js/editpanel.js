@@ -326,7 +326,7 @@ function render() {
 }
 
 // the keys the selection answers to, said once for every reader
-const KEYS_NOTE = "drag to move · ⇧ arrows nudge";
+const KEYS_NOTE = "drag to move · ⇧ arrows nudge, Alt/⌥ ⇧ by a grid square";
 
 // what the path carries, by kind, and the steps through it
 function foot() {

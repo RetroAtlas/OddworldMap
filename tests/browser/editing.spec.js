@@ -452,6 +452,10 @@ test("the selection drags where the pointer carries it, nudges on the arrows and
   await page.goto("/#AE");
   await settleAny(page);
   await attach(page);
+  // outside the mode Alt with Shift and an arrow does nothing, as any Alt chord
+  const camX0 = await page.evaluate(() => window.__st.cam.x);
+  await page.keyboard.press("Alt+Shift+ArrowRight");
+  expect(await page.evaluate(() => window.__st.cam.x)).toBe(camX0);
   await page.keyboard.press("e");
   await page.waitForFunction(() => window.__st.edit === true);
   const door = await aimAtDoor(page);
@@ -488,6 +492,13 @@ test("the selection drags where the pointer carries it, nudges on the arrows and
   await page.keyboard.press("Control+z");
   await page.waitForFunction((d) => window.__st.sel?.x1 === d.x1 + 25, door);
 
+  // Alt beside Shift nudges by a grid square, the object's own, and that run is one step too
+  await page.keyboard.press("Alt+Shift+ArrowRight");
+  await page.keyboard.press("Alt+Shift+ArrowRight");
+  await page.waitForFunction((d) => window.__st.sel?.x1 === d.x1 + 75, door);
+  await page.keyboard.press("Control+z");
+  await page.waitForFunction((d) => window.__st.sel?.x1 === d.x1 + 25, door);
+
   // Escape mid-drag lets the object go where it was, and the panel stays
   const grab = await aimAtDoorNow(page);
   await page.mouse.move(grab.x, grab.y);
@@ -504,13 +515,40 @@ test("the selection drags where the pointer carries it, nudges on the arrows and
   expect(await page.evaluate(() => window.__st.cam.x)).not.toBe(camBefore);
   expect((await selRect(page)).rect[0]).toBe(door.x1 + 25);
 
+  // Shift during a drag snaps the midpoint onto the engine's x grid
+  const at = await aimAtDoorNow(page);
+  await page.mouse.move(at.x, at.y);
+  await page.mouse.down();
+  await page.keyboard.down("Shift");
+  await page.mouse.move(at.x + 14, at.y);
+  await page.mouse.move(at.x + 30, at.y);
+  await page.mouse.up();
+  await page.keyboard.up("Shift");
+  await page.waitForFunction((d) => window.__st.sel?.x1 !== d.x1 + 25, door);
+  const snapped = await page.evaluate(async () => {
+    const u = (m) => new URL("js/" + m, location.href).href;
+    const collide = await import(u("collide.js"));
+    const t = window.__st.sel;
+    const mid = Math.trunc((t.x1 + t.x2) / 2);
+    return {
+      x1: t.x1,
+      y1: t.y1,
+      mid,
+      grid: collide.snapAt("AE", window.__st.data.geometry, mid, false),
+    };
+  });
+  expect(snapped.grid).toBe(snapped.mid);
+  expect(snapped.x1).not.toBe(door.x1 + 40);
+  expect(snapped.y1).toBe(door.y1 + 10);
+  const x1Now = snapped.x1;
+
   // the Place rows type the position, the size keeping the top-left, and ↺ puts the rect back
   const input = (k) => page.locator(`#editBody input[data-place="${k}"]`);
   await input("w").fill(String(w + 10));
   await input("w").press("Tab");
-  await page.waitForFunction((d) => window.__st.sel?.x2 === d.x1 + 25 + d.x2 - d.x1 + 10, door);
+  await page.waitForFunction((x2) => window.__st.sel?.x2 === x2, x1Now + w + 10);
   now = await selRect(page);
-  expect(now.rect).toEqual([door.x1 + 25, door.y1 + 10, door.x1 + 25 + w + 10, door.y1 + 10 + h]);
+  expect(now.rect).toEqual([x1Now, door.y1 + 10, x1Now + w + 10, door.y1 + 10 + h]);
   expect(now.notes).toEqual(["moved", "resized"]);
   await page.locator("#editBody .ep-shipped .ep-back").click();
   await page.waitForFunction((d) => window.__st.sel?.x1 === d.x1, door);

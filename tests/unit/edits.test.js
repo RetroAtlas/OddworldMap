@@ -39,6 +39,7 @@ import {
   undoEdit,
   setEnabled,
   setLevelShort,
+  snapRect,
   takeReport,
   validDelta,
   validRect,
@@ -656,4 +657,20 @@ test("a moved object exports where it now stands, listed under the camera its mi
   );
   const { doc: back } = exportPath("AE", G.geometry, state.lvl, state.path, side);
   assert.equal(createHash("sha256").update(canonical(back)).digest("hex"), digests.AE["MI P1"]);
+});
+
+test("a snapped rect puts its midpoint where the engine's grid stands a sprite, by scale and camera", () => {
+  const ao = { worldW: 1024, worldH: 480 };
+  const full = { name: "Slig", fields: { scale: 0 } },
+    half = { name: "Slig", fields: { scale: 1 } };
+  assert.deepEqual(snapRect("AE", AE_GEOMETRY, full, [100, 50, 124, 74]), [100, 50, 124, 74]);
+  assert.deepEqual(snapRect("AE", AE_GEOMETRY, full, [105, 50, 129, 74]), [100, 50, 124, 74]);
+  assert.deepEqual(snapRect("AE", AE_GEOMETRY, full, [115, 50, 139, 74]), [125, 50, 149, 74]);
+  assert.deepEqual(snapRect("AE", AE_GEOMETRY, half, [105, 50, 129, 74]), [111, 50, 135, 74]);
+  assert.deepEqual(snapRect("AO", ao, full, [1324, 50, 1348, 74]), [1327, 50, 1351, 74]);
+  assert.deepEqual(snapRect("AO", ao, full, [300, 50, 324, 74]), [303, 50, 327, 74]);
+  assert.deepEqual(
+    snapRect("AE", AE_GEOMETRY, { name: "Hoist" }, [105, 50, 129, 74]),
+    [100, 50, 124, 74],
+  );
 });
