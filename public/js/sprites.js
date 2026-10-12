@@ -361,7 +361,8 @@ rule("AE", "WorkWheel", (c) => {
 });
 
 // the platform the start-point TLV of a lift column spawns, with its bottom
-// wheel, its two ropes and the top wheel at the pulley the column carries
+// wheel, its two ropes and the top wheel at the pulley the column carries; the
+// wheels turn only while the lift moves
 const AO_LIFT = {
   R1: "RuptureFarms",
   R6: "RuptureFarms",
@@ -415,6 +416,7 @@ function liftPoint(c) {
     layer,
     rgb: wheelRgb,
     semi: false,
+    frozen: true,
   });
   const plat = draw(c, platform, x, y, { layer, rgb, yOff: 0 });
   if (ae && c.lvl.short !== "NE") out.push(wheel, plat);
@@ -450,6 +452,7 @@ function liftPoint(c) {
         rgb: wheelRgb,
         semi: false,
         yOff: 0,
+        frozen: true,
       }),
     );
   }

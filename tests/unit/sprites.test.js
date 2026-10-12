@@ -380,6 +380,23 @@ test("pinned placements: of two start points on one lift shaft in a camera, the 
   }
 });
 
+test("a lift at rest holds both its wheels on their first frame", () => {
+  for (const g of GAMES) {
+    const set = sheets[g];
+    const wheels = allRecords(g).filter(({ r }) => /^Lift(Bottom|Top)Wheel_/.test(r.anim));
+    assert.ok(
+      wheels.some(({ r }) => /^LiftTopWheel_/.test(r.anim)),
+      `${g} draws a top wheel`,
+    );
+    for (const { lvl, path, t, r } of wheels) {
+      const at = `${g} ${lvl.short} P${path.id} (${t.x1},${t.y1}) ${r.anim}`;
+      assert.ok(set.anims[r.anim].frames.length > 1, `${at} has frames to turn through`);
+      for (const tick of [0, 1, 2, 30, 1000])
+        assert.equal(resolveRecord(r, set, tick).frame, 0, `${at} at tick ${tick}`);
+    }
+  }
+});
+
 test("pinned placements: each game's first Abe stands on the floor inside his own screen", () => {
   const abeAt = (d, lv, pid) => {
     const l = d.levels.find((l) => l.short === lv);
