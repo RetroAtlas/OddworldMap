@@ -1002,8 +1002,8 @@ class PinnedRevision(unittest.TestCase):
         self.assertIn(DECOMP_COMMIT[:9], doc)
         self.assertIn(AO_COMMIT[:9], doc)
 
-    def test_the_readme_names_the_oxipng_pin(self):
-        self.assertIn(image.OXIPNG_VERSION, (HERE.parent / "README.md").read_text())
+    def test_the_builder_doc_names_the_oxipng_pin(self):
+        self.assertIn(image.OXIPNG_VERSION, (HERE.parent / "docs" / "builder.md").read_text())
 
 
 class PinnedEncoder(unittest.TestCase):
