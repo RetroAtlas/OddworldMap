@@ -34,6 +34,7 @@ import {
   redoEdit,
   editStore,
   restoreEdits,
+  revertObject,
   revertPath,
   sanitizeEdits,
   undoEdit,
@@ -673,4 +674,29 @@ test("a snapped rect puts its midpoint where the engine's grid stands a sprite, 
     snapRect("AE", AE_GEOMETRY, { name: "Hoist" }, [105, 50, 129, 74]),
     [100, 50, 124, 74],
   );
+});
+
+test("one object goes back as shipped in one step, fields and rect alike", () => {
+  restoreEdits({});
+  const G = world();
+  const P1 = G.levels[0].paths[0],
+    d = P1.tlvs[0];
+  stand(G);
+  let n = applyFieldEdit(d, "camera", 18);
+  n = applyRectEdit(n, [20, 15, 44, 39]);
+  applyFieldEdit(P1.tlvs[1], "camera", 3);
+  assert.deepEqual(editNotes(n), ["camera", "moved"]);
+  assert.equal(revertObject(n), d);
+  assert.equal(state.path.tlvs[0], d);
+  assert.equal(state.path.tlvs[1].fields.camera, 3);
+  assert.deepEqual(Object.keys(editStore().AE["MI/1"].objects), ["Door@400,10"]);
+  assert.ok(undoEdit("AE", "MI", 1));
+  assert.deepEqual(editNotes(state.path.tlvs[0]), ["camera", "moved"]);
+  assert.ok(redoEdit("AE", "MI", 1));
+  assert.equal(state.path.tlvs[0], d);
+  const before = state.path;
+  assert.equal(revertObject(d), d);
+  assert.equal(state.path, before);
+  assert.equal(revertObject(state.path.tlvs[1]), P1.tlvs[1]);
+  assert.equal(state.path, P1);
 });

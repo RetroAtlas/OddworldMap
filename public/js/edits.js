@@ -356,11 +356,11 @@ const deltaOf = (gameId, pk, key) =>
   (((all()[gameId] ??= {})[pk] ??= { objects: {} }).objects[key] ??= {});
 function prune(gameId, pk, key) {
   const game = all()[gameId],
-    path = game?.[pk],
-    delta = path?.objects[key];
-  if (!delta) return;
-  if (delta.fields && !Object.keys(delta.fields).length) delete delta.fields;
-  if (!liveDelta(delta)) delete path.objects[key];
+    path = game?.[pk];
+  if (!path) return;
+  const delta = path.objects[key];
+  if (delta?.fields && !Object.keys(delta.fields).length) delete delta.fields;
+  if (delta && !liveDelta(delta)) delete path.objects[key];
   if (!Object.keys(path.objects).length) delete game[pk];
   if (!Object.keys(game).length) delete edits[gameId];
 }
@@ -398,6 +398,20 @@ export function applyRectEdit(t, rect, { merge = false, ...where } = {}) {
   const delta = deltaOf(gameId, pk, key);
   if (sameRect(rect, was)) delete delta.rect;
   else delta.rect = [...rect];
+  prune(gameId, pk, key);
+  persist();
+  swapPath(G, lv, pa);
+  return currentOf(pristine, standingPath());
+}
+
+// one object back as the disc has it, fields and rect alike, in one step.
+// Returns the object now standing for it.
+export function revertObject(t, where = {}) {
+  const { gameId, lv, pa, G, pristine, pk, key, standingPath } = locate(t, where);
+  const path = all()[gameId]?.[pk];
+  if (!path?.objects[key]) return currentOf(pristine, standingPath());
+  record(gameId, pk, clone(path));
+  delete path.objects[key];
   prune(gameId, pk, key);
   persist();
   swapPath(G, lv, pa);

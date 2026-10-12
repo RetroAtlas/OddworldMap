@@ -4,6 +4,13 @@
    "date": "2026-10-12",
    "tag": "new",
    "tiny": true,
+   "title": "Put one object back as shipped",
+   "detail": "The edit panel gains a \"put back as shipped\" button for an object you have changed: every field and its place go back to what the disc holds in one press, and one undo brings the lot back. \"Revert this path\" still puts the whole path back."
+  },
+  {
+   "date": "2026-10-12",
+   "tag": "new",
+   "tiny": true,
    "title": "Snap a dragged object to the engine's grid",
    "detail": "Hold Shift while dragging an object in edit mode and it snaps sideways onto the grid the game stands its sprites on. Its columns are 25 units apart at full scale and 13 at half, measured the way each game measures them, Oddysee's from the screen the object is on. Let go of Shift and the drag is free again. Alt/⌥ with Shift and the arrow keys nudges the selected object by a grid square at a time, 25 units or 13 for one on the background plane."
   },

@@ -899,6 +899,12 @@ body.page-zoomed #minimap {
   margin-top: 6px;
   font-size: 11px;
 }
+.ep-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  padding: 4px 0 2px;
+}
 .ep-place {
   display: flex;
   gap: 4px;

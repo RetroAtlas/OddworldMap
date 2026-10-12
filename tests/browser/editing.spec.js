@@ -558,6 +558,32 @@ test("the selection drags where the pointer carries it, nudges on the arrows and
   expect(now.stored).toBeNull();
   expect(await page.evaluate(() => window.__edits.pathEdited(window.__st.path))).toBe(false);
 
+  // put back as shipped takes every change to the object away in one press, and one undo brings it back
+  await input("x").fill(String(door.x1 + 30));
+  await input("x").press("Tab");
+  await page.waitForFunction((d) => window.__st.sel?.x1 === d.x1 + 30, door);
+  const camera = page.locator('#editBody input[data-field="camera"]');
+  await camera.fill(String(door.camera + 1));
+  await camera.press("Tab");
+  await page.waitForFunction((c) => window.__st.sel?.fields.camera === c, door.camera + 1);
+  expect((await selRect(page)).notes).toEqual(["camera", "moved"]);
+  await page.locator('#editBody [data-action="revert"]').focus();
+  await page.keyboard.press("Enter");
+  await page.waitForFunction(
+    (d) => window.__st.sel?.x1 === d.x1 && window.__st.sel?.fields.camera === d.camera,
+    door,
+  );
+  now = await selRect(page);
+  expect(now.notes).toEqual([]);
+  expect(now.stored).toBeNull();
+  await expect(page.locator('#editBody [data-action="revert"]')).toHaveCount(0);
+  await expect(page.locator("#editPanel")).toBeFocused();
+  await page.keyboard.press("Control+z");
+  await page.waitForFunction((d) => window.__st.sel?.x1 === d.x1 + 30, door);
+  expect((await selRect(page)).notes).toEqual(["camera", "moved"]);
+  await page.keyboard.press("Control+Shift+z");
+  await page.waitForFunction((d) => window.__st.sel?.x1 === d.x1, door);
+
   // the permalink names the shipped origin and lands on the object where it now stands
   await input("x").fill(String(door.x1 + 100));
   await input("x").press("Tab");

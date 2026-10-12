@@ -22,9 +22,11 @@ import {
   forgetAll,
   gameEdits,
   hasLevelShort,
+  isEdited,
   pathEdited,
   pristineOf,
   redoEdit,
+  revertObject,
   revertPath,
   setLevelShort,
   undoEdit,
@@ -220,6 +222,23 @@ function head(label) {
   body.append(h);
 }
 
+// what the selection can have done to it, one button each, found again by its
+// action after the re-render its press causes
+function actions(t) {
+  const row = document.createElement("div");
+  row.className = "ep-actions";
+  const act = (action, label, title, on) => {
+    const b = linkButton(label, title, on);
+    b.dataset.action = action;
+    row.append(b);
+  };
+  if (isEdited(t))
+    act("revert", "put back as shipped", "Every field and the place back as the disc has it", () =>
+      attempt(() => revertObject(t)),
+    );
+  if (row.children.length) body.append(row);
+}
+
 function render() {
   const t = state.sel;
   if (!t) return;
@@ -229,7 +248,9 @@ function render() {
     ? `[data-field="${CSS.escape(held.field)}"]`
     : held.place
       ? `[data-place="${held.place}"]`
-      : null;
+      : held.action
+        ? `[data-action="${held.action}"]`
+        : null;
   const game = state.data.id;
   const cam = state.path.cams.find((c) => c.cell === tlvCell(t, state.path, GEO));
   const where = `${state.lvl.short} P${state.path.id}${cam ? " · " + cam.name.slice(-3) : ""}`;
@@ -237,6 +258,7 @@ function render() {
   title.querySelector(".ep-type").onclick = () =>
     window.dispatchEvent(new CustomEvent("typecard-open", { detail: { type: t.name } }));
   body.innerHTML = "";
+  actions(t);
 
   // what the navigation now believes about the object
   const extra = Object.entries(t.extra || {});
@@ -278,6 +300,7 @@ function render() {
     none.textContent = "This type carries no fields to edit.";
     body.append(none);
     foot();
+    if (focused) (body.querySelector(focused) ?? (held.action ? panel : null))?.focus();
     return;
   }
 
@@ -322,7 +345,7 @@ function render() {
     body.append(row);
   }
   foot();
-  if (focused) body.querySelector(focused)?.focus();
+  if (focused) (body.querySelector(focused) ?? (held.action ? panel : null))?.focus();
 }
 
 // the keys the selection answers to, said once for every reader
