@@ -13,7 +13,7 @@ import { cellAt, nearestCam, offScreen, tlvCell } from "./model.js";
 import { setHighlight } from "./render.js";
 import { fieldPrefsFor, getSettings } from "./settings.js";
 import { jumpToTlv } from "./navigate.js";
-import { currentOf, editedFields } from "./edits.js";
+import { currentOf, editNotes } from "./edits.js";
 import { selectObject } from "./editpanel.js";
 
 const panel = $("camPanel"),
@@ -110,7 +110,7 @@ function list(cam, focus) {
       const off = offScreen(t, LAYOUT)
         ? ` <span class="e">· <span class="gloss" data-tip="${esc(OFFSCREEN_NOTE)}">offscreen</span></span>`
         : "";
-      const changed = Object.keys(editedFields(t)).sort();
+      const changed = editNotes(t);
       const edited = changed.length
         ? ` <span class="e">· <span class="edited">${esc(`${EDITED_NOTE}: ${changed.join(", ")}`)}</span></span>`
         : "";

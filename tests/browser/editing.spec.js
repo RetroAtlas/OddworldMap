@@ -72,6 +72,8 @@ const aimAtDoor = (page) =>
       y: r.top + (cy - st.cam.y) * st.cam.z,
       x1: t.x1,
       y1: t.y1,
+      x2: t.x2,
+      y2: t.y2,
       camera: t.fields.camera,
     };
   });
@@ -417,6 +419,136 @@ test("undo and redo step a path's edits, on the keys and in the panel", async ({
   expect(await cam()).toBe(door.camera + 1);
   await page.locator("#editBody .ep-foot .linkbtn", { hasText: "undo" }).click();
   expect(await cam()).toBe(door.camera);
+  expect(errors).toEqual([]);
+});
+
+// where the selected door's centre is on the screen now, after a move
+const aimAtDoorNow = (page) =>
+  page.evaluate(async () => {
+    const u = (m) => new URL("js/" + m, location.href).href;
+    const stateModule = await import(u("state.js"));
+    const st = stateModule.state;
+    const [cx, cy] = window.__model.markerCentre(st.sel, stateModule.LAYOUT);
+    const r = document.getElementById("cv").getBoundingClientRect();
+    return { x: r.left + (cx - st.cam.x) * st.cam.z, y: r.top + (cy - st.cam.y) * st.cam.z };
+  });
+
+// the selected object's rect as the page holds it now, with what the surfaces say of it
+const selRect = (page) =>
+  page.evaluate(() => {
+    const t = window.__st.sel;
+    return {
+      rect: [t.x1, t.y1, t.x2, t.y2],
+      notes: window.__edits.editNotes(t),
+      stored: JSON.parse(localStorage.getItem("owm:edits") ?? "null"),
+    };
+  });
+
+test("the selection drags where the pointer carries it, nudges on the arrows and types its place", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await armEditing(page);
+  await page.goto("/#AE");
+  await settleAny(page);
+  await attach(page);
+  await page.keyboard.press("e");
+  await page.waitForFunction(() => window.__st.edit === true);
+  const door = await aimAtDoor(page);
+  const w = door.x2 - door.x1,
+    h = door.y2 - door.y1;
+  await page.mouse.click(door.x, door.y);
+  await expect(page.locator("#editPanel")).toBeVisible();
+  await expect(page.locator('#editBody input[data-place="x"]')).toHaveValue(String(door.x1));
+
+  // a drag past the slip carries the door by the pointer's travel, 50 px being 25 units at zoom 2
+  await page.mouse.move(door.x, door.y);
+  await page.mouse.down();
+  await page.mouse.move(door.x + 20, door.y + 8);
+  await page.mouse.move(door.x + 50, door.y + 20);
+  await page.mouse.up();
+  await page.waitForFunction((d) => window.__st.sel?.x1 === d.x1 + 25, door);
+  let now = await selRect(page);
+  expect(now.rect).toEqual([door.x1 + 25, door.y1 + 10, door.x1 + 25 + w, door.y1 + 10 + h]);
+  expect(now.notes).toEqual(["moved"]);
+  const [key, delta] = Object.entries(now.stored.AE["MI/1"].objects)[0];
+  expect(key.startsWith(`Door@${door.x1},${door.y1}`)).toBe(true);
+  expect(delta).toEqual({ rect: now.rect });
+  await expect(page.locator("#editBody .ep-shipped")).toContainText(
+    `shipped: ${door.x1},${door.y1}`,
+  );
+  await page.mouse.move(door.x + 50, door.y + 20);
+  await expect(page.locator("#tip")).toContainText("edited on this device: moved");
+  await expect(page.locator("#tip")).toContainText("drag to move");
+
+  // a run of nudges is one step, and the chord takes the whole run back
+  await page.evaluate(() => document.activeElement?.blur());
+  for (let i = 0; i < 3; i++) await page.keyboard.press("Shift+ArrowRight");
+  await page.waitForFunction((d) => window.__st.sel?.x1 === d.x1 + 28, door);
+  await page.keyboard.press("Control+z");
+  await page.waitForFunction((d) => window.__st.sel?.x1 === d.x1 + 25, door);
+
+  // Escape mid-drag lets the object go where it was, and the panel stays
+  const grab = await aimAtDoorNow(page);
+  await page.mouse.move(grab.x, grab.y);
+  await page.mouse.down();
+  await page.mouse.move(grab.x + 30, grab.y + 30);
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  expect((await selRect(page)).rect[0]).toBe(door.x1 + 25);
+  await expect(page.locator("#editPanel")).toBeVisible();
+
+  // a bare arrow still pans the map rather than the object
+  const camBefore = await page.evaluate(() => window.__st.cam.x);
+  await page.keyboard.press("ArrowRight");
+  expect(await page.evaluate(() => window.__st.cam.x)).not.toBe(camBefore);
+  expect((await selRect(page)).rect[0]).toBe(door.x1 + 25);
+
+  // the Place rows type the position, the size keeping the top-left, and ↺ puts the rect back
+  const input = (k) => page.locator(`#editBody input[data-place="${k}"]`);
+  await input("w").fill(String(w + 10));
+  await input("w").press("Tab");
+  await page.waitForFunction((d) => window.__st.sel?.x2 === d.x1 + 25 + d.x2 - d.x1 + 10, door);
+  now = await selRect(page);
+  expect(now.rect).toEqual([door.x1 + 25, door.y1 + 10, door.x1 + 25 + w + 10, door.y1 + 10 + h]);
+  expect(now.notes).toEqual(["moved", "resized"]);
+  await page.locator("#editBody .ep-shipped .ep-back").click();
+  await page.waitForFunction((d) => window.__st.sel?.x1 === d.x1, door);
+  now = await selRect(page);
+  expect(now.rect).toEqual([door.x1, door.y1, door.x2, door.y2]);
+  expect(now.notes).toEqual([]);
+  expect(now.stored).toBeNull();
+  expect(await page.evaluate(() => window.__edits.pathEdited(window.__st.path))).toBe(false);
+
+  // the permalink names the shipped origin and lands on the object where it now stands
+  await input("x").fill(String(door.x1 + 100));
+  await input("x").press("Tab");
+  await page.waitForFunction((d) => window.__st.sel?.x1 === d.x1 + 100, door);
+  const link = await page.evaluate(() => window.__nav.objectHash(window.__st.sel));
+  expect(link).toContain(`/Door@${door.x1},${door.y1}`);
+  await page.goto("/" + link);
+  await page.reload();
+  await settleAny(page);
+  await attach(page);
+  await expect(page.locator(".toast", { hasText: "marker on Door" })).toBeVisible();
+  const landed = await page.evaluate((d) => {
+    const st = window.__st;
+    const t = st.path.tlvs.find((o) => o.name === "Door" && o.x1 === d.x1 + 100 && o.y1 === d.y1);
+    return { found: !!t, notes: t ? window.__edits.editNotes(t) : null };
+  }, door);
+  expect(landed.found).toBe(true);
+  expect(landed.notes).toEqual(["moved"]);
+  const centre = await page.evaluate(async (d) => {
+    const u = (m) => new URL("js/" + m, location.href).href;
+    const stateModule = await import(u("state.js"));
+    const st = stateModule.state;
+    const t = st.path.tlvs.find((o) => o.name === "Door" && o.x1 === d.x1 + 100 && o.y1 === d.y1);
+    const [cx, cy] = window.__model.markerCentre(t, stateModule.LAYOUT);
+    const cv = document.getElementById("cv");
+    const c = window.__model.camCenter(st.cam, cv.clientWidth, cv.clientHeight);
+    return [Math.round(c.x - cx), Math.round(c.y - cy)];
+  }, door);
+  expect(centre).toEqual([0, 0]);
   expect(errors).toEqual([]);
 });
 

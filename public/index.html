@@ -102,7 +102,7 @@
         id="editBtn"
         class="chrome actbtn"
         aria-pressed="false"
-        data-tip="Edit objects on this path: click a marker to select it, then change its fields in the panel.&#10;Edits stay on this device and never travel in a link."
+        data-tip="Edit objects on this path: click a marker to select it, then change its fields in the panel or drag it where it should stand.&#10;Edits stay on this device and never travel in a link."
       >
         Edit objects
       </button>
@@ -447,6 +447,10 @@
             >undo / redo the last edit on the path, in edit mode
           </div>
           <div class="sc-row">
+            <span class="sc-keys"><kbd>⇧</kbd><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd></span
+            >nudge the selected object one unit, in edit mode; a run of nudges is one undo step
+          </div>
+          <div class="sc-row">
             <span class="sc-keys"><kbd>s</kbd></span
             >gaps between screens
           </div>
@@ -613,8 +617,7 @@
               the screen list.
             </div>
             <label class="checkrow"
-              ><input type="checkbox" id="sEditObjects" autocomplete="off" /> Edit object
-              properties</label
+              ><input type="checkbox" id="sEditObjects" autocomplete="off" /> Edit objects</label
             >
             <div class="st-row" id="editsHeld" hidden>
               <span id="editsCount"></span>
@@ -622,8 +625,8 @@
             </div>
             <div class="st-desc">
               Adds an Edit objects button to the sidebar (or press e): a click on a marker selects
-              it, and a panel changes any field the game stores for it, with what the disc shipped
-              beside anything you change.
+              it, a drag moves it, and a panel changes any field the game stores for it and where it
+              stands, with what the disc shipped beside anything you change.
             </div>
             <label class="checkrow"
               ><input type="checkbox" id="sRawValues" autocomplete="off" /> Show raw field

@@ -36,6 +36,7 @@ import {
   setHighlight,
   hitBoxes,
   objectShown,
+  setMoveGhost,
   setPatrol,
   setWireFocus,
 } from "./render.js";
@@ -71,7 +72,7 @@ import { getSettings, fieldPrefsFor } from "./settings.js";
 import { focusCamPanel, openCamPanel, openCamPanelNear } from "./campanel.js";
 import { togglePlace } from "./place.js";
 import { selectObject, setEditMode } from "./editpanel.js";
-import { editedFields } from "./edits.js";
+import { applyRectEdit, currentOf, editNotes, fitRect, isEdited } from "./edits.js";
 import { toggleGraph } from "./graphview.js";
 import { addRoutePoint, routeArrive, routeSeam, undoRoutePoint } from "./route.js";
 import { closeDialog, openDialog, trapDialogKeys } from "./dialog.js";
@@ -112,6 +113,7 @@ window.addEventListener("selection-changed", (e) => {
 // the mode acts on the map, so on narrow the drawer comes off it
 window.addEventListener("edit-changed", () => {
   if (state.edit && isNarrow()) toggleMenu(false);
+  else if (!state.edit) cancelMove();
 });
 
 // the graph takes the whole surface, so the drawer has to come off it
@@ -151,6 +153,19 @@ function ptrXY(e) {
   return { x: e.clientX - r.left, y: e.clientY - r.top };
 }
 
+// a slip within this many pixels is a click; past it the press is a drag
+const slip = (e) => (e.pointerType === "mouse" ? 4 : 6);
+
+// the selection carried by the pointer
+let moving = null;
+function cancelMove() {
+  if (!moving) return;
+  moving.cancelled = true;
+  moving.preview = null;
+  setMoveGhost(null);
+  cv.style.cursor = modeCursor();
+}
+
 cv.addEventListener("pointerdown", (e) => {
   if (e.detail <= 1) graphHandover = false; // a press of its own, not a gesture's tail
   const p = ptrXY(e);
@@ -172,11 +187,30 @@ cv.addEventListener("pointerdown", (e) => {
       draw();
       return;
     }
-    panning = true;
     panMoved = false;
+    // a press on the selection carries it, by the click's own ranking; anywhere else pans
+    if (state.edit && state.sel && (e.pointerType !== "mouse" || e.button === 0)) {
+      updateHover();
+      if (hoverTlvs[0] === state.sel) {
+        const t = state.sel,
+          pt = drawAtMouse();
+        moving = {
+          t,
+          grab: { x: wX(pt.x) - t.x1, y: wY(pt.y) - t.y1 },
+          rect: [t.x1, t.y1, t.x2, t.y2],
+          start: p,
+          moved: false,
+          preview: null,
+          cancelled: false,
+        };
+        return;
+      }
+    }
+    panning = true;
     cv.classList.add("panning");
     panStart = { x: p.x, y: p.y, cx: state.cam.x, cy: state.cam.y };
   } else if (pointers.size === 2) {
+    cancelMove();
     panning = false;
     measuring = false;
     cv.classList.remove("panning");
@@ -207,17 +241,30 @@ cv.addEventListener("pointermove", (e) => {
   }
   mouse.x = p.x;
   mouse.y = p.y;
+  if (moving) {
+    if (moving.cancelled) return;
+    if (Math.abs(p.x - moving.start.x) + Math.abs(p.y - moving.start.y) > slip(e)) {
+      if (!moving.moved) tip.style.display = "none";
+      moving.moved = true;
+    }
+    if (moving.moved) {
+      const pt = drawAtMouse();
+      const [x1, y1, x2, y2] = moving.rect;
+      const nx = Math.round(wX(pt.x) - moving.grab.x),
+        ny = Math.round(wY(pt.y) - moving.grab.y);
+      moving.preview = fitRect(state.path, GEO, [nx, ny, nx + x2 - x1, ny + y2 - y1]);
+      setMoveGhost(moving.preview);
+      cv.style.cursor = "grabbing";
+    }
+    return;
+  }
   if (measuring && state.ruler) {
     const pt = snapAtMouse();
     state.ruler.x2 = pt.x;
     state.ruler.y2 = pt.y;
   }
   if (panning) {
-    if (
-      Math.abs(p.x - panStart.x) + Math.abs(p.y - panStart.y) >
-      (e.pointerType === "mouse" ? 4 : 6)
-    )
-      panMoved = true;
+    if (Math.abs(p.x - panStart.x) + Math.abs(p.y - panStart.y) > slip(e)) panMoved = true;
     state.cam.x = panStart.cx - (p.x - panStart.x) / state.cam.z;
     state.cam.y = panStart.cy - (p.y - panStart.y) / state.cam.z;
   }
@@ -227,6 +274,22 @@ cv.addEventListener("pointermove", (e) => {
 
 function endPointer(e) {
   if (!pointers.delete(e.pointerId)) return;
+  if (moving && !pointers.size) {
+    const m = moving;
+    moving = null;
+    setMoveGhost(null);
+    cv.style.cursor = modeCursor();
+    panMoved = m.moved || m.cancelled; // no click follows a carried or a let-go press
+    if (m.moved && !m.cancelled) {
+      if (!m.preview) toast(`${m.t.name} is too big for the path's grid`);
+      else
+        try {
+          applyRectEdit(m.t, m.preview);
+        } catch (err) {
+          toast(err.message);
+        }
+    }
+  }
   if (pointers.size === 1) {
     // pinch ended with a pointer still down: continue as a pan
     const [p] = pointers.values();
@@ -241,7 +304,23 @@ function endPointer(e) {
   }
 }
 cv.addEventListener("pointerup", endPointer);
-cv.addEventListener("pointercancel", endPointer);
+// a pointer the browser takes away lets the object go where it was
+cv.addEventListener("pointercancel", (e) => {
+  cancelMove();
+  endPointer(e);
+});
+
+// a move in progress is let go before anything else hears Escape
+window.addEventListener(
+  "keydown",
+  (e) => {
+    if (!moving || e.key !== "Escape") return;
+    cancelMove();
+    e.stopImmediatePropagation();
+    e.preventDefault();
+  },
+  { capture: true },
+);
 
 // measurements don't outlive their path
 window.addEventListener("selection-changed", () => {
@@ -268,6 +347,8 @@ cv.addEventListener("pointerleave", () => {
 window.addEventListener("data-changed", () => {
   hoverTlvs = [];
   tip.style.display = "none";
+  // an object that left the path mid-drag is let go, a swap it survived carries on
+  if (moving && !currentOf(moving.t, state.path)) cancelMove();
 });
 
 cv.addEventListener("click", () => {
@@ -322,7 +403,7 @@ cv.addEventListener("contextmenu", (e) => {
   const t = hoverTlvs[0];
   const url = location.href.split("#")[0] + objectHash(t);
   // the link names the shipped object, the one a recipient can resolve
-  const copied = Object.keys(editedFields(t)).length
+  const copied = isEdited(t)
     ? `${t.name} link copied — it opens on the shipped ${t.name}`
     : `${t.name} link copied`;
   (navigator.clipboard?.writeText(url) ?? Promise.reject()).then(
@@ -456,6 +537,12 @@ window.addEventListener("keydown", (e) => {
   const pan = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[
     e.key
   ];
+  if (pan && moving) return; // the hand has the object
+  if (pan && e.shiftKey && state.edit && state.sel) {
+    nudge(pan);
+    e.preventDefault();
+    return;
+  }
   if (pan) {
     state.cam.x += (pan[0] * KEY_PAN_PX) / state.cam.z;
     state.cam.y += (pan[1] * KEY_PAN_PX) / state.cam.z;
@@ -468,6 +555,19 @@ window.addEventListener("keydown", (e) => {
   scheduleDraw();
   scheduleHash(false);
 });
+
+// the selection one world unit along, kept on the grid; every press of a run
+// joins the one undo step
+function nudge([dx, dy]) {
+  const t = state.sel;
+  const rect = fitRect(state.path, GEO, [t.x1 + dx, t.y1 + dy, t.x2 + dx, t.y2 + dy]);
+  if (!rect) return;
+  try {
+    applyRectEdit(t, rect, { merge: true });
+  } catch (err) {
+    toast(err.message);
+  }
+}
 
 // ---- shortcuts panel (the ? key) -----------------------------------------
 const shortcutsOverlay = $("shortcutsOverlay");
@@ -595,11 +695,11 @@ function updateHover() {
               ? `<br><span class="e">${esc(DARK_NOTE)}</span>`
               : said.slice(0, 3).join("") +
                 (said.length > 3 ? `<br><span class="e">+${said.length - 3} more</span>` : "");
-          const edited = Object.keys(editedFields(t)).sort();
+          const edited = editNotes(t);
           const d = shownDest(t);
           let follow = "";
           if (state.edit) {
-            follow = `<br><span class="f">click to select</span>`;
+            follow = `<br><span class="f">${t === state.sel ? "drag to move · ⇧ arrows nudge" : "click to select"}</span>`;
           } else if (d && isLoopback(t, state.data, state.lvl, state.path)) {
             follow = `<br><span class="f loop">⟳ loops back to itself</span>`;
           } else if (d && !followableDest(t)) {
@@ -689,7 +789,10 @@ function updateHover() {
     tip.style.top =
       (below + tipH > cv.clientHeight ? Math.max(6, mouse.y - tipH - 12) : below) + "px";
     if (!panning)
-      cv.style.cursor = modeCursor() || (hoverTlvs.some((t) => followableDest(t)) ? "pointer" : "");
+      cv.style.cursor =
+        state.edit && hoverTlvs[0] === state.sel
+          ? "move"
+          : modeCursor() || (hoverTlvs.some((t) => followableDest(t)) ? "pointer" : "");
   } else {
     tip.style.display = "none";
     if (!panning) cv.style.cursor = modeCursor();

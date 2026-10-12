@@ -13,12 +13,16 @@ import { getSettings } from "./settings.js";
 import { GAME_IDS, loadEditorData } from "./data.js";
 import {
   applyFieldEdit,
+  applyRectEdit,
   canRedo,
   canUndo,
+  editNotes,
   editedFields,
+  editedRect,
   forgetAll,
   gameEdits,
   hasLevelShort,
+  pathEdited,
   pristineOf,
   redoEdit,
   revertPath,
@@ -115,13 +119,55 @@ const here3 = () => [state.data.id, state.lvl.short, state.path.id];
 const undoHere = () => state.path && undoEdit(...here3());
 const redoHere = () => state.path && redoEdit(...here3());
 
-function commit(field, value) {
+// a refusal is toasted and the form shows what still stands; a commit that
+// goes through re-renders by the swap it causes
+function attempt(fn) {
   try {
-    applyFieldEdit(state.sel, field, value); // the swap re-points the selection and re-renders
+    fn();
   } catch (e) {
     toast(e.message);
     render();
   }
+}
+const commit = (field, value) => attempt(() => applyFieldEdit(state.sel, field, value));
+const commitRect = (rect) => attempt(() => applyRectEdit(state.sel, rect));
+
+function rectWith(t, key, v) {
+  const w = t.x2 - t.x1,
+    h = t.y2 - t.y1;
+  if (key === "x") return [v, t.y1, v + w, t.y2];
+  if (key === "y") return [t.x1, v, t.x2, v + h];
+  if (key === "w") return [t.x1, t.y1, t.x1 + v, t.y2];
+  return [t.x1, t.y1, t.x2, t.y1 + v];
+}
+
+const PLACE_LABELS = { x: "x", y: "y", w: "width", h: "height" };
+
+function placeRow(t, label, words) {
+  const row = document.createElement("div");
+  row.className = "ep-row";
+  const name = document.createElement("span");
+  name.className = "ep-name";
+  name.textContent = label;
+  const val = document.createElement("span");
+  val.className = "ep-val ep-place";
+  for (const [key, value, min] of words) {
+    const el = document.createElement("input");
+    el.type = "number";
+    el.min = min;
+    el.max = 32767;
+    el.step = 1;
+    el.value = value;
+    el.dataset.place = key;
+    el.setAttribute("aria-label", PLACE_LABELS[key]);
+    el.onchange = () => {
+      if (Number.isInteger(el.valueAsNumber)) commitRect(rectWith(t, key, el.valueAsNumber));
+      else render();
+    };
+    val.append(el);
+  }
+  row.append(name, val);
+  body.append(row);
 }
 
 function control(t, field, value) {
@@ -150,6 +196,23 @@ function control(t, field, value) {
   return el;
 }
 
+function linkButton(label, title, onclick) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "linkbtn";
+  b.textContent = label;
+  if (title) b.title = title;
+  b.onclick = onclick;
+  return b;
+}
+// the ↺ beside a shipped value, named by its title since the glyph says nothing
+function putBack(title, onclick) {
+  const b = linkButton("↺", title, onclick);
+  b.classList.add("ep-back");
+  b.setAttribute("aria-label", title);
+  return b;
+}
+
 function head(label) {
   const h = document.createElement("div");
   h.className = "listhead ep-head";
@@ -160,7 +223,13 @@ function head(label) {
 function render() {
   const t = state.sel;
   if (!t) return;
-  const focused = document.activeElement?.dataset?.field; // the control being worked keeps the keyboard
+  // the control being worked keeps the keyboard
+  const held = document.activeElement?.dataset ?? {};
+  const focused = held.field
+    ? `[data-field="${CSS.escape(held.field)}"]`
+    : held.place
+      ? `[data-place="${held.place}"]`
+      : null;
   const game = state.data.id;
   const cam = state.path.cams.find((c) => c.cell === tlvCell(t, state.path, GEO));
   const where = `${state.lvl.short} P${state.path.id}${cam ? " · " + cam.name.slice(-3) : ""}`;
@@ -179,17 +248,40 @@ function render() {
     body.append(d);
   }
 
+  // where it stands and how big it is, in world units
+  head("Place");
+  placeRow(t, "position", [
+    ["x", t.x1, -32768],
+    ["y", t.y1, -32768],
+  ]);
+  placeRow(t, "size", [
+    ["w", t.x2 - t.x1, 0],
+    ["h", t.y2 - t.y1, 0],
+  ]);
+  const was = editedRect(t);
+  if (was) {
+    const shipped = document.createElement("div");
+    shipped.className = "ep-shipped e";
+    shipped.textContent = `shipped: ${was[0]},${was[1]} ${was[2] - was[0]}×${was[3] - was[1]}`;
+    shipped.append(
+      " ",
+      putBack("Put it back where it shipped", () => commitRect(was)),
+    );
+    body.append(shipped);
+  }
+
+  const pristine = pristineOf(t);
+  const delta = editedFields(t);
   if (!t.fields) {
     const none = document.createElement("div");
     none.className = "ep-none e";
     none.textContent = "This type carries no fields to edit.";
     body.append(none);
+    foot();
     return;
   }
 
   head("Fields");
-  const pristine = pristineOf(t);
-  const delta = editedFields(t);
   for (const k of Object.keys(t.fields).sort((a, b) => a.localeCompare(b))) {
     const row = document.createElement("div");
     row.className = "ep-row";
@@ -221,48 +313,61 @@ function render() {
       const was = document.createElement("span");
       was.className = "ep-shipped e";
       was.textContent = `shipped: ${pristine.fields[k]}`;
-      const back = document.createElement("button");
-      back.type = "button";
-      back.className = "linkbtn ep-back";
-      back.textContent = "↺";
-      back.title = `Put ${k} back as shipped`;
-      back.setAttribute("aria-label", back.title);
-      back.onclick = () => commit(k, pristine.fields[k]);
-      was.append(" ", back);
+      was.append(
+        " ",
+        putBack(`Put ${k} back as shipped`, () => commit(k, pristine.fields[k])),
+      );
       row.append(was);
     }
     body.append(row);
   }
+  foot();
+  if (focused) body.querySelector(focused)?.focus();
+}
 
-  const total = state.path.tlvs.reduce((n, o) => n + Object.keys(editedFields(o)).length, 0);
+// the keys the selection answers to, said once for every reader
+const KEYS_NOTE = "drag to move · ⇧ arrows nudge";
+
+// what the path carries, by kind, and the steps through it
+function foot() {
+  const keys = document.createElement("div");
+  keys.className = "ep-keys e";
+  keys.textContent = KEYS_NOTE;
+  body.append(keys);
+  let fields = 0,
+    moved = 0,
+    resized = 0;
+  for (const o of state.path.tlvs) {
+    fields += Object.keys(editedFields(o)).length;
+    const notes = editNotes(o);
+    if (notes.includes("moved")) moved++;
+    if (notes.includes("resized")) resized++;
+  }
+  const parts = [];
+  if (fields) parts.push(`${fields} field${fields === 1 ? "" : "s"}`);
+  if (moved) parts.push(`${moved} moved`);
+  if (resized) parts.push(`${resized} resized`);
   const foot = document.createElement("div");
   foot.className = "ep-foot e";
-  foot.textContent = total
-    ? `${total} field${total === 1 ? "" : "s"} edited on this path`
+  foot.textContent = parts.length
+    ? `${parts.join(", ")} on this path`
     : "nothing edited on this path";
   // the steps stand whether or not the path has edits: a redo follows an undo of everything
   const step = (label, can, act, title) => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "linkbtn";
-    b.textContent = label;
-    b.title = title;
+    const b = linkButton(label, title, act);
     b.disabled = !can;
-    b.onclick = act;
     foot.append(" · ", b);
   };
   step("undo", canUndo(...here3()), undoHere, "Undo the last edit on this path (Ctrl+Z, ⌘Z)");
   step("redo", canRedo(...here3()), redoHere, "Redo (Shift+Ctrl+Z, ⇧⌘Z)");
-  if (total) {
-    const back = document.createElement("button");
-    back.type = "button";
-    back.className = "linkbtn";
-    back.textContent = "Revert this path";
-    back.onclick = () => revertPath(state.data.id, state.lvl.short, state.path.id);
-    foot.append(" · ", back);
-  }
+  if (pathEdited(state.path))
+    foot.append(
+      " · ",
+      linkButton("Revert this path", null, () =>
+        revertPath(state.data.id, state.lvl.short, state.path.id),
+      ),
+    );
   body.append(foot);
-  if (focused) body.querySelector(`[data-field="${CSS.escape(focused)}"]`)?.focus();
 }
 
 btn.hidden = !allowed();

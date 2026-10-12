@@ -470,8 +470,10 @@ export async function applyHash() {
   if (view) centerOn(view.x, view.y, clamp(view.z, ZOOM_MIN, ZOOM_MAX));
   applyingHash = false;
   if (p.obj) {
-    // a link to a specific object: center it and hold a marker on it
-    const t = findTlv(state.path.tlvs, p.obj);
+    // a link to a specific object: center it and hold a marker on it. The link
+    // names the shipped origin; the marker lands on what now stands for it
+    const origin = findTlv(state.path.tlvs.map(pristineOf), p.obj);
+    const t = origin && currentOf(origin, state.path);
     const c = t && markerCentre(t, LAYOUT);
     const fx = c ? c[0] : (view?.x ?? dX(p.obj.x1)),
       fy = c ? c[1] : (view?.y ?? dY(p.obj.y1));

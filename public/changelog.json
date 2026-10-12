@@ -2,6 +2,12 @@
  "entries": [
   {
    "date": "2026-10-12",
+   "tag": "new",
+   "title": "Move an object on the map",
+   "detail": "In edit mode, the object you have selected can be dragged where it should stand: a dashed outline follows the pointer and the move lands when you let go. It is kept on this device like any other edit, and marked wherever it shows. Shift with the arrow keys nudges it one unit at a time, and a run of nudges is one undo step, so a long hold comes back with one press. The panel's new \"Place\" rows type the position and the size instead, with what the disc shipped beside them and a way back. A moved object's link still opens on the game's own object elsewhere, and on this device it lands where the object now stands. The setting that turns editing on is now \"Edit objects\", since it arms the whole editor."
+  },
+  {
+   "date": "2026-10-12",
    "tag": "fixed",
    "tiny": true,
    "title": "An Oddysee lift's right-hand rope reaches its platform",

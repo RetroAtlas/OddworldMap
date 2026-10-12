@@ -17,7 +17,7 @@ import {
   KEPT_UNSEEN,
 } from "./config.js";
 import { $, cv, cvCtx, cssVar } from "./dom.js";
-import { editedFields } from "./edits.js";
+import { isEdited } from "./edits.js";
 import { drawX, drawY } from "./geometry.js";
 import { state, GEO, LAYOUT, CELL_W, CELL_H, cellOrigin, worldLen } from "./state.js";
 import {
@@ -391,6 +391,15 @@ export function setPatrol(z) {
 }
 window.addEventListener("selection-changed", () => setPatrol(null));
 
+// the rect a drag would commit, outlined while the pointer carries the selection
+let moveGhost = null;
+export function setMoveGhost(rect) {
+  if (rect === moveGhost) return;
+  moveGhost = rect;
+  scheduleDraw();
+}
+window.addEventListener("selection-changed", () => setMoveGhost(null));
+
 // an edit stands the path as new objects, which none of these point at any more
 window.addEventListener("data-changed", () => {
   setConnFocus(null);
@@ -575,6 +584,7 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   if (show.conn) paintConnections(f, transients ? connFocus : null);
   if (transients && highlight) paintHighlight(f, highlight);
   if (transients && sel) paintSelection(f, sel);
+  if (transients && moveGhost) paintMoveGhost(f, moveGhost);
   if (ruler) paintRuler(f, ruler);
   if (route) paintRoute(f, route);
   if (transients && flash) paintFlash(f, flash);
@@ -682,7 +692,7 @@ function paintMarkers(f, sprites) {
       // the sprite stands for the marker; the edited mark stays, and the label
       // where there is a sprite to name
       const label = showLabels && as === "sprite";
-      if (label || Object.keys(editedFields(t)).length) paintMarkerNotes(f, t, label);
+      if (label || isEdited(t)) paintMarkerNotes(f, t, label);
       continue;
     }
     const dir = PENS.on ? barrierDir(t) : null; // pens off: barriers are plain meta boxes
@@ -740,7 +750,7 @@ function paintMarkers(f, sprites) {
       ctx.restore();
     }
     // an edited object says so on the map itself, exports included
-    if (Object.keys(editedFields(t)).length) {
+    if (isEdited(t)) {
       const pad = 3 / cam.z;
       ctx.strokeStyle = `rgb(${COLOR.editRgb})`;
       ctx.lineWidth = 1.5 / cam.z;
@@ -1148,7 +1158,7 @@ function paintMarkerNotes({ ctx, cam, layout }, t, label) {
   if (!box) return;
   const w = Math.max(box.w, 10),
     h = Math.max(box.h, 10);
-  if (Object.keys(editedFields(t)).length) {
+  if (isEdited(t)) {
     const pad = 3 / cam.z;
     ctx.strokeStyle = `rgb(${COLOR.editRgb})`;
     ctx.lineWidth = 1.5 / cam.z;
@@ -1159,6 +1169,17 @@ function paintMarkerNotes({ ctx, cam, layout }, t, label) {
     ctx.fillStyle = catOf(t).color;
     ctx.fillText(t.name, box.x, box.y - 3 / cam.z);
   }
+}
+
+function paintMoveGhost({ ctx, cam, layout }, [x1, y1, x2, y2]) {
+  const box = drawBox({ x1, y1, x2, y2 }, layout);
+  const w = Math.max(box.w, 10),
+    h = Math.max(box.h, 10);
+  ctx.strokeStyle = `rgb(${COLOR.editRgb})`;
+  ctx.lineWidth = 2 / cam.z;
+  ctx.setLineDash([6 / cam.z, 4 / cam.z]);
+  ctx.strokeRect(box.x, box.y, w, h);
+  ctx.setLineDash([]);
 }
 
 // switch wiring: dotted hairlines from each producer to its id's consumers,

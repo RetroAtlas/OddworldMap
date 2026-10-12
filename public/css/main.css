@@ -890,9 +890,21 @@ body.page-zoomed #minimap {
 }
 .ep-derived,
 .ep-none,
+.ep-keys,
 .ep-foot {
   padding: 3px 0;
   overflow-wrap: anywhere;
+}
+.ep-keys {
+  margin-top: 6px;
+  font-size: 11px;
+}
+.ep-place {
+  display: flex;
+  gap: 4px;
+}
+.ep-val.ep-place input {
+  width: 64px;
 }
 .ep-row {
   display: grid;
