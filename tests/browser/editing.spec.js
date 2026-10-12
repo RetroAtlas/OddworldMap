@@ -616,6 +616,128 @@ test("the selection drags where the pointer carries it, nudges on the arrows and
   expect(errors).toEqual([]);
 });
 
+const routePoints = (page) =>
+  page.evaluate(() => (window.__st.route ?? []).reduce((n, s) => n + s.pts.length, 0));
+
+test("a removed object stands as a ghost to restore, and Backspace leaves a route its points", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await armEditing(page);
+  await page.goto("/#AE");
+  await settleAny(page);
+  await attach(page);
+  // a route plotted and its tool disarmed stays drawn
+  await page.keyboard.press("r");
+  await page.waitForFunction(() => window.__st.show.route === true);
+  const box = await page.locator("#cv").boundingBox();
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.click(box.x + box.width / 2 + 40, box.y + box.height / 2);
+  await page.waitForFunction(
+    () => (window.__st.route ?? []).reduce((n, s) => n + s.pts.length, 0) === 2,
+  );
+  await page.keyboard.press("r");
+  await page.waitForFunction(() => window.__st.show.route === false);
+  expect(await routePoints(page)).toBe(2);
+
+  // Backspace with a selection removes the object and leaves the route alone
+  await page.keyboard.press("e");
+  await page.waitForFunction(() => window.__st.edit === true);
+  const door = await aimAtDoor(page);
+  await page.mouse.click(door.x, door.y);
+  await expect(page.locator("#editPanel")).toBeVisible();
+  await page.evaluate(() => document.activeElement?.blur());
+  await page.keyboard.press("Backspace");
+  await page.waitForFunction(() => window.__edits.isRemoved(window.__st.sel));
+  expect(await routePoints(page)).toBe(2);
+  const gone = await page.evaluate((d) => {
+    const st = window.__st;
+    return {
+      standing: st.path.tlvs.some((o) => o.name === "Door" && o.x1 === d.x1 && o.y1 === d.y1),
+      ghosts: window.__edits.removedObjects(st.path).length,
+      stored: Object.values(JSON.parse(localStorage.getItem("owm:edits")).AE["MI/1"].objects),
+      disabled: document.querySelector("#editBody fieldset")?.disabled,
+    };
+  }, door);
+  expect(gone).toEqual({ standing: false, ghosts: 1, stored: [{ removed: true }], disabled: true });
+  await expect(page.locator("#editTitle")).toContainText("removed on this device");
+  await expect(page.locator('#editBody [data-action="restore"]')).toBeVisible();
+  await expect(page.locator('#editBody [data-action="remove"]')).toHaveCount(0);
+  await expect(page.locator("#editBody .ep-foot")).toContainText("1 removed on this path");
+
+  // the panel's own restore puts the door back, keeps the keyboard on the actions row, and Delete removes it again
+  await page.locator('#editBody [data-action="restore"]').focus();
+  await page.keyboard.press("Enter");
+  await page.waitForFunction(
+    (d) => window.__st.path.tlvs.some((o) => o.name === "Door" && o.x1 === d.x1 && o.y1 === d.y1),
+    door,
+  );
+  await expect(page.locator('#editBody [data-action="remove"]')).toBeFocused();
+  await page.keyboard.press("Delete");
+  await page.waitForFunction(() => window.__edits.isRemoved(window.__st.sel));
+  await expect(page.locator("#editBody .ep-keys")).toContainText("restore puts it back");
+  await page.click("#settingsBtn");
+  await expect(page.locator("#editsCount")).toHaveText("1 object edited on 1 path");
+  await page.click("#settingsClose");
+  await expect(page.locator("#settingsOverlay")).toBeHidden();
+
+  // a ghost takes no second removal, and Backspace over one is the route's again
+  await page.keyboard.press("Backspace");
+  expect(await routePoints(page)).toBe(1);
+  expect(await page.evaluate(() => window.__edits.removedObjects(window.__st.path).length)).toBe(1);
+  // and Shift with an arrow over one pans the map, as it does with nothing selected
+  const camX = await page.evaluate(() => window.__st.cam.x);
+  await page.keyboard.press("Shift+ArrowRight");
+  expect(await page.evaluate(() => window.__st.cam.x)).not.toBe(camX);
+  expect(await page.evaluate(() => window.__edits.isRemoved(window.__st.sel))).toBe(true);
+  await page.keyboard.press("Shift+ArrowLeft");
+  expect(await page.evaluate(() => window.__st.cam.x)).toBeCloseTo(camX, 6);
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#editPanel")).toBeHidden();
+  await page.keyboard.press("Backspace");
+  expect(await routePoints(page)).toBe(0);
+  await page.mouse.move(door.x + 1, door.y + 1);
+  await expect(page.locator("#tip")).toContainText("removed on this device");
+  await expect(page.locator("#tip")).toContainText("click to select");
+  await page.mouse.click(door.x, door.y);
+  await expect(page.locator("#editPanel")).toBeVisible();
+  expect(await page.evaluate(() => window.__edits.isRemoved(window.__st.sel))).toBe(true);
+
+  // the screen list names the ghost and offers its restore
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("l");
+  await expect(page.locator("#camPanel")).toBeVisible();
+  await expect(page.locator("#camPanelTitle")).toContainText("1 removed");
+  await expect(page.locator('#camPanel .rowtool[aria-label="Restore Door"]')).toHaveCount(1);
+  await page.keyboard.press("Escape");
+
+  // a reload keeps the removal, and a link to the door says so
+  const link = await page.evaluate(() =>
+    window.__nav.objectHash(window.__edits.removedObjects(window.__st.path)[0]),
+  );
+  expect(link).toContain(`/Door@${door.x1},${door.y1}`);
+  await page.goto("/" + link);
+  await page.reload();
+  await settleAny(page);
+  await attach(page);
+  await expect(page.locator(".toast", { hasText: "Door removed on this device" })).toBeVisible();
+  expect(await page.evaluate(() => window.__edits.removedObjects(window.__st.path).length)).toBe(1);
+
+  // the screen list's restore puts the door back, and the path is the disc's again
+  await page.keyboard.press("e");
+  await page.waitForFunction(() => window.__st.edit === true);
+  await page.keyboard.press("l");
+  await page.locator('#camPanel .rowtool[aria-label="Restore Door"]').click();
+  await page.waitForFunction(
+    (d) => window.__st.path.tlvs.some((o) => o.name === "Door" && o.x1 === d.x1 && o.y1 === d.y1),
+    door,
+  );
+  expect(await page.evaluate(() => window.__edits.pathEdited(window.__st.path))).toBe(false);
+  expect(await page.evaluate(() => localStorage.getItem("owm:edits"))).toBeNull();
+  await expect(page.locator('#camPanel .rowtool[aria-label="Restore Door"]')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test("the mode draws every marker, whatever Markers for the rest says", async ({ page }) => {
   const errors = trackErrors(page);
   await seedView(page, {

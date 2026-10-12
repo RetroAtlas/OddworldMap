@@ -3,6 +3,12 @@
   {
    "date": "2026-10-12",
    "tag": "new",
+   "title": "Remove an object, and bring it back",
+   "detail": "In edit mode, \"remove\" takes the selected object off the path, as do the Delete and Backspace keys. It is gone from the map and from every export, but while you are editing it stays as a dotted ghost where it stood, named as removed on hover and in the screen list. A click selects it, and \"restore\" puts it back exactly as it was, moves and field edits included. Like every edit the removal stays on this device, marked, and one undo takes it back."
+  },
+  {
+   "date": "2026-10-12",
+   "tag": "new",
    "tiny": true,
    "title": "Put one object back as shipped",
    "detail": "The edit panel gains a \"put back as shipped\" button for an object you have changed: every field and its place go back to what the disc holds in one press, and one undo brings the lot back. \"Revert this path\" still puts the whole path back."

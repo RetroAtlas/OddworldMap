@@ -17,7 +17,7 @@ import {
   KEPT_UNSEEN,
 } from "./config.js";
 import { $, cv, cvCtx, cssVar } from "./dom.js";
-import { isEdited } from "./edits.js";
+import { isEdited, removedObjects } from "./edits.js";
 import { drawX, drawY } from "./geometry.js";
 import { state, GEO, LAYOUT, CELL_W, CELL_H, cellOrigin, worldLen } from "./state.js";
 import {
@@ -582,6 +582,7 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   paintMarkers(f, sprites);
   if (show.wires) paintWires(f, transients ? wireFocus : null);
   if (show.conn) paintConnections(f, transients ? connFocus : null);
+  if (transients && state.edit) paintGhosts(f, removedObjects(path));
   if (transients && highlight) paintHighlight(f, highlight);
   if (transients && sel) paintSelection(f, sel);
   if (transients && moveGhost) paintMoveGhost(f, moveGhost);
@@ -1179,6 +1180,26 @@ function paintMoveGhost({ ctx, cam, layout }, [x1, y1, x2, y2]) {
   ctx.lineWidth = 2 / cam.z;
   ctx.setLineDash([6 / cam.z, 4 / cam.z]);
   ctx.strokeRect(box.x, box.y, w, h);
+  ctx.setLineDash([]);
+}
+
+// the objects removed from the path, where they last stood; the mode alone shows them
+function paintGhosts(f, ghosts) {
+  const { ctx, cam, layout } = f;
+  ctx.strokeStyle = ctx.fillStyle = `rgb(${COLOR.editRgb})`;
+  ctx.lineWidth = 1.5 / cam.z;
+  ctx.setLineDash([2 / cam.z, 3 / cam.z]);
+  ctx.globalAlpha = 0.55;
+  ctx.font = `${11 / cam.z}px sans-serif`;
+  for (const g of ghosts) {
+    if (!markerShown(g)) continue;
+    const box = drawBox(g, layout);
+    const w = Math.max(box.w, 10),
+      h = Math.max(box.h, 10);
+    ctx.strokeRect(box.x, box.y, w, h);
+    if (f.showLabels && labelled(g)) ctx.fillText(`${g.name} · removed`, box.x, box.y - 3 / cam.z);
+  }
+  ctx.globalAlpha = 1;
   ctx.setLineDash([]);
 }
 

@@ -13,7 +13,9 @@ import {
   PENS,
   LINE_COLORS,
   LINE_NAMES,
+  REMOVED_NOTE,
   WIRE_COLOR,
+  markerShown,
 } from "./config.js";
 import {
   $,
@@ -46,6 +48,7 @@ import {
   computeWiring,
   destOf,
   destTrusted,
+  drawBox,
   isLoopback,
   levelWiring,
   lineRuns,
@@ -73,7 +76,16 @@ import { getSettings, fieldPrefsFor } from "./settings.js";
 import { focusCamPanel, openCamPanel, openCamPanelNear } from "./campanel.js";
 import { togglePlace } from "./place.js";
 import { selectObject, setEditMode } from "./editpanel.js";
-import { applyRectEdit, currentOf, editNotes, fitRect, isEdited, snapRect } from "./edits.js";
+import {
+  applyRectEdit,
+  currentOf,
+  editNotes,
+  fitRect,
+  isEdited,
+  isRemoved,
+  removedObjects,
+  snapRect,
+} from "./edits.js";
 import { toggleGraph } from "./graphview.js";
 import { addRoutePoint, routeArrive, routeSeam, undoRoutePoint } from "./route.js";
 import { closeDialog, openDialog, trapDialogKeys } from "./dialog.js";
@@ -190,7 +202,12 @@ cv.addEventListener("pointerdown", (e) => {
     }
     panMoved = false;
     // a press on the selection carries it, by the click's own ranking; anywhere else pans
-    if (state.edit && state.sel && (e.pointerType !== "mouse" || e.button === 0)) {
+    if (
+      state.edit &&
+      state.sel &&
+      !isRemoved(state.sel) &&
+      (e.pointerType !== "mouse" || e.button === 0)
+    ) {
       updateHover();
       if (hoverTlvs[0] === state.sel) {
         const t = state.sel,
@@ -406,9 +423,10 @@ cv.addEventListener("contextmenu", (e) => {
   const t = hoverTlvs[0];
   const url = location.href.split("#")[0] + objectHash(t);
   // the link names the shipped object, the one a recipient can resolve
-  const copied = isEdited(t)
-    ? `${t.name} link copied — it opens on the shipped ${t.name}`
-    : `${t.name} link copied`;
+  const copied =
+    isEdited(t) || isRemoved(t)
+      ? `${t.name} link copied — it opens on the shipped ${t.name}`
+      : `${t.name} link copied`;
   (navigator.clipboard?.writeText(url) ?? Promise.reject()).then(
     () => toast(copied),
     () => toast("copy failed"),
@@ -510,7 +528,13 @@ window.addEventListener("keydown", (e) => {
     if (!e.repeat) toggleShow(show); // a held key autorepeats; the toggle must not
     return;
   }
-  if (e.key === "Backspace" && state.route) {
+  // the removal claims the key, whichever handler the window reaches first
+  if (
+    e.key === "Backspace" &&
+    state.route &&
+    !e.defaultPrevented &&
+    !(state.edit && state.sel && !isRemoved(state.sel))
+  ) {
     undoRoutePoint();
     e.preventDefault(); // Backspace must not fall through to history-back
     return;
@@ -542,7 +566,7 @@ window.addEventListener("keydown", (e) => {
     return;
   }
   if (pan && moving) return; // the hand has the object
-  if (pan && e.shiftKey && state.edit && state.sel) {
+  if (pan && e.shiftKey && state.edit && state.sel && !isRemoved(state.sel)) {
     nudge(pan, e.altKey);
     e.preventDefault();
     return;
@@ -652,6 +676,16 @@ function updateHover() {
     }
     if (best) under.push({ t, i, ...best });
   });
+  // the mode's ghosts after everything standing, at the rects they were removed with
+  if (state.edit)
+    removedObjects(state.path).forEach((g, i) => {
+      if (!markerShown(g)) return;
+      const b = drawBox(g, LAYOUT);
+      const w = Math.max(b.w, 10),
+        h = Math.max(b.h, 10);
+      if (pt.x < b.x - 4 || pt.x > b.x + w + 4 || pt.y < b.y - 4 || pt.y > b.y + h + 4) return;
+      under.push({ t: g, i: -1 - i, drawn: false, area: Number.MAX_SAFE_INTEGER });
+    });
   under.sort((a, b) => b.drawn - a.drawn || a.area - b.area || b.i - a.i);
   hoverTlvs = under.map((u) => u.t);
   // partner preview: hovering a linked object outlines its counterpart when
@@ -709,7 +743,14 @@ function updateHover() {
           const d = shownDest(t);
           let follow = "";
           if (state.edit) {
-            follow = `<br><span class="f">${t === state.sel ? "drag to move · ⇧ arrows nudge" : "click to select"}</span>`;
+            const hint = isRemoved(t)
+              ? t === state.sel
+                ? "restore it from the panel"
+                : "click to select"
+              : t === state.sel
+                ? "drag to move · ⇧ arrows nudge · Del removes"
+                : "click to select";
+            follow = `<br><span class="f">${hint}</span>`;
           } else if (d && isLoopback(t, state.data, state.lvl, state.path)) {
             follow = `<br><span class="f loop">⟳ loops back to itself</span>`;
           } else if (d && !followableDest(t)) {
@@ -763,6 +804,7 @@ function updateHover() {
             (offScreen(t, LAYOUT)
               ? `<br><span class="e offscreen">${esc(OFFSCREEN_NOTE)}</span>`
               : "") +
+            (isRemoved(t) ? `<br><span class="e edited">${esc(REMOVED_NOTE)}</span>` : "") +
             (edited.length
               ? `<br><span class="e edited">${esc(`${EDITED_NOTE}: ${edited.join(", ")}`)}</span>`
               : "") +
@@ -800,7 +842,7 @@ function updateHover() {
       (below + tipH > cv.clientHeight ? Math.max(6, mouse.y - tipH - 12) : below) + "px";
     if (!panning)
       cv.style.cursor =
-        state.edit && hoverTlvs[0] === state.sel
+        state.edit && hoverTlvs[0] === state.sel && !isRemoved(state.sel)
           ? "move"
           : modeCursor() || (hoverTlvs.some((t) => followableDest(t)) ? "pointer" : "");
   } else {

@@ -40,7 +40,15 @@ import { isDemoPath } from "./demo.js";
 import { pathVisible, revealPath } from "./pathvisible.js";
 import { orderPaths } from "./pathorder.js";
 import { displayLabel, getSettings, rememberLocation } from "./settings.js";
-import { currentOf, pathEdited, pristineOf, takeReport } from "./edits.js";
+import {
+  currentOf,
+  ghostOf,
+  isRemoved,
+  pathEdited,
+  pristineOf,
+  removedObjects,
+  takeReport,
+} from "./edits.js";
 
 function markOn(box, key) {
   for (const b of box.children) b.classList.toggle("on", b.dataset.key === key);
@@ -472,14 +480,23 @@ export async function applyHash() {
   if (p.obj) {
     // a link to a specific object: center it and hold a marker on it. The link
     // names the shipped origin; the marker lands on what now stands for it
-    const origin = findTlv(state.path.tlvs.map(pristineOf), p.obj);
-    const t = origin && currentOf(origin, state.path);
+    const origin = findTlv(
+      [...state.path.tlvs, ...removedObjects(state.path)].map(pristineOf),
+      p.obj,
+    );
+    const t = origin && (currentOf(origin, state.path) ?? ghostOf(origin, state.path));
     const c = t && markerCentre(t, LAYOUT);
     const fx = c ? c[0] : (view?.x ?? dX(p.obj.x1)),
       fy = c ? c[1] : (view?.y ?? dY(p.obj.y1));
     centerOn(fx, fy, null); // re-derives the focus zoom for this viewport
     flashAt(fx, fy, true);
-    toast(t ? `marker on ${t.name}` : `no ${p.obj.name} at that spot`);
+    toast(
+      !t
+        ? `no ${p.obj.name} at that spot`
+        : isRemoved(t)
+          ? `${t.name} removed on this device`
+          : `marker on ${t.name}`,
+    );
   }
   state.route = route; // the hash is the source of truth: absent means no route
   if (state.graph !== p.graph) {

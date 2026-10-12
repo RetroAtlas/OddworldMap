@@ -23,14 +23,19 @@ import {
   gameEdits,
   hasLevelShort,
   isEdited,
+  isRemoved,
   pathEdited,
   pristineOf,
   redoEdit,
+  removeObject,
+  removedObjects,
+  restoreObject,
   revertObject,
   revertPath,
   setLevelShort,
   undoEdit,
 } from "./edits.js";
+import { REMOVED_NOTE, catOf, markerShown } from "./config.js";
 import { toast } from "./toast.js";
 import { scheduleDraw } from "./render.js";
 
@@ -145,7 +150,7 @@ function rectWith(t, key, v) {
 
 const PLACE_LABELS = { x: "x", y: "y", w: "width", h: "height" };
 
-function placeRow(t, label, words) {
+function placeRow(t, label, words, into) {
   const row = document.createElement("div");
   row.className = "ep-row";
   const name = document.createElement("span");
@@ -169,7 +174,7 @@ function placeRow(t, label, words) {
     val.append(el);
   }
   row.append(name, val);
-  body.append(row);
+  into.append(row);
 }
 
 function control(t, field, value) {
@@ -215,11 +220,11 @@ function putBack(title, onclick) {
   return b;
 }
 
-function head(label) {
+function head(label, into) {
   const h = document.createElement("div");
   h.className = "listhead ep-head";
   h.textContent = label;
-  body.append(h);
+  into.append(h);
 }
 
 // what the selection can have done to it, one button each, found again by its
@@ -232,11 +237,38 @@ function actions(t) {
     b.dataset.action = action;
     row.append(b);
   };
-  if (isEdited(t))
-    act("revert", "put back as shipped", "Every field and the place back as the disc has it", () =>
-      attempt(() => revertObject(t)),
+  if (isRemoved(t))
+    act("restore", "restore", "Put the object back on the path, as it was removed", () =>
+      restoreHere(t),
     );
-  if (row.children.length) body.append(row);
+  else {
+    act("remove", "remove", "Take the object off the path (Del); a ghost stays to restore it", () =>
+      attempt(() => removeObject(t)),
+    );
+    if (isEdited(t))
+      act(
+        "revert",
+        "put back as shipped",
+        "Every field and the place back as the disc has it",
+        () => attempt(() => revertObject(t)),
+      );
+  }
+  body.append(row);
+}
+// a press on either of these leaves the other standing in its place
+const COUNTERPART = { remove: "restore", restore: "remove" };
+// what was put on the path is drawn: its category comes back where the map's
+// own rule hides it
+function reveal(t) {
+  if (!markerShown(t))
+    window.dispatchEvent(new CustomEvent("reveal-category", { detail: { key: catOf(t).key } }));
+}
+// a restore from any surface, and the object drawn
+export function restoreHere(t) {
+  attempt(() => {
+    const back = restoreObject(t);
+    if (back) reveal(back);
+  });
 }
 
 function render() {
@@ -249,47 +281,72 @@ function render() {
     : held.place
       ? `[data-place="${held.place}"]`
       : held.action
-        ? `[data-action="${held.action}"]`
+        ? `[data-action="${held.action}"], [data-action="${COUNTERPART[held.action] ?? held.action}"]`
         : null;
+  const refocus = () => {
+    if (focused) (body.querySelector(focused) ?? (held.action ? panel : null))?.focus();
+  };
   const game = state.data.id;
+  const ghost = isRemoved(t);
   const cam = state.path.cams.find((c) => c.cell === tlvCell(t, state.path, GEO));
   const where = `${state.lvl.short} P${state.path.id}${cam ? " · " + cam.name.slice(-3) : ""}`;
-  title.innerHTML = `<button type="button" class="linkbtn ep-type">${esc(t.name)}</button> <span class="e">${esc(where)}</span>`;
+  title.innerHTML =
+    `<button type="button" class="linkbtn ep-type">${esc(t.name)}</button> <span class="e">${esc(where)}</span>` +
+    (ghost ? ` <span class="e edited">${esc(REMOVED_NOTE)}</span>` : "");
   title.querySelector(".ep-type").onclick = () =>
     window.dispatchEvent(new CustomEvent("typecard-open", { detail: { type: t.name } }));
   body.innerHTML = "";
   actions(t);
+  // a ghost's sections read but take nothing: its one action is the restore
+  const into = document.createElement(ghost ? "fieldset" : "div");
+  if (ghost) {
+    into.className = "ep-ghost";
+    into.disabled = true;
+  }
+  body.append(into);
 
   // what the navigation now believes about the object
   const extra = Object.entries(t.extra || {});
   if (extra.length) {
-    head("Derived");
+    head("Derived", into);
     const d = document.createElement("div");
     d.className = "ep-derived e";
     d.textContent = extra.map(([k, v]) => `${k}=${v}`).join("  ");
-    body.append(d);
+    into.append(d);
   }
 
   // where it stands and how big it is, in world units
-  head("Place");
-  placeRow(t, "position", [
-    ["x", t.x1, -32768],
-    ["y", t.y1, -32768],
-  ]);
-  placeRow(t, "size", [
-    ["w", t.x2 - t.x1, 0],
-    ["h", t.y2 - t.y1, 0],
-  ]);
-  const was = editedRect(t);
-  if (was) {
-    const shipped = document.createElement("div");
-    shipped.className = "ep-shipped e";
-    shipped.textContent = `shipped: ${was[0]},${was[1]} ${was[2] - was[0]}×${was[3] - was[1]}`;
-    shipped.append(
-      " ",
-      putBack("Put it back where it shipped", () => commitRect(was)),
+  if (!ghost) {
+    head("Place", into);
+    placeRow(
+      t,
+      "position",
+      [
+        ["x", t.x1, -32768],
+        ["y", t.y1, -32768],
+      ],
+      into,
     );
-    body.append(shipped);
+    placeRow(
+      t,
+      "size",
+      [
+        ["w", t.x2 - t.x1, 0],
+        ["h", t.y2 - t.y1, 0],
+      ],
+      into,
+    );
+    const was = editedRect(t);
+    if (was) {
+      const shipped = document.createElement("div");
+      shipped.className = "ep-shipped e";
+      shipped.textContent = `shipped: ${was[0]},${was[1]} ${was[2] - was[0]}×${was[3] - was[1]}`;
+      shipped.append(
+        " ",
+        putBack("Put it back where it shipped", () => commitRect(was)),
+      );
+      into.append(shipped);
+    }
   }
 
   const pristine = pristineOf(t);
@@ -298,13 +355,13 @@ function render() {
     const none = document.createElement("div");
     none.className = "ep-none e";
     none.textContent = "This type carries no fields to edit.";
-    body.append(none);
+    into.append(none);
     foot();
-    if (focused) (body.querySelector(focused) ?? (held.action ? panel : null))?.focus();
+    refocus();
     return;
   }
 
-  head("Fields");
+  head("Fields", into);
   for (const k of Object.keys(t.fields).sort((a, b) => a.localeCompare(b))) {
     const row = document.createElement("div");
     row.className = "ep-row";
@@ -342,25 +399,27 @@ function render() {
       );
       row.append(was);
     }
-    body.append(row);
+    into.append(row);
   }
   foot();
-  if (focused) (body.querySelector(focused) ?? (held.action ? panel : null))?.focus();
+  refocus();
 }
 
 // the keys the selection answers to, said once for every reader
-const KEYS_NOTE = "drag to move · ⇧ arrows nudge, Alt/⌥ ⇧ by a grid square";
+const KEYS_NOTE = "drag to move · ⇧ arrows nudge, Alt/⌥ ⇧ by a grid square · Del removes";
+const GHOST_KEYS_NOTE = "restore puts it back · n adds";
 
 // what the path carries, by kind, and the steps through it
 function foot() {
   const keys = document.createElement("div");
   keys.className = "ep-keys e";
-  keys.textContent = KEYS_NOTE;
+  keys.textContent = isRemoved(state.sel) ? GHOST_KEYS_NOTE : KEYS_NOTE;
   body.append(keys);
   let fields = 0,
     moved = 0,
     resized = 0;
-  for (const o of state.path.tlvs) {
+  const removed = removedObjects(state.path);
+  for (const o of [...state.path.tlvs, ...removed]) {
     fields += Object.keys(editedFields(o)).length;
     const notes = editNotes(o);
     if (notes.includes("moved")) moved++;
@@ -370,6 +429,7 @@ function foot() {
   if (fields) parts.push(`${fields} field${fields === 1 ? "" : "s"}`);
   if (moved) parts.push(`${moved} moved`);
   if (resized) parts.push(`${resized} resized`);
+  if (removed.length) parts.push(`${removed.length} removed`);
   const foot = document.createElement("div");
   foot.className = "ep-foot e";
   foot.textContent = parts.length
@@ -436,6 +496,21 @@ window.addEventListener("float-opened", (e) => {
 window.addEventListener("keydown", (e) => {
   const inField = typingIn(e.target);
   if (e.key === "Escape" && !panel.hidden && !inField) selectObject(null);
+  // the selection off the path, outside a field, once per press; the key claimed so the route planner yields
+  if (
+    (e.key === "Delete" || e.key === "Backspace") &&
+    state.edit &&
+    state.sel &&
+    !inField &&
+    !e.altKey &&
+    !e.ctrlKey &&
+    !e.metaKey
+  ) {
+    if (isRemoved(state.sel)) return; // a ghost takes nothing, and leaves the key to the route
+    e.preventDefault();
+    if (!e.repeat) attempt(() => removeObject(state.sel));
+    return;
+  }
   if (!state.edit || !state.path || inField || e.altKey || !(e.ctrlKey || e.metaKey)) return;
   const k = e.key.toLowerCase();
   if (k !== "z" && k !== "y") return;

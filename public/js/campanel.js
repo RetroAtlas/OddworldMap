@@ -6,15 +6,15 @@
 import { esc } from "./util.js";
 import { fieldEntries, fieldHelp } from "./fields.js";
 import { DARK_NOTE, objectMessages } from "./messages.js";
-import { CATS, EDITED_NOTE, OFFSCREEN_NOTE, catOf } from "./config.js";
+import { CATS, EDITED_NOTE, OFFSCREEN_NOTE, REMOVED_NOTE, catOf } from "./config.js";
 import { $, narrowMQ, typingIn } from "./dom.js";
 import { GEO, LAYOUT, state } from "./state.js";
 import { cellAt, nearestCam, offScreen, tlvCell } from "./model.js";
 import { setHighlight } from "./render.js";
 import { fieldPrefsFor, getSettings } from "./settings.js";
 import { jumpToTlv } from "./navigate.js";
-import { currentOf, editNotes } from "./edits.js";
-import { selectObject } from "./editpanel.js";
+import { currentOf, editNotes, isRemoved, removedObjects } from "./edits.js";
+import { restoreHere, selectObject } from "./editpanel.js";
 
 const panel = $("camPanel"),
   title = $("camPanelTitle"),
@@ -85,8 +85,16 @@ function list(cam, focus) {
       byCat.get(catOf(t)).push(t);
       n++;
     }
+  // the mode lists what was removed from the screen too, each with its restore
+  let k = 0;
+  if (state.edit)
+    for (const g of removedObjects(path))
+      if (inCell(g)) {
+        byCat.get(catOf(g)).push(g);
+        k++;
+      }
 
-  title.innerHTML = `${esc(cam.name)} <span class="e">· ${n} object${n === 1 ? "" : "s"}</span>`;
+  title.innerHTML = `${esc(cam.name)} <span class="e">· ${n} object${n === 1 ? "" : "s"}${k ? ` · ${k} removed` : ""}</span>`;
   body.innerHTML = "";
   for (const [c, tlvs] of byCat) {
     if (!tlvs.length) continue;
@@ -95,8 +103,10 @@ function list(cam, focus) {
     head.innerHTML = `<span class="sw" style="background:${c.color}"></span>${c.label}`;
     body.appendChild(head);
     for (const t of tlvs) {
+      const ghost = isRemoved(t);
       const b = document.createElement("button");
       b.className = "rowbtn cp-row";
+      if (ghost) b.classList.add("cp-ghost");
       if (t === focus) b.classList.add("active");
       const ex = fieldEntries(t, fieldPrefsFor(state.data.id))
         .map(([k, v]) => {
@@ -111,10 +121,13 @@ function list(cam, focus) {
         ? ` <span class="e">· <span class="gloss" data-tip="${esc(OFFSCREEN_NOTE)}">offscreen</span></span>`
         : "";
       const changed = editNotes(t);
+      const removed = ghost
+        ? ` <span class="e">· <span class="edited">${esc(REMOVED_NOTE)}</span></span>`
+        : "";
       const edited = changed.length
         ? ` <span class="e">· <span class="edited">${esc(`${EDITED_NOTE}: ${changed.join(", ")}`)}</span></span>`
         : "";
-      b.innerHTML = esc(t.name) + off + edited + (ex ? " " + ex : "");
+      b.innerHTML = esc(t.name) + off + removed + edited + (ex ? " " + ex : "");
       b.onclick = (e) => {
         jumpToTlv(state.data, state.lvl, state.path, t);
         if (state.edit) selectObject(t, { focus: e.detail === 0 }); // Enter counts no presses
@@ -124,6 +137,16 @@ function list(cam, focus) {
       const wrap = document.createElement("div");
       wrap.className = "cp-row-wrap";
       wrap.append(b);
+      if (ghost) {
+        const back = document.createElement("button");
+        back.className = "rowtool";
+        back.type = "button";
+        back.textContent = "↺";
+        back.title = `Restore ${t.name}`;
+        back.setAttribute("aria-label", back.title);
+        back.onclick = () => restoreHere(t);
+        wrap.append(back);
+      }
       // with the field picker on, a ⚙ jumps to this type's row in it
       if (t.fields && getSettings().fieldPrefs.mode === "more") {
         const gear = document.createElement("button");
@@ -164,7 +187,7 @@ function list(cam, focus) {
       }
     }
   }
-  if (!n) body.innerHTML = `<div class="cp-none">no objects on this screen</div>`;
+  if (!n && !k) body.innerHTML = `<div class="cp-none">no objects on this screen</div>`;
   listedAt = here();
   lastOpen = { cam, focus };
   panel.hidden = false;
@@ -181,6 +204,11 @@ window.addEventListener("float-opened", (e) => {
 // out of date by the time the mode closes
 window.addEventListener("graph-changed", () => {
   if (state.graph) closeCamPanel();
+});
+
+// the removed rows come and go with the mode
+window.addEventListener("edit-changed", () => {
+  if (!panel.hidden && lastOpen) list(lastOpen.cam, lastOpen.focus);
 });
 
 $("camPanelClose").onclick = closeCamPanel;
