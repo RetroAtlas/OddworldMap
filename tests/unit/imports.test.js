@@ -54,6 +54,7 @@ test("pure modules import in bare Node", async () => {
     "reliveexport",
     "extra",
     "edits",
+    "objecttypes",
     "collide",
     "sprites",
     "patrolkit",
