@@ -997,10 +997,10 @@ class LinksCache(unittest.TestCase):
 
 
 class PinnedRevision(unittest.TestCase):
-    def test_the_readme_names_both_pins(self):
-        readme = (HERE.parent / "README.md").read_text()
-        self.assertIn(DECOMP_COMMIT[:9], readme)
-        self.assertIn(AO_COMMIT[:9], readme)
+    def test_the_decomp_doc_names_both_pins(self):
+        doc = (HERE.parent / "docs" / "decomp.md").read_text()
+        self.assertIn(DECOMP_COMMIT[:9], doc)
+        self.assertIn(AO_COMMIT[:9], doc)
 
     def test_the_readme_names_the_oxipng_pin(self):
         self.assertIn(image.OXIPNG_VERSION, (HERE.parent / "README.md").read_text())
