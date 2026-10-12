@@ -52,7 +52,7 @@ Item-specific reasoning and cross-references stay inside this folder. An item ma
 ## Moonshot
 
 - [**11.** Live position tracking](item-011-live-position-tracking.md) — a local bridge feeding Abe's live position to the map while practising. _Large, research first._
-- [**42.** Level editor](item-042-level-editor.md) — Phases 1 and 2 shipped: the cross-check agrees with relive_api object for object, and a path saves as the level editor's own JSON. Phase 3's first two slices shipped too: an object's properties edit in the browser as a local sandbox behind a setting, kept on the device and marked wherever they show, every surface following through one data-changed event, with undo and redo per path. Moving, adding and removing objects and the collision lines are the parked slices. _The parked slices large._
+- [**42.** Level editor](item-042-level-editor.md) — Phases 1 and 2 shipped: the cross-check agrees with relive_api object for object, and a path saves as the level editor's own JSON. Phase 3's first three slices shipped too: an object's properties edit in the browser as a local sandbox behind a setting, kept on the device and marked wherever they show, every surface following through one data-changed event, with undo and redo per path; an object moves, resizes, removes to a ghost, adds from a picker of the game's types and duplicates, through the same model. Editing the collision lines is the one parked slice. _The parked slice large._
 
 ## Undecided
 

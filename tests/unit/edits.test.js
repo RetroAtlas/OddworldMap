@@ -20,6 +20,7 @@ import {
   canRedo,
   canUndo,
   currentOf,
+  duplicateObject,
   editNotes,
   editedFields,
   editedRect,
@@ -1144,3 +1145,48 @@ for (const [g, lv, pa] of [
     );
   });
 }
+
+test("a duplicate stands beside its original as an added copy of it, fields as they stand", () => {
+  restoreEdits({});
+  const G = world();
+  const P1 = G.levels[0].paths[0],
+    d = P1.tlvs[0];
+  stand(G);
+  const edited = applyFieldEdit(d, "camera", 18);
+  const copy = duplicateObject(edited);
+  assert.ok(isAdded(copy));
+  assert.equal(copy.name, "Door");
+  assert.deepEqual([copy.x1, copy.y1, copy.x2, copy.y2], [35, 10, 59, 34]);
+  assert.deepEqual(copy.fields, { ...DOOR, camera: 18 });
+  assert.equal(copy.extra.to_cam, 18);
+  assert.equal(state.path.tlvs[3], copy);
+  assert.deepEqual(editStore().AE["MI/1"].objects["+1"], {
+    name: "Door",
+    rect: [35, 10, 59, 34],
+    fields: { ...DOOR, camera: 18 },
+  });
+  // a wide object's copy clears its original, and a copy of a copy numbers on
+  const wide = applyRectEdit(P1.tlvs[1], [400, 10, 500, 34]);
+  const wideCopy = duplicateObject(wide);
+  assert.deepEqual([wideCopy.x1, wideCopy.x2], [501, 601]);
+  const again = duplicateObject(copy);
+  assert.equal(again.x1, 60);
+  assert.deepEqual(
+    Object.keys(editStore().AE["MI/1"].objects).filter((k) => k[0] === "+"),
+    ["+1", "+2", "+3"],
+  );
+  // a copy keeps its original's screen: to the left where the right spot would leave it
+  const edge = applyRectEdit(currentOf(wide), [340, 10, 364, 34]);
+  const beside = duplicateObject(edge);
+  assert.deepEqual([beside.x1, beside.y1, beside.x2, beside.y2], [315, 10, 339, 34]);
+  // a field-less copy, a ghost refused, and every copy a step
+  const h = duplicateObject(P1.tlvs[2]);
+  assert.equal("fields" in h, false);
+  removeObject(currentOf(d));
+  assert.throws(() => duplicateObject(removedObjects(state.path)[0]), /removed/);
+  assert.throws(() => duplicateObject(edited), /removed/); // a handle from before the removal
+  for (let i = 0; i < 9; i++) assert.ok(undoEdit("AE", "MI", 1), `step ${i}`);
+  assert.equal(canUndo("AE", "MI", 1), false);
+  assert.equal(state.path, P1);
+  restoreEdits({});
+});

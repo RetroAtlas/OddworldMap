@@ -17,6 +17,7 @@ import {
   applyRectEdit,
   canRedo,
   canUndo,
+  duplicateObject,
   editNotes,
   editedFields,
   editedRect,
@@ -252,6 +253,9 @@ function actions(t) {
       restoreHere(t),
     );
   else {
+    act("duplicate", "duplicate", "A copy beside it, as it stands (Ctrl+D, ⌘D)", () =>
+      duplicateHere(t),
+    );
     act(
       "remove",
       "remove",
@@ -283,6 +287,14 @@ export function restoreHere(t) {
   attempt(() => {
     const back = restoreObject(t);
     if (back) reveal(back);
+  });
+}
+// the copy is the selection from here, and drawn
+function duplicateHere(t) {
+  attempt(() => {
+    const copy = duplicateObject(t);
+    reveal(copy);
+    selectObject(copy, { focus: panel.contains(document.activeElement) });
   });
 }
 
@@ -422,7 +434,8 @@ function render() {
 }
 
 // the keys the selection answers to, said once for every reader
-const KEYS_NOTE = "drag to move · ⇧ arrows nudge, Alt/⌥ ⇧ by a grid square · Del removes · n adds";
+const KEYS_NOTE =
+  "drag to move · ⇧ arrows nudge, Alt/⌥ ⇧ by a grid square · Del removes · Ctrl/⌘ D duplicates · n adds";
 const GHOST_KEYS_NOTE = "restore puts it back · n adds";
 
 // what the path carries, by kind, and the steps through it
@@ -657,6 +670,12 @@ window.addEventListener("keydown", (e) => {
   }
   if (!state.edit || !state.path || inField || e.altKey || !(e.ctrlKey || e.metaKey)) return;
   const k = e.key.toLowerCase();
+  if (k === "d") {
+    if (!state.sel || view === "picker") return;
+    e.preventDefault();
+    if (!e.repeat && !isRemoved(state.sel)) duplicateHere(state.sel);
+    return;
+  }
   if (k !== "z" && k !== "y") return;
   e.preventDefault();
   if (k === "y" || e.shiftKey) redoHere();

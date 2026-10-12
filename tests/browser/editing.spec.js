@@ -905,6 +905,55 @@ test("the picker adds an object at the view's centre, marked added, exported who
   expect(errors).toEqual([]);
 });
 
+test("Ctrl+D puts a copy of the selection beside it, as an added object one undo takes away", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await armEditing(page);
+  await page.goto("/#AE");
+  await settleAny(page);
+  await attach(page);
+  await page.keyboard.press("e");
+  await page.waitForFunction(() => window.__st.edit === true);
+  const before = await page.evaluate(() => window.__st.path.tlvs.length);
+  const door = await aimAtDoor(page);
+  await page.mouse.click(door.x, door.y);
+  await expect(page.locator("#editPanel")).toBeVisible();
+  await expect(page.locator('#editBody [data-action="duplicate"]')).toBeVisible();
+  await page.evaluate(() => document.activeElement?.blur());
+  // a held key repeats its keydown; one press, one copy
+  await page.keyboard.down("Control");
+  await page.keyboard.down("d");
+  await page.keyboard.down("d");
+  await page.keyboard.up("d");
+  await page.keyboard.up("Control");
+  await page.waitForFunction((n) => window.__st.path.tlvs.length === n + 1, before);
+  const copy = await page.evaluate((d) => {
+    const st = window.__st;
+    const t = st.sel;
+    const original = st.path.tlvs.find((o) => o.name === "Door" && o.x1 === d.x1 && o.y1 === d.y1);
+    return {
+      added: window.__edits.isAdded(t),
+      name: t.name,
+      rect: [t.x1, t.y1, t.x2, t.y2],
+      camera: t.fields.camera,
+      sameFields: JSON.stringify(t.fields) === JSON.stringify(original.fields),
+      stored: Object.values(JSON.parse(localStorage.getItem("owm:edits")).AE["MI/1"].objects),
+    };
+  }, door);
+  expect(copy.added).toBe(true);
+  expect(copy.name).toBe("Door");
+  expect(copy.rect).toEqual([door.x1 + 25, door.y1, door.x2 + 25, door.y2]);
+  expect(copy.camera).toBe(door.camera);
+  expect(copy.sameFields).toBe(true);
+  expect(copy.stored).toHaveLength(1);
+  await expect(page.locator("#editTitle")).toContainText("added on this device");
+  await page.keyboard.press("Control+z");
+  await page.waitForFunction((n) => window.__st.path.tlvs.length === n, before);
+  expect(await page.evaluate(() => localStorage.getItem("owm:edits"))).toBeNull();
+  expect(errors).toEqual([]);
+});
+
 test("the mode draws every marker, whatever Markers for the rest says", async ({ page }) => {
   const errors = trackErrors(page);
   await seedView(page, {

@@ -576,14 +576,29 @@ export function removeObject(t, where = {}) {
 // the type's defaults under the ones given; keyed past every number the path's
 // entry has handed out. Returns the object now standing for it.
 export function addObject(name, rect, fields = {}, where = {}) {
-  const { gameId, lv, pa, G, pk, P, standingPath } = placeOf(where);
-  const type = typeTable(G)[name];
+  const place = placeOf(where);
+  const type = typeTable(place.G)[name];
   if (!type) throw new Error(`${name} is not a type the game places`);
+  for (const [f, v] of Object.entries(fields))
+    if (!validValue(place.gameId, name, f, v, type.defaults))
+      throw new Error(`${name}.${f}: ${v} is not a value the archive holds`);
+  return insertAdded(place, type, name, rect, fields);
+}
+
+// a copy of a standing object beside it on its own screen; its fields the
+// archive's own words, which a copy takes as they stand. Returns the copy.
+export function duplicateObject(t, where = {}) {
+  const place = locate(t, where);
+  const type = typeTable(place.G)[t.name];
+  if (!type) throw new Error(`${t.name} is not a type the game places`);
+  const rect = freeSpot(place.standingPath(), place.G.geometry, rectOf(t));
+  if (!rect) throw new Error(`a ${t.name} is too big for the path's grid`);
+  return insertAdded(place, type, t.name, rect, t.fields ? { ...t.fields } : {});
+}
+
+function insertAdded({ gameId, lv, pa, G, pk, P, standingPath }, type, name, rect, fields) {
   if (!validRect(P, G.geometry, rect))
     throw new Error(`${name}: ${rect.join(",")} is not a place on the path's grid`);
-  for (const [f, v] of Object.entries(fields))
-    if (!validValue(gameId, name, f, v, type.defaults))
-      throw new Error(`${name}.${f}: ${v} is not a value the archive holds`);
   record(gameId, pk, clone(all()[gameId]?.[pk] ?? null));
   const pe = ((all()[gameId] ??= {})[pk] ??= { objects: {} });
   const mark = `${gameId}/${pk}`;
