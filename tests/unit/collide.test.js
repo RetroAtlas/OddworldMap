@@ -8,6 +8,8 @@ import {
   raycast,
   raycastDiag,
   raycastDown,
+  snapAt,
+  snapX,
   tlvAt,
   wallHit,
 } from "../../public/js/collide.js";
@@ -173,4 +175,13 @@ test("raycast: a crossing whose determinant is under a unit is skipped as parall
     { line: 0, x: 5, y: 5 },
     "a longer line crosses",
   );
+});
+
+test("snapAt: Exoddus snaps the world x itself, Oddysee the x within the point's own camera", () => {
+  const geo = { worldW: 1024, worldH: 480 };
+  for (const x of [0, 112, 117, 1336, 5000])
+    assert.equal(snapAt("AE", geo, x, false), snapX("AE", x, false));
+  assert.equal(snapAt("AO", geo, 1024 + 312, false), 1024 + snapX("AO", 312, false));
+  assert.equal(snapAt("AO", geo, 2048 + 100, true), 2048 + snapX("AO", 100, true));
+  assert.equal(snapAt("AO", geo, 312, false), snapX("AO", 312, false));
 });

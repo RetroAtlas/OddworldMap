@@ -6,7 +6,7 @@
 // No DOM, so it stays importable in bare Node.
 
 import { onBackgroundPlane } from "./fields.js";
-import { raycastDiag, raycastDown, snapX } from "./collide.js";
+import { raycastDiag, raycastDown, snapAt as snapWorldX, snapX } from "./collide.js";
 import { sligBounds, tlvCell } from "./model.js";
 import { lcdMessages } from "./messages.js";
 import { AE_MUDOKONS_IN_LEVEL, AO_MUDOKONS, TALLY_EDGE, lcdIds } from "./lcd.js";
@@ -20,13 +20,7 @@ const TRACK = [8];
 const bgOf = (types) => types.map((t) => t + 4);
 const planeTypes = (half, types) => (half ? bgOf(types) : types);
 
-// Oddysee snaps in the current camera's own coordinates (MapFollowMe), the
-// camera being the object's own on a map
-const snapAt = (c, x) => {
-  if (c.game === "AE") return snapX("AE", x, c.half);
-  const camX = Math.floor(x / c.geo.worldW) * c.geo.worldW;
-  return camX + snapX("AO", x - camX, c.half);
-};
+const snapAt = (c, x) => snapWorldX(c.game, c.geo, x, c.half);
 
 const trunc = Math.trunc;
 const mid = (t) => trunc((t.x1 + t.x2) / 2);

@@ -25,6 +25,14 @@ export function snapX(game, x, half) {
   return x - r + (r >= 13 ? 25 : 0);
 }
 
+// the snap of a world x: Oddysee snaps in the current camera's own coordinates
+// (MapFollowMe), the camera being the point's own on a map
+export function snapAt(game, geo, x, half) {
+  if (game === "AE") return snapX("AE", x, half);
+  const camX = Math.floor(x / geo.worldW) * geo.worldW;
+  return camX + snapX("AO", x - camX, half);
+}
+
 // ScaleToGridSize: the grid a creature's probes and strides are measured in
 export const gridSize = (half) => (half ? 13 : 25);
 
