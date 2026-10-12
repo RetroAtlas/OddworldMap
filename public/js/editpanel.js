@@ -5,13 +5,14 @@
 
 import { $, cv, narrowMQ, typingIn } from "./dom.js";
 import { esc } from "./util.js";
-import { GEO, state } from "./state.js";
-import { tlvCell } from "./model.js";
+import { GEO, LAYOUT, state, wX, wY } from "./state.js";
+import { camCenter, cellAt, cellCentre, nearestCam, tlvCell } from "./model.js";
 import { LIVE_WHEN, fieldHelp, fieldType, valueMap } from "./fields.js";
 import { fieldUnit } from "./glossary.js";
 import { getSettings } from "./settings.js";
 import { GAME_IDS, loadEditorData } from "./data.js";
 import {
+  addObject,
   applyFieldEdit,
   applyRectEdit,
   canRedo,
@@ -19,9 +20,12 @@ import {
   editNotes,
   editedFields,
   editedRect,
+  fitRect,
   forgetAll,
+  freeSpot,
   gameEdits,
   hasLevelShort,
+  isAdded,
   isEdited,
   isRemoved,
   pathEdited,
@@ -33,9 +37,12 @@ import {
   revertObject,
   revertPath,
   setLevelShort,
+  typeNames,
+  typeTable,
   undoEdit,
 } from "./edits.js";
-import { REMOVED_NOTE, catOf, markerShown } from "./config.js";
+import { ADDED_NOTE, REMOVED_NOTE, catOf, markerShown } from "./config.js";
+import { typeSummary } from "./typeinfo.js";
 import { toast } from "./toast.js";
 import { scheduleDraw } from "./render.js";
 
@@ -48,6 +55,7 @@ let armedFor = null; // the game whose level map the mode holds
 let arming = false;
 let opener = null; // where focus returns when a panel holding it closes
 let selectedAt = null; // the place the selection is on
+let view = "form"; // the form over the selection, or the picker of types to add
 
 const here = () => state.path && `${state.data.id}/${state.lvl.short}/${state.path.id}`;
 
@@ -97,6 +105,7 @@ function close() {
   panel.hidden = true;
   state.sel = null;
   selectedAt = null;
+  view = "form";
   scheduleDraw();
   if (held && opener?.isConnected && opener.offsetParent) opener.focus();
   opener = null;
@@ -111,6 +120,7 @@ export function selectObject(t, { focus = false } = {}) {
   }
   state.sel = t;
   selectedAt = here();
+  view = "form";
   render();
   panel.hidden = false;
   window.dispatchEvent(new CustomEvent("float-opened", { detail: { id: "editPanel" } }));
@@ -126,14 +136,14 @@ const here3 = () => [state.data.id, state.lvl.short, state.path.id];
 const undoHere = () => state.path && undoEdit(...here3());
 const redoHere = () => state.path && redoEdit(...here3());
 
-// a refusal is toasted and the form shows what still stands; a commit that
-// goes through re-renders by the swap it causes
+// a refusal is toasted and the form, where it is up, shows what still stands;
+// a commit that goes through re-renders by the swap it causes
 function attempt(fn) {
   try {
     fn();
   } catch (e) {
     toast(e.message);
-    render();
+    if (view === "form") render();
   }
 }
 const commit = (field, value) => attempt(() => applyFieldEdit(state.sel, field, value));
@@ -242,10 +252,15 @@ function actions(t) {
       restoreHere(t),
     );
   else {
-    act("remove", "remove", "Take the object off the path (Del); a ghost stays to restore it", () =>
-      attempt(() => removeObject(t)),
+    act(
+      "remove",
+      "remove",
+      isAdded(t)
+        ? "Take the object off the path (Del)"
+        : "Take the object off the path (Del); a ghost stays to restore it",
+      () => attempt(() => removeObject(t)),
     );
-    if (isEdited(t))
+    if (isEdited(t) && !isAdded(t))
       act(
         "revert",
         "put back as shipped",
@@ -290,9 +305,10 @@ function render() {
   const ghost = isRemoved(t);
   const cam = state.path.cams.find((c) => c.cell === tlvCell(t, state.path, GEO));
   const where = `${state.lvl.short} P${state.path.id}${cam ? " · " + cam.name.slice(-3) : ""}`;
+  const note = ghost ? REMOVED_NOTE : isAdded(t) ? ADDED_NOTE : null;
   title.innerHTML =
     `<button type="button" class="linkbtn ep-type">${esc(t.name)}</button> <span class="e">${esc(where)}</span>` +
-    (ghost ? ` <span class="e edited">${esc(REMOVED_NOTE)}</span>` : "");
+    (note ? ` <span class="e edited">${esc(note)}</span>` : "");
   title.querySelector(".ep-type").onclick = () =>
     window.dispatchEvent(new CustomEvent("typecard-open", { detail: { type: t.name } }));
   body.innerHTML = "";
@@ -406,7 +422,7 @@ function render() {
 }
 
 // the keys the selection answers to, said once for every reader
-const KEYS_NOTE = "drag to move · ⇧ arrows nudge, Alt/⌥ ⇧ by a grid square · Del removes";
+const KEYS_NOTE = "drag to move · ⇧ arrows nudge, Alt/⌥ ⇧ by a grid square · Del removes · n adds";
 const GHOST_KEYS_NOTE = "restore puts it back · n adds";
 
 // what the path carries, by kind, and the steps through it
@@ -417,18 +433,21 @@ function foot() {
   body.append(keys);
   let fields = 0,
     moved = 0,
-    resized = 0;
+    resized = 0,
+    addedN = 0;
   const removed = removedObjects(state.path);
   for (const o of [...state.path.tlvs, ...removed]) {
     fields += Object.keys(editedFields(o)).length;
     const notes = editNotes(o);
     if (notes.includes("moved")) moved++;
     if (notes.includes("resized")) resized++;
+    if (isAdded(o)) addedN++;
   }
   const parts = [];
   if (fields) parts.push(`${fields} field${fields === 1 ? "" : "s"}`);
   if (moved) parts.push(`${moved} moved`);
   if (resized) parts.push(`${resized} resized`);
+  if (addedN) parts.push(`${addedN} added`);
   if (removed.length) parts.push(`${removed.length} removed`);
   const foot = document.createElement("div");
   foot.className = "ep-foot e";
@@ -450,7 +469,129 @@ function foot() {
         revertPath(state.data.id, state.lvl.short, state.path.id),
       ),
     );
+  foot.append(
+    " · ",
+    linkButton(
+      "add an object…",
+      "Pick one of the game's types to put on the path (n)",
+      openAddPicker,
+    ),
+  );
   body.append(foot);
+}
+
+// the picker of the game's types: the panel's second view, over the place in
+// hand like the form, its one outcome a fresh object selected
+export function openAddPicker() {
+  if (!state.edit || !state.path) return;
+  view = "picker";
+  selectedAt = here();
+  if (!panel.contains(document.activeElement)) opener = document.activeElement;
+  renderPicker("");
+  panel.hidden = false;
+  window.dispatchEvent(new CustomEvent("float-opened", { detail: { id: "editPanel" } }));
+  body.querySelector(".ep-filter").focus();
+  scheduleDraw();
+}
+
+function renderPicker(query) {
+  title.innerHTML = `Add an object <span class="e">${esc(`${state.lvl.short} P${state.path.id}`)}</span>`;
+  body.innerHTML = "";
+  const filter = document.createElement("input");
+  filter.type = "search";
+  filter.className = "filterbox ep-filter";
+  filter.placeholder = "find an object type…";
+  filter.autocomplete = "off";
+  filter.setAttribute("aria-label", "Filter object types");
+  filter.value = query;
+  const list = document.createElement("div");
+  list.className = "ep-types";
+  const rows = () => {
+    list.innerHTML = "";
+    const q = filter.value.trim().toLowerCase();
+    for (const name of typeNames(state.data)) {
+      if (q && !name.toLowerCase().includes(q)) continue;
+      const c = catOf({ name }),
+        shown = markerShown({ name });
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "rowbtn ep-typerow";
+      if (!shown) b.classList.add("off");
+      const about = typeSummary(name);
+      b.innerHTML =
+        `<span class="sw" style="background:${c.color}"></span>${esc(name)}` +
+        (about ? ` <span class="e">${esc(about)}</span>` : "") +
+        (shown ? "" : ` <span class="e">· hidden by the ${esc(c.label)} filter</span>`);
+      b.onclick = () => addHere(name);
+      list.append(b);
+    }
+    if (!list.children.length) list.innerHTML = `<div class="ep-none e">no type by that name</div>`;
+  };
+  filter.oninput = rows;
+  // the input keeps Escape (a search box clears on it)
+  filter.onkeydown = (e) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      if (filter.value) {
+        filter.value = "";
+        rows();
+      } else if (state.sel) selectObject(state.sel, { focus: true });
+      else selectObject(null);
+    } else if (e.key === "Enter") {
+      // a typed name takes its first match; an untyped Enter only moves to the list
+      e.preventDefault();
+      const first = list.querySelector(".ep-typerow");
+      if (filter.value.trim()) first?.click();
+      else first?.focus();
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      list.querySelector(".ep-typerow")?.focus();
+    }
+  };
+  // the arrows walk the rows, from the filter down and back up to it, and none
+  // of the four reaches the map's pan
+  list.onkeydown = (e) => {
+    if (!e.key.startsWith("Arrow")) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+    const items = [...list.querySelectorAll(".ep-typerow")];
+    const i = items.indexOf(e.target);
+    if (i < 0) return;
+    (e.key === "ArrowDown" ? items[i + 1] : (items[i - 1] ?? filter))?.focus();
+  };
+  body.append(filter, list);
+  rows();
+}
+
+// a fresh object at the middle of the view, on the screen under it or the
+// nearest one, the type's usual size around that point, fitted onto the grid
+// and stepped aside from an object standing exactly there
+function addHere(name) {
+  const { path, cam } = state;
+  const c = camCenter(cam, cv.clientWidth, cv.clientHeight);
+  let x = c.x,
+    y = c.y;
+  const cell = cellAt(x, y, path, LAYOUT);
+  if (!path.cams.some((k) => k.cell === cell)) {
+    const near = nearestCam(x, y, path, LAYOUT);
+    if (near) [x, y] = cellCentre(near.cell, path, LAYOUT);
+  }
+  const wx = Math.round(wX(x)),
+    wy = Math.round(wY(y));
+  const [w, h] = typeTable(state.data)[name].size;
+  const x1 = wx - Math.floor(w / 2),
+    y1 = wy - Math.floor(h / 2);
+  const rect = fitRect(path, GEO, [x1, y1, x1 + w, y1 + h]);
+  if (!rect) {
+    toast(`a ${name} is too big for the path's grid`);
+    return;
+  }
+  attempt(() => {
+    const t = addObject(name, freeSpot(path, GEO, rect));
+    reveal(t);
+    selectObject(t, { focus: true });
+  });
 }
 
 btn.hidden = !allowed();
@@ -463,7 +604,7 @@ window.addEventListener("settings-changed", (e) => {
 $("editClose").onclick = () => selectObject(null);
 
 window.addEventListener("data-changed", () => {
-  if (panel.hidden) return;
+  if (panel.hidden || view === "picker") return;
   if (state.sel) render();
   else selectObject(null);
 });
@@ -495,12 +636,15 @@ window.addEventListener("float-opened", (e) => {
 // chord is the browser's own undo of the typing
 window.addEventListener("keydown", (e) => {
   const inField = typingIn(e.target);
-  if (e.key === "Escape" && !panel.hidden && !inField) selectObject(null);
-  // the selection off the path, outside a field, once per press; the key claimed so the route planner yields
+  // Escape leaves the picker for the selection's form where one stands, else closes
+  if (e.key === "Escape" && !panel.hidden && !inField)
+    selectObject(view === "picker" ? state.sel : null, { focus: view === "picker" });
+  // the selection off the path; the key claimed so the route planner yields
   if (
     (e.key === "Delete" || e.key === "Backspace") &&
     state.edit &&
     state.sel &&
+    view === "form" &&
     !inField &&
     !e.altKey &&
     !e.ctrlKey &&

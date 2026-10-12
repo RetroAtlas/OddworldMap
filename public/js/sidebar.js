@@ -39,6 +39,14 @@ CATS.forEach((c) => {
   catUI.set(c, { cb, cnt: lab.querySelector(".cnt") });
   filterBox.appendChild(lab);
 });
+// an object put into a hidden category brings the category back, as a click would
+window.addEventListener("reveal-category", (e) => {
+  const c = CATS.find((c) => c.key === e.detail.key);
+  const ui = c && catUI.get(c);
+  if (!ui || ui.cb.checked) return;
+  ui.cb.checked = true;
+  ui.cb.onchange();
+});
 function setFilters(onFor) {
   CATS.forEach((c) => {
     c.on = onFor(c);

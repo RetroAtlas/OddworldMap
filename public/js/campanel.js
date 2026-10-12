@@ -6,14 +6,14 @@
 import { esc } from "./util.js";
 import { fieldEntries, fieldHelp } from "./fields.js";
 import { DARK_NOTE, objectMessages } from "./messages.js";
-import { CATS, EDITED_NOTE, OFFSCREEN_NOTE, REMOVED_NOTE, catOf } from "./config.js";
+import { ADDED_NOTE, CATS, EDITED_NOTE, OFFSCREEN_NOTE, REMOVED_NOTE, catOf } from "./config.js";
 import { $, narrowMQ, typingIn } from "./dom.js";
 import { GEO, LAYOUT, state } from "./state.js";
 import { cellAt, nearestCam, offScreen, tlvCell } from "./model.js";
 import { setHighlight } from "./render.js";
 import { fieldPrefsFor, getSettings } from "./settings.js";
 import { jumpToTlv } from "./navigate.js";
-import { currentOf, editNotes, isRemoved, removedObjects } from "./edits.js";
+import { currentOf, editNotes, isAdded, isRemoved, removedObjects } from "./edits.js";
 import { restoreHere, selectObject } from "./editpanel.js";
 
 const panel = $("camPanel"),
@@ -124,9 +124,11 @@ function list(cam, focus) {
       const removed = ghost
         ? ` <span class="e">· <span class="edited">${esc(REMOVED_NOTE)}</span></span>`
         : "";
-      const edited = changed.length
-        ? ` <span class="e">· <span class="edited">${esc(`${EDITED_NOTE}: ${changed.join(", ")}`)}</span></span>`
-        : "";
+      const edited = isAdded(t)
+        ? ` <span class="e">· <span class="edited">${esc(ADDED_NOTE)}</span></span>`
+        : changed.length
+          ? ` <span class="e">· <span class="edited">${esc(`${EDITED_NOTE}: ${changed.join(", ")}`)}</span></span>`
+          : "";
       b.innerHTML = esc(t.name) + off + removed + edited + (ex ? " " + ex : "");
       b.onclick = (e) => {
         jumpToTlv(state.data, state.lvl, state.path, t);

@@ -30,6 +30,7 @@ export const ENTRY_NOTE = "entry point (arrived at from another level)";
 export const DEMO_NOTE = "demo path (only the title-screen demos play here)";
 export const EDITED_NOTE = "edited on this device";
 export const REMOVED_NOTE = "removed on this device";
+export const ADDED_NOTE = "added on this device";
 
 export const LINE_COLORS = { 0:"#43d94c", 1:"#ff5c5c", 2:"#ff9d3d", 3:"#5ca9ff", 4:"#2b8f33", 5:"#a33c3c", 6:"#a3702b" };
 export const LINE_NAMES = { 0:"Floor", 1:"Wall (left)", 2:"Wall (right)", 3:"Ceiling",

@@ -3,6 +3,13 @@
   {
    "date": "2026-10-12",
    "tag": "new",
+   "flagship": true,
+   "title": "Add an object to a path",
+   "detail": "Edit mode can now put new objects on a path. Press n, or \"Add an object…\" under the \"Edit objects\" button, and a picker lists every type the game places, each with a line on what it is. Type to narrow it, walk it with the arrows, and pick one. A fresh object lands at the middle of the view, or beside whatever already stands exactly there, sized and set up like a typical one of its kind, selected and ready to drag. It carries every field the game stores for its type, so a path with your additions saves whole for the level editor, and it is marked as added wherever it shows. Added objects stay on this device like every other edit."
+  },
+  {
+   "date": "2026-10-12",
+   "tag": "new",
    "title": "Remove an object, and bring it back",
    "detail": "In edit mode, \"remove\" takes the selected object off the path, as do the Delete and Backspace keys. It is gone from the map and from every export, but while you are editing it stays as a dotted ghost where it stood, named as removed on hover and in the screen list. A click selects it, and \"restore\" puts it back exactly as it was, moves and field edits included. Like every edit the removal stays on this device, marked, and one undo takes it back."
   },

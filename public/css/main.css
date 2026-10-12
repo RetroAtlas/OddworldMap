@@ -159,6 +159,12 @@ body:not(.menu-open) #sidebar {
   border-color: rgb(var(--edit-rgb));
   font-weight: 600;
 }
+#editTools {
+  display: none;
+}
+body.editing #editTools {
+  display: block;
+}
 .btnrow button.entry::before {
   content: "\25B8";
   color: var(--accent);
@@ -426,6 +432,7 @@ body.graph #help,
 body.graph #exportBtn,
 body.graph #exportPathBtn,
 body.graph #editBtn,
+body.graph #editTools,
 body.graph #numbersBtn {
   display: none;
 }
@@ -914,6 +921,15 @@ body.page-zoomed #minimap {
 .cp-row.cp-ghost {
   opacity: 0.75;
 }
+.ep-filter {
+  margin: 6px 0 5px;
+}
+.ep-typerow {
+  font-size: 12px;
+}
+.ep-typerow.off {
+  opacity: 0.6;
+}
 .ep-place {
   display: flex;
   gap: 4px;
@@ -1010,19 +1026,6 @@ body.page-zoomed #minimap {
   padding: 8px 10px;
   border-top: 1px solid var(--line);
 }
-#numbersPick > input {
-  width: 100%;
-  background: var(--panel2);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  color: var(--text);
-  padding: 5px 9px;
-  font-size: 12px;
-  outline: none;
-}
-#numbersPick > input:focus {
-  border-color: var(--accent);
-}
 #numbersTypes {
   overflow-y: auto;
   margin-top: 5px;
@@ -1038,6 +1041,20 @@ body.page-zoomed #minimap {
 /* a click on a greyed box reaches its row, which says what it needs */
 .checkrow input:disabled {
   pointer-events: none;
+}
+/* the search box that narrows a panel's list */
+.filterbox {
+  width: 100%;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 5px 9px;
+  font-size: 12px;
+  outline: none;
+}
+.filterbox:focus {
+  border-color: var(--accent);
 }
 /* the small heading that divides a list, and the full-width row that acts as
    a button within one */

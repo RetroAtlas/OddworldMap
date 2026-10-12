@@ -102,10 +102,19 @@
         id="editBtn"
         class="chrome actbtn"
         aria-pressed="false"
-        data-tip="Edit objects on this path: click a marker to select it, then change its fields in the panel or drag it where it should stand.&#10;Edits stay on this device and never travel in a link."
+        data-tip="Edit objects on this path: click a marker to select it, then change its fields in the panel, drag it where it should stand, remove it, or add one of the game's objects.&#10;Edits stay on this device and never travel in a link."
       >
         Edit objects
       </button>
+      <div id="editTools" class="chrome">
+        <button
+          id="editAddBtn"
+          class="actbtn"
+          data-tip="Puts one of the game's object types on the path, picked from a list, at the middle of the view."
+        >
+          Add an object…
+        </button>
+      </div>
       <h2>
         Display
         <span class="h2tools"><button id="tReset" class="linkbtn">reset</button></span>
@@ -352,6 +361,7 @@
         <div id="numbersPick">
           <input
             id="numbersFilter"
+            class="filterbox"
             type="search"
             placeholder="find an object type…"
             autocomplete="off"
@@ -463,6 +473,10 @@
             <span class="sc-keys"><kbd>Del</kbd><kbd>⌫</kbd></span
             >remove the selected object, in edit mode; a shipped one stays as a ghost to restore it
             from
+          </div>
+          <div class="sc-row">
+            <span class="sc-keys"><kbd>n</kbd></span
+            >add an object to the path, in edit mode: pick one of the game's types
           </div>
           <div class="sc-row">
             <span class="sc-keys"><kbd>s</kbd></span
@@ -640,7 +654,8 @@
             <div class="st-desc">
               Adds an Edit objects button to the sidebar (or press e): a click on a marker selects
               it, a drag moves it, and a panel changes any field the game stores for it and where it
-              stands, with what the disc shipped beside anything you change.
+              stands, with what the disc shipped beside anything you change; objects can be removed,
+              and new ones of any type the game places added.
             </div>
             <label class="checkrow"
               ><input type="checkbox" id="sRawValues" autocomplete="off" /> Show raw field

@@ -13,6 +13,7 @@ import {
   PENS,
   LINE_COLORS,
   LINE_NAMES,
+  ADDED_NOTE,
   REMOVED_NOTE,
   WIRE_COLOR,
   markerShown,
@@ -75,12 +76,13 @@ import { markKeyHeld, toggleShow } from "./sidebar.js";
 import { getSettings, fieldPrefsFor } from "./settings.js";
 import { focusCamPanel, openCamPanel, openCamPanelNear } from "./campanel.js";
 import { togglePlace } from "./place.js";
-import { selectObject, setEditMode } from "./editpanel.js";
+import { openAddPicker, selectObject, setEditMode } from "./editpanel.js";
 import {
   applyRectEdit,
   currentOf,
   editNotes,
   fitRect,
+  isAdded,
   isEdited,
   isRemoved,
   removedObjects,
@@ -119,6 +121,11 @@ export function toggleMenu(open) {
 syncMenu();
 menuBtn.onclick = () => toggleMenu();
 scrim.onclick = () => toggleMenu(false);
+// the sidebar's way to the picker; the sheet it opens would land under the drawer on narrow
+$("editAddBtn").onclick = () => {
+  if (isNarrow()) toggleMenu(false);
+  openAddPicker();
+};
 window.addEventListener("selection-changed", (e) => {
   if (isNarrow() && !e.detail.fromHash) toggleMenu(false); // reveal the map after picking
 });
@@ -423,8 +430,9 @@ cv.addEventListener("contextmenu", (e) => {
   const t = hoverTlvs[0];
   const url = location.href.split("#")[0] + objectHash(t);
   // the link names the shipped object, the one a recipient can resolve
-  const copied =
-    isEdited(t) || isRemoved(t)
+  const copied = isAdded(t)
+    ? `${t.name} link copied — the ${t.name} exists on this device alone`
+    : isEdited(t) || isRemoved(t)
       ? `${t.name} link copied — it opens on the shipped ${t.name}`
       : `${t.name} link copied`;
   (navigator.clipboard?.writeText(url) ?? Promise.reject()).then(
@@ -549,6 +557,12 @@ window.addEventListener("keydown", (e) => {
   }
   if (e.key === "e") {
     if (!e.repeat) setEditMode(!state.edit);
+    return;
+  }
+  if (e.key === "n") {
+    if (!state.edit) return;
+    e.preventDefault(); // the letter must not land in the filter the picker focuses
+    if (!e.repeat) openAddPicker();
     return;
   }
   if (e.key === "l") {
@@ -805,9 +819,11 @@ function updateHover() {
               ? `<br><span class="e offscreen">${esc(OFFSCREEN_NOTE)}</span>`
               : "") +
             (isRemoved(t) ? `<br><span class="e edited">${esc(REMOVED_NOTE)}</span>` : "") +
-            (edited.length
-              ? `<br><span class="e edited">${esc(`${EDITED_NOTE}: ${edited.join(", ")}`)}</span>`
-              : "") +
+            (isAdded(t)
+              ? `<br><span class="e edited">${esc(ADDED_NOTE)}</span>`
+              : edited.length
+                ? `<br><span class="e edited">${esc(`${EDITED_NOTE}: ${edited.join(", ")}`)}</span>`
+                : "") +
             (about ? `<br><span class="e about">${esc(about)}</span>` : "") +
             messages +
             (ex ? `<br><span class="kv">${ex}</span>` : "") +

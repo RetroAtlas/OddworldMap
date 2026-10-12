@@ -13,8 +13,8 @@ import { state } from "./state.js";
 import { fieldPrefsFor, getSettings } from "./settings.js";
 import { jumpToPlace, jumpToTlv } from "./navigate.js";
 import { pathIn } from "./model.js";
-import { isEdited } from "./edits.js";
-import { EDITED_NOTE } from "./config.js";
+import { isAdded, isEdited } from "./edits.js";
+import { ADDED_NOTE, EDITED_NOTE } from "./config.js";
 import { toggleMenu } from "./interaction.js";
 
 const HIT_CAP = 1500,
@@ -132,7 +132,9 @@ function hitButton(h, terms) {
   }
   b.innerHTML =
     `<span class="loc">${h.L.short} P${h.P.id}</span> ${highlight(h.t.name, terms)}` +
-    (isEdited(h.t) ? ` <span class="ex edited">${esc(EDITED_NOTE)}</span>` : "") +
+    (isEdited(h.t)
+      ? ` <span class="ex edited">${esc(isAdded(h.t) ? ADDED_NOTE : EDITED_NOTE)}</span>`
+      : "") +
     (ex ? ` <span class="ex">${highlight(ex, terms)}</span>` : "");
   b.onclick = () => jumpToTlv(h.G, h.L, h.P, h.t);
   return b;
