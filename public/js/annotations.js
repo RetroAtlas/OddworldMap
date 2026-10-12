@@ -1,6 +1,6 @@
 // Curated names and notes from annotations.json (hand-edited source; see
-// README). A curated name is a deliberate override — the in-game name shows
-// only where no curated one is defined.
+// docs/curated-data.md). A curated name is a deliberate override — the
+// in-game name shows only where no curated one is defined.
 // The raw file shape stays contained here — callers get plain lookups.
 // Leaf module: no imports, importable in bare Node.
 
