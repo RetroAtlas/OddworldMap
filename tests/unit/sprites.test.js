@@ -66,7 +66,9 @@ const ONE_SHOTS = new Set();
 
 // animations the rules reach only from a state an edit puts an object in
 const EDIT_REACHED = new Set([
+  "AO_FallingRock_Waiting", // an Oddysee rock whose switch is set to the always-on id
   "CrawlingSlig_Idle", // a crawling slig whose state is set awake
+  "Explosion_Rock", // the debris of an Oddysee rock set on the always-on id
   "Scrab_JumpAndRunToFall", // a scrab whose scale leaves it no floor
   "Slig_ReloadGun", // an Oddysee slig turned to face a wall, standing past its reload timer
   "Slig_ReloadGun@StockYardsSlig",
@@ -76,10 +78,8 @@ const EDIT_REACHED = new Set([
 // written; one leaves its game's list with the code that draws it
 const SHIPPED_AHEAD = {
   AO: new Set([
-    "AO_FallingRock_Waiting", // a rock whose switch comes on
     "Bee_Swarm", // a honey sack's swarm and the bee hole's
     "DeathFlare_2", // a sling Mudokon appearing
-    "Explosion_Rock", // a rock's debris
     "Honey_Drip", // a hanging honey sack
     "Mudokon_Sling_Idle", // a sling Mudokon
     "Mudokon_Sling_Speak",
@@ -506,6 +506,23 @@ test("falling items: every one on the always-on switch falls, smashes on a floor
       assert.ok(floors > 0 && floors + stops > 1, `${where} smashes ${floors} + ${stops} times`);
     }
   assert.deepEqual(seen, { AO: 3, AE: 23 });
+});
+
+test("pinned falls: an Oddysee rock set on the always-on switch rumbles in its own art and throws rocks and sticks", () => {
+  const r = recordAt("AO", "F2", 5, "FallingItem", 1520, 1062);
+  const dropped = { ...r, cycle: { ...r.cycle, p: { ...r.cycle.p, switchId: 1 } } };
+  assert.equal(resolveRecord(dropped, sheets.AO, 1).name, "AO_FallingRock_Waiting");
+  let tick = 1;
+  while (resolveRecord(dropped, sheets.AO, tick + 1).y >= resolveRecord(dropped, sheets.AO, tick).y)
+    tick++;
+  const thrown = brainAt(dropped, sheets.AO, tick).state.fx.filter((p) => p.kind === "burst");
+  assert.deepEqual(
+    thrown.map((p) => [p.anim, p.parts.length]),
+    [
+      ["Explosion_Rock", 25],
+      ["Explosion_Stick", 25],
+    ],
+  );
 });
 
 test("pinned falls: a Bonewerkz shaft crate stops on the drills its camera builds, read in the camera's own order", () => {

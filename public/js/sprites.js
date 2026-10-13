@@ -581,11 +581,9 @@ rule("AE", "FallingItem", (c) => {
 rule("AO", "FallingItem", (c) => {
   const { t } = c;
   const farms = c.lvl.short === "R1" || c.lvl.short === "R2";
-  // the sheet carries neither the rocks' second art nor their debris, a fresh
-  // game dropping none
   const art = farms
     ? ["FallingMeat_Falling", "FallingMeat_Waiting"]
-    : ["AO_FallingRock_Falling", "AO_FallingRock_Falling"];
+    : ["AO_FallingRock_Falling", "AO_FallingRock_Waiting"];
   const debris = farms
     ? { anim: "Meat_Gib", type: "meat", count: 25 }
     : { anim: "Explosion_Rock", type: "rocks", count: 25 };

@@ -2,6 +2,13 @@
  "entries": [
   {
    "date": "2026-10-13",
+   "tag": "improved",
+   "tiny": true,
+   "title": "Oddysee's rocks fall in their own art",
+   "detail": "None of Oddysee's falling rocks drops at a fresh start, but one set falling in edit mode now rumbles in its own art and smashes into rock debris and sticks, as the game draws it."
+  },
+  {
+   "date": "2026-10-13",
    "tag": "new",
    "title": "Rocks, crates and meat fall",
    "detail": "While \"Objects as themselves\" is on, the falling items the game drops from the moment you arrive now drop on the map too. They are the half-size rocks of the Mudomo Vault, the crates of the Bonewerkz and the meat of Rupture Farms Return. Each rumbles a while, falls faster and faster, smashes on the floor below and comes again, for good. In the Bonewerkz shaft lined with drills, a crate that meets a running drill smashes on it instead, as in the game. The smash throws the game's own debris, drawn larger or smaller as it flies nearer or farther: rocks or sticks in Exoddus, with a blast in the Bonewerkz, and meat and sticks in Rupture Farms Return. Each item shows on its own screen alone, so one whose floor lies below that screen falls out of sight, and some of its debris flies back up into view. An export still draws them waiting."
