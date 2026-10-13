@@ -1,15 +1,16 @@
-import { BRAINS, STARTS, randomRange, scaleOf, switchGet } from "./patrolkit.js";
+import { camVoidX, camVoidY } from "./collide.js";
+import { BRAINS, STARTS, fpDiv, fpMul, randomRange, scaleOf, switchGet } from "./patrolkit.js";
 
 // ---- the effects a brain gives off -----------------------------------------
-// Short-lived things drawn beside the object: a sprite that plays once, the
-// engine's vector sparks, a sleeper's rising Z, a hint fly's hover. Each is
-// stepped with its brain and read back by the painter.
+// Short-lived things drawn beside the object. Each is stepped with its brain
+// and read back by the painter, on the screen of the camera it names or else
+// the one its point falls in.
 
 const PARTICLE_RGB = [128, 128, 128];
 
 // a Particle: an animation played once at a point, additive, and gone the
 // tick after its last frame
-function emitSprite(st, anim, x, y, layer, scale = scaleOf(st)) {
+export function emitSprite(st, anim, x, y, layer, scale = scaleOf(st), cam = null) {
   st.fx.push({
     kind: "sprite",
     anim,
@@ -20,7 +21,58 @@ function emitSprite(st, anim, x, y, layer, scale = scaleOf(st)) {
     blend: 1,
     rgb: PARTICLE_RGB,
     born: st.tick,
+    cam,
   });
+}
+
+// a ParticleBurst: debris flung from a point in three dimensions at speeds
+// rolled from the dice, falling ever faster and turned back short of the eye,
+// in raw 16.16 as the engine keeps it; Oddysee slows its sticks. The depth's
+// speed is an absolute value taken of a roll made twice, one roll deciding the
+// sign and a fresh one the size, so a piece may drift away instead
+const FP = 65536;
+export function emitBurst(st, rnd, now, b) {
+  const ae = st.game === "AE";
+  const speed = !ae && b.type === "sticks" ? fpMul(Math.trunc(0.4 * FP), b.scale) : b.scale;
+  const roll = () => fpMul((rnd() - 128) << 13, speed);
+  const parts = [];
+  for (let i = 0; i < b.count; i++) {
+    const vx = roll();
+    const vy = -roll();
+    const vz = roll() >= 0 ? -roll() : roll();
+    parts.push({ x: b.x, y: b.y, z: 0, vx, vy, vz });
+  }
+  st.fx.push({
+    kind: "burst",
+    anim: b.anim,
+    meat: b.type === "meat",
+    ae,
+    scale: b.scale,
+    layer: b.scale === FP ? 39 : 20,
+    win: b.win,
+    cam: b.cam,
+    parts,
+    born: st.tick,
+    timer: now + 91,
+  });
+}
+
+const within = ([left, top, right, bottom], x, y) =>
+  x >= left && x <= right && y >= top && y <= bottom;
+
+// the pieces a burst draws, as its render takes them: those on its screen,
+// each at the scale its depth gives, Exoddus's scaled by the burst's; the
+// first drawn by the burst's animation, the rest as its copies
+export function burstParts(p) {
+  const [left, top, right, bottom] = p.win;
+  const out = [];
+  for (const q of p.parts) {
+    if (q.x < left * FP || q.x > right * FP || q.y < top * FP || q.y > bottom * FP) continue;
+    let s = fpDiv(100 * FP, q.z + 300 * FP);
+    if (p.ae) s = fpMul(s, p.scale);
+    out.push({ x: q.x / FP, y: q.y / FP, scale: s / FP, copy: out.length > 0 });
+  }
+  return out;
 }
 
 // a Spark: `count` lines at rolled angles, drawn for two ticks, the second
@@ -133,6 +185,33 @@ export function stepEffects(st, now, rnd) {
       p.x += 5 * Math.cos(th);
       p.y -= 2 * Math.sin(th);
       keep.push(p);
+    } else if (p.kind === "burst") {
+      // Oddysee carries a piece over the void between screens; a piece turned
+      // back from the eye plays its sound, rolling for it, a meat chunk only
+      // where its screen would hear it
+      for (const q of p.parts) {
+        q.x += q.vx;
+        q.y += q.vy;
+        q.z += q.vz;
+        q.vy += FP / 4;
+        if (!p.ae) {
+          const sx = camVoidX(q.x / FP, q.vx, 16);
+          if (sx !== null) q.x = sx * FP;
+          const sy = camVoidY(q.y / FP, q.vy, 16);
+          if (sy !== null) q.y = sy * FP;
+        }
+        if (q.z + 300 * FP < 15 * FP) {
+          q.vz = -q.vz;
+          q.z += q.vz;
+          if (!p.meat) {
+            randomRange(st, rnd, -64, 46);
+            randomRange(st, rnd, -10, 10);
+            rnd();
+          } else if (within(p.win, Math.trunc(q.x / FP), Math.trunc(q.y / FP)))
+            randomRange(st, rnd, -900, -300);
+        }
+      }
+      if (now <= p.timer) keep.push(p);
     }
   }
   st.fx = keep;

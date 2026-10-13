@@ -4,7 +4,7 @@
 // No DOM at module top level, so it stays importable in bare Node.
 
 import { LOGIC_FPS } from "./config.js";
-import { BRAINS, MOTIONS, SPAWN_FRAME, STARTS, stepEffects } from "./brains.js";
+import { BRAINS, MOTIONS, SPAWN_FRAME, STARTS, burstParts, stepEffects } from "./brains.js";
 
 // an animation holds each frame `fps` ticks: at construction frame 0 stands
 // with its counter at 1, so the first tick decodes frame 0 again and loads the
@@ -288,6 +288,8 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
   return { name: anim, anim: a, frame, x, y, flip, moved, bright, rgb };
 }
 
+const RAW_RGB = [128, 128, 128];
+
 // what a record's brain has given off at a tick, each with its place and layer
 export function resolveEffects(r, set, tick, patrolAt = tick) {
   const cy = r.cycle;
@@ -311,7 +313,29 @@ export function resolveEffects(r, set, tick, patrolAt = tick) {
         layer: p.layer,
         blend: p.blend,
         rgb: p.rgb,
+        cam: p.cam ?? null,
       });
+    } else if (p.kind === "burst") {
+      // the pieces draw the burst's own frame, opaque and unmodulated
+      const a = set.anims[p.anim];
+      if (!a || p.born > at) continue;
+      const frame = frameAt(a, at - p.born + 1);
+      for (const q of burstParts(p))
+        out.push({
+          kind: "sprite",
+          anim: a,
+          name: p.anim,
+          frame,
+          x: q.x,
+          y: q.y,
+          scale: q.scale,
+          layer: p.layer,
+          blend: 0,
+          semi: false,
+          rgb: RAW_RGB,
+          cam: p.cam,
+          copy: q.copy,
+        });
     } else if (p.kind === "z") {
       if (p.born > at) continue;
       out.push({

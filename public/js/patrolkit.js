@@ -31,6 +31,26 @@ export const switchGet = (st, id) => (id === 1 ? 1 : id === 0 ? 0 : (st.sw[id] ?
 // the engine's 16.16 fixed-point values, one per frame, as pixels
 export const fp16 = (raw) => raw.map((v) => v / 65536);
 
+// Math_FixedPoint_Multiply and Math_FixedPoint_Divide on raw 16.16 values: the
+// magnitudes' product truncated, and a quotient taken a byte at a time, the
+// remainder's low bits dropped where the divisor passes 2^24
+export function fpMul(a, b) {
+  const m = Math.trunc((Math.abs(a) * Math.abs(b)) / 65536);
+  return a < 0 !== b < 0 ? -m : m;
+}
+export function fpDiv(a, b) {
+  const n = Math.abs(a),
+    d = Math.abs(b);
+  const rem = n % d;
+  let q = Math.floor(n / d) * 65536;
+  if (d >= 0x1000000)
+    q +=
+      Math.floor((rem % Math.floor(d / 256)) / Math.floor(d / 65536)) +
+      Math.floor(rem / Math.floor(d / 256)) * 256;
+  else q += Math.floor((((rem * 256) % d) * 256) / d) + Math.floor((rem * 256) / d) * 256;
+  return a < 0 !== b < 0 ? -q : q;
+}
+
 // ---- the creatures on patrol -------------------------------------------------
 // A patrol brain owns a position on the path's collision lines and walks it
 // with PathLine::MoveOnLine, handing over to the linked line; its world is the

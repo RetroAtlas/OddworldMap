@@ -1,6 +1,12 @@
 {
  "entries": [
   {
+   "date": "2026-10-13",
+   "tag": "new",
+   "title": "Rocks, crates and meat fall",
+   "detail": "The falling items the game sets dropping from the moment you arrive now drop on the map too, while \"Objects as themselves\" is on: the half-size rocks in the Mudomo Vault, the crates of the Bonewerkz and the meat of Rupture Farms Return. Each rumbles for the time its fields give it, falls faster and faster as the game drops it, smashes on the floor below and comes again, for good. The smash throws the game's own debris, rocks or sticks in Exoddus with a blast in the Bonewerkz, meat and sticks in Oddysee, flung from the game's own dice and drawn larger or smaller as it flies nearer or farther. Each item shows on its own screen alone, as the game shows it, so one whose floor lies below that screen falls out of sight, and some of its debris flies back up into view. An export still draws them waiting."
+  },
+  {
    "date": "2026-10-12",
    "tag": "new",
    "tiny": true,

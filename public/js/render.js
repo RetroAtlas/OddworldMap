@@ -996,20 +996,23 @@ function paintText(ctx, layout, cam, set, e, view) {
   }
 }
 
-// an effect a brain gave off, drawn additively, any lines as the engine's
-// gouraud lines, and clipped to the camera the point falls in
+// an effect a brain gave off, drawn additively unless it says otherwise, any
+// lines as the engine's gouraud lines, and clipped to the camera it names or
+// else the one its point falls in
 function paintEffect(ctx, layout, set, e, ae, view) {
-  const cam = cameraAt(layout, Math.trunc(e.x), Math.trunc(e.y));
+  const cam = e.cam
+    ? cameraAt(layout, e.cam.x, e.cam.y)
+    : cameraAt(layout, Math.trunc(e.x), Math.trunc(e.y));
   ctx.save();
   ctx.beginPath();
   ctx.rect(cam.dx, cam.dy, layout.visW, layout.visH);
   ctx.clip();
-  ctx.globalCompositeOperation = "lighter";
+  ctx.globalCompositeOperation = e.kind === "sprite" && e.blend === 0 ? "source-over" : "lighter";
   if (e.kind === "sprite") {
     const frame = e.anim.frames[e.frame];
-    const tile = processedFrame(set.sheets[frame[0]], frame, true, e.rgb);
+    const tile = processedFrame(set.sheets[frame[0]], frame, e.semi ?? true, e.rgb);
     if (tile) {
-      const r = { scale: e.scale, flipY: false, swap: false };
+      const r = { scale: e.scale, flipY: false, swap: false, copy: !!e.copy };
       drawFrame(ctx, cam, tile, frame, r, { flip: false }, ae, e.x, e.y);
     }
   } else if (e.kind === "text") paintText(ctx, layout, cam, set, e, view);
@@ -1057,31 +1060,43 @@ const Z_BURST = [
 
 // one frame at a world anchor, placed as Animation::vRender places it: the
 // frame's own offset scaled, a half-scale frame's y offset a unit less and
-// Exoddus's a pixel larger, every rounding a truncation of v + 0.499
+// Exoddus's a pixel larger, every rounding a truncation of v + 0.499; a copy
+// of another's frame is placed as AnimationUnknown places it, its offset and
+// size scaled and truncated toward zero
 function drawFrame(ctx, cam, tile, frame, r, shown, ae, wx, wy) {
   const [, , , w, h, xoff, yoff] = frame;
-  const t = (v) => Math.trunc(v + 0.499);
   const s = r.scale;
-  let fw = w,
-    fh = h,
-    ox = xoff,
-    oy = yoff;
-  if (s !== 1) {
-    fw *= s;
-    fh *= s;
-    ox *= s;
-    oy = oy * s - 1;
-    if (ae && s === 0.5) {
-      fw += 1;
-      fh += 1;
-    }
-  }
   const xpos = cam.dx + (Math.trunc(wx) - cam.wx),
     ypos = cam.dy + (Math.trunc(wy) - cam.wy);
-  const dw = Math.floor(fw - 0.501) + 1,
+  let x0, y0, dw, dh;
+  if (r.copy) {
+    dw = Math.trunc(w * s);
+    dh = Math.trunc(h * s);
+    const ox = Math.trunc(xoff * s),
+      oy = Math.trunc(yoff * s);
+    x0 = shown.flip ? xpos - ox - dw : xpos + ox;
+    y0 = r.flipY ? ypos - oy - dh : ypos + oy;
+  } else {
+    const t = (v) => Math.trunc(v + 0.499);
+    let fw = w,
+      fh = h,
+      ox = xoff,
+      oy = yoff;
+    if (s !== 1) {
+      fw *= s;
+      fh *= s;
+      ox *= s;
+      oy = oy * s - 1;
+      if (ae && s === 0.5) {
+        fw += 1;
+        fh += 1;
+      }
+    }
+    dw = Math.floor(fw - 0.501) + 1;
     dh = Math.floor(fh - 0.501) + 1;
-  const x0 = shown.flip ? xpos - t(ox) - t(fw) : xpos + t(ox);
-  const y0 = r.flipY ? ypos - t(oy) - t(fh) : ypos + t(oy);
+    x0 = shown.flip ? xpos - t(ox) - t(fw) : xpos + t(ox);
+    y0 = r.flipY ? ypos - t(oy) - t(fh) : ypos + t(oy);
+  }
   ctx.save();
   ctx.translate(x0, y0);
   if (shown.flip) {

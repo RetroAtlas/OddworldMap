@@ -25,6 +25,10 @@ const snapAt = (c, x) => snapWorldX(c.game, c.geo, x, c.half);
 const trunc = Math.trunc;
 const mid = (t) => trunc((t.x1 + t.x2) / 2);
 const midY = (t) => trunc((t.y1 + t.y2) / 2);
+// a point in the cell of the camera whose object list holds an object: the one
+// its rect's corner falls in in Oddysee, its midpoint in Exoddus
+const listedAt = (c) =>
+  c.game === "AE" ? { x: mid(c.t), y: midY(c.t) } : { x: c.t.x1, y: c.t.y1 };
 const ALL_LINES = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 // the levels whose themed art and tints differ
 const AE_VAULTS = new Set(["NE", "PV", "SV"]);
@@ -507,23 +511,73 @@ rule("AE", "BoneBag", (c) => [
   }),
 ]);
 
+// a falling item stands in its first art until its switch reads on and in its
+// second from then; a camera change removes one that is not falling, so it
+// shows on the screen of the camera that builds it alone, the one whose list
+// holds it, and it retires after a fall where its rect's foot lies off that
+// screen
+function fallingItem(c, [art, waiting], y, debris, blast = false) {
+  const { t, f, geo } = c;
+  const cam = listedAt(c);
+  const left = Math.floor(cam.x / geo.worldW) * geo.worldW + geo.winX;
+  const top = Math.floor(cam.y / geo.worldH) * geo.worldH + geo.winY;
+  const win = [left, top, left + geo.visW, top + geo.visH];
+  const [fx, fy] = [mid(t), t.y2];
+  const p = {
+    switchId: f.switch_id,
+    interval: f.fall_interval,
+    max: f.max_falling_items,
+    reset: f.reset_switch_id_after_use === 1,
+    art,
+    waiting,
+    x: t.x1,
+    y,
+    lines: c.lines,
+    floor: planeTypes(c.half, FLOOR),
+    win,
+    cam,
+    stays: fx >= win[0] && fx <= win[2] && fy >= win[1] && fy <= win[3],
+    debris,
+    blast,
+  };
+  return { cam, cycle: brain(c, "fallingItem", false, p) };
+}
+
 rule("AE", "FallingItem", (c) => {
   const { t } = c;
   if (c.lvl.short === "CR") return [];
-  const anim = c.lvl.short === "BW" ? "FallingCrate_Falling" : "AE_FallingRock_Falling";
-  // the item waits no lower than the top of the camera that builds it, the
-  // one holding its rect's midpoint, and a camera change removes it, so it
-  // shows on that camera's screen alone
-  const at = { x: mid(t), y: midY(t) };
-  const camTop = Math.floor(at.y / c.geo.worldH) * c.geo.worldH + c.geo.winY;
-  return [draw(c, anim, t.x1, Math.min(t.y1, camTop), { layer: c.half ? 12 : 31, camAt: at })];
+  const bw = c.lvl.short === "BW";
+  const art = bw
+    ? ["FallingCrate_Falling", "FallingCrate_Waiting"]
+    : ["AE_FallingRock_Falling", "AE_FallingRock_Waiting"];
+  // the item waits no lower than the top of the camera that builds it
+  const camTop = Math.floor(midY(t) / c.geo.worldH) * c.geo.worldH + c.geo.winY;
+  const y = Math.min(t.y1, camTop);
+  const debris = bw
+    ? { anim: "Explosion_Stick", type: "sticks", count: 20 }
+    : { anim: "Explosion_Rock", type: "rocks", count: 25 };
+  const { cam, cycle } = fallingItem(c, art, y, [debris], bw);
+  return [draw(c, art[0], t.x1, y, { layer: c.half ? 12 : 31, camAt: cam, cycle })];
 });
 rule("AO", "FallingItem", (c) => {
+  const { t } = c;
   const farms = c.lvl.short === "R1" || c.lvl.short === "R2";
+  // the sheet carries neither the rocks' second art nor their debris, a fresh
+  // game dropping none
+  const art = farms
+    ? ["FallingMeat_Falling", "FallingMeat_Waiting"]
+    : ["AO_FallingRock_Falling", "AO_FallingRock_Falling"];
+  const debris = farms
+    ? { anim: "Meat_Gib", type: "meat", count: 25 }
+    : { anim: "Explosion_Rock", type: "rocks", count: 25 };
+  const sticks = { anim: "Explosion_Stick", type: "sticks", count: 25 };
+  const { cam, cycle } = fallingItem(c, art, t.y1, [debris, sticks]);
   return [
-    draw(c, farms ? "FallingMeat_Falling" : "AO_FallingRock_Falling", c.t.x1, c.t.y1, {
+    draw(c, art[0], t.x1, t.y1, {
       layer: 31,
       rgb: c.lvl.short === "L1" ? [77, 120, 190] : [105, 105, 105],
+      camAt: cam,
+      cycle,
     }),
   ];
 });

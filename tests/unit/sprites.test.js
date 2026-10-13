@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { spriteDraws, spriteTypes } from "../../public/js/sprites.js";
 import { armFieldData } from "../../public/js/fields.js";
-import { resolveEffects, resolveRecord } from "../../public/js/motion.js";
+import { brainAt, resolveEffects, resolveRecord } from "../../public/js/motion.js";
+import { raycast } from "../../public/js/collide.js";
 import { patrolZone, sligBounds } from "../../public/js/model.js";
 import { drawX } from "../../public/js/geometry.js";
 
@@ -77,10 +78,7 @@ const SHIPPED_AHEAD = {
   AO: new Set([
     "Bee_Swarm", // a honey sack's swarm and the bee hole's
     "DeathFlare_2", // a sling Mudokon appearing
-    "Explosion_Stick", // a falling item's debris
-    "FallingMeat_Waiting", // meat on the always-on switch
     "Honey_Drip", // a hanging honey sack
-    "Meat_Gib", // meat's debris
     "Mudokon_Sling_Idle", // a sling Mudokon
     "Mudokon_Sling_Speak",
     "ObjectShadow", // a creature's drop shadow
@@ -89,12 +87,7 @@ const SHIPPED_AHEAD = {
     "Well_Leaf", // a well letting a leaf go
   ]),
   AE: new Set([
-    "AE_FallingRock_Waiting", // a rock on the always-on switch
-    "AirExplosion", // a crate's blast
     "ChantOrb_Particle", // the flare running down a web line
-    "Explosion_Rock", // a rock's debris
-    "Explosion_Stick", // a crate's debris
-    "FallingCrate_Waiting", // a crate on the always-on switch
     "Fleech_Climb", // a fleech climbing a hoist
     "Fleech_RaiseHead",
     "Fleech_SettleOnGround",
@@ -251,21 +244,32 @@ test("nothing parks: every record whose animation does not loop is frozen on pur
     }
 });
 
+// brains every placed record of which waits on a switch a fresh game holds off
+const WAITING = new Set([
+  "AO fallingItem false AO_FallingRock_Falling", // Oddysee's rocks, none on the always-on switch
+]);
+
 test("brains: every brain runs on the sidecar's animations and keeps moving", () => {
   for (const g of GAMES) {
     const set = sheets[g];
-    const seen = new Map();
-    for (const { t, r } of allRecords(g)) {
+    const moves = new Map();
+    for (const { r } of allRecords(g)) {
       if (r.cycle?.kind !== "brain") continue;
       const key = `${r.cycle.brain} ${r.cycle.emo} ${r.anim}`;
-      if (seen.has(key)) continue;
-      seen.set(key, t);
+      if (moves.get(key)) continue;
       const names = brainAnims(r, set);
-      assert.ok(names.size > 1 || names.moved, `${g} ${key} never changes animation or place`);
+      moves.set(key, names.size > 1 || names.moved);
       for (const n of names)
         assert.ok(set.anims[n], `${g} ${key} reaches ${n}, which the sidecar lacks`);
     }
-    assert.ok(seen.size > 0, `${g} has brains`);
+    assert.ok(moves.size > 0, `${g} has brains`);
+    for (const [key, moved] of moves)
+      assert.ok(
+        moved !== WAITING.has(`${g} ${key}`),
+        moved
+          ? `${g} ${key} moves, so it leaves WAITING`
+          : `${g} ${key} never changes animation or place`,
+      );
   }
 });
 
@@ -457,6 +461,41 @@ test("pinned placements: an Exoddus falling item waits no lower than the top of 
 
 // a minute of the patrol clock, longer than any pause a creature on patrol rolls
 const PATROL_MINUTE = 1800;
+
+// nothing switches the always-on id off and none of these carries a count, so
+// each falls for good: in a minute, every one lands on a floor of its own plane
+// more than once, throws its debris there, and starts over where it waited
+test("falling items: every one on the always-on switch falls, lands on a floor of its plane and starts over", () => {
+  const seen = { AO: 0, AE: 0 };
+  for (const g of GAMES)
+    for (const { lvl, path, t, r } of allRecords(g)) {
+      if (t.name !== "FallingItem" || t.fields.switch_id !== 1) continue;
+      seen[g]++;
+      const where = `${g} ${lvl.short} P${path.id} (${t.x1},${t.y1})`;
+      const yOff = r.y - r.cycle.p.y;
+      const floor = r.scale === 1 ? [0] : [4];
+      let landings = 0,
+        prev = null;
+      for (let tick = 0; tick <= PATROL_MINUTE; tick++) {
+        const s = resolveRecord(r, sheets[g], tick);
+        assert.ok(s, `${where} retires at ${tick}`);
+        if (prev && s.y < prev.y) {
+          const y = prev.y - yOff;
+          const hit = raycast(path.lines, prev.x, y - 1, prev.x, y + 1, floor);
+          assert.ok(hit && hit.y === y, `${where} stops at ${y} without a floor there`);
+          const thrown = brainAt(r, sheets[g], tick - 1).state.fx.filter(
+            (p) => p.kind === "burst" && p.born === tick - 1,
+          );
+          assert.equal(thrown.length, r.cycle.p.debris.length, `${where} smashes at ${tick - 1}`);
+          assert.equal(s.y, r.y, `${where} starts over where it waited`);
+          landings++;
+        }
+        prev = s;
+      }
+      assert.ok(landings > 1, `${where} lands ${landings} times in a minute`);
+    }
+  assert.deepEqual(seen, { AO: 3, AE: 23 });
+});
 function xSpan(r, set) {
   let lo = Infinity,
     hi = -Infinity;

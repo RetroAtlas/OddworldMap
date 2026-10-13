@@ -8,7 +8,7 @@
 
 // the registry: every brain module, and the tables they fill
 export { BRAINS, MOTIONS, SPAWN_FRAME, STARTS } from "./patrolkit.js";
-export { stepEffects } from "./effects.js";
+export { burstParts, stepEffects } from "./effects.js";
 import "./idlebrains.js";
 import "./slig.js";
 import "./scrab.js";
@@ -19,4 +19,5 @@ import "./greeter.js";
 import "./bat.js";
 import "./glukkon.js";
 import "./flyingslig.js";
+import "./fallingitem.js";
 import "./lcd.js";

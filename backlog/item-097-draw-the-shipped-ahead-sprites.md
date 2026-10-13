@@ -1,6 +1,6 @@
 # 97. Draw what the sheets carry ahead of their brains
 
-**Status:** open · **Effort:** medium in all, a small rule or brain each (the shadows also need a subtractive blend in the painter) · **Where:** viewer, `sprites.js` and the brain modules; no disc
+**Status:** open — the falling items on the always-on switch shipped 2026-10-13 · **Effort:** medium in all, a small rule or brain each (the shadows also need a subtractive blend in the painter) · **Where:** viewer, `sprites.js` and the brain modules; no disc
 
 **Filed:** 2026-10-09, from an audit of every animation the map could draw at a fresh start without a player that the sheets did not ship, made so that one rebuild could carry them all (*Ship the next brains' sprites in one rebuild, ahead of the brains*).
 
@@ -39,6 +39,18 @@ Every behaviour below is the decomp's, read under the no-player reading [94](ite
 **A honey sack and the bee hole** (`Honey_Drip`, `Bee_Swarm`; Oddysee). A hanging sack lets a drip fall every 90 ticks at the first drip target in its camera and keeps a swarm of five bees steering about it; F2 P2's swarm hole sends a swarm of 20 along the path's lines every 100 ticks unless a rolling ball fills it. 2 sacks (F1 P2, F2 P2; F2's camera has no drip target, so its drips land at the origin, off the map) and 1 hole.
 
 **A claw carrying motion detectors** (`Security_Claw_Upper_NoRotation`; Oddysee). A claw whose camera holds motion detectors stops rotating and takes them: each detector's flare draws at the claw, a unit left and eleven up, every tick. 3 claws in E2 (P2 at (406,159), P4 at (429,186) and (3476,149)) carrying 8 detectors. The claw's bob, 8 units on a cosine and a quarter of that on a sine, two angle steps a tick, needs no art and goes with it.
+
+## Shipped (2026-10-13)
+
+**The falling items on the always-on switch** (`fallingitem.js`, their debris in `effects.js`). Every placed falling item runs the decomp's brain and reads its switch through `switchGet`, so the 26 on id 1 move at a fresh start and the rest wait in their first art until something writes theirs: each rumbles `fall_interval` in its second art, falls in the engine's 16.16 gaining 1.8 a tick (0.9 at half scale), smashes where the raycast meets the floor of its plane, stands back where it waited in its first art for a tick and rumbles again. The smash throws the decomp's `ParticleBurst` from the item's own dice cursor, ported per game, and in the Bonewerkz the `AirExplosion` blast beside it; the item and all it throws show on the screen of the camera that builds it alone. `tests/unit/sprites.test.js` sweeps the 26 for a minute: each lands on a floor of its plane more than once, throws its debris there and starts over.
+
+Where the sketch was wrong:
+
+- The speed cap is asked before the gain is added, so an item that has passed 20 falls 21.6 a tick (20.7 at half scale), not 20.
+- An Oddysee item is built by the camera whose cell holds its rect's corner, where an Exoddus one's holds its midpoint (every object's camera list on both discs), and the camera matters more falling than waiting: most items land below their own screen, PV P5's rocks at 560 under a screen ending at 500, the upper two BW P1 crates two and one screens down, R2 P7's meat at 1424 in the slack under its last screen. In the game they fall out of view, and their debris flies back into it from below.
+- The decomp's `ParticleBurst` is the PC build's in places, and the PS1 builds' code, disassembled, is what the map follows: every piece asked for in both games (25 rocks or 20 sticks in Exoddus, where the decomp halves them; 25 meat or rocks then 25 sticks in Oddysee), flung with the y speed negated in both, a depth speed whose sign one roll decides and a fresh roll sizes, so some pieces drift away from the eye, every piece on the screen drawn however large (the decomp's Exoddus bounds reach 640 and drop a piece past full size), and an item retired on any count but none. Beyond their art the games differ only in Exoddus scaling the depth by the burst's scale and Oddysee slowing its sticks to 0.4 and carrying pieces over the void between screens.
+- A piece turned back short of the eye plays a sound the dice are rolled for, three rolls a piece (`Math_RandomRange(-64, 46)`, which the decomp comments out as unused, then the volume and the pan; an Oddysee meat chunk one, and only on its screen), so the debris spends the item's dice long after the smash.
+- `DamageHitItems` is more than damage: a crate that overlaps a drill of its scale stops and smashes there, and six BW P4 crates fall through a shaft of running drills; that stop is still open.
 
 ## Not shipped, and why
 
