@@ -148,7 +148,7 @@ class SheetSet(unittest.TestCase):
 
     FONT = {"w": 1, "h": 1, "texels": b"\x07", "glyphs": [[0, 0, 3, 0], [0, 0, 10, 0]]}
 
-    def write(self, out, px):
+    def write(self, out, px, links=None):
         frames, entries = [(1, 1, px)], {"A": {"frames": [(0, 0, 0)]}}
         with mock.patch.object(sprites, "build_sprites", return_value=(frames, entries, [])), \
                 mock.patch.object(sprites, "read_dice", return_value=list(range(256))), \
@@ -156,7 +156,8 @@ class SheetSet(unittest.TestCase):
                 mock.patch.object(sprites, "write_png",
                                   side_effect=lambda path, w, h, rgba, keep_alpha: Path(path).write_bytes(rgba)), \
                 contextlib.redirect_stdout(io.StringIO()):
-            dst = sprites.write_sprites("AO", [("R1", SimpleNamespace(disc="d"))], out, "cams/ao/sprites")
+            dst = sprites.write_sprites("AO", [("R1", SimpleNamespace(disc="d"))], out, "cams/ao/sprites",
+                                        links=links)
         return json.loads(dst.read_text())
 
     def test_a_set_is_named_for_its_pixels_and_their_shape(self):
@@ -195,6 +196,17 @@ class SheetSet(unittest.TestCase):
             self.assertEqual(Path(side["sheets"][font["sheet"]]).name, "font.png")
             self.assertEqual((font["w"], font["h"], font["glyphs"]), (1, 1, self.FONT["glyphs"]))
             self.assertEqual((out / side["sheets"][font["sheet"]]).read_bytes(), bytes([7, 7, 7, 255]))
+
+    def test_the_same_links_in_another_order_write_the_same_bytes(self):
+        links = {"R1": {"1": [[-1, 1], [0, -1]], "10": [[-1, -1]]}, "E1": {"3": [[-1, -1]]},
+                 "C1": {"2": [[1, -1], [-1, 0]]}}
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            written = []
+            for handed in (links, dict(reversed(links.items()))):
+                self.assertEqual(self.write(out, bytes([1, 2, 3, 255]), handed)["links"], links)
+                written.append((out / "sprites_ao.json").read_bytes())
+        self.assertEqual(written[0], written[1])
 
     def test_each_game_ships_the_one_set_its_sidecar_names(self):
         for game in ("ao", "ae"):

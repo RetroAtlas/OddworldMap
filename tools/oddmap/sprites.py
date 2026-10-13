@@ -592,7 +592,7 @@ def write_sprites(game_key, levels, out, sheets_rel, abe=None, links=None):
         sidecar["abe"] = abe
     if links:
         sidecar["links"] = {short: {pid: [row[:2] for row in rows] for pid, rows in paths.items()}
-                            for short, paths in links.items()}
+                            for short, paths in sorted(links.items())}
     dst = out / f"sprites_{game_key.lower()}.json"
     dst.write_text(json.dumps(sidecar, indent=1))
     for old in sheets_dir.iterdir():
