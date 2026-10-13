@@ -2,6 +2,12 @@
  "entries": [
   {
    "date": "2026-10-13",
+   "tag": "fixed",
+   "title": "Scenery covers only what the game covers",
+   "detail": "With \"Objects as themselves\" on, every piece of foreground used to lie over every object. Each now sits on the layer the game draws it on, so creatures, doors and the rest standing in front of scenery the game puts behind them now show. That uncovers objects on close to a hundred screens across both games, seven Slogs in the Bonewerkz among them. The debris a falling item throws flies over the foreground too, as it does in play."
+  },
+  {
+   "date": "2026-10-13",
    "tag": "improved",
    "tiny": true,
    "title": "Oddysee's rocks fall in their own art",

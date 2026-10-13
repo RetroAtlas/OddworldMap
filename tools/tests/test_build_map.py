@@ -13,6 +13,7 @@ import io
 import json
 import math
 import os
+import re
 import shutil
 import struct
 import subprocess
@@ -213,31 +214,68 @@ class DecodeFg1(unittest.TestCase):
         return cls.header(0xFFFD, layer=len(body), x=len(lz)) + lz
 
     def decode(self, *chunks):
-        return image.decode_fg1(bytes(4) + b"".join(chunks), self.CAM, self.W, self.H)
+        return image.decode_fg1([bytes(4) + b"".join(chunks)], self.CAM, self.W, self.H)
 
-    def marked(self, overlay):
-        return {(i % self.W, i // self.W): bytes(overlay[i * 4:i * 4 + 4])
-                for i in range(self.W * self.H) if overlay[i * 4 + 3]}
+    def marked(self, overlays):
+        """per layer id, the pixels its overlay marks"""
+        return {layer: {(i % self.W, i // self.W): bytes(o[i * 4:i * 4 + 4])
+                        for i in range(self.W * self.H) if o[i * 4 + 3]}
+                for layer, o in overlays.items()}
 
     def test_a_partial_block_marks_its_pixels_and_leaves_zero_transparent(self):
-        overlay, clean = self.decode(self.BLOCK, self.header(0xFFFF))
+        overlays, clean = self.decode(self.BLOCK, self.header(0xFFFF))
         self.assertTrue(clean)
-        self.assertEqual(self.marked(overlay), {(1, 0): b"\xff\x00\x00\xff"})
+        self.assertEqual(self.marked(overlays), {0: {(1, 0): b"\xff\x00\x00\xff"}})
 
     def test_the_same_block_inside_a_sub_stream_marks_the_same_pixels(self):
-        overlay, clean = self.decode(self.sub(self.BLOCK + self.header(0xFFFC)), self.header(0xFFFF))
+        overlays, clean = self.decode(self.sub(self.BLOCK + self.header(0xFFFC)), self.header(0xFFFF))
         self.assertTrue(clean)
-        self.assertEqual(self.marked(overlay), {(1, 0): b"\xff\x00\x00\xff"})
+        self.assertEqual(self.marked(overlays), {0: {(1, 0): b"\xff\x00\x00\xff"}})
 
     def test_a_full_block_copies_the_cam_pixels(self):
-        overlay, clean = self.decode(self.header(0xFFFE, x=0, y=1, cw=2, ch=1), self.header(0xFFFF))
+        overlays, clean = self.decode(self.header(0xFFFE, x=0, y=1, cw=2, ch=1), self.header(0xFFFF))
         self.assertTrue(clean)
-        self.assertEqual(self.marked(overlay), {(0, 1): bytes([0x11]) * 4, (1, 1): bytes([0x11]) * 4})
+        self.assertEqual(self.marked(overlays), {0: {(0, 1): bytes([0x11]) * 4, (1, 1): bytes([0x11]) * 4}})
+
+    def test_each_block_draws_into_the_overlay_of_its_own_layer(self):
+        overlays, clean = self.decode(self.BLOCK, self.header(0xFFFE, layer=3, x=0, y=1, cw=1, ch=1),
+                                      self.header(0xFFFF))
+        self.assertTrue(clean)
+        self.assertEqual(self.marked(overlays), {0: {(1, 0): b"\xff\x00\x00\xff"},
+                                                 3: {(0, 1): bytes([0x11]) * 4}})
+
+    def test_a_partial_block_draws_over_a_full_block_on_its_layer_whichever_comes_first(self):
+        full = self.header(0xFFFE, x=0, y=0, cw=4, ch=1)
+        for chunks in ((full, self.BLOCK), (self.BLOCK, full)):
+            overlays, clean = self.decode(*chunks, self.header(0xFFFF))
+            self.assertTrue(clean)
+            self.assertEqual(self.marked(overlays)[0][(1, 0)], b"\xff\x00\x00\xff")
+            self.assertEqual(self.marked(overlays)[0][(2, 0)], bytes([0x11]) * 4)
+
+    def test_the_first_partial_block_to_mark_a_pixel_is_on_top(self):
+        blue = struct.pack("<HHhhHH", 0, 0, 1, 0, 1, 1) + struct.pack("<H", 0x1F << 10)
+        overlays, clean = self.decode(blue, self.BLOCK, self.header(0xFFFF))
+        self.assertTrue(clean)
+        self.assertEqual(self.marked(overlays), {0: {(1, 0): b"\x00\x00\xff\xff"}})
+
+    def test_a_cameras_chunks_compose_as_one(self):
+        first = bytes(4) + self.BLOCK + self.header(0xFFFF)
+        second = bytes(4) + self.header(0xFFFE, x=0, y=0, cw=4, ch=1) + self.header(0xFFFF)
+        overlays, clean = image.decode_fg1([first, second], self.CAM, self.W, self.H)
+        self.assertTrue(clean)
+        self.assertEqual(self.marked(overlays)[0][(1, 0)], b"\xff\x00\x00\xff")
+        self.assertEqual(len(self.marked(overlays)[0]), 4)
+
+    def test_a_layer_with_nothing_on_screen_has_no_overlay(self):
+        overlays, clean = self.decode(self.header(0xFFFE, layer=1, x=-4, y=0, cw=2, ch=1), self.BLOCK,
+                                      self.header(0xFFFF))
+        self.assertTrue(clean)
+        self.assertEqual(list(overlays), [0])
 
     def test_a_truncated_block_reports_unclean(self):
-        overlay, clean = self.decode(self.BLOCK[:-2])
+        overlays, clean = self.decode(self.BLOCK[:-2])
         self.assertFalse(clean)
-        self.assertIsNone(overlay)
+        self.assertEqual(overlays, {})
 
     def test_a_junk_type_inside_a_sub_stream_reports_unclean(self):
         body = self.BLOCK + self.header(0x1234) + self.BLOCK + self.header(0xFFFC)
@@ -314,7 +352,7 @@ class Reencode(unittest.TestCase):
     @unittest.skipUnless(shutil.which("oxipng"), "no oxipng on PATH")
     def test_a_written_png_re_emits_to_itself(self):
         with tempfile.TemporaryDirectory() as tmp:
-            mask, cam, dst = (Path(tmp) / n for n in ("a_fg.png", "a.png", "b.png"))
+            mask, cam, dst = (Path(tmp) / n for n in ("a_fg37.png", "a.png", "b.png"))
             image.write_png(mask, 16, 4, self.RGBA, keep_alpha=True)
             self.assertEqual(image.read_png(mask.read_bytes()), (16, 4, self.RGBA))
             self.assertFalse(image.reencode_png(mask, dst))
@@ -326,7 +364,7 @@ class Reencode(unittest.TestCase):
     @unittest.skipUnless(shutil.which("oxipng"), "no oxipng on PATH")
     def test_bytes_another_encoder_wrote_move_and_are_reported(self):
         with tempfile.TemporaryDirectory() as tmp:
-            ours, theirs = Path(tmp) / "a_fg.png", Path(tmp) / "b_fg.png"
+            ours, theirs = Path(tmp) / "a_fg37.png", Path(tmp) / "b_fg37.png"
             image.write_png(ours, 16, 4, self.RGBA, keep_alpha=True)
             with mock.patch.object(image.subprocess, "run"):  # the raw RGBA8 stands for another encoder's bytes
                 image.write_png(theirs, 16, 4, self.RGBA, keep_alpha=True)
@@ -1050,7 +1088,7 @@ class PinnedEncoder(unittest.TestCase):
                          f"install that release (brew upgrade oxipng, or cargo install oxipng --version "
                          f"{image.OXIPNG_VERSION} --locked), or move OXIPNG_VERSION and re-encode the tree")
         pngs = sorted((SITE / "cams").rglob("*.png"))
-        few = [p for p in pngs if p.name.endswith("_fg.png") or p.parent.parent.name == "sprites"]
+        few = [p for p in pngs if re.search(r"_fg\d+\.png$", p.name) or p.parent.parent.name == "sprites"]
         sample = few + [p for p in pngs if p not in few][::40]
         with tempfile.TemporaryDirectory() as tmp:
             moved = image.reencode_pngs([(p, Path(tmp) / f"{i}.png") for i, p in enumerate(sample)])

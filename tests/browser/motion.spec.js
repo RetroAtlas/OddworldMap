@@ -871,9 +871,9 @@ test.describe("Objects as themselves", () => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("state.js"));
       const { path } = st.state;
-      const c = path.cams.find((c) => c.fg);
+      const c = path.cams.find((c) => c.masks);
       const im = new Image();
-      im.src = new URL(c.fg, location.href).href;
+      im.src = new URL(c.masks[0][1], location.href).href;
       await im.decode();
       const oc = document.createElement("canvas");
       oc.width = im.naturalWidth;

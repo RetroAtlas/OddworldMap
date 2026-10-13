@@ -25,6 +25,8 @@ GAMES = {
         "tlv": {"header_len": 0x18, "rect_off": 0x10, "min_len": 24, "max_len": 480,
                 "max_type": 115, "check_flags": True, "extra_fn": tlv_extra_ao},
         "line_links": (("previous", 0x0C, "i"), ("next", 0x10, "i")),
+        # the render layer each FG1 block layer id draws on
+        "fg1_layers": (37, 18),
         "parse_tables": parse_pathdata_cpp_ao,
     },
     "AE": {
@@ -47,6 +49,7 @@ GAMES = {
                 "max_type": 150, "check_flags": False, "extra_fn": tlv_extra_ae},
         "line_links": (("previous", 0x0A, "h"), ("next", 0x0C, "h"), ("previous_2", 0x0E, "h"),
                        ("next_2", 0x10, "h"), ("length", 0x12, "h")),
+        "fg1_layers": (4, 18, 23, 37),
         "parse_tables": parse_pathdata_cpp_ae,
     },
 }

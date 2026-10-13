@@ -90,19 +90,22 @@ function dimmedImg(src) {
   dimCache[src] = oc;
   return oc;
 }
-function tintedImg(src) {
-  if (tintCache[src]) return tintCache[src];
-  const im = img(src);
-  if (!im.complete || !im.naturalWidth) return null; // retried next draw
+// a camera's masks tinted as one, so a pixel two layers cover tints once; held
+// under its first mask, which leaves the cache when the camera's masks do
+function tintedMasks(c) {
+  const key = c.masks[0][1];
+  if (tintCache[key]) return tintCache[key];
+  const ims = c.masks.map(([, src]) => img(src));
+  if (!ims.every((im) => im.complete && im.naturalWidth)) return null; // retried next draw
   const oc = document.createElement("canvas");
-  oc.width = im.naturalWidth;
-  oc.height = im.naturalHeight;
+  oc.width = ims[0].naturalWidth;
+  oc.height = ims[0].naturalHeight;
   const octx = oc.getContext("2d");
-  octx.drawImage(im, 0, 0);
+  for (const im of ims) octx.drawImage(im, 0, 0);
   octx.globalCompositeOperation = "source-in";
   octx.fillStyle = "#ff4fd8";
   octx.fillRect(0, 0, oc.width, oc.height);
-  tintCache[src] = oc;
+  tintCache[key] = oc;
   return oc;
 }
 
@@ -244,7 +247,7 @@ export async function preloadPath(path) {
   const srcs = [];
   for (const c of path.cams) {
     if (c.png) srcs.push(c.png);
-    if (c.fg) srcs.push(c.fg);
+    for (const [, src] of c.masks ?? []) srcs.push(src);
   }
   if (state.show.objects) {
     // the sheets are known only once the sidecar is in
@@ -283,7 +286,7 @@ export function artworkReady(path) {
   };
   for (const c of path.cams) {
     if (c.png && !decoded(c.png)) return false;
-    if (state.show.fg && c.fg && !decoded(c.fg)) return false;
+    if (state.show.fg) for (const [, src] of c.masks ?? []) if (!decoded(src)) return false;
   }
   if (state.show.objects) {
     // a sidecar still coming keeps the paint waiting; a failed one has nothing more to wait for
@@ -300,7 +303,7 @@ window.addEventListener("selection-changed", () => {
   const keep = new Set(sheetSrcs(state.data.id));
   for (const c of state.path.cams) {
     if (c.png) keep.add(c.png);
-    if (c.fg) keep.add(c.fg);
+    for (const [, src] of c.masks ?? []) keep.add(src);
   }
   for (const src of Object.keys(images)) {
     if (keep.has(src)) continue;
@@ -562,15 +565,14 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
     showLabels: show.labels && cam.z > 0.45,
   };
   paintScreens(f, show.dim);
-  // the sprites stand between the artwork and its foreground masks, which the
-  // game draws over them; an export draws the first frame, so two exports agree
+  // the sprites and the foreground masks share the game's layers; an export
+  // draws the first frame, so two exports agree
   const set = show.objects ? spriteSet(data.id) : null;
   const sprites = set ? spriteRecords(data, lvl, path, set) : null;
   paintedSprites = sprites;
   if (sprites) {
     const live = transients && motionRunning();
-    paintSprites(f, sprites, set, live ? sceneTick() : 0, live ? patrolTick() : 0);
-    paintForeground(f, show.dim);
+    paintSprites(f, sprites, set, live ? sceneTick() : 0, live ? patrolTick() : 0, show.dim);
   } else {
     movedBy.clear();
     spriteBoxes.clear();
@@ -615,8 +617,8 @@ function paintScreens({ ctx, path, layout }, dim) {
 // foreground occlusion masks, tinted so they stand out from the identical background art
 function paintMasks({ ctx, path, layout }) {
   for (const c of path.cams) {
-    if (!c.fg) continue;
-    const t = tintedImg(c.fg);
+    if (!c.masks) continue;
+    const t = tintedMasks(c);
     if (!t) continue;
     const cx = (c.cell % path.w) * layout.cellW,
       cy = Math.floor(c.cell / path.w) * layout.cellH;
@@ -795,7 +797,7 @@ function noteBox(t, b, cam, layout) {
 // layer, the later-constructed under the earlier; each clipped to its own
 // camera's window, where the game clips too, so a frame reaching past it
 // never paints over a neighbouring screen
-function paintSprites(f, sprites, set, tick, patrolAt) {
+function paintSprites(f, sprites, set, tick, patrolAt, dim) {
   const { ctx, data, layout, path } = f;
   movedBy.clear();
   spriteBoxes.clear();
@@ -815,8 +817,15 @@ function paintSprites(f, sprites, set, tick, patrolAt) {
       );
   recs.push(...fx);
   recs.sort((a, b) => a[0].layer - b[0].layer || b[1] - a[1] || a[2] - b[2]);
+  // a foreground mask covers the sprites of every layer below its own and lies
+  // under those of its own layer
+  const masks = path.cams
+    .flatMap((c) => (c.masks ?? []).map(([layer, src]) => [layer, src, c]))
+    .sort((a, b) => a[0] - b[0]);
+  let m = 0;
   const ae = data.id === "AE";
   for (const [r, , , t, isFx] of recs) {
+    for (; m < masks.length && masks[m][0] <= r.layer; m++) paintMask(f, masks[m], dim);
     if (isFx) {
       paintEffect(ctx, layout, set, r, ae, f.view);
       continue;
@@ -867,6 +876,7 @@ function paintSprites(f, sprites, set, tick, patrolAt) {
       ctx.restore();
     }
   }
+  for (; m < masks.length; m++) paintMask(f, masks[m], dim);
 }
 
 // a camera's window and coordinates for a world point
@@ -1116,16 +1126,13 @@ function drawFrame(ctx, cam, tile, frame, r, shown, ae, wx, wy) {
   return { x: x0, y: y0, w: dw, h: dh };
 }
 
-// the foreground masks as the game draws them, over the sprites and untinted
-function paintForeground({ ctx, path, layout }, dim) {
-  for (const c of path.cams) {
-    if (!c.fg) continue;
-    const im = dim ? dimmedImg(c.fg) : img(c.fg);
-    if (!im || (im instanceof Image && !(im.complete && im.naturalWidth))) continue;
-    const cx = (c.cell % path.w) * layout.cellW,
-      cy = Math.floor(c.cell / path.w) * layout.cellH;
-    ctx.drawImage(im, cx, cy, layout.visW, layout.visH);
-  }
+// one layer of a camera's foreground as the game draws it, untinted
+function paintMask({ ctx, path, layout }, [, src, c], dim) {
+  const im = dim ? dimmedImg(src) : img(src);
+  if (!im || (im instanceof Image && !(im.complete && im.naturalWidth))) return;
+  const cx = (c.cell % path.w) * layout.cellW,
+    cy = Math.floor(c.cell / path.w) * layout.cellH;
+  ctx.drawImage(im, cx, cy, layout.visW, layout.visH);
 }
 
 // whether a world point lies inside one of the path's screens

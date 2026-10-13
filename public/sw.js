@@ -6,7 +6,7 @@
 // exactly as fresh as with no worker, and refresh the fallback as they pass.
 // The builder writes this line: it is a content hash of the cameras and masks,
 // so a regenerated one expires the cache and an unchanged build leaves it alone.
-const CACHE_NAME = "cams-a7920ce5410f";
+const CACHE_NAME = "cams-342b2d9b482c";
 // a game's sprite sheets sit in a directory named for their pixels, outside the
 // hash: a changed set arrives under new URLs, and storing one retires the
 // game's other sets
@@ -18,7 +18,7 @@ const SHELL = "shell-v1";
 // unregistration can't stop a controlling worker until reload, and a
 // module flag wouldn't survive an idle-worker restart
 const ENABLED = "cams-on";
-// has to clear both games' complete artwork (2893 files), which the page can
+// has to clear both games' complete artwork (3196 files), which the page can
 // ask for outright; a cap under that would evict the download's own head
 const MAX_ENTRIES = 4000; // ≈280 MB
 const TRIM_SLACK = 50; // hysteresis so trim doesn't scan keys() on every put

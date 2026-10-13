@@ -1,15 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { CAM_FILE_BYTES, SHEET_FILE_BYTES } from "../../public/js/config.js";
+import { CAM_FILE_BYTES, MASK_FILE_BYTES, SHEET_FILE_BYTES } from "../../public/js/config.js";
 import { camFiles } from "../../public/js/model.js";
 
 const read = (name) => readFileSync(new URL(`../../public/${name}`, import.meta.url), "utf8");
 const load = (name) => JSON.parse(read(name));
 
 const GAMES = [
-  ["map_data_ao.json", 935, "sprites_ao.json"],
-  ["map_data_ae.json", 1953, "sprites_ae.json"],
+  ["map_data_ao.json", 1006, "sprites_ao.json"],
+  ["map_data_ae.json", 2185, "sprites_ae.json"],
 ];
 const sheets = (file) => load(file).sheets;
 // a sheet is stored by the same worker rule as a cam, so it has to sit where that rule looks
@@ -42,7 +42,7 @@ for (const [file, files] of GAMES)
       "every entry is a cam png path",
     );
     // the foreground layers are half the download and easy to leave out
-    assert.ok(list.some((f) => f.endsWith("_fg.png")));
+    assert.ok(list.some((f) => /_fg\d+\.png$/.test(f)));
   });
 
 // the download stores a whole game at once, so a cap below the complete set
@@ -64,8 +64,16 @@ test("the cap comment and the viewer doc quote the artwork as it ships", () => {
   assert.equal(Number(/complete artwork \((\d+) files\)/.exec(read("sw.js"))[1]), total);
   // the atlases are sized as sheets; the font map is a few hundred bytes
   const atlases = GAMES.map(([, , sp]) => sheets(sp).filter((f) => /\/\d+\.png$/.test(f)).length);
+  const masks = GAMES.map(
+    ([file]) => camFiles(load(file)).filter((f) => /_fg\d+\.png$/.test(f)).length,
+  );
   const mb = files.map(([c], i) =>
-    Math.round((c * CAM_FILE_BYTES + atlases[i] * SHEET_FILE_BYTES) / 1e6),
+    Math.round(
+      ((c - masks[i]) * CAM_FILE_BYTES +
+        masks[i] * MASK_FILE_BYTES +
+        atlases[i] * SHEET_FILE_BYTES) /
+        1e6,
+    ),
   );
   const doc = readFileSync(new URL("../../docs/viewer.md", import.meta.url), "utf8");
   const quote = /~(\d+) MB for Oddysee, ~(\d+) MB for Exoddus/;

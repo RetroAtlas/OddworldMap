@@ -158,7 +158,7 @@ export const camFiles = (data) =>
   data.levels
     .flatMap((L) => L.paths)
     .flatMap((P) => P.cams)
-    .flatMap((c) => [c.png, c.fg])
+    .flatMap((c) => [c.png, ...(c.masks ?? []).map(([, src]) => src)])
     .filter(Boolean);
 
 // the camera id a cam name's C## suffix carries, or null

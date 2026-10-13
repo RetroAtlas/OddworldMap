@@ -2,7 +2,7 @@
 // setting goes on, and the Settings panel that stores a whole game's artwork in
 // one go, so a place you have never opened still opens with no connection.
 
-import { CAM_FILE_BYTES, SHEET_FILE_BYTES } from "./config.js";
+import { CAM_FILE_BYTES, MASK_FILE_BYTES, SHEET_FILE_BYTES } from "./config.js";
 import { GAME_FILES, GAME_IDS, loadSprites } from "./data.js";
 import { hasStoredEdits } from "./edits.js";
 import { $ } from "./dom.js";
@@ -23,7 +23,12 @@ const PROGRESS_MS = 120; // redraw pace while files land
 
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 // an atlas is sized as a sheet; the font map beside them is a few hundred bytes
-const bytesOf = (url) => (/\/sprites\/.*\/\d+\.png$/.test(url) ? SHEET_FILE_BYTES : CAM_FILE_BYTES);
+const bytesOf = (url) =>
+  /\/sprites\/.*\/\d+\.png$/.test(url)
+    ? SHEET_FILE_BYTES
+    : /_fg\d+\.png$/.test(url)
+      ? MASK_FILE_BYTES
+      : CAM_FILE_BYTES;
 const estimateMB = (urls) => Math.round(urls.reduce((n, u) => n + bytesOf(u), 0) / 1e6);
 
 // the worker only answers fetches on a page it controls, so nothing is worth
