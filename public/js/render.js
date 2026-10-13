@@ -286,7 +286,8 @@ export function artworkReady(path) {
   };
   for (const c of path.cams) {
     if (c.png && !decoded(c.png)) return false;
-    if (state.show.fg) for (const [, src] of c.masks ?? []) if (!decoded(src)) return false;
+    if (state.show.fg || state.show.objects)
+      for (const [, src] of c.masks ?? []) if (!decoded(src)) return false;
   }
   if (state.show.objects) {
     // a sidecar still coming keeps the paint waiting; a failed one has nothing more to wait for
