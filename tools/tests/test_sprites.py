@@ -149,7 +149,7 @@ class SheetSet(unittest.TestCase):
     FONT = {"w": 1, "h": 1, "texels": b"\x07", "glyphs": [[0, 0, 3, 0], [0, 0, 10, 0]]}
 
     def write(self, out, px, links=None):
-        frames, entries = [(1, 1, px)], {"A": {"frames": [(0, 0, 0)]}}
+        frames, entries = [(1, 1, px)], {"A": {"frames": [(0, 0, 0, [0, 0, 1, 1])]}}
         with mock.patch.object(sprites, "build_sprites", return_value=(frames, entries, [])), \
                 mock.patch.object(sprites, "read_dice", return_value=list(range(256))), \
                 mock.patch.object(sprites, "read_font", return_value=dict(self.FONT)), \

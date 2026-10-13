@@ -425,16 +425,15 @@ def build_sprites(game_key, levels):
                 misses.append(name)
                 continue
             clut = read_palt(pal)
-        refs, bound = [], None
+        refs = []
         for w, h, px, xoff, yoff, ref, b in anim_frames(data, anim, game_key, clut):
             key = (spec.get("file"), spec.get("rid", spec.get("bg")), ref, tuple(spec.get("pal", ())))
             if key not in index:
                 index[key] = len(frames)
                 frames.append((w, h, px))
-            refs.append([index[key], xoff, yoff])
-            bound = bound or b
+            refs.append([index[key], xoff, yoff, b])
         entries[name] = {"fps": anim["fps"], "loop": anim["loop"], "loop_start": anim["loop_start"],
-                         "bound": bound, "frames": refs}
+                         "frames": refs}
     return frames, entries, misses
 
 def permutation_windows(data):
@@ -582,7 +581,8 @@ def write_sprites(game_key, levels, out, sheets_rel, abe=None, links=None):
         write_png(out / rel, w, hh, rgba, keep_alpha=True)
         sheet_files.append(rel)
     for entry in entries.values():
-        entry["frames"] = [[*placed[i], *frames[i][:2], xoff, yoff] for i, xoff, yoff in entry["frames"]]
+        entry["frames"] = [[*placed[i], *frames[i][:2], xoff, yoff, *bound]
+                           for i, xoff, yoff, bound in entry["frames"]]
     dice = {tuple(read_dice(disc)) for disc in {lvl.disc for _, lvl in levels}}
     if len(dice) != 1:
         raise SystemExit("sprites: the discs disagree on the random table")

@@ -85,8 +85,8 @@ function draw(c, anim, x, y, o = {}) {
   };
 }
 
-// the frame-0 bounding rectangle of an animation, from the sidecar
-const bound = (c, anim) => c.anims?.[anim]?.bound ?? [0, 0, 0, 0];
+// the bounding rectangle of an animation's first frame, from the sidecar
+const bound = (c, anim) => c.anims?.[anim]?.frames[0].slice(7, 11) ?? [0, 0, 0, 0];
 
 // one entry per level row of a tint table, the rest the fallback
 const tint = (table, lv, fallback) => table[lv] ?? fallback;
