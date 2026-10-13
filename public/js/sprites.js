@@ -27,8 +27,8 @@ const mid = (t) => trunc((t.x1 + t.x2) / 2);
 const midY = (t) => trunc((t.y1 + t.y2) / 2);
 // a point in the cell of the camera whose object list holds an object: the one
 // its rect's corner falls in in Oddysee, its midpoint in Exoddus
-const listedAt = (c) =>
-  c.game === "AE" ? { x: mid(c.t), y: midY(c.t) } : { x: c.t.x1, y: c.t.y1 };
+const listedAt = (game, t) => (game === "AE" ? { x: mid(t), y: midY(t) } : { x: t.x1, y: t.y1 });
+const cellOf = (geo, at) => `${Math.floor(at.x / geo.worldW)},${Math.floor(at.y / geo.worldH)}`;
 const ALL_LINES = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 // the levels whose themed art and tints differ
 const AE_VAULTS = new Set(["NE", "PV", "SV"]);
@@ -518,7 +518,7 @@ rule("AE", "BoneBag", (c) => [
 // screen
 function fallingItem(c, [art, waiting], y, debris, blast = false) {
   const { t, f, geo } = c;
-  const cam = listedAt(c);
+  const cam = listedAt(c.game, t);
   const left = Math.floor(cam.x / geo.worldW) * geo.worldW + geo.winX;
   const top = Math.floor(cam.y / geo.worldH) * geo.worldH + geo.winY;
   const win = [left, top, left + geo.visW, top + geo.visH];
@@ -539,8 +539,27 @@ function fallingItem(c, [art, waiting], y, debris, blast = false) {
     stays: fx >= win[0] && fx <= win[2] && fy >= win[1] && fy <= win[3],
     debris,
     blast,
+    stoppers: stoppers(c, cam),
   };
   return { cam, cycle: brain(c, "fallingItem", false, p) };
+}
+
+// what an Exoddus falling item stops on: the objects of these types its camera
+// builds at its scale, each as drawn, and whether its update comes first in a
+// tick, the camera building its objects in its list's order
+const STOPPERS = { Drill: "Drill", MineCar: "Mine_Car_Open" };
+function stoppers(c, cam) {
+  if (c.game !== "AE") return [];
+  const here = cellOf(c.geo, cam);
+  const out = [];
+  c.path.tlvs.forEach((o, index) => {
+    const half = onBackgroundPlane(c.game, o);
+    if (!STOPPERS[o.name] || half !== c.half || cellOf(c.geo, listedAt(c.game, o)) !== here) return;
+    const recs = rules.AE[o.name]({ ...c, t: o, f: o.fields || {}, index, half });
+    const rec = recs.find((r) => r.anim.startsWith(STOPPERS[o.name]));
+    if (rec) out.push({ rec, first: index < c.index });
+  });
+  return out;
 }
 
 rule("AE", "FallingItem", (c) => {

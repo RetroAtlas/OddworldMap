@@ -109,50 +109,78 @@ function uxbState(digits, tick) {
 }
 
 const brainStates = new WeakMap();
+const variantOf = (r) => (r.anim?.includes("@") ? r.anim.slice(r.anim.indexOf("@")) : "");
 
-// a brain's state at a tick, stepped on from where it last stood. A state
-// belongs to the clock generation it was built in: one from an earlier
-// generation is replaced, while one ahead of the ask within the same generation
-// is kept and the ask answered from a throwaway, so only that ask replays
-export function brainAt(r, set, tick) {
+// a brain's state as its object's constructor leaves it
+function freshState(r, set, gen) {
   const cy = r.cycle;
-  const want = Math.max(tick, 1);
-  const variant = r.anim?.includes("@") ? r.anim.slice(r.anim.indexOf("@")) : "";
-  const gen = cy.patrol ? patrolGen : sceneGen;
-  const cached = brainStates.get(r);
-  const current = cached && cached.gen === gen ? cached : null;
-  let st = current && current.tick <= want ? current : null;
-  if (!st) {
-    st = {
-      gen,
-      tick: 0,
-      sub: 0,
-      cur: r.anim ? r.anim.slice(0, r.anim.length - variant.length) : null,
-      next: null,
-      timer: 0,
-      turn: 0,
-      set: 1,
-      flip: r.flip,
-      dx: 0,
-      dy: 0,
-      m: null,
-      emo: !!cy.emo,
-      p: cy.p ?? null,
-      w: cy.world ?? null,
-      game: cy.game ?? null,
-      r,
-      ax: r.x,
-      ay: r.y,
-      anims: set.anims,
-      fx: [],
-      seed: cy.seed,
-      seed2: cy.seed,
-      dice: set.dice,
-      sw: {},
+  const variant = variantOf(r);
+  const st = {
+    gen,
+    tick: 0,
+    sub: 0,
+    cur: r.anim ? r.anim.slice(0, r.anim.length - variant.length) : null,
+    next: null,
+    timer: 0,
+    turn: 0,
+    set: 1,
+    flip: r.flip,
+    dx: 0,
+    dy: 0,
+    m: null,
+    emo: !!cy.emo,
+    p: cy.p ?? null,
+    w: cy.world ?? null,
+    game: cy.game ?? null,
+    r,
+    ax: r.x,
+    ay: r.y,
+    anims: set.anims,
+    fx: [],
+    seed: cy.seed,
+    seed2: cy.seed,
+    dice: set.dice,
+    sw: {},
+  };
+  // another object as this one meets it in its step at tick T: a copy of its
+  // brain stepped beside this one, through T where its update comes first in
+  // the tick and through the tick before where it comes after, its frame the
+  // one the last animation step left it on; an object with no brain stands
+  // where it was placed
+  const peers = new Map();
+  st.peer = (rec, T, first) => {
+    const at = first ? T : T - 1;
+    if (!rec.cycle) {
+      const a = set.anims[rec.anim];
+      const frame = a && (rec.frozen ? rec.frame : frameAt(a, T - 1, rec.frame));
+      return {
+        x: rec.x,
+        y: rec.y,
+        flip: rec.flip,
+        scale: rec.scale,
+        frame: a?.frames[frame] ?? null,
+      };
+    }
+    let ps = peers.get(rec);
+    if (!ps || ps.tick > at) peers.set(rec, (ps = freshState(rec, set, gen)));
+    stepTo(ps, rec, set, at);
+    const a = set.anims[ps.cur + variantOf(rec)];
+    return {
+      x: rec.x + ps.dx,
+      y: rec.y + ps.dy,
+      flip: ps.flip,
+      scale: rec.scale,
+      frame: a?.frames[frameAt(a, T - ps.set)] ?? null,
     };
-    STARTS[cy.brain]?.(st, r);
-    if (!current) brainStates.set(r, st);
-  }
+  };
+  STARTS[cy.brain]?.(st, r);
+  return st;
+}
+
+// a brain stepped a tick at a time to `want`
+function stepTo(st, r, set, want) {
+  const cy = r.cycle;
+  const variant = variantOf(r);
   const rnd = () => st.dice[st.seed++ & 255];
   while (st.tick < want) {
     const T = ++st.tick;
@@ -167,8 +195,26 @@ export function brainAt(r, set, tick) {
     if (st.cur !== was) st.set = T;
     if (st.fx.length) stepEffects(st, now, rnd);
   }
+}
+
+// a brain's state at a tick, stepped on from where it last stood. A state
+// belongs to the clock generation it was built in: one from an earlier
+// generation is replaced, while one ahead of the ask within the same generation
+// is kept and the ask answered from a throwaway, so only that ask replays
+export function brainAt(r, set, tick) {
+  const cy = r.cycle;
+  const want = Math.max(tick, 1);
+  const gen = cy.patrol ? patrolGen : sceneGen;
+  const cached = brainStates.get(r);
+  const current = cached && cached.gen === gen ? cached : null;
+  let st = current && current.tick <= want ? current : null;
+  if (!st) {
+    st = freshState(r, set, gen);
+    if (!current) brainStates.set(r, st);
+  }
+  stepTo(st, r, set, want);
   return {
-    anim: (st.show ?? st.cur) + variant,
+    anim: (st.show ?? st.cur) + variantOf(r),
     at: tick - st.set + 1,
     flip: st.flip,
     state: st,

@@ -463,9 +463,10 @@ test("pinned placements: an Exoddus falling item waits no lower than the top of 
 const PATROL_MINUTE = 1800;
 
 // nothing switches the always-on id off and none of these carries a count, so
-// each falls for good: in a minute, every one lands on a floor of its own plane
-// more than once, throws its debris there, and starts over where it waited
-test("falling items: every one on the always-on switch falls, lands on a floor of its plane and starts over", () => {
+// each falls for good: in a minute, every one smashes more than once, on a floor
+// of its own plane or, where its camera builds one, on a drill in its way,
+// throws its debris there, and starts over where it waited
+test("falling items: every one on the always-on switch falls, smashes on a floor of its plane or a drill, and starts over", () => {
   const seen = { AO: 0, AE: 0 };
   for (const g of GAMES)
     for (const { lvl, path, t, r } of allRecords(g)) {
@@ -474,7 +475,8 @@ test("falling items: every one on the always-on switch falls, lands on a floor o
       const where = `${g} ${lvl.short} P${path.id} (${t.x1},${t.y1})`;
       const yOff = r.y - r.cycle.p.y;
       const floor = r.scale === 1 ? [0] : [4];
-      let landings = 0,
+      let floors = 0,
+        stops = 0,
         prev = null;
       for (let tick = 0; tick <= PATROL_MINUTE; tick++) {
         const s = resolveRecord(r, sheets[g], tick);
@@ -482,19 +484,49 @@ test("falling items: every one on the always-on switch falls, lands on a floor o
         if (prev && s.y < prev.y) {
           const y = prev.y - yOff;
           const hit = raycast(path.lines, prev.x, y - 1, prev.x, y + 1, floor);
-          assert.ok(hit && hit.y === y, `${where} stops at ${y} without a floor there`);
+          if (hit && hit.y === y) floors++;
+          else {
+            assert.ok(r.cycle.p.stoppers.length, `${where} stops at ${y} with nothing there`);
+            stops++;
+          }
           const thrown = brainAt(r, sheets[g], tick - 1).state.fx.filter(
             (p) => p.kind === "burst" && p.born === tick - 1,
           );
           assert.equal(thrown.length, r.cycle.p.debris.length, `${where} smashes at ${tick - 1}`);
           assert.equal(s.y, r.y, `${where} starts over where it waited`);
-          landings++;
         }
         prev = s;
       }
-      assert.ok(landings > 1, `${where} lands ${landings} times in a minute`);
+      assert.ok(floors > 0 && floors + stops > 1, `${where} smashes ${floors} + ${stops} times`);
     }
   assert.deepEqual(seen, { AO: 3, AE: 23 });
+});
+
+test("pinned falls: a Bonewerkz shaft crate stops on the drills its camera builds, read in the camera's own order", () => {
+  const stops = (x1, y1) =>
+    recordAt("AE", "BW", 4, "FallingItem", x1, y1).cycle.p.stoppers.map(
+      ({ rec, first }) => `${rec.anim}@${rec.x},${rec.y}${first ? " first" : ""}`,
+    );
+  // the shaft's upper screens list their crates ahead of their drills, its lowest its drill first
+  assert.deepEqual(stops(564, 523), [
+    "Drill_Horizontal_Off@639,721",
+    "Drill_Horizontal_Off@537,644",
+  ]);
+  assert.deepEqual(stops(562, 1040), ["Drill_Horizontal_Off@512,1184 first"]);
+  assert.deepEqual(stops(1976, 276), [], "a crate with no drill in its camera");
+  // a crate's first fall meets a drill reaching across the shaft: the upper
+  // crate's after its eleventh move, the lowest screen's after its twelfth
+  const smashAt = (x1, y1) => {
+    const r = recordAt("AE", "BW", 4, "FallingItem", x1, y1);
+    let prev = null;
+    for (let tick = 0; ; tick++) {
+      const s = resolveRecord(r, sheets.AE, tick);
+      if (prev && s.y < prev.y) return [tick - 1, prev.y];
+      prev = s;
+    }
+  };
+  assert.deepEqual(smashAt(564, 523), [63, 520 + (66 * 117964) / 65536]);
+  assert.deepEqual(smashAt(562, 1040), [59, 1040 + (78 * 117964) / 65536]);
 });
 function xSpan(r, set) {
   let lo = Infinity,

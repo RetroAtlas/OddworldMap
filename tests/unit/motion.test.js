@@ -1622,9 +1622,15 @@ test("brainAt: a new clock generation replaces a cached state, and a tick behind
 // ---- falling items ---------------------------------------------------------
 
 const FP = 65536;
+// a frame of the given bounding rect
+const bounded = (n, fps, loop, rect) => ({
+  ...anim(n, fps, loop),
+  frames: Array.from({ length: n }, (_, i) => [0, i, 0, 1, 1, 0, 0, ...rect]),
+});
 const ITEM_ANIMS = {
-  Item_Falling: anim(4, 4, true),
-  Item_Waiting: anim(4, 1, true),
+  Item_Falling: bounded(4, 4, true, [-10, -30, 10, -5]),
+  Item_Waiting: bounded(4, 1, true, [-10, -30, 10, -5]),
+  Stopper: bounded(1, 1, true, [-20, -10, 20, 0]),
   Explosion_Rock: anim(8, 2, true),
   Explosion_Stick: anim(8, 2, true),
   Meat_Gib: anim(8, 1, true),
@@ -1656,6 +1662,7 @@ const fallingItem = (p = {}, scale = 1, game = "AE") => {
     stays: true,
     debris: [],
     blast: false,
+    stoppers: [],
     ...p,
   };
   return {
@@ -1888,4 +1895,33 @@ test("the Bonewerkz blast: AirExplosion three quarters the item's scale, fifteen
   );
   const half = at(0.5);
   assert.deepEqual([half.y, half.scale], [230 - 7.5, 0.375]);
+});
+
+test("falling item: an Exoddus item stops where its rect first meets a drill's or a mine car's and smashes there", () => {
+  const set = itemSet(192);
+  // a stopper's rect spans 140..150 under the item, edges meeting counting
+  const stopper = (x) => ({
+    anim: "Stopper",
+    x,
+    y: 150,
+    scale: 1,
+    flip: false,
+    frame: 0,
+    cycle: null,
+  });
+  const r = fallingItem({
+    debris: [ROCKS],
+    stoppers: [{ rec: stopper(100), first: false }],
+  });
+  // the item's foot is 5 above its anchor: after 12 moves it stands at 140.4,
+  // its rect reaching 135.4, short of the stopper's top; the 13th move takes it
+  // to 162, whose rect meets it in the next tick's check before it moves
+  assert.equal(resolveRecord(r, set, 23).y, fallen(12));
+  assert.equal(resolveRecord(r, set, 24).y, fallen(13));
+  assert.equal(resolveRecord(r, set, 25).y, fallen(13), "stopped where it stands, not moved");
+  assert.equal(resolveEffects(r, set, 25)[0].y, fallen(13) - 8, "the debris thrown from there");
+  assert.equal(resolveRecord(r, set, 26).y, 0, "and it starts over");
+  // one beside its column is passed by
+  const past = fallingItem({ stoppers: [{ rec: stopper(131), first: false }] });
+  assert.equal(resolveRecord(past, set, 26).y, 200);
 });

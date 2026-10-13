@@ -1,4 +1,4 @@
-import { raycast } from "./collide.js";
+import { boundingRect, raycast, rectsMeet } from "./collide.js";
 import { emitBurst, emitSprite } from "./effects.js";
 import { BRAINS, STARTS, fpMul, switchGet } from "./patrolkit.js";
 
@@ -34,6 +34,18 @@ function smash(st, rnd, now, s) {
     );
 }
 
+// DamageHitItems: a stopper of its scale whose rect meets the item's own, each
+// as the item sees it in this tick's update, stops the fall where it is
+function meetsStopper(st) {
+  if (!st.p.stoppers.length) return false;
+  const a = st.anims[st.cur];
+  const own = boundingRect(a.frames[st.m.frame], st.p.x, st.y / FP, st.r.scale, false);
+  return st.p.stoppers.some(({ rec, first }) => {
+    const o = st.peer(rec, st.tick, first);
+    return o.frame && rectsMeet(own, boundingRect(o.frame, o.x, o.y, o.scale, o.flip));
+  });
+}
+
 BRAINS.fallingItem = (st, now, rnd) => {
   const p = st.p;
   const s = st.r.scale * FP;
@@ -49,13 +61,14 @@ BRAINS.fallingItem = (st, now, rnd) => {
       if (now >= st.timer) st.state = "falling";
       break;
     case "falling": {
+      const stopped = meetsStopper(st);
       if (st.vy < TOP) st.vy += fpMul(s, GAIN);
       const hit = raycast(p.lines, p.x, st.y / FP, p.x, (st.y + st.vy) / FP, p.floor);
-      if (!hit) {
+      if (!hit && !stopped) {
         st.y += st.vy;
         break;
       }
-      st.y = Math.round(hit.y * FP);
+      if (!stopped) st.y = Math.round(hit.y * FP);
       st.state = "smashed";
       smash(st, rnd, now, s);
       break;

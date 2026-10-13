@@ -166,6 +166,20 @@ export function moveOnLine(lines, links, i, x, y, dist, ao) {
   return { line: i, x: nx, y: ny };
 }
 
+// GetBoundingRect: a frame's own bounding rect, mirrored with the object,
+// scaled and truncated toward zero, at the object's truncated position
+export function boundingRect(frame, x, y, scale, flip) {
+  let [x1, y1, x2, y2] = frame.slice(7, 11);
+  if (flip) [x1, x2] = [-x2, -x1];
+  const s = (v) => Math.trunc(v * scale);
+  const ox = Math.trunc(x),
+    oy = Math.trunc(y);
+  return [s(x1) + ox, s(y1) + oy, s(x2) + ox, s(y2) + oy];
+}
+
+// PSX_Rects_overlap_no_adjustment: two rects meeting, edges inclusive
+export const rectsMeet = (a, b) => a[0] <= b[2] && a[2] >= b[0] && a[1] <= b[3] && a[3] >= b[1];
+
 // TLV_Get_At: the first object of the name whose rectangle meets the probe
 // rectangle, edges inclusive
 export function tlvAt(tlvs, x1, y1, x2, y2, name) {

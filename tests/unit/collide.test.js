@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  boundingRect,
   moveOnLine,
   nextLine,
   onEndOfLine,
@@ -8,6 +9,7 @@ import {
   raycast,
   raycastDiag,
   raycastDown,
+  rectsMeet,
   snapAt,
   snapX,
   tlvAt,
@@ -184,4 +186,21 @@ test("snapAt: Exoddus snaps the world x itself, Oddysee the x within the point's
   assert.equal(snapAt("AO", geo, 1024 + 312, false), 1024 + snapX("AO", 312, false));
   assert.equal(snapAt("AO", geo, 2048 + 100, true), 2048 + snapX("AO", 100, true));
   assert.equal(snapAt("AO", geo, 312, false), snapX("AO", 312, false));
+});
+
+test("boundingRect: a frame's own rect, mirrored with the object, scaled toward zero, at its truncated place", () => {
+  const frame = [0, 0, 0, 30, 40, -15, -35, -13, -35, 8, -9];
+  assert.deepEqual(boundingRect(frame, 100, 200, 1, false), [87, 165, 108, 191]);
+  assert.deepEqual(boundingRect(frame, 100, 200, 1, true), [92, 165, 113, 191], "x mirrored");
+  assert.deepEqual(
+    boundingRect(frame, 100.9, 200.5, 0.5, false),
+    [94, 183, 104, 196],
+    "half scale truncates -6.5 to -6 and -17.5 to -17",
+  );
+});
+
+test("rectsMeet: rects that share only an edge meet", () => {
+  assert.ok(rectsMeet([0, 0, 10, 10], [10, 10, 20, 20]));
+  assert.ok(!rectsMeet([0, 0, 10, 10], [11, 0, 20, 10]));
+  assert.ok(!rectsMeet([0, 0, 10, 10], [0, 11, 10, 20]));
 });
