@@ -34,6 +34,13 @@
    "anim": 0
   }
  },
+ "AO_FallingRock_Waiting": {
+  "ao": {
+   "file": "F2ROCK.BAN",
+   "rid": 2007,
+   "anim": 1
+  }
+ },
  "AirExplosion": {
   "ae": {
    "file": "EXPLO2.BAN",
@@ -513,6 +520,11 @@
   }
  },
  "Explosion_Rock": {
+  "ao": {
+   "file": "DEBRIS00.BAN",
+   "rid": 1105,
+   "anim": 0
+  },
   "ae": {
    "file": "DEBRIS00.BAN",
    "rid": 1105,
@@ -1683,6 +1695,20 @@
    "anim": 1
   }
  },
+ "Mudokon_Walk": {
+  "ao": {
+   "file": "ABEBSIC1.BAN",
+   "rid": 55,
+   "anim": 3
+  }
+ },
+ "Mudokon_WalkBegin": {
+  "ao": {
+   "file": "ABEBSIC1.BAN",
+   "rid": 55,
+   "anim": 1
+  }
+ },
  "ObjectShadow": {
   "ao": {
    "file": "SHADOW.BAN",
@@ -2115,6 +2141,13 @@
    ]
   }
  },
+ "Slig_Running": {
+  "ao": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 1
+  }
+ },
  "Slig_Sleeping": {
   "ao": {
    "file": "SLGSLEEP.BAN",
@@ -2136,6 +2169,13 @@
     "E1PAL.BAN",
     412
    ]
+  }
+ },
+ "Slig_StandToRun": {
+  "ao": {
+   "file": "SLIG.BND",
+   "rid": 412,
+   "anim": 11
   }
  },
  "Slig_StandToWalk": {

@@ -76,14 +76,20 @@ const EDIT_REACHED = new Set([
 // written; one leaves its game's list with the code that draws it
 const SHIPPED_AHEAD = {
   AO: new Set([
+    "AO_FallingRock_Waiting", // a rock whose switch comes on
     "Bee_Swarm", // a honey sack's swarm and the bee hole's
     "DeathFlare_2", // a sling Mudokon appearing
+    "Explosion_Rock", // a rock's debris
     "Honey_Drip", // a hanging honey sack
     "Mudokon_Sling_Idle", // a sling Mudokon
     "Mudokon_Sling_Speak",
+    "Mudokon_Walk", // the F1 P2 lift Mudokon walking in
+    "Mudokon_WalkBegin",
     "ObjectShadow", // a creature's drop shadow
     "Scrab_AO_ToFall", // a scrab walking off its line's end
     "Security_Claw_Upper_NoRotation", // a claw carrying motion detectors
+    "Slig_Running", // the F1 P2 slig running off its screen
+    "Slig_StandToRun",
     "Well_Leaf", // a well letting a leaf go
   ]),
   AE: new Set([

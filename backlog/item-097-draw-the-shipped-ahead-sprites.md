@@ -40,6 +40,8 @@ Every behaviour below is the decomp's, read under the no-player reading [94](ite
 
 **A claw carrying motion detectors** (`Security_Claw_Upper_NoRotation`; Oddysee). A claw whose camera holds motion detectors stops rotating and takes them: each detector's flare draws at the claw, a unit left and eleven up, every tick. 3 claws in E2 (P2 at (406,159), P4 at (429,186) and (3476,149)) carrying 8 detectors. The claw's bob, 8 units on a cosine and a quarter of that on a sine, two angle steps a tick, needs no art and goes with it.
 
+**Two single objects in F1 P2** (`Mudokon_WalkBegin`, `Mudokon_Walk`, `Slig_StandToRun`, `Slig_Running`; Oddysee, shipped ahead 2026-10-13 in the rebuild that brought the Oddysee rocks' art). The lift Mudokon walks 64 units in 120 ticks after its camera loads (`ABEBSIC1.BAN` 55, ordinals 1 and 3), and the slig placed to chase and disappear runs off its screen at load and is removed (`SLIG.BND` 412, ordinals 11 and 1).
+
 ## Shipped (2026-10-13)
 
 **The falling items on the always-on switch** (`fallingitem.js`, their debris in `effects.js`). Every placed falling item runs the decomp's brain and reads its switch through `switchGet`, so the 26 on id 1 move at a fresh start and the rest wait in their first art until something writes theirs: each rumbles `fall_interval` in its second art, falls in the engine's 16.16 gaining 1.8 a tick (0.9 at half scale), smashes where the raycast meets the floor of its plane, stands back where it waited in its first art for a tick and rumbles again. The smash throws the decomp's `ParticleBurst` from the item's own dice cursor, ported per game, and in the Bonewerkz the `AirExplosion` blast beside it; the item and all it throws show on the screen of the camera that builds it alone. `tests/unit/sprites.test.js` sweeps the 26 for a minute: each lands on a floor of its plane more than once, throws its debris there and starts over.
@@ -55,7 +57,6 @@ Where the sketch was wrong:
 ## Not shipped, and why
 
 - **Never drawn without Abe**, so the test would refuse them: `Mudokon_TurnWheelEnd` (only Abe's voice stops a wheel worker), Exoddus's `Scrab_WalkToFall` and Oddysee's `Scrab_Landing` (above).
-- **Two single objects in F1 P2, left for a later rebuild:** the lift Mudokon that walks 64 units in 120 ticks after its camera loads (`Mudokon_WalkBegin`, `Mudokon_Walk`, `ABEBSIC1.BAN` 55 ordinals 1 and 3), and the slig placed to chase and disappear, which runs off its screen at load and is removed (`Slig_StandToRun`, `Slig_Running`, `SLIG.BND` 412 ordinals 11 and 1). About 35 KB of sheet between them.
 - **Waiting on Abe:** the ring-giving Mudokons, the sick Mudokons' answers, the Glukkon switches, the seven Exoddus sligs placed to chase, the Elum, the surprise-web paramites (none on switch 1), the hand stones.
 - **Waiting on a switch off at a fresh start:** all 88 door flames, the security doors, the train doors, the bee nests, gas, water, the falling items on other ids, the explosion sets, the spawners.
 - **Not animations:** the LCD screens and status boards (a font), the gas countdowns and the meters. Oddysee's stars are placed but the game's own render of them is empty.
@@ -76,3 +77,7 @@ These can land whenever their brain is written, without a rebuild:
 | Oddysee | 955,619 bytes, 1,878 rows | 972,239 bytes, 1,952 rows |
 
 The map data came out byte for byte as before. The Oddysee sheet now has 96 rows left under the builder's 2048-row cap; the two F1 P2 walk-ins would take it to 2,037, and past the cap the sheet goes on to a second PNG, which the viewer already reads as a list.
+
+## Measured (2026-10-13)
+
+The rebuild that added the Oddysee rocks' waiting art (`AO_FallingRock_Waiting`, `F2ROCK.BAN` 2007 ordinal 1) and rock debris (`Explosion_Rock`, `DEBRIS00.BAN` 1105) and the two F1 P2 walk-ins took the Oddysee sheet from 972,239 bytes and 1,952 rows to two PNGs of 1,010,514 bytes and 2,043 rows and 960 bytes and 7 rows, the builder's 2048-row cap passed by seven. The map data and the Exoddus sheet came out byte for byte as before.
