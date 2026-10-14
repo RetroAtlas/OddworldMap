@@ -1548,3 +1548,29 @@ export function spriteDraws(data, lvl, path, t, set) {
 }
 
 export const spriteTypes = (gameId) => Object.keys(rules[gameId] || {});
+
+// the sheet a record's own art is on: its animation's, else its brain's
+const BRAIN_SHEETS = {
+  lcd: (set) => set.font?.sheet,
+  tally: (set) => set.font?.sheet,
+  hintfly: (set) => set.anims.HintFly?.frames[0][0],
+};
+export function ownSheet(set, r) {
+  if (r.anim) return set.anims[r.anim]?.frames[0][0] ?? null;
+  return BRAIN_SHEETS[r.cycle?.brain]?.(set) ?? null;
+}
+
+// the sheets records draw from: each one's own, and the sidecar's shared sheets
+// wherever a record runs a brain, the one source of the effects and the text
+// drawn beside an object
+export function recordSheets(set, recs) {
+  const keys = new Set();
+  let brain = false;
+  for (const r of recs) {
+    const k = ownSheet(set, r);
+    if (k) keys.add(k);
+    if (r.cycle?.kind === "brain") brain = true;
+  }
+  if (brain) for (const k of set.shared) keys.add(k);
+  return [...keys].filter((k) => Object.hasOwn(set.sheets, k)).sort();
+}

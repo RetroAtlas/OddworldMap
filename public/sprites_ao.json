@@ -61,6 +61,10 @@
   "TrapDoor": "cams/ao/sprites/TrapDoor.ffe1b7acb946.png",
   "ZBall": "cams/ao/sprites/ZBall.cc007d47c3ad.png"
  },
+ "shared": [
+  "Font",
+  "Particles"
+ ],
  "anims": {
   "AO_FallingRock_Falling": {
    "fps": 4,

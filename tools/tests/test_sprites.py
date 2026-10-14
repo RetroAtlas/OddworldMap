@@ -275,6 +275,13 @@ class Sheets(unittest.TestCase):
             self.assertEqual((font["w"], font["h"], font["glyphs"]), (1, 1, self.FONT["glyphs"]))
             self.assertEqual((out / side["sheets"][font["sheet"]]).read_bytes(), bytes([7, 7, 7, 255]))
 
+    def test_the_shared_sheets_are_the_font_s_and_the_particles_where_a_build_has_them(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            self.assertEqual(self.write(out, {"A": bytes([1, 2, 3, 255])})["shared"], [sprites.FONT_FAMILY])
+            self.assertEqual(self.write(out, {"A": bytes([1, 2, 3, 255]), sprites.PARTICLES: bytes([4, 5, 6, 255])})
+                             ["shared"], [sprites.FONT_FAMILY, sprites.PARTICLES])
+
     def test_no_animation_may_take_the_font_s_family(self):
         with tempfile.TemporaryDirectory() as tmp, self.assertRaises(SystemExit) as caught:
             self.write(Path(tmp), {sprites.FONT_FAMILY: bytes([1, 2, 3, 255])})

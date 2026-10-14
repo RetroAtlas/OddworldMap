@@ -3,6 +3,12 @@
   {
    "date": "2026-10-14",
    "tag": "improved",
+   "title": "Only the sprites a path draws",
+   "detail": "With \"Objects as themselves\" on, the map used to download a whole game's sprites, a megabyte for Oddysee, before the first creature appeared. It now fetches only the sprites of the creatures and devices on the path you open, about a fifth of that on Rupture Farms' first path, and they appear together once they have arrived. An object whose sprite fails to load keeps its marker."
+  },
+  {
+   "date": "2026-10-14",
+   "tag": "improved",
    "tiny": true,
    "title": "A link opens on its own path alone",
    "detail": "A shared link to one of a level's later paths, and the spot the map remembers from your last visit, used to download every screen of the level's first path on the way there. Now only the path you asked for is fetched, which on a phone can spare several megabytes."

@@ -64,7 +64,7 @@ export function setMotionRunning(on, repaint) {
 
 export const motionRunning = () => running;
 
-// the scene's ticks count from when the path on screen was set up, as the
+// the scene's ticks count from when the path's sprites first appear, as the
 // game constructs a camera's objects the moment it loads, so every object
 // starts from its spawn frame on arrival; the Objects toggle coming on starts
 // it over

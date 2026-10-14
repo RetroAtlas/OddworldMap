@@ -29,6 +29,7 @@ SHEET_W = 1024          # a sheet's width at most; its height follows the frames
 SHEET_MAX_H = 2048
 SHEETS_DIR = "sprites"  # under a game's cams directory, its family sheets in it
 FONT_FAMILY = "Font"
+PARTICLES = "Particles"  # the effects the brains give off, whatever family gives them
 
 # alpha states a texel can take in an atlas: the viewer blends the marked ones
 # only where the object's polygon is semi-transparent, which is the object's
@@ -582,11 +583,11 @@ def family_sheet(family, names, entries, frames):
 def write_sprites(game_key, levels, out, sheets_rel, abe=None, links=None):
     """a sheet per family and the LCD font's index map, each under `sheets_rel`
     named for its family and its pixels, nothing else left there, and the game's
-    sprites sidecar beside the data file, carrying the font's glyph table, the
-    per-path Abe start where the game places a device by it and each collision
-    line's previous and next links, which the engine's line following walks;
-    misses fail the build, since a name the viewer may ask for must not be left
-    out silently"""
+    sprites sidecar beside the data file, carrying the sheets a path with a brain
+    draws from whatever its own, the font's glyph table, the per-path Abe start
+    where the game places a device by it and each collision line's previous and
+    next links, which the engine's line following walks; misses fail the build,
+    since a name the viewer may ask for must not be left out silently"""
     frames, entries, misses = build_sprites(game_key, levels)
     if misses:
         raise SystemExit(f"sprites: {len(misses)} listed animations not found on the discs: "
@@ -609,7 +610,8 @@ def write_sprites(game_key, levels, out, sheets_rel, abe=None, links=None):
     dice = {tuple(read_dice(disc)) for disc in {lvl.disc for _, lvl in levels}}
     if len(dice) != 1:
         raise SystemExit("sprites: the discs disagree on the random table")
-    sidecar = {"sheets": sheet_files, "anims": entries, "dice": list(dice.pop()),
+    sidecar = {"sheets": sheet_files, "shared": [f for f in (FONT_FAMILY, PARTICLES) if f in sheet_files],
+               "anims": entries, "dice": list(dice.pop()),
                "font": {"sheet": FONT_FAMILY, "w": font["w"], "h": font["h"], "glyphs": font["glyphs"]}}
     if abe:
         sidecar["abe"] = abe

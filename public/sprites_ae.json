@@ -41,6 +41,10 @@
   "TrapDoor": "cams/ae/sprites/TrapDoor.086977f62c9d.png",
   "WorkWheel": "cams/ae/sprites/WorkWheel.add19d8f375e.png"
  },
+ "shared": [
+  "Font",
+  "Particles"
+ ],
  "anims": {
   "AE_FallingRock_Falling": {
    "fps": 4,

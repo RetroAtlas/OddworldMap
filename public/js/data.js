@@ -117,7 +117,13 @@ export function loadSprites(id, low) {
   let p = spriteData.get(id);
   if (!p) {
     p = loadJson(`sprites_${id.toLowerCase()}.json`, low ? { priority: "low" } : null).then((d) => {
-      if (!d?.anims || !d.sheets || typeof d.sheets !== "object" || Array.isArray(d.sheets)) {
+      if (
+        !d?.anims ||
+        !d.sheets ||
+        typeof d.sheets !== "object" ||
+        Array.isArray(d.sheets) ||
+        !Array.isArray(d.shared)
+      ) {
         spriteData.delete(id);
         return null;
       }

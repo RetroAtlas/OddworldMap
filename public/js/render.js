@@ -47,7 +47,7 @@ import {
   setMotionRunning,
   setPatrolsRunning,
 } from "./motion.js";
-import { spriteDraws, spriteTypes } from "./sprites.js";
+import { ownSheet, recordSheets, spriteDraws, spriteTypes } from "./sprites.js";
 
 // canvas colors shared with the stylesheet, read once from the tokens
 const COLOR = {
@@ -64,7 +64,7 @@ function img(src) {
   if (!images[src]) {
     const im = new Image();
     im.src = src;
-    im.onload = scheduleDraw;
+    im.onload = im.onerror = scheduleDraw;
     images[src] = im;
   }
   return images[src];
@@ -126,10 +126,19 @@ const spritesFailed = (gameId) => spriteSets[gameId] === false;
 export function warmSprites(gameId) {
   spriteSet(gameId);
 }
-function retrySprites(gameId) {
-  if (spritesFailed(gameId)) delete spriteSets[gameId];
-}
 const sheetSrcs = (gameId) => Object.values(spriteSets[gameId]?.sheets ?? {});
+const settled = (src) => !!images[src]?.complete;
+const failed = (src) => settled(src) && !images[src].naturalWidth;
+function retrySprites(gameId) {
+  let dropped = spritesFailed(gameId);
+  if (dropped) delete spriteSets[gameId];
+  for (const src of sheetSrcs(gameId))
+    if (failed(src)) {
+      delete images[src];
+      dropped = true;
+    }
+  if (dropped) scheduleDraw();
+}
 
 // a frame as one object draws it: the texels the semi-transparency bit marks
 // blend only where the polygon is semi-transparent, and the engine modulates
@@ -165,9 +174,9 @@ function processedFrame(src, frame, semi, rgb) {
   return oc;
 }
 
-// the draw records of the standing path, keyed by object; an edit swaps the
-// path and the records with it
-let spriteCache = { path: null, set: null, byTlv: null };
+// the draw records of the standing path, keyed by object, and the sheet files
+// they draw from; an edit swaps the path and the records with it
+let spriteCache = { path: null, set: null, byTlv: null, sheets: null };
 function spriteRecords(data, lvl, path, set) {
   if (spriteCache.path !== path || spriteCache.set !== set) {
     const byTlv = new Map();
@@ -175,14 +184,46 @@ function spriteRecords(data, lvl, path, set) {
       const recs = spriteDraws(data, lvl, path, t, set);
       if (recs.length) byTlv.set(t, recs);
     }
-    spriteCache = { path, set, byTlv };
+    const sheets = recordSheets(set, [...byTlv.values()].flat()).map((k) => set.sheets[k]);
+    spriteCache = { path, set, byTlv, sheets };
     resetScene();
     frameCache.clear();
   }
   return spriteCache.byTlv;
 }
+// the sheet files a path's sprites draw from; a path other than the standing
+// one is asked for whole
+function pathSheets(path, set) {
+  if (path !== state.path) return Object.values(set.sheets);
+  spriteRecords(state.data, state.lvl, path, set);
+  return spriteCache.sheets;
+}
 
-let paintedSprites = null;
+// the places whose sprites have drawn: an edit there, and a family it brings,
+// draw as their sheets land rather than holding back what already stands
+const shownPlaces = new Set();
+const place = () => `${state.data.id}/${state.lvl.short}/${state.path.id}`;
+const placeShown = () => !!state.path && shownPlaces.has(place());
+// the standing path's sprites draw once its sheets and its foreground masks have
+// all arrived or failed, so they appear together, and the scene starts then
+function spritesReady(set, live) {
+  const art = [
+    ...state.path.cams.flatMap((c) => (c.masks ?? []).map(([, src]) => src)),
+    ...pathSheets(state.path, set),
+  ];
+  for (const src of art) img(src);
+  if (placeShown()) return true;
+  if (!art.every(settled)) return false;
+  if (live) {
+    shownPlaces.add(place());
+    resetScene();
+    syncMotion();
+  }
+  return true;
+}
+
+let paintedSprites = null,
+  spritesDrawn = false;
 const ruled = {};
 const hasRule = (game, name) => (ruled[game] ??= new Set(spriteTypes(game))).has(name);
 // connection edges, computed lazily and keyed by path object identity —
@@ -222,6 +263,12 @@ function kept(t) {
   }
   return keptCache.set.has(t);
 }
+// a record whose own sheet failed to load leaves its object a marker
+function lostSheet(r) {
+  const set = spriteSets[state.data.id];
+  const k = set && ownSheet(set, r);
+  return !!k && failed(set.sheets[k]);
+}
 // what an object is drawn as: its sprite, its marker, unseen (there to point
 // at, nothing to paint) or nothing. A type the rules know stays present when
 // its own state draws nothing, an open door included
@@ -232,8 +279,11 @@ function drawnAs(t, sprites) {
   // the editor's click needs a box for everything it may edit
   const markers = state.show.markers || state.edit;
   if (hasRule(state.data.id, t.name)) {
-    if (sprites) return sprites.has(t) ? "sprite" : markers ? "marker" : "unseen";
-    return spritesFailed(state.data.id) ? "marker" : null;
+    if (!sprites) return spritesFailed(state.data.id) ? "marker" : null;
+    if (!sprites.has(t)) return markers ? "marker" : "unseen";
+    // a sprite still on its way leaves its object there to point at, boxed for the editor
+    if (!spritesDrawn) return state.edit ? "marker" : "unseen";
+    return sprites.get(t).some(lostSheet) ? "marker" : "sprite";
   }
   if (markers) return "marker";
   return kept(t) ? "unseen" : null;
@@ -253,7 +303,8 @@ export async function preloadPath(path) {
     // the sheets are known only once the sidecar is in
     spriteSet(state.data.id);
     if (spriteSets[state.data.id] === null) await loadSprites(state.data.id);
-    srcs.push(...sheetSrcs(state.data.id));
+    const set = spriteSets[state.data.id];
+    if (set) srcs.push(...pathSheets(path, set));
   }
   return Promise.all(
     srcs.map((src) => {
@@ -291,8 +342,9 @@ export function artworkReady(path) {
   }
   if (state.show.objects) {
     // a sidecar still coming keeps the paint waiting; a failed one has nothing more to wait for
-    if (!spriteSets[state.data.id] && !spritesFailed(state.data.id)) return false;
-    for (const s of sheetSrcs(state.data.id)) if (!decoded(s)) return false;
+    const set = spriteSets[state.data.id];
+    if (!set && !spritesFailed(state.data.id)) return false;
+    if (set) for (const s of pathSheets(path, set)) if (!decoded(s)) return false;
   }
   return true;
 }
@@ -308,7 +360,7 @@ window.addEventListener("selection-changed", () => {
   }
   for (const src of Object.keys(images)) {
     if (keep.has(src)) continue;
-    images[src].onload = null; // in-flight loads must not repaint after eviction
+    images[src].onload = images[src].onerror = null; // in-flight loads must not repaint after eviction
     delete images[src];
     delete tintCache[src];
     delete dimCache[src];
@@ -457,7 +509,12 @@ export function syncMotion() {
   objectsShown = shown;
   shownGame = game;
   const on =
-    shown && getSettings().animate && !state.graph && !document.hidden && !reducedMotion.matches;
+    shown &&
+    getSettings().animate &&
+    !state.graph &&
+    !document.hidden &&
+    !reducedMotion.matches &&
+    placeShown();
   setMotionRunning(on, scheduleDraw);
   setPatrolsRunning(!!state.show.patrols);
   if (shown && state.data) spriteSet(state.data.id);
@@ -597,11 +654,11 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   // draws the first frame, so two exports agree
   const set = show.objects ? spriteSet(data.id) : null;
   const standing = set ? spriteRecords(data, lvl, path, set) : null;
-  if (standing) for (const src of sheetSrcs(data.id)) img(src);
+  spritesDrawn = !!standing && spritesReady(set, transients);
   paintedSprites = standing;
   held = transients && sel && carriedRect ? holding(data, lvl, path, set, sel, carriedRect) : null;
   const sprites = held && standing ? heldRecords(path, standing) : standing;
-  if (sprites) {
+  if (sprites && spritesDrawn) {
     const live = transients && motionRunning();
     paintSprites(f, sprites, set, live ? sceneTick() : 0, live ? patrolTick() : 0, show.dim);
   } else {

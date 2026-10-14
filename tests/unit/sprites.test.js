@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { spriteDraws, spriteTypes } from "../../public/js/sprites.js";
+import { ownSheet, recordSheets, spriteDraws, spriteTypes } from "../../public/js/sprites.js";
 import { armFieldData } from "../../public/js/fields.js";
 import { brainAt, resolveEffects, resolveRecord } from "../../public/js/motion.js";
 import { raycast } from "../../public/js/collide.js";
@@ -45,6 +45,7 @@ function brainAnims(r, set) {
     for (const e of resolveEffects(r, set, t)) {
       assert.ok(Number.isFinite(e.x) && Number.isFinite(e.y), `${r.anim} effect at ${t}`);
       if (e.kind === "sprite") names.add(e.name);
+      if (e.kind === "text") names.text = true;
       moved = true;
     }
     const shown = resolveRecord(r, set, t);
@@ -60,6 +61,22 @@ function brainAnims(r, set) {
   names.moved = moved;
   return names;
 }
+
+// what a record shows and gives off, every cycle resolved as the painter
+// resolves it; swept once a game for the tests that read it
+function reachOf(r, set) {
+  if (r.cycle?.kind === "brain") return brainAnims(r, set);
+  const names = new Set(r.anim ? [r.anim] : []);
+  if (r.cycle)
+    for (let t = 0; t <= BRAIN_WINDOW; t++) {
+      const shown = resolveRecord(r, set, t);
+      if (shown) names.add(shown.name);
+    }
+  return names;
+}
+const swept = {};
+const sweep = (g) =>
+  (swept[g] ??= allRecords(g).map((x) => ({ ...x, reach: reachOf(x.r, sheets[g]) })));
 
 // the one-shot animations a record is meant to stand on, parked
 const ONE_SHOTS = new Set();
@@ -119,20 +136,14 @@ const SHIPPED_AHEAD = {
 test("every record names an animation the sidecar carries, and every sidecar animation is drawn", () => {
   for (const g of GAMES) {
     const used = new Set();
-    for (const { r } of allRecords(g)) {
+    for (const { r, reach } of sweep(g)) {
       // an effect-only object draws no sprite of its own
-      if (r.anim !== null) {
+      if (r.anim !== null)
         assert.ok(
           sheets[g].anims[r.anim],
           `${g}: ${r.anim} is drawn but not in sprites_${g.toLowerCase()}.json`,
         );
-        used.add(r.anim);
-      }
-      // the cycles name animations of their own
-      if (r.cycle?.kind === "uxb")
-        for (const n of ["Bomb_Flash", "Bomb_RedGreenTick", "Bomb_RedGreenTick@GreenFlash"])
-          used.add(n);
-      if (r.cycle?.kind === "brain") for (const n of brainAnims(r, sheets[g])) used.add(n);
+      for (const n of reach) used.add(n);
     }
     for (const n of Object.keys(sheets[g].anims))
       assert.ok(
@@ -202,6 +213,60 @@ test("every frame a sidecar names sits on a listed sheet, an animation's frames 
           `${g} ${name} frame`,
         );
       assert.equal(new Set(a.frames.map((f) => f[0])).size, 1, `${g} ${name} sheets`);
+    }
+  }
+});
+
+// a path asks for its records' sheets alone, so what a record shows or gives off
+// has to lie on them
+test("a record draws only from its own animation's sheet, and with a brain the shared ones", () => {
+  for (const g of GAMES) {
+    const set = sheets[g];
+    for (const s of set.shared) assert.ok(Object.hasOwn(set.sheets, s), `${g} shares ${s}`);
+    for (const { lvl, path, t, r, reach } of sweep(g)) {
+      const where = `${g} ${lvl.short} P${path.id} ${t.name}`;
+      const asks = new Set(recordSheets(set, [r]));
+      for (const n of reach) {
+        const on = set.anims[n].frames[0][0];
+        assert.ok(
+          asks.has(on),
+          `${where}: ${n} lies on the ${on} sheet, which it does not ask for`,
+        );
+      }
+      if (reach.text) assert.ok(asks.has(set.font.sheet), `${where}: its text needs the font`);
+      if (r.anim === null)
+        assert.equal(r.cycle?.kind, "brain", `${where}: a record with no animation runs a brain`);
+    }
+  }
+});
+
+test("a path asks for the shared sheets only where one of its records runs a brain", () => {
+  for (const g of GAMES) {
+    const set = sheets[g];
+    const byPath = new Map();
+    for (const { path, r } of sweep(g)) byPath.set(path, [...(byPath.get(path) ?? []), r]);
+    let brainless = 0;
+    for (const recs of byPath.values()) {
+      if (recs.some((r) => r.cycle?.kind === "brain")) continue;
+      brainless++;
+      const asks = recordSheets(set, recs);
+      for (const k of set.shared)
+        assert.ok(!asks.includes(k), `${g}: a path with no brain asks for ${k}`);
+    }
+    assert.ok(brainless > 0, `${g} has a path with records and no brain`);
+  }
+});
+
+test("a record with no animation of its own names the sheet its brain draws from", () => {
+  for (const g of GAMES) {
+    const set = sheets[g];
+    for (const { t, r } of sweep(g)) {
+      if (r.anim !== null) continue;
+      const want = { lcd: set.font.sheet, tally: set.font.sheet, zzz: null }[r.cycle.brain];
+      const own = ownSheet(set, r);
+      if (r.cycle.brain === "hintfly")
+        assert.equal(own, set.anims.HintFly.frames[0][0], `${g} ${t.name}`);
+      else assert.equal(own, want, `${g} ${t.name} runs ${r.cycle.brain}`);
     }
   }
 });
