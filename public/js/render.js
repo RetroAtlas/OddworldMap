@@ -129,7 +129,7 @@ export function warmSprites(gameId) {
 function retrySprites(gameId) {
   if (spritesFailed(gameId)) delete spriteSets[gameId];
 }
-const sheetSrcs = (gameId) => spriteSets[gameId]?.sheets || [];
+const sheetSrcs = (gameId) => Object.values(spriteSets[gameId]?.sheets ?? {});
 
 // a frame as one object draws it: the texels the semi-transparency bit marks
 // blend only where the polygon is semi-transparent, and the engine modulates
@@ -597,6 +597,7 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   // draws the first frame, so two exports agree
   const set = show.objects ? spriteSet(data.id) : null;
   const standing = set ? spriteRecords(data, lvl, path, set) : null;
+  if (standing) for (const src of sheetSrcs(data.id)) img(src);
   paintedSprites = standing;
   held = transients && sel && carriedRect ? holding(data, lvl, path, set, sel, carriedRect) : null;
   const sprites = held && standing ? heldRecords(path, standing) : standing;

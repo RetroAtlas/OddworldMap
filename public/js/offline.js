@@ -22,9 +22,8 @@ const CONTROL_MS = 10000; // how long a download waits for the worker to take th
 const PROGRESS_MS = 120; // redraw pace while files land
 
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
-// an atlas is sized as a sheet; the font map beside them is a few hundred bytes
 const bytesOf = (url) =>
-  /\/sprites\/.*\/\d+\.png$/.test(url)
+  /\/sprites\//.test(url)
     ? SHEET_FILE_BYTES
     : /_fg\d+\.png$/.test(url)
       ? MASK_FILE_BYTES
@@ -102,7 +101,7 @@ const pending = (row) => idle(row) && !complete(row);
 const allUrls = () => [...rows.values()].flatMap((row) => row.urls);
 
 function addSheets(row, sprites) {
-  for (const f of sprites.sheets) {
+  for (const f of Object.values(sprites.sheets)) {
     const url = new URL(f, location.href).href;
     if (!row.urls.includes(url)) row.urls.push(url);
   }

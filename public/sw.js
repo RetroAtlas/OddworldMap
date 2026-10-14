@@ -7,10 +7,12 @@
 // The builder writes this line: it is a content hash of the cameras and masks,
 // so a regenerated one expires the cache and an unchanged build leaves it alone.
 const CACHE_NAME = "cams-342b2d9b482c";
-// a game's sprite sheets sit in a directory named for their pixels, outside the
-// hash: a changed set arrives under new URLs, and storing one retires the
-// game's other sets
-const SHEET_SET = /^\/cams\/([^/]+)\/sprites\/([^/]+)\/[^/]+\.png$/;
+// a game's sprite sheets sit one per family, each named for its family and its
+// pixels, outside the hash: a changed sheet arrives under a new URL, and storing
+// one retires its family's others and whatever else under the game's sprites is
+// no family's sheet
+const SHEET = /^\/cams\/([^/]+)\/sprites\/([A-Z][A-Za-z0-9]*)\.([0-9a-f]{12})\.png$/;
+const SPRITES = /^\/cams\/([^/]+)\/sprites\//;
 // the shell bucket self-refreshes per request, so its name never has to move;
 // bumping it is only for retiring an incompatible storage scheme
 const SHELL = "shell-v1";
@@ -18,7 +20,7 @@ const SHELL = "shell-v1";
 // unregistration can't stop a controlling worker until reload, and a
 // module flag wouldn't survive an idle-worker restart
 const ENABLED = "cams-on";
-// has to clear both games' complete artwork (3196 files), which the page can
+// has to clear both games' complete artwork (3291 files), which the page can
 // ask for outright; a cap under that would evict the download's own head
 const MAX_ENTRIES = 4000; // ≈280 MB
 const TRIM_SLACK = 50; // hysteresis so trim doesn't scan keys() on every put
@@ -65,11 +67,13 @@ async function trim(cache) {
 }
 
 async function retireSheets(cache, request) {
-  const [, game, set] = SHEET_SET.exec(new URL(request.url).pathname) || [];
-  if (!set) return;
+  const [, game, family, name] = SHEET.exec(new URL(request.url).pathname) || [];
+  if (!name) return;
   for (const key of await cache.keys()) {
-    const [, g, s] = SHEET_SET.exec(new URL(key.url).pathname) || [];
-    if (g === game && s !== set) await cache.delete(key);
+    const path = new URL(key.url).pathname;
+    if (SPRITES.exec(path)?.[1] !== game) continue;
+    const [, , f, n] = SHEET.exec(path) || [];
+    if (!n || (f === family && n !== name)) await cache.delete(key);
   }
 }
 

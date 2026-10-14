@@ -191,14 +191,17 @@ test("records are well-formed: finite anchors, the engine's scales and layers, a
     }
 });
 
-test("every frame a sidecar names sits inside its sheet's declared list", () => {
+test("every frame a sidecar names sits on a listed sheet, an animation's frames all on one", () => {
   for (const g of GAMES) {
-    const n = sheets[g].sheets.length;
     for (const [name, a] of Object.entries(sheets[g].anims)) {
       assert.ok(a.fps >= 1 && a.frames.length >= 1, `${g} ${name}`);
       assert.ok(a.loop_start >= 0 && a.loop_start < a.frames.length, `${g} ${name} loop start`);
       for (const f of a.frames)
-        assert.ok(f[0] >= 0 && f[0] < n && f[3] > 0 && f[4] > 0, `${g} ${name} frame`);
+        assert.ok(
+          Object.hasOwn(sheets[g].sheets, f[0]) && f[3] > 0 && f[4] > 0,
+          `${g} ${name} frame`,
+        );
+      assert.equal(new Set(a.frames.map((f) => f[0])).size, 1, `${g} ${name} sheets`);
     }
   }
 });
@@ -206,8 +209,7 @@ test("every frame a sidecar names sits inside its sheet's declared list", () => 
 test("the LCD font names a listed sheet and its glyphs sit inside it, the gap and the space first", () => {
   for (const g of GAMES) {
     const f = sheets[g].font;
-    assert.ok(f.sheet >= 0 && f.sheet < sheets[g].sheets.length, `${g} font sheet`);
-    assert.ok(sheets[g].sheets[f.sheet].endsWith("/font.png"), `${g} font file`);
+    assert.ok(Object.hasOwn(sheets[g].sheets, f.sheet), `${g} font sheet`);
     assert.equal(f.glyphs.length, 157, `${g} glyph count`);
     for (const [x, y, w, h] of f.glyphs) assert.ok(x + w <= f.w && y + h <= f.h, `${g} glyph`);
     const [gap, space] = f.glyphs;

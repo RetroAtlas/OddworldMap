@@ -1,5 +1,6 @@
 {
  "AE_FallingRock_Falling": {
+  "family": "FallingItem",
   "ae": {
    "file": "FALLROCK.BAN",
    "rid": 2007,
@@ -7,6 +8,7 @@
   }
  },
  "AE_FallingRock_Waiting": {
+  "family": "FallingItem",
   "ae": {
    "file": "FALLROCK.BAN",
    "rid": 2007,
@@ -14,6 +16,7 @@
   }
  },
  "AE_Rope": {
+  "family": "Rope",
   "ae": {
    "file": "ROPES.BAN",
    "rid": 1000,
@@ -21,6 +24,7 @@
   }
  },
  "AE_Rope@NECROPE": {
+  "family": "Rope",
   "ae": {
    "file": "NECROPE.BAN",
    "rid": 1000,
@@ -28,6 +32,7 @@
   }
  },
  "AO_FallingRock_Falling": {
+  "family": "FallingItem",
   "ao": {
    "file": "F2ROCK.BAN",
    "rid": 2007,
@@ -35,6 +40,7 @@
   }
  },
  "AO_FallingRock_Waiting": {
+  "family": "FallingItem",
   "ao": {
    "file": "F2ROCK.BAN",
    "rid": 2007,
@@ -42,6 +48,7 @@
   }
  },
  "AirExplosion": {
+  "family": "Particles",
   "ae": {
    "file": "EXPLO2.BAN",
    "rid": 301,
@@ -49,6 +56,7 @@
   }
  },
  "Background_Glukkon_Idle@GlukAqua": {
+  "family": "Glukkon",
   "ao": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -60,6 +68,7 @@
   }
  },
  "Background_Glukkon_Idle@GlukBlue": {
+  "family": "Glukkon",
   "ao": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -71,6 +80,7 @@
   }
  },
  "Background_Glukkon_Idle@GlukGreen": {
+  "family": "Glukkon",
   "ao": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -82,6 +92,7 @@
   }
  },
  "Background_Glukkon_Idle@GlukRed": {
+  "family": "Glukkon",
   "ao": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -93,6 +104,7 @@
   }
  },
  "Background_Glukkon_KillHim1@GlukAqua": {
+  "family": "Glukkon",
   "ao": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -104,6 +116,7 @@
   }
  },
  "Background_Glukkon_KillHim1@GlukBlue": {
+  "family": "Glukkon",
   "ao": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -115,6 +128,7 @@
   }
  },
  "Background_Glukkon_KillHim1@GlukGreen": {
+  "family": "Glukkon",
   "ao": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -126,6 +140,7 @@
   }
  },
  "Background_Glukkon_KillHim1@GlukRed": {
+  "family": "Glukkon",
   "ao": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -137,6 +152,7 @@
   }
  },
  "Background_Glukkon_KillHim2@GlukAqua": {
+  "family": "Glukkon",
   "ao": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -148,6 +164,7 @@
   }
  },
  "Background_Glukkon_KillHim2@GlukBlue": {
+  "family": "Glukkon",
   "ao": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -159,6 +176,7 @@
   }
  },
  "Background_Glukkon_KillHim2@GlukGreen": {
+  "family": "Glukkon",
   "ao": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -170,6 +188,7 @@
   }
  },
  "Background_Glukkon_KillHim2@GlukRed": {
+  "family": "Glukkon",
   "ao": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -181,6 +200,7 @@
   }
  },
  "Bat": {
+  "family": "Bat",
   "ao": {
    "file": "BATBASIC.BAN",
    "rid": 63,
@@ -188,6 +208,7 @@
   }
  },
  "Bat_Flying": {
+  "family": "Bat",
   "ao": {
    "file": "BATBASIC.BAN",
    "rid": 63,
@@ -195,6 +216,7 @@
   }
  },
  "Bat_Unknown": {
+  "family": "Bat",
   "ao": {
    "file": "BATBASIC.BAN",
    "rid": 63,
@@ -202,6 +224,7 @@
   }
  },
  "Bee_Swarm": {
+  "family": "Particles",
   "ao": {
    "file": "WASP.BAN",
    "rid": 61,
@@ -209,12 +232,14 @@
   }
  },
  "BellHammer_Idle": {
+  "family": "BellHammer",
   "ao": {
    "bg": 1019,
    "anim": 0
   }
  },
  "BigChime": {
+  "family": "Chime",
   "ao": {
    "file": "CHIMES.BAN",
    "rid": 2005,
@@ -222,6 +247,7 @@
   }
  },
  "Bomb_Flash": {
+  "family": "Bomb",
   "ao": {
    "file": "BOMB.BND",
    "rid": 1011,
@@ -234,6 +260,7 @@
   }
  },
  "Bomb_RedGreenTick": {
+  "family": "Bomb",
   "ao": {
    "file": "BOMB.BND",
    "rid": 1011,
@@ -246,6 +273,7 @@
   }
  },
  "Bomb_RedGreenTick@GreenFlash": {
+  "family": "Bomb",
   "ao": {
    "file": "BOMB.BND",
    "rid": 1011,
@@ -266,6 +294,7 @@
   }
  },
  "BoneBag_Idle": {
+  "family": "Sack",
   "ae": {
    "file": "BONEBAG.BAN",
    "rid": 590,
@@ -273,6 +302,7 @@
   }
  },
  "BoomMachine_Button_On": {
+  "family": "BoomMachine",
   "ao": {
    "file": "GMACHINE.BND",
    "rid": 6008,
@@ -285,6 +315,7 @@
   }
  },
  "BoomMachine_Pipe_Idle": {
+  "family": "BoomMachine",
   "ao": {
    "file": "GMACHINE.BND",
    "rid": 6009,
@@ -297,6 +328,7 @@
   }
  },
  "BrewMachine_Button": {
+  "family": "BrewMachine",
   "ae": {
    "file": "BREWBTN.BAN",
    "rid": 6016,
@@ -304,6 +336,7 @@
   }
  },
  "ChantOrb_Particle": {
+  "family": "Particles",
   "ao": {
    "file": "OMMFLARE.BAN",
    "rid": 312,
@@ -316,6 +349,7 @@
   }
  },
  "Chime_Ball": {
+  "family": "Chime",
   "ao": {
    "file": "F2CHMBAL.BAN",
    "rid": 2024,
@@ -323,6 +357,7 @@
   }
  },
  "CrawlingSligButton": {
+  "family": "CrawlingSlig",
   "ae": {
    "file": "CSLGBUTN.BAN",
    "rid": 1057,
@@ -330,6 +365,7 @@
   }
  },
  "CrawlingSligLocker_Closed": {
+  "family": "CrawlingSlig",
   "ae": {
    "file": "LOCKER.BAN",
    "rid": 448,
@@ -337,6 +373,7 @@
   }
  },
  "CrawlingSlig_Idle": {
+  "family": "CrawlingSlig",
   "ae": {
    "file": "CRAWLSLG.BND",
    "rid": 449,
@@ -344,6 +381,7 @@
   }
  },
  "CrawlingSlig_Snoozing": {
+  "family": "CrawlingSlig",
   "ae": {
    "file": "CRAWLSLG.BND",
    "rid": 449,
@@ -351,6 +389,7 @@
   }
  },
  "DeathFlare_2": {
+  "family": "Particles",
   "ao": {
    "file": "DEADFLR.BAN",
    "rid": 349,
@@ -358,6 +397,7 @@
   }
  },
  "Desert_TrapDoor_Closed": {
+  "family": "TrapDoor",
   "ao": {
    "file": "D2TRAP.BAN",
    "rid": 1004,
@@ -365,6 +405,7 @@
   }
  },
  "Desert_TrapDoor_Open": {
+  "family": "TrapDoor",
   "ao": {
    "file": "D2TRAP.BAN",
    "rid": 1004,
@@ -372,6 +413,7 @@
   }
  },
  "Door_BarracksMetal_Closed": {
+  "family": "Door",
   "ae": {
    "file": "SHDOOR.BAN",
    "rid": 2012,
@@ -379,6 +421,7 @@
   }
  },
  "Door_Barracks_Closed": {
+  "family": "Door",
   "ae": {
    "file": "BADOOR.BAN",
    "rid": 2012,
@@ -386,6 +429,7 @@
   }
  },
  "Door_Bonewerkz_Closed": {
+  "family": "Door",
   "ae": {
    "file": "BWDOOR.BAN",
    "rid": 2012,
@@ -393,6 +437,7 @@
   }
  },
  "Door_Brewery_Closed": {
+  "family": "Door",
   "ae": {
    "file": "BRDOOR.BAN",
    "rid": 2012,
@@ -400,6 +445,7 @@
   }
  },
  "Door_Desert_Closed": {
+  "family": "Door",
   "ao": {
    "file": "DDOOR.BND",
    "rid": 2012,
@@ -407,6 +453,7 @@
   }
  },
  "Door_Feeco_Closed": {
+  "family": "Door",
   "ae": {
    "file": "FDDOOR.BAN",
    "rid": 2012,
@@ -414,6 +461,7 @@
   }
  },
  "Door_Forest_Closed": {
+  "family": "Door",
   "ao": {
    "file": "FDOOR.BND",
    "rid": 2012,
@@ -421,6 +469,7 @@
   }
  },
  "Door_Lines_Closed": {
+  "family": "Door",
   "ao": {
    "file": "LDOOR.BND",
    "rid": 2012,
@@ -428,6 +477,7 @@
   }
  },
  "Door_Lock_Idle": {
+  "family": "Door",
   "ae": {
    "file": "DOORLOCK.BAN",
    "rid": 374,
@@ -435,6 +485,7 @@
   }
  },
  "Door_Mines_Closed": {
+  "family": "Door",
   "ae": {
    "file": "DOOR.BAN",
    "rid": 2012,
@@ -442,6 +493,7 @@
   }
  },
  "Door_RuptureFarms_Closed": {
+  "family": "Door",
   "ao": {
    "file": "RDOOR.BND",
    "rid": 2012,
@@ -449,6 +501,7 @@
   }
  },
  "Door_Temple_Closed": {
+  "family": "Door",
   "ae": {
    "file": "SVZDOOR.BAN",
    "rid": 2012,
@@ -456,6 +509,7 @@
   }
  },
  "Dove_Flying": {
+  "family": "Dove",
   "ao": {
    "file": "DOVBASIC.BAN",
    "rid": 60,
@@ -468,6 +522,7 @@
   }
  },
  "Dove_Idle": {
+  "family": "Dove",
   "ao": {
    "file": "DOVBASIC.BAN",
    "rid": 60,
@@ -480,6 +535,7 @@
   }
  },
  "Drill_Horizontal_Off": {
+  "family": "Drill",
   "ae": {
    "file": "DRILL.BAN",
    "rid": 6004,
@@ -487,6 +543,7 @@
   }
  },
  "Drill_Horizontal_On": {
+  "family": "Drill",
   "ae": {
    "file": "DRILL.BAN",
    "rid": 6004,
@@ -494,6 +551,7 @@
   }
  },
  "Drill_Vertical_Off": {
+  "family": "Drill",
   "ae": {
    "file": "DRILL.BAN",
    "rid": 6004,
@@ -501,6 +559,7 @@
   }
  },
  "Drill_Vertical_On": {
+  "family": "Drill",
   "ae": {
    "file": "DRILL.BAN",
    "rid": 6004,
@@ -508,6 +567,7 @@
   }
  },
  "Electric_Wall": {
+  "family": "ElectricWall",
   "ao": {
    "file": "ELECWALL.BAN",
    "rid": 6000,
@@ -520,6 +580,7 @@
   }
  },
  "Explosion_Rock": {
+  "family": "Particles",
   "ao": {
    "file": "DEBRIS00.BAN",
    "rid": 1105,
@@ -532,6 +593,7 @@
   }
  },
  "Explosion_Stick": {
+  "family": "Particles",
   "ao": {
    "file": "STICK.BAN",
    "rid": 358,
@@ -544,6 +606,7 @@
   }
  },
  "FallingCrate_Falling": {
+  "family": "FallingItem",
   "ae": {
    "file": "FALLBONZ.BAN",
    "rid": 2007,
@@ -551,6 +614,7 @@
   }
  },
  "FallingCrate_Waiting": {
+  "family": "FallingItem",
   "ae": {
    "file": "FALLBONZ.BAN",
    "rid": 2007,
@@ -558,6 +622,7 @@
   }
  },
  "FallingMeat_Falling": {
+  "family": "FallingItem",
   "ao": {
    "file": "R1BARREL.BAN",
    "rid": 2007,
@@ -565,6 +630,7 @@
   }
  },
  "FallingMeat_Waiting": {
+  "family": "FallingItem",
   "ao": {
    "file": "R1BARREL.BAN",
    "rid": 2007,
@@ -572,6 +638,7 @@
   }
  },
  "FinalTestDoor_Desert_Closed": {
+  "family": "Door",
   "ao": {
    "file": "DDOOR.BND",
    "rid": 2018,
@@ -579,6 +646,7 @@
   }
  },
  "FinalTestDoor_Forest_Closed": {
+  "family": "Door",
   "ao": {
    "file": "FDOOR.BND",
    "rid": 2018,
@@ -586,6 +654,7 @@
   }
  },
  "Fleech_Climb": {
+  "family": "Fleech",
   "ae": {
    "file": "FLEECH.BAN",
    "rid": 900,
@@ -593,6 +662,7 @@
   }
  },
  "Fleech_Crawl": {
+  "family": "Fleech",
   "ae": {
    "file": "FLEECH.BAN",
    "rid": 900,
@@ -600,6 +670,7 @@
   }
  },
  "Fleech_Idle": {
+  "family": "Fleech",
   "ae": {
    "file": "FLEECH.BAN",
    "rid": 900,
@@ -607,6 +678,7 @@
   }
  },
  "Fleech_Knockback": {
+  "family": "Fleech",
   "ae": {
    "file": "FLEECH.BAN",
    "rid": 900,
@@ -614,6 +686,7 @@
   }
  },
  "Fleech_PatrolCry": {
+  "family": "Fleech",
   "ae": {
    "file": "FLEECH.BAN",
    "rid": 900,
@@ -621,6 +694,7 @@
   }
  },
  "Fleech_RaiseHead": {
+  "family": "Fleech",
   "ae": {
    "file": "FLEECH.BAN",
    "rid": 900,
@@ -628,6 +702,7 @@
   }
  },
  "Fleech_SettleOnGround": {
+  "family": "Fleech",
   "ae": {
    "file": "FLEECH.BAN",
    "rid": 900,
@@ -635,6 +710,7 @@
   }
  },
  "Fleech_Sleeping": {
+  "family": "Fleech",
   "ae": {
    "file": "FLEECH.BAN",
    "rid": 900,
@@ -642,6 +718,7 @@
   }
  },
  "Fleech_SleepingWithTongue": {
+  "family": "Fleech",
   "ae": {
    "file": "FLEECH.BAN",
    "rid": 900,
@@ -649,6 +726,7 @@
   }
  },
  "Fleech_StopMidCrawlCycle": {
+  "family": "Fleech",
   "ae": {
    "file": "FLEECH.BAN",
    "rid": 900,
@@ -656,6 +734,7 @@
   }
  },
  "FlintGlow": {
+  "family": "Light",
   "ao": {
    "file": "FLNTGLOW.BAN",
    "rid": 6028,
@@ -663,6 +742,7 @@
   }
  },
  "FlintLock_Gourd": {
+  "family": "FlintLock",
   "ao": {
    "file": "GOURD.BAN",
    "rid": 2028,
@@ -670,6 +750,7 @@
   }
  },
  "FlintLock_Hammers_Disabled": {
+  "family": "FlintLock",
   "ao": {
    "file": "F2FLINT.BAN",
    "rid": 2017,
@@ -677,6 +758,7 @@
   }
  },
  "FlyingSlig_BeginDownMovement": {
+  "family": "FlyingSlig",
   "ae": {
    "file": "FLYSLIG.BND",
    "rid": 450,
@@ -684,6 +766,7 @@
   }
  },
  "FlyingSlig_EndDownMovement": {
+  "family": "FlyingSlig",
   "ae": {
    "file": "FLYSLIG.BND",
    "rid": 450,
@@ -691,6 +774,7 @@
   }
  },
  "FlyingSlig_EndUpMovement": {
+  "family": "FlyingSlig",
   "ae": {
    "file": "FLYSLIG.BND",
    "rid": 450,
@@ -698,6 +782,7 @@
   }
  },
  "FlyingSlig_HorizontalToUpMovement": {
+  "family": "FlyingSlig",
   "ae": {
    "file": "FLYSLIG.BND",
    "rid": 450,
@@ -705,6 +790,7 @@
   }
  },
  "FlyingSlig_Idle": {
+  "family": "FlyingSlig",
   "ae": {
    "file": "FLYSLIG.BND",
    "rid": 450,
@@ -712,6 +798,7 @@
   }
  },
  "FlyingSlig_IdleToHorizontal": {
+  "family": "FlyingSlig",
   "ae": {
    "file": "FLYSLIG.BND",
    "rid": 450,
@@ -719,6 +806,7 @@
   }
  },
  "FlyingSlig_IdleTurnAround": {
+  "family": "FlyingSlig",
   "ae": {
    "file": "FLYSLIG.BND",
    "rid": 450,
@@ -726,6 +814,7 @@
   }
  },
  "FlyingSlig_MoveDown": {
+  "family": "FlyingSlig",
   "ae": {
    "file": "FLYSLIG.BND",
    "rid": 450,
@@ -733,6 +822,7 @@
   }
  },
  "FlyingSlig_MoveDownToHorizontal": {
+  "family": "FlyingSlig",
   "ae": {
    "file": "FLYSLIG.BND",
    "rid": 450,
@@ -740,6 +830,7 @@
   }
  },
  "FlyingSlig_MoveDownTurnAround": {
+  "family": "FlyingSlig",
   "ae": {
    "file": "FLYSLIG.BND",
    "rid": 450,
@@ -747,6 +838,7 @@
   }
  },
  "FlyingSlig_MoveHorizontal": {
+  "family": "FlyingSlig",
   "ae": {
    "file": "FLYSLIG.BND",
    "rid": 450,
@@ -754,6 +846,7 @@
   }
  },
  "FlyingSlig_MoveHorizontalEnd": {
+  "family": "FlyingSlig",
   "ae": {
    "file": "FLYSLIG.BND",
    "rid": 450,
@@ -761,6 +854,7 @@
   }
  },
  "FlyingSlig_MoveHorizontalToDown": {
+  "family": "FlyingSlig",
   "ae": {
    "file": "FLYSLIG.BND",
    "rid": 450,
@@ -768,6 +862,7 @@
   }
  },
  "FlyingSlig_MoveUp": {
+  "family": "FlyingSlig",
   "ae": {
    "file": "FLYSLIG.BND",
    "rid": 450,
@@ -775,6 +870,7 @@
   }
  },
  "FlyingSlig_MoveUpToHorizontal": {
+  "family": "FlyingSlig",
   "ae": {
    "file": "FLYSLIG.BND",
    "rid": 450,
@@ -782,6 +878,7 @@
   }
  },
  "FlyingSlig_MoveUpTurnAround": {
+  "family": "FlyingSlig",
   "ae": {
    "file": "FLYSLIG.BND",
    "rid": 450,
@@ -789,6 +886,7 @@
   }
  },
  "FlyingSlig_TurnQuick": {
+  "family": "FlyingSlig",
   "ae": {
    "file": "FLYSLIG.BND",
    "rid": 450,
@@ -796,6 +894,7 @@
   }
  },
  "Foot_Switch_Bonewerkz_Idle": {
+  "family": "Switch",
   "ae": {
    "file": "BWTRIGGR.BAN",
    "rid": 2010,
@@ -803,6 +902,7 @@
   }
  },
  "Foot_Switch_Industrial_Idle": {
+  "family": "Switch",
   "ae": {
    "file": "TRIGGER.BAN",
    "rid": 2010,
@@ -810,6 +910,7 @@
   }
  },
  "Foot_Switch_Temple": {
+  "family": "Switch",
   "ao": {
    "file": "TRIGGER.BAN",
    "rid": 2010,
@@ -817,6 +918,7 @@
   }
  },
  "Foot_Switch_Vault_Idle": {
+  "family": "Switch",
   "ae": {
    "file": "VLTTRIGR.BAN",
    "rid": 2010,
@@ -824,6 +926,7 @@
   }
  },
  "Glukkon_Aslik_BeginWalk": {
+  "family": "Aslik",
   "ae": {
    "file": "ASLIK.BND",
    "rid": 802,
@@ -831,6 +934,7 @@
   }
  },
  "Glukkon_Aslik_EndSingleStep": {
+  "family": "Aslik",
   "ae": {
    "file": "ASLIK.BND",
    "rid": 802,
@@ -838,6 +942,7 @@
   }
  },
  "Glukkon_Aslik_EndWalk": {
+  "family": "Aslik",
   "ae": {
    "file": "ASLIK.BND",
    "rid": 802,
@@ -845,6 +950,7 @@
   }
  },
  "Glukkon_Aslik_Idle": {
+  "family": "Aslik",
   "ae": {
    "file": "ASLIK.BND",
    "rid": 802,
@@ -852,6 +958,7 @@
   }
  },
  "Glukkon_Aslik_LongLaugh": {
+  "family": "Aslik",
   "ae": {
    "file": "ASLIK.BND",
    "rid": 802,
@@ -859,6 +966,7 @@
   }
  },
  "Glukkon_Aslik_Speak1": {
+  "family": "Aslik",
   "ae": {
    "file": "ASLIK.BND",
    "rid": 802,
@@ -866,6 +974,7 @@
   }
  },
  "Glukkon_Aslik_Turn": {
+  "family": "Aslik",
   "ae": {
    "file": "ASLIK.BND",
    "rid": 802,
@@ -873,6 +982,7 @@
   }
  },
  "Glukkon_Aslik_Walk": {
+  "family": "Aslik",
   "ae": {
    "file": "ASLIK.BND",
    "rid": 802,
@@ -880,6 +990,7 @@
   }
  },
  "Glukkon_Dripik_BeginWalk": {
+  "family": "Dripik",
   "ae": {
    "file": "DRIPIK.BND",
    "rid": 804,
@@ -887,6 +998,7 @@
   }
  },
  "Glukkon_Dripik_EndSingleStep": {
+  "family": "Dripik",
   "ae": {
    "file": "DRIPIK.BND",
    "rid": 804,
@@ -894,6 +1006,7 @@
   }
  },
  "Glukkon_Dripik_EndWalk": {
+  "family": "Dripik",
   "ae": {
    "file": "DRIPIK.BND",
    "rid": 804,
@@ -901,6 +1014,7 @@
   }
  },
  "Glukkon_Dripik_Idle": {
+  "family": "Dripik",
   "ae": {
    "file": "DRIPIK.BND",
    "rid": 804,
@@ -908,6 +1022,7 @@
   }
  },
  "Glukkon_Dripik_LongLaugh": {
+  "family": "Dripik",
   "ae": {
    "file": "DRIPIK.BND",
    "rid": 804,
@@ -915,6 +1030,7 @@
   }
  },
  "Glukkon_Dripik_Speak1": {
+  "family": "Dripik",
   "ae": {
    "file": "DRIPIK.BND",
    "rid": 804,
@@ -922,6 +1038,7 @@
   }
  },
  "Glukkon_Dripik_Turn": {
+  "family": "Dripik",
   "ae": {
    "file": "DRIPIK.BND",
    "rid": 804,
@@ -929,6 +1046,7 @@
   }
  },
  "Glukkon_Dripik_Walk": {
+  "family": "Dripik",
   "ae": {
    "file": "DRIPIK.BND",
    "rid": 804,
@@ -936,6 +1054,7 @@
   }
  },
  "Glukkon_Normal_BeginWalk": {
+  "family": "Glukkon",
   "ae": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -943,6 +1062,7 @@
   }
  },
  "Glukkon_Normal_EndSingleStep": {
+  "family": "Glukkon",
   "ae": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -950,6 +1070,7 @@
   }
  },
  "Glukkon_Normal_EndWalk": {
+  "family": "Glukkon",
   "ae": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -957,6 +1078,7 @@
   }
  },
  "Glukkon_Normal_Idle": {
+  "family": "Glukkon",
   "ae": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -964,6 +1086,7 @@
   }
  },
  "Glukkon_Normal_LongLaugh": {
+  "family": "Glukkon",
   "ae": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -971,6 +1094,7 @@
   }
  },
  "Glukkon_Normal_Speak1": {
+  "family": "Glukkon",
   "ae": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -978,6 +1102,7 @@
   }
  },
  "Glukkon_Normal_Turn": {
+  "family": "Glukkon",
   "ae": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -985,6 +1110,7 @@
   }
  },
  "Glukkon_Normal_Walk": {
+  "family": "Glukkon",
   "ae": {
    "file": "GLUKKON.BND",
    "rid": 800,
@@ -992,6 +1118,7 @@
   }
  },
  "Glukkon_Phleg_BeginWalk": {
+  "family": "Phleg",
   "ae": {
    "file": "PHLEG.BND",
    "rid": 806,
@@ -999,6 +1126,7 @@
   }
  },
  "Glukkon_Phleg_EndSingleStep": {
+  "family": "Phleg",
   "ae": {
    "file": "PHLEG.BND",
    "rid": 806,
@@ -1006,6 +1134,7 @@
   }
  },
  "Glukkon_Phleg_EndWalk": {
+  "family": "Phleg",
   "ae": {
    "file": "PHLEG.BND",
    "rid": 806,
@@ -1013,6 +1142,7 @@
   }
  },
  "Glukkon_Phleg_Idle": {
+  "family": "Phleg",
   "ae": {
    "file": "PHLEG.BND",
    "rid": 806,
@@ -1020,6 +1150,7 @@
   }
  },
  "Glukkon_Phleg_LongLaugh": {
+  "family": "Phleg",
   "ae": {
    "file": "PHLEG.BND",
    "rid": 806,
@@ -1027,6 +1158,7 @@
   }
  },
  "Glukkon_Phleg_Speak1": {
+  "family": "Phleg",
   "ae": {
    "file": "PHLEG.BND",
    "rid": 806,
@@ -1034,6 +1166,7 @@
   }
  },
  "Glukkon_Phleg_Turn": {
+  "family": "Phleg",
   "ae": {
    "file": "PHLEG.BND",
    "rid": 806,
@@ -1041,6 +1174,7 @@
   }
  },
  "Glukkon_Phleg_Walk": {
+  "family": "Phleg",
   "ae": {
    "file": "PHLEG.BND",
    "rid": 806,
@@ -1048,6 +1182,7 @@
   }
  },
  "GoldGlow": {
+  "family": "Light",
   "ao": {
    "file": "GOLDGLOW.BAN",
    "rid": 6011,
@@ -1055,6 +1190,7 @@
   }
  },
  "GreenGlow": {
+  "family": "Light",
   "ao": {
    "file": "GRENGLOW.BAN",
    "rid": 6010,
@@ -1062,6 +1198,7 @@
   }
  },
  "Greeter_Moving": {
+  "family": "Greeter",
   "ae": {
    "file": "GREETER.BAN",
    "rid": 307,
@@ -1069,6 +1206,7 @@
   }
  },
  "Greeter_Speak": {
+  "family": "Greeter",
   "ae": {
    "file": "GREETER.BAN",
    "rid": 307,
@@ -1076,6 +1214,7 @@
   }
  },
  "Greeter_Turn": {
+  "family": "Greeter",
   "ae": {
    "file": "GREETER.BAN",
    "rid": 307,
@@ -1083,6 +1222,7 @@
   }
  },
  "HintFly": {
+  "family": "Particles",
   "ao": {
    "file": "HINTFLY.BAN",
    "rid": 62,
@@ -1090,6 +1230,7 @@
   }
  },
  "Honey": {
+  "family": "Honey",
   "ao": {
    "file": "HONEY.BAN",
    "rid": 337,
@@ -1097,6 +1238,7 @@
   }
  },
  "HoneySack_Hanging": {
+  "family": "Honey",
   "ao": {
    "file": "HIVE.BND",
    "rid": 1013,
@@ -1104,6 +1246,7 @@
   }
  },
  "Honey_Drip": {
+  "family": "Particles",
   "ao": {
    "file": "HONEY.BAN",
    "rid": 337,
@@ -1111,6 +1254,7 @@
   }
  },
  "HubDoor_Desert_Closed": {
+  "family": "Door",
   "ao": {
    "file": "DDOOR.BND",
    "rid": 2019,
@@ -1118,6 +1262,7 @@
   }
  },
  "HubDoor_Forest_Closed": {
+  "family": "Door",
   "ao": {
    "file": "FDOOR.BND",
    "rid": 2019,
@@ -1125,6 +1270,7 @@
   }
  },
  "Lever_Idle": {
+  "family": "Switch",
   "ao": {
    "file": "SWITCH1.BAN",
    "rid": 1009,
@@ -1137,6 +1283,7 @@
   }
  },
  "Lever_Pull_Left": {
+  "family": "Switch",
   "ae": {
    "file": "SWITCH1.BAN",
    "rid": 1009,
@@ -1144,6 +1291,7 @@
   }
  },
  "Lever_Pull_Release_Left": {
+  "family": "Switch",
   "ae": {
    "file": "SWITCH1.BAN",
    "rid": 1009,
@@ -1151,6 +1299,7 @@
   }
  },
  "Lever_Pull_Release_Right": {
+  "family": "Switch",
   "ae": {
    "file": "SWITCH1.BAN",
    "rid": 1009,
@@ -1158,6 +1307,7 @@
   }
  },
  "Lever_Pull_Right": {
+  "family": "Switch",
   "ae": {
    "file": "SWITCH1.BAN",
    "rid": 1009,
@@ -1165,6 +1315,7 @@
   }
  },
  "LiftBottomWheel_Desert": {
+  "family": "Lift",
   "ao": {
    "file": "D1LIFT.BND",
    "rid": 1001,
@@ -1172,6 +1323,7 @@
   }
  },
  "LiftBottomWheel_Forest": {
+  "family": "Lift",
   "ao": {
    "file": "FLIFT.BND",
    "rid": 1001,
@@ -1179,6 +1331,7 @@
   }
  },
  "LiftBottomWheel_Lines": {
+  "family": "Lift",
   "ao": {
    "file": "LLIFT.BND",
    "rid": 1001,
@@ -1186,6 +1339,7 @@
   }
  },
  "LiftBottomWheel_Mines": {
+  "family": "Lift",
   "ae": {
    "file": "MILIFT.BND",
    "rid": 1001,
@@ -1193,6 +1347,7 @@
   }
  },
  "LiftBottomWheel_Necrum": {
+  "family": "Lift",
   "ae": {
    "file": "NELIFT.BND",
    "rid": 1001,
@@ -1200,6 +1355,7 @@
   }
  },
  "LiftBottomWheel_RuptureFarms": {
+  "family": "Lift",
   "ao": {
    "file": "RLIFT.BND",
    "rid": 1001,
@@ -1207,6 +1363,7 @@
   }
  },
  "LiftPlatform_Desert": {
+  "family": "Lift",
   "ao": {
    "file": "D1LIFT.BND",
    "rid": 1032,
@@ -1214,6 +1371,7 @@
   }
  },
  "LiftPlatform_Desert2": {
+  "family": "Lift",
   "ao": {
    "file": "D2LIFT.BND",
    "rid": 1032,
@@ -1221,6 +1379,7 @@
   }
  },
  "LiftPlatform_Forest": {
+  "family": "Lift",
   "ao": {
    "file": "FLIFT.BND",
    "rid": 1032,
@@ -1228,6 +1387,7 @@
   }
  },
  "LiftPlatform_Lines": {
+  "family": "Lift",
   "ao": {
    "file": "LLIFT.BND",
    "rid": 1032,
@@ -1235,6 +1395,7 @@
   }
  },
  "LiftPlatform_Mines": {
+  "family": "Lift",
   "ae": {
    "file": "MILIFT.BND",
    "rid": 1032,
@@ -1242,6 +1403,7 @@
   }
  },
  "LiftPlatform_Necrum": {
+  "family": "Lift",
   "ae": {
    "file": "NELIFT.BND",
    "rid": 1032,
@@ -1249,6 +1411,7 @@
   }
  },
  "LiftPlatform_RuptureFarms": {
+  "family": "Lift",
   "ao": {
    "file": "RLIFT.BND",
    "rid": 1032,
@@ -1256,6 +1419,7 @@
   }
  },
  "LiftTopWheel_Desert": {
+  "family": "Lift",
   "ao": {
    "file": "D1LIFT.BND",
    "rid": 1001,
@@ -1263,6 +1427,7 @@
   }
  },
  "LiftTopWheel_Forest": {
+  "family": "Lift",
   "ao": {
    "file": "FLIFT.BND",
    "rid": 1001,
@@ -1270,6 +1435,7 @@
   }
  },
  "LiftTopWheel_Mines": {
+  "family": "Lift",
   "ae": {
    "file": "MILIFT.BND",
    "rid": 1001,
@@ -1277,6 +1443,7 @@
   }
  },
  "LiftTopWheel_Necrum": {
+  "family": "Lift",
   "ae": {
    "file": "NELIFT.BND",
    "rid": 1001,
@@ -1284,6 +1451,7 @@
   }
  },
  "LiftTopWheel_RuptureFarms": {
+  "family": "Lift",
   "ao": {
    "file": "RLIFT.BND",
    "rid": 1001,
@@ -1291,6 +1459,7 @@
   }
  },
  "Lines_Lever_Idle": {
+  "family": "Switch",
   "ao": {
    "file": "L1SWITCH.BAN",
    "rid": 1009,
@@ -1298,6 +1467,7 @@
   }
  },
  "Lines_TrapDoor_Closed": {
+  "family": "TrapDoor",
   "ao": {
    "file": "P6C1TRAP.BAN",
    "rid": 1004,
@@ -1305,6 +1475,7 @@
   }
  },
  "Lines_TrapDoor_Open": {
+  "family": "TrapDoor",
   "ao": {
    "file": "P6C1TRAP.BAN",
    "rid": 1004,
@@ -1312,6 +1483,7 @@
   }
  },
  "MeatSack_Idle": {
+  "family": "Sack",
   "ao": {
    "file": "D2ELUM.BAN",
    "rid": 4002,
@@ -1324,6 +1496,7 @@
   }
  },
  "MeatSawMotor": {
+  "family": "MeatSaw",
   "ao": {
    "file": "R1METSAW.BAN",
    "rid": 6003,
@@ -1331,6 +1504,7 @@
   }
  },
  "MeatSaw_Idle": {
+  "family": "MeatSaw",
   "ao": {
    "file": "R1METSAW.BAN",
    "rid": 6003,
@@ -1338,6 +1512,7 @@
   }
  },
  "MeatSaw_Moving": {
+  "family": "MeatSaw",
   "ao": {
    "file": "R1METSAW.BAN",
    "rid": 6003,
@@ -1345,6 +1520,7 @@
   }
  },
  "Meat_Gib": {
+  "family": "Particles",
   "ao": {
    "file": "R1MEAT.BAN",
    "rid": 6014,
@@ -1352,6 +1528,7 @@
   }
  },
  "MediumChime": {
+  "family": "Chime",
   "ao": {
    "file": "CHIMES.BAN",
    "rid": 2005,
@@ -1359,6 +1536,7 @@
   }
  },
  "Mine": {
+  "family": "Bomb",
   "ao": {
    "file": "MINE.BND",
    "rid": 1036,
@@ -1371,6 +1549,7 @@
   }
  },
  "Mine_Car_Open": {
+  "family": "MineCar",
   "ae": {
    "file": "BAYROLL.BAN",
    "rid": 6013,
@@ -1378,6 +1557,7 @@
   }
  },
  "Mine_Car_Tread_Idle": {
+  "family": "MineCar",
   "ae": {
    "file": "BAYROLL.BAN",
    "rid": 6013,
@@ -1385,6 +1565,7 @@
   }
  },
  "Mine_Flash": {
+  "family": "Bomb",
   "ao": {
    "file": "MINEFLSH.BAN",
    "rid": 1040,
@@ -1397,6 +1578,7 @@
   }
  },
  "MotionDetector_Flare": {
+  "family": "Security",
   "ao": {
    "file": "MFLARE.BAN",
    "rid": 6002,
@@ -1409,6 +1591,7 @@
   }
  },
  "MotionDetector_Laser": {
+  "family": "Security",
   "ao": {
    "file": "MOTION.BAN",
    "rid": 6001,
@@ -1421,6 +1604,7 @@
   }
  },
  "MovingBomb": {
+  "family": "MovingBomb",
   "ao": {
    "file": "D1MBOMB.BAN",
    "rid": 3006,
@@ -1433,6 +1617,7 @@
   }
  },
  "Mudokon_Chisel": {
+  "family": "Mudokon",
   "ae": {
    "file": "MUDCHSL.BAN",
    "rid": 511,
@@ -1440,6 +1625,7 @@
   }
  },
  "Mudokon_Chisel@BlindMud": {
+  "family": "Mudokon",
   "ae": {
    "file": "MUDCHSL.BAN",
    "rid": 511,
@@ -1451,6 +1637,7 @@
   }
  },
  "Mudokon_CrouchChant": {
+  "family": "Mudokon",
   "ao": {
    "file": "MUDLOTUS.BND",
    "rid": 516,
@@ -1458,6 +1645,7 @@
   }
  },
  "Mudokon_CrouchIdle": {
+  "family": "Mudokon",
   "ao": {
    "file": "ABEBSIC.BAN",
    "rid": 10,
@@ -1470,6 +1658,7 @@
   }
  },
  "Mudokon_CrouchIdle@BlindMud": {
+  "family": "Mudokon",
   "ae": {
    "file": "ABEBSIC.BAN",
    "rid": 10,
@@ -1481,6 +1670,7 @@
   }
  },
  "Mudokon_CrouchScrub": {
+  "family": "Mudokon",
   "ao": {
    "file": "MUDSCRUB.BAN",
    "rid": 510,
@@ -1493,6 +1683,7 @@
   }
  },
  "Mudokon_CrouchScrub@BlindMud": {
+  "family": "Mudokon",
   "ae": {
    "file": "MUDSCRUB.BAN",
    "rid": 510,
@@ -1504,6 +1695,7 @@
   }
  },
  "Mudokon_CrouchToStand": {
+  "family": "Mudokon",
   "ae": {
    "file": "ABEBSIC.BAN",
    "rid": 10,
@@ -1511,6 +1703,7 @@
   }
  },
  "Mudokon_CrouchTurn": {
+  "family": "Mudokon",
   "ao": {
    "file": "ABEBSIC.BAN",
    "rid": 10,
@@ -1523,6 +1716,7 @@
   }
  },
  "Mudokon_CrouchTurn@BlindMud": {
+  "family": "Mudokon",
   "ae": {
    "file": "ABEBSIC.BAN",
    "rid": 10,
@@ -1534,6 +1728,7 @@
   }
  },
  "Mudokon_Idle": {
+  "family": "Mudokon",
   "ao": {
    "file": "ABEBSIC1.BAN",
    "rid": 55,
@@ -1546,6 +1741,7 @@
   }
  },
  "Mudokon_LeverUse": {
+  "family": "Mudokon",
   "ae": {
    "file": "ABEPULL.BAN",
    "rid": 11,
@@ -1553,6 +1749,7 @@
   }
  },
  "Mudokon_Sling_Idle": {
+  "family": "Mudokon",
   "ao": {
    "file": "MUDSLING.BAN",
    "rid": 508,
@@ -1560,6 +1757,7 @@
   }
  },
  "Mudokon_Sling_Speak": {
+  "family": "Mudokon",
   "ao": {
    "file": "MUDSLING.BAN",
    "rid": 508,
@@ -1567,6 +1765,7 @@
   }
  },
  "Mudokon_Speak3@AngryMud": {
+  "family": "Mudokon",
   "ae": {
    "file": "ABEBSIC1.BAN",
    "rid": 55,
@@ -1578,6 +1777,7 @@
   }
  },
  "Mudokon_Speak3@WiredMud": {
+  "family": "Mudokon",
   "ae": {
    "file": "ABEBSIC1.BAN",
    "rid": 55,
@@ -1589,6 +1789,7 @@
   }
  },
  "Mudokon_SpeakFart@SadMud": {
+  "family": "Mudokon",
   "ae": {
    "file": "ABEBSIC1.BAN",
    "rid": 55,
@@ -1600,6 +1801,7 @@
   }
  },
  "Mudokon_SpeakFart@WiredMud": {
+  "family": "Mudokon",
   "ae": {
    "file": "ABEBSIC1.BAN",
    "rid": 55,
@@ -1611,6 +1813,7 @@
   }
  },
  "Mudokon_StandScrubLoop": {
+  "family": "Mudokon",
   "ao": {
    "file": "MUDCHSL.BAN",
    "rid": 511,
@@ -1618,6 +1821,7 @@
   }
  },
  "Mudokon_StandScrubLoopToPause": {
+  "family": "Mudokon",
   "ao": {
    "file": "MUDCHSL.BAN",
    "rid": 511,
@@ -1625,6 +1829,7 @@
   }
  },
  "Mudokon_StandScrubPause": {
+  "family": "Mudokon",
   "ao": {
    "file": "MUDCHSL.BAN",
    "rid": 511,
@@ -1632,6 +1837,7 @@
   }
  },
  "Mudokon_StandScrubPauseToLoop": {
+  "family": "Mudokon",
   "ao": {
    "file": "MUDCHSL.BAN",
    "rid": 511,
@@ -1639,6 +1845,7 @@
   }
  },
  "Mudokon_StandToCrouch": {
+  "family": "Mudokon",
   "ae": {
    "file": "ABEBSIC.BAN",
    "rid": 10,
@@ -1646,6 +1853,7 @@
   }
  },
  "Mudokon_StartChisel": {
+  "family": "Mudokon",
   "ae": {
    "file": "MUDCHSL.BAN",
    "rid": 511,
@@ -1653,6 +1861,7 @@
   }
  },
  "Mudokon_StartChisel@BlindMud": {
+  "family": "Mudokon",
   "ae": {
    "file": "MUDCHSL.BAN",
    "rid": 511,
@@ -1664,6 +1873,7 @@
   }
  },
  "Mudokon_StopChisel": {
+  "family": "Mudokon",
   "ae": {
    "file": "MUDCHSL.BAN",
    "rid": 511,
@@ -1671,6 +1881,7 @@
   }
  },
  "Mudokon_StopChisel@BlindMud": {
+  "family": "Mudokon",
   "ae": {
    "file": "MUDCHSL.BAN",
    "rid": 511,
@@ -1682,6 +1893,7 @@
   }
  },
  "Mudokon_TurnWheel": {
+  "family": "Mudokon",
   "ae": {
    "file": "ABEWORK.BAN",
    "rid": 515,
@@ -1689,6 +1901,7 @@
   }
  },
  "Mudokon_TurnWheelBegin": {
+  "family": "Mudokon",
   "ae": {
    "file": "ABEWORK.BAN",
    "rid": 515,
@@ -1696,6 +1909,7 @@
   }
  },
  "Mudokon_Walk": {
+  "family": "Mudokon",
   "ao": {
    "file": "ABEBSIC1.BAN",
    "rid": 55,
@@ -1703,6 +1917,7 @@
   }
  },
  "Mudokon_WalkBegin": {
+  "family": "Mudokon",
   "ao": {
    "file": "ABEBSIC1.BAN",
    "rid": 55,
@@ -1710,6 +1925,7 @@
   }
  },
  "ObjectShadow": {
+  "family": "Particles",
   "ao": {
    "file": "SHADOW.BAN",
    "rid": 2035,
@@ -1722,6 +1938,7 @@
   }
  },
  "ParamiteWeb": {
+  "family": "Paramite",
   "ae": {
    "file": "WEB.BAN",
    "rid": 2034,
@@ -1729,6 +1946,7 @@
   }
  },
  "Paramite_GameSpeakBegin": {
+  "family": "Paramite",
   "ao": {
    "file": "PARAMITE.BND",
    "rid": 605,
@@ -1741,6 +1959,7 @@
   }
  },
  "Paramite_GameSpeakEnd": {
+  "family": "Paramite",
   "ao": {
    "file": "PARAMITE.BND",
    "rid": 605,
@@ -1753,6 +1972,7 @@
   }
  },
  "Paramite_Idle": {
+  "family": "Paramite",
   "ao": {
    "file": "PARAMITE.BND",
    "rid": 600,
@@ -1765,6 +1985,7 @@
   }
  },
  "Paramite_PreHiss": {
+  "family": "Paramite",
   "ao": {
    "file": "PARAMITE.BND",
    "rid": 605,
@@ -1777,6 +1998,7 @@
   }
  },
  "Paramite_Turn": {
+  "family": "Paramite",
   "ao": {
    "file": "PARAMITE.BND",
    "rid": 600,
@@ -1789,6 +2011,7 @@
   }
  },
  "PullRingRope_Idle": {
+  "family": "Switch",
   "ae": {
    "file": "PULLRING.BAN",
    "rid": 1014,
@@ -1796,6 +2019,7 @@
   }
  },
  "Pullring_Desert_Idle": {
+  "family": "Switch",
   "ao": {
    "file": "PULLRING.BAN",
    "rid": 1014,
@@ -1803,6 +2027,7 @@
   }
  },
  "Pullring_Farms_Idle": {
+  "family": "Switch",
   "ao": {
    "file": "R1PULRNG.BAN",
    "rid": 1014,
@@ -1810,6 +2035,7 @@
   }
  },
  "R1_TrapDoor_Closed": {
+  "family": "TrapDoor",
   "ao": {
    "file": "R1TRAP.BAN",
    "rid": 1004,
@@ -1817,6 +2043,7 @@
   }
  },
  "R1_TrapDoor_Open": {
+  "family": "TrapDoor",
   "ao": {
    "file": "R1TRAP.BAN",
    "rid": 1004,
@@ -1824,6 +2051,7 @@
   }
  },
  "RedDoorLight": {
+  "family": "Light",
   "ao": {
    "file": "HUBRED.BAN",
    "rid": 6032,
@@ -1831,6 +2059,7 @@
   }
  },
  "RedHubLight": {
+  "family": "Light",
   "ao": {
    "file": "HUBRED.BAN",
    "rid": 6032,
@@ -1838,6 +2067,7 @@
   }
  },
  "RockSack_Idle": {
+  "family": "Sack",
   "ao": {
    "bg": 1002,
    "anim": 1
@@ -1849,6 +2079,7 @@
   }
  },
  "RockSack_Idle@BlueRockSack": {
+  "family": "Sack",
   "ao": {
    "bg": 1002,
    "anim": 1,
@@ -1859,6 +2090,7 @@
   }
  },
  "Rope_Lines": {
+  "family": "Rope",
   "ao": {
    "file": "ROPES.BAN",
    "rid": 1000,
@@ -1866,6 +2098,7 @@
   }
  },
  "Rope_R1": {
+  "family": "Rope",
   "ao": {
    "file": "R1ROPES.BAN",
    "rid": 1000,
@@ -1873,6 +2106,7 @@
   }
  },
  "RuptureFarms_Lever_Idle": {
+  "family": "Switch",
   "ao": {
    "file": "R1SWITCH.BAN",
    "rid": 1009,
@@ -1880,6 +2114,7 @@
   }
  },
  "Scrab_AO_ToFall": {
+  "family": "Scrab",
   "ao": {
    "file": "SCRAB.BND",
    "rid": 700,
@@ -1887,6 +2122,7 @@
   }
  },
  "Scrab_HowlBegin": {
+  "family": "Scrab",
   "ao": {
    "file": "SCRAB.BND",
    "rid": 705,
@@ -1899,6 +2135,7 @@
   }
  },
  "Scrab_HowlEnd": {
+  "family": "Scrab",
   "ao": {
    "file": "SCRAB.BND",
    "rid": 705,
@@ -1911,6 +2148,7 @@
   }
  },
  "Scrab_Idle": {
+  "family": "Scrab",
   "ao": {
    "file": "SCRAB.BND",
    "rid": 700,
@@ -1923,6 +2161,7 @@
   }
  },
  "Scrab_JumpAndRunToFall": {
+  "family": "Scrab",
   "ae": {
    "file": "SCRAB.BND",
    "rid": 700,
@@ -1930,6 +2169,7 @@
   }
  },
  "Scrab_Knockback": {
+  "family": "Scrab",
   "ae": {
    "file": "SCRAB.BND",
    "rid": 700,
@@ -1937,6 +2177,7 @@
   }
  },
  "Scrab_Landing": {
+  "family": "Scrab",
   "ae": {
    "file": "SCRAB.BND",
    "rid": 700,
@@ -1944,6 +2185,7 @@
   }
  },
  "Scrab_Run": {
+  "family": "Scrab",
   "ao": {
    "file": "SCRAB.BND",
    "rid": 700,
@@ -1956,6 +2198,7 @@
   }
  },
  "Scrab_RunToStand": {
+  "family": "Scrab",
   "ao": {
    "file": "SCRAB.BND",
    "rid": 700,
@@ -1968,6 +2211,7 @@
   }
  },
  "Scrab_Shriek": {
+  "family": "Scrab",
   "ae": {
    "file": "SCRAB.BND",
    "rid": 709,
@@ -1975,6 +2219,7 @@
   }
  },
  "Scrab_StandToRun": {
+  "family": "Scrab",
   "ao": {
    "file": "SCRAB.BND",
    "rid": 700,
@@ -1987,6 +2232,7 @@
   }
  },
  "Scrab_StandToWalk": {
+  "family": "Scrab",
   "ao": {
    "file": "SCRAB.BND",
    "rid": 700,
@@ -1999,6 +2245,7 @@
   }
  },
  "Scrab_Turn": {
+  "family": "Scrab",
   "ao": {
    "file": "SCRAB.BND",
    "rid": 700,
@@ -2011,6 +2258,7 @@
   }
  },
  "Scrab_Walk": {
+  "family": "Scrab",
   "ao": {
    "file": "SCRAB.BND",
    "rid": 700,
@@ -2023,6 +2271,7 @@
   }
  },
  "Scrab_WalkToStand": {
+  "family": "Scrab",
   "ao": {
    "file": "SCRAB.BND",
    "rid": 700,
@@ -2035,6 +2284,7 @@
   }
  },
  "Security_Claw_Lower_Idle": {
+  "family": "Security",
   "ao": {
    "file": "F2EYEORB.BAN",
    "rid": 2008,
@@ -2042,6 +2292,7 @@
   }
  },
  "Security_Claw_Upper_NoRotation": {
+  "family": "Security",
   "ao": {
    "file": "F2EYEORB.BAN",
    "rid": 2008,
@@ -2049,6 +2300,7 @@
   }
  },
  "Security_Claw_Upper_Rotating": {
+  "family": "Security",
   "ao": {
    "file": "F2EYEORB.BAN",
    "rid": 2008,
@@ -2056,6 +2308,7 @@
   }
  },
  "Security_Orb": {
+  "family": "Security",
   "ao": {
    "file": "F2MAMORB.BAN",
    "rid": 2006,
@@ -2068,6 +2321,7 @@
   }
  },
  "Slam_Door_Industrial_Closed": {
+  "family": "Door",
   "ae": {
    "file": "SLAM.BAN",
    "rid": 2020,
@@ -2075,6 +2329,7 @@
   }
  },
  "Slam_Door_Vault_Closed": {
+  "family": "Door",
   "ae": {
    "file": "SLAMVLTS.BAN",
    "rid": 2020,
@@ -2082,6 +2337,7 @@
   }
  },
  "SlapLock_Initiate": {
+  "family": "SlapLock",
   "ae": {
    "file": "GHOSTTRP.BAN",
    "rid": 1053,
@@ -2089,6 +2345,7 @@
   }
  },
  "SlapLock_Shaking": {
+  "family": "SlapLock",
   "ae": {
    "file": "GHOSTTRP.BAN",
    "rid": 1053,
@@ -2096,6 +2353,7 @@
   }
  },
  "Slig_Idle": {
+  "family": "Slig",
   "ao": {
    "file": "SLIG.BND",
    "rid": 412,
@@ -2108,6 +2366,7 @@
   }
  },
  "Slig_Idle@StockYardsSlig": {
+  "family": "Slig",
   "ao": {
    "file": "SLIG.BND",
    "rid": 412,
@@ -2119,6 +2378,7 @@
   }
  },
  "Slig_ReloadGun": {
+  "family": "Slig",
   "ao": {
    "file": "SLIG.BND",
    "rid": 412,
@@ -2131,6 +2391,7 @@
   }
  },
  "Slig_ReloadGun@StockYardsSlig": {
+  "family": "Slig",
   "ao": {
    "file": "SLIG.BND",
    "rid": 412,
@@ -2142,6 +2403,7 @@
   }
  },
  "Slig_Running": {
+  "family": "Slig",
   "ao": {
    "file": "SLIG.BND",
    "rid": 412,
@@ -2149,6 +2411,7 @@
   }
  },
  "Slig_Sleeping": {
+  "family": "Slig",
   "ao": {
    "file": "SLGSLEEP.BAN",
    "rid": 413,
@@ -2161,6 +2424,7 @@
   }
  },
  "Slig_Sleeping@StockYardsSlig": {
+  "family": "Slig",
   "ao": {
    "file": "SLGSLEEP.BAN",
    "rid": 413,
@@ -2172,6 +2436,7 @@
   }
  },
  "Slig_StandToRun": {
+  "family": "Slig",
   "ao": {
    "file": "SLIG.BND",
    "rid": 412,
@@ -2179,6 +2444,7 @@
   }
  },
  "Slig_StandToWalk": {
+  "family": "Slig",
   "ao": {
    "file": "SLIG.BND",
    "rid": 412,
@@ -2191,6 +2457,7 @@
   }
  },
  "Slig_StandToWalk@StockYardsSlig": {
+  "family": "Slig",
   "ao": {
    "file": "SLIG.BND",
    "rid": 412,
@@ -2202,6 +2469,7 @@
   }
  },
  "Slig_TurnAroundStanding": {
+  "family": "Slig",
   "ao": {
    "file": "SLIG.BND",
    "rid": 412,
@@ -2214,6 +2482,7 @@
   }
  },
  "Slig_TurnAroundStanding@StockYardsSlig": {
+  "family": "Slig",
   "ao": {
    "file": "SLIG.BND",
    "rid": 412,
@@ -2225,6 +2494,7 @@
   }
  },
  "Slig_WalkToStand": {
+  "family": "Slig",
   "ao": {
    "file": "SLIG.BND",
    "rid": 412,
@@ -2237,6 +2507,7 @@
   }
  },
  "Slig_WalkToStand@StockYardsSlig": {
+  "family": "Slig",
   "ao": {
    "file": "SLIG.BND",
    "rid": 412,
@@ -2248,6 +2519,7 @@
   }
  },
  "Slig_Walking": {
+  "family": "Slig",
   "ao": {
    "file": "SLIG.BND",
    "rid": 412,
@@ -2260,6 +2532,7 @@
   }
  },
  "Slig_Walking@StockYardsSlig": {
+  "family": "Slig",
   "ao": {
    "file": "SLIG.BND",
    "rid": 412,
@@ -2271,6 +2544,7 @@
   }
  },
  "Slog_Growl": {
+  "family": "Slog",
   "ao": {
    "file": "SLOG.BND",
    "rid": 574,
@@ -2283,6 +2557,7 @@
   }
  },
  "Slog_Idle": {
+  "family": "Slog",
   "ao": {
    "file": "SLOG.BND",
    "rid": 570,
@@ -2295,6 +2570,7 @@
   }
  },
  "Slog_MoveHeadUpwards": {
+  "family": "Slog",
   "ao": {
    "file": "SLOG.BND",
    "rid": 570,
@@ -2307,6 +2583,7 @@
   }
  },
  "Slog_Scratch": {
+  "family": "Slog",
   "ao": {
    "file": "SLOG.BND",
    "rid": 574,
@@ -2319,6 +2596,7 @@
   }
  },
  "Slog_Sleeping": {
+  "family": "Slog",
   "ao": {
    "file": "SLOG.BND",
    "rid": 571,
@@ -2331,6 +2609,7 @@
   }
  },
  "Slurg_Move": {
+  "family": "Slurg",
   "ae": {
    "file": "SLURG.BAN",
    "rid": 306,
@@ -2338,6 +2617,7 @@
   }
  },
  "Slurg_Turn_Around": {
+  "family": "Slurg",
   "ae": {
    "file": "SLURG.BAN",
    "rid": 306,
@@ -2345,6 +2625,7 @@
   }
  },
  "SmallChime": {
+  "family": "Chime",
   "ao": {
    "file": "CHIMES.BAN",
    "rid": 2005,
@@ -2352,6 +2633,7 @@
   }
  },
  "Status_Light_Green": {
+  "family": "Light",
   "ae": {
    "file": "STATUSLT.BAN",
    "rid": 373,
@@ -2359,6 +2641,7 @@
   }
  },
  "Stone_Ball": {
+  "family": "RollingBall",
   "ao": {
    "file": "F2STNBAL.BAN",
    "rid": 2002,
@@ -2366,6 +2649,7 @@
   }
  },
  "Stone_Ball_Stopper": {
+  "family": "RollingBall",
   "ao": {
    "file": "F2STNSCK.BAN",
    "rid": 2003,
@@ -2373,6 +2657,7 @@
   }
  },
  "Swinging_Ball_Normal": {
+  "family": "ZBall",
   "ao": {
    "file": "F2ZBALL.BAN",
    "rid": 2001,
@@ -2380,6 +2665,7 @@
   }
  },
  "TimedMine_Idle": {
+  "family": "Bomb",
   "ao": {
    "file": "BOMB.BND",
    "rid": 1005,
@@ -2387,6 +2673,7 @@
   }
  },
  "Tortured_Mudokon": {
+  "family": "Mudokon",
   "ae": {
    "file": "MUDTORT.BAN",
    "rid": 518,
@@ -2394,6 +2681,7 @@
   }
  },
  "Tortured_Mudokon_Tears": {
+  "family": "Mudokon",
   "ae": {
    "file": "TEARS.BAN",
    "rid": 375,
@@ -2401,6 +2689,7 @@
   }
  },
  "Trap_Door_Closed": {
+  "family": "TrapDoor",
   "ae": {
    "file": "TRAPDOOR.BAN",
    "rid": 1004,
@@ -2408,6 +2697,7 @@
   }
  },
  "Trap_Door_Open": {
+  "family": "TrapDoor",
   "ae": {
    "file": "TRAPDOOR.BAN",
    "rid": 1004,
@@ -2415,6 +2705,7 @@
   }
  },
  "Trap_Door_Tribal_Closed": {
+  "family": "TrapDoor",
   "ae": {
    "file": "VLTSTRAP.BAN",
    "rid": 1004,
@@ -2422,6 +2713,7 @@
   }
  },
  "Trap_Door_Tribal_Open": {
+  "family": "TrapDoor",
   "ae": {
    "file": "VLTSTRAP.BAN",
    "rid": 1004,
@@ -2429,6 +2721,7 @@
   }
  },
  "UXB_Active": {
+  "family": "Bomb",
   "ao": {
    "file": "UXB.BND",
    "rid": 1037,
@@ -2441,6 +2734,7 @@
   }
  },
  "UXB_Disabled": {
+  "family": "Bomb",
   "ao": {
    "file": "UXB.BND",
    "rid": 1037,
@@ -2453,6 +2747,7 @@
   }
  },
  "Well_Leaf": {
+  "family": "Particles",
   "ao": {
    "file": "WELLLEAF.BAN",
    "rid": 341,
@@ -2465,6 +2760,7 @@
   }
  },
  "Work_Wheel_Idle": {
+  "family": "WorkWheel",
   "ae": {
    "file": "WORKWHEL.BAN",
    "rid": 320,
@@ -2472,6 +2768,7 @@
   }
  },
  "Work_Wheel_Turning": {
+  "family": "WorkWheel",
   "ae": {
    "file": "WORKWHEL.BAN",
    "rid": 320,
@@ -2479,6 +2776,7 @@
   }
  },
  "Zap_Sparks": {
+  "family": "Particles",
   "ae": {
    "file": "OMMFLARE.BAN",
    "rid": 312,
@@ -2486,581 +2784,697 @@
   }
  },
  "bg:1017": {
+  "family": "F1P06",
   "ao": {
    "bg": 1017
   }
  },
  "bg:1018": {
+  "family": "F1P05",
   "ao": {
    "bg": 1018
   }
  },
  "bg:1023": {
+  "family": "F1P05",
   "ao": {
    "bg": 1023
   }
  },
  "bg:1024": {
+  "family": "F1P05",
   "ao": {
    "bg": 1024
   }
  },
  "bg:1031": {
+  "family": "F1P09",
   "ao": {
    "bg": 1031
   }
  },
  "bg:1038": {
+  "family": "F1P09",
   "ao": {
    "bg": 1038
   }
  },
  "bg:1039": {
+  "family": "F1P09",
   "ao": {
    "bg": 1039
   }
  },
  "bg:1050": {
+  "family": "F1P01",
   "ao": {
    "bg": 1050
   }
  },
  "bg:1200": {
+  "family": "F1P01",
   "ao": {
    "bg": 1200
   }
  },
  "bg:1201": {
+  "family": "MIP01",
   "ae": {
    "bg": 1201
   }
  },
  "bg:1202": {
+  "family": "FDP01",
   "ae": {
    "bg": 1202
   }
  },
  "bg:1204": {
+  "family": "MIP04",
   "ae": {
    "bg": 1204
   }
  },
  "bg:1206": {
+  "family": "BRP02",
   "ae": {
    "bg": 1206
   }
  },
  "bg:1207": {
+  "family": "BRP04",
   "ae": {
    "bg": 1207
   }
  },
  "bg:2013": {
+  "family": "F2P01",
   "ao": {
    "bg": 2013
   }
  },
  "bg:2014": {
+  "family": "F2P01",
   "ao": {
    "bg": 2014
   }
  },
  "bg:2020": {
+  "family": "F2P02",
   "ao": {
    "bg": 2020
   }
  },
  "bg:2021": {
+  "family": "F2P02",
   "ao": {
    "bg": 2021
   }
  },
  "bg:2022": {
+  "family": "F2P06",
   "ao": {
    "bg": 2022
   }
  },
  "bg:2029": {
+  "family": "F2P04",
   "ao": {
    "bg": 2029
   }
  },
  "bg:2030": {
+  "family": "F2P04",
   "ao": {
    "bg": 2030
   }
  },
  "bg:2031": {
+  "family": "F2P04",
   "ao": {
    "bg": 2031
   }
  },
  "bg:2036": {
+  "family": "F2P04",
   "ao": {
    "bg": 2036
   }
  },
  "bg:2040": {
+  "family": "F4P09",
   "ao": {
    "bg": 2040
   }
  },
  "bg:2041": {
+  "family": "F4P09",
   "ao": {
    "bg": 2041
   }
  },
  "bg:2042": {
+  "family": "F4P09",
   "ao": {
    "bg": 2042
   }
  },
  "bg:2043": {
+  "family": "F4P09",
   "ao": {
    "bg": 2043
   }
  },
  "bg:2044": {
+  "family": "F4P09",
   "ao": {
    "bg": 2044
   }
  },
  "bg:2045": {
+  "family": "F4P09",
   "ao": {
    "bg": 2045
   }
  },
  "bg:2046": {
+  "family": "F4P09",
   "ao": {
    "bg": 2046
   }
  },
  "bg:2047": {
+  "family": "F4P09",
   "ao": {
    "bg": 2047
   }
  },
  "bg:2048": {
+  "family": "F4P09",
   "ao": {
    "bg": 2048
   }
  },
  "bg:2049": {
+  "family": "F4P09",
   "ao": {
    "bg": 2049
   }
  },
  "bg:2050": {
+  "family": "F4P09",
   "ao": {
    "bg": 2050
   }
  },
  "bg:2051": {
+  "family": "F4P09",
   "ao": {
    "bg": 2051
   }
  },
  "bg:2052": {
+  "family": "F4P09",
   "ao": {
    "bg": 2052
   }
  },
  "bg:2053": {
+  "family": "F4P09",
   "ao": {
    "bg": 2053
   }
  },
  "bg:2054": {
+  "family": "F4P09",
   "ao": {
    "bg": 2054
   }
  },
  "bg:3016": {
+  "family": "D1P01",
   "ao": {
    "bg": 3016
   }
  },
  "bg:3017": {
+  "family": "D1P01",
   "ao": {
    "bg": 3017
   }
  },
  "bg:3018": {
+  "family": "D1P06",
   "ao": {
    "bg": 3018
   }
  },
  "bg:3027": {
+  "family": "D1P06",
   "ao": {
    "bg": 3027
   }
  },
  "bg:3031": {
+  "family": "D1P09",
   "ao": {
    "bg": 3031
   }
  },
  "bg:3032": {
+  "family": "D1P09",
   "ao": {
    "bg": 3032
   }
  },
  "bg:3033": {
+  "family": "D1P09",
   "ao": {
    "bg": 3033
   }
  },
  "bg:3034": {
+  "family": "D1P09",
   "ao": {
    "bg": 3034
   }
  },
  "bg:3036": {
+  "family": "D1P09",
   "ao": {
    "bg": 3036
   }
  },
  "bg:3037": {
+  "family": "D1P09",
   "ao": {
    "bg": 3037
   }
  },
  "bg:3038": {
+  "family": "D1P09",
   "ao": {
    "bg": 3038
   }
  },
  "bg:3039": {
+  "family": "D1P01",
   "ao": {
    "bg": 3039
   }
  },
  "bg:3040": {
+  "family": "D1P01",
   "ao": {
    "bg": 3040
   }
  },
  "bg:3041": {
+  "family": "D1P06",
   "ao": {
    "bg": 3041
   }
  },
  "bg:3047": {
+  "family": "D1P08",
   "ao": {
    "bg": 3047
   }
  },
  "bg:3048": {
+  "family": "D1P08",
   "ao": {
    "bg": 3048
   }
  },
  "bg:3049": {
+  "family": "D1P08",
   "ao": {
    "bg": 3049
   }
  },
  "bg:3050": {
+  "family": "D1P06",
   "ao": {
    "bg": 3050
   }
  },
  "bg:3051": {
+  "family": "D1P06",
   "ao": {
    "bg": 3051
   }
  },
  "bg:3052": {
+  "family": "D1P01",
   "ao": {
    "bg": 3052
   }
  },
  "bg:4006": {
+  "family": "D2P03",
   "ao": {
    "bg": 4006
   }
  },
  "bg:4007": {
+  "family": "D2P03",
   "ao": {
    "bg": 4007
   }
  },
  "bg:4008": {
+  "family": "D2P03",
   "ao": {
    "bg": 4008
   }
  },
  "bg:4009": {
+  "family": "D2P04",
   "ao": {
    "bg": 4009
   }
  },
  "bg:4010": {
+  "family": "D2P04",
   "ao": {
    "bg": 4010
   }
  },
  "bg:4011": {
+  "family": "D2P04",
   "ao": {
    "bg": 4011
   }
  },
  "bg:4012": {
+  "family": "D2P06",
   "ao": {
    "bg": 4012
   }
  },
  "bg:4013": {
+  "family": "D2P06",
   "ao": {
    "bg": 4013
   }
  },
  "bg:4014": {
+  "family": "D2P09",
   "ao": {
    "bg": 4014
   }
  },
  "bg:4015": {
+  "family": "D2P09",
   "ao": {
    "bg": 4015
   }
  },
  "bg:4016": {
+  "family": "D2P09",
   "ao": {
    "bg": 4016
   }
  },
  "bg:4017": {
+  "family": "D2P09",
   "ao": {
    "bg": 4017
   }
  },
  "bg:4018": {
+  "family": "D2P09",
   "ao": {
    "bg": 4018
   }
  },
  "bg:4019": {
+  "family": "D2P09",
   "ao": {
    "bg": 4019
   }
  },
  "bg:4021": {
+  "family": "D2P09",
   "ao": {
    "bg": 4021
   }
  },
  "bg:4022": {
+  "family": "D2P10",
   "ao": {
    "bg": 4022
   }
  },
  "bg:4023": {
+  "family": "D2P10",
   "ao": {
    "bg": 4023
   }
  },
  "bg:4024": {
+  "family": "D2P04",
   "ao": {
    "bg": 4024
   }
  },
  "bg:4025": {
+  "family": "D2P04",
   "ao": {
    "bg": 4025
   }
  },
  "bg:4026": {
+  "family": "D2P04",
   "ao": {
    "bg": 4026
   }
  },
  "bg:4027": {
+  "family": "D2P06",
   "ao": {
    "bg": 4027
   }
  },
  "bg:4028": {
+  "family": "D2P05",
   "ao": {
    "bg": 4028
   }
  },
  "bg:4029": {
+  "family": "D7P11",
   "ao": {
    "bg": 4029
   }
  },
  "bg:4030": {
+  "family": "D7P11",
   "ao": {
    "bg": 4030
   }
  },
  "bg:4031": {
+  "family": "D7P11",
   "ao": {
    "bg": 4031
   }
  },
  "bg:4032": {
+  "family": "D7P11",
   "ao": {
    "bg": 4032
   }
  },
  "bg:4033": {
+  "family": "D7P11",
   "ao": {
    "bg": 4033
   }
  },
  "bg:4034": {
+  "family": "D7P11",
   "ao": {
    "bg": 4034
   }
  },
  "bg:5000": {
+  "family": "L1P06",
   "ao": {
    "bg": 5000
   }
  },
  "bg:5001": {
+  "family": "L1P06",
   "ao": {
    "bg": 5001
   }
  },
  "bg:5002": {
+  "family": "L1P01",
   "ao": {
    "bg": 5002
   }
  },
  "bg:5003": {
+  "family": "L1P01",
   "ao": {
    "bg": 5003
   }
  },
  "bg:5004": {
+  "family": "L1P02",
   "ao": {
    "bg": 5004
   }
  },
  "bg:5005": {
+  "family": "L1P02",
   "ao": {
    "bg": 5005
   }
  },
  "bg:5006": {
+  "family": "L1P01",
   "ao": {
    "bg": 5006
   }
  },
  "bg:5007": {
+  "family": "L1P01",
   "ao": {
    "bg": 5007
   }
  },
  "bg:6014": {
+  "family": "R2P12",
   "ao": {
    "bg": 6014
   }
  },
  "bg:6015": {
+  "family": "R2P12",
   "ao": {
    "bg": 6015
   }
  },
  "bg:6016": {
+  "family": "R1P15",
   "ao": {
    "bg": 6016
   }
  },
  "bg:6017": {
+  "family": "R1P15",
   "ao": {
    "bg": 6017
   }
  },
  "bg:6018": {
+  "family": "R1P18",
   "ao": {
    "bg": 6018
   }
  },
  "bg:6019": {
+  "family": "R1P18",
   "ao": {
    "bg": 6019
   }
  },
  "bg:6020": {
+  "family": "R1P18",
   "ao": {
    "bg": 6020
   }
  },
  "bg:6021": {
+  "family": "R1P18",
   "ao": {
    "bg": 6021
   }
  },
  "bg:6022": {
+  "family": "R1P18",
   "ao": {
    "bg": 6022
   }
  },
  "bg:6023": {
+  "family": "R1P18",
   "ao": {
    "bg": 6023
   }
  },
  "bg:6024": {
+  "family": "R1P18",
   "ao": {
    "bg": 6024
   }
  },
  "bg:6025": {
+  "family": "R1P18",
   "ao": {
    "bg": 6025
   }
  },
  "bg:6026": {
+  "family": "R1P18",
   "ao": {
    "bg": 6026
   }
  },
  "bg:7000": {
+  "family": "E1P01",
   "ao": {
    "bg": 7000
   }
  },
  "bg:7001": {
+  "family": "E1P01",
   "ao": {
    "bg": 7001
   }
  },
  "bg:7002": {
+  "family": "E1P02",
   "ao": {
    "bg": 7002
   }
  },
  "bg:7003": {
+  "family": "E1P02",
   "ao": {
    "bg": 7003
   }
  },
  "bg:7004": {
+  "family": "E1P03",
   "ao": {
    "bg": 7004
   }
  },
  "bg:7006": {
+  "family": "E1P03",
   "ao": {
    "bg": 7006
   }
  },
  "bg:7007": {
+  "family": "E1P04",
   "ao": {
    "bg": 7007
   }
  },
  "bg:7008": {
+  "family": "E1P04",
   "ao": {
    "bg": 7008
   }
  },
  "bg:7010": {
+  "family": "E1P04",
   "ao": {
    "bg": 7010
   }

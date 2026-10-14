@@ -1,6 +1,6 @@
 """Sprite animations off the discs: the Anim chunks of a level's BAN, BND and
-CAM files, decoded into the atlases and the sidecar the viewer's Objects-as-themselves
-toggle draws from.
+CAM files, decoded into a sheet per family and the sidecar the viewer's
+Objects-as-themselves toggle draws from.
 
 An Anim chunk is a file header, the frames (each a FrameHeader and its pixel
 payload, the CLUT somewhere beside them) and the animation tables, which pack
@@ -10,7 +10,7 @@ frame infos and walking forward. Every offset is from byte 0 of the chunk data.
 Exoddus ships 260 chunks in a second shape, one pre-rendered sheet whose frame
 infos carry sub-rectangles in the slot a frame-header offset usually fills.
 
-The LCD screens' font rides in the same set: LCDFONT.FNT is one Font chunk per
+The LCD screens' font is a family of its own: LCDFONT.FNT is one Font chunk per
 level archive, a header, a CLUT the screens never read and the 4bpp texels, and
 its glyph rectangles are a table in the executable, found by its shape."""
 import hashlib
@@ -25,9 +25,10 @@ from oddmap.paths import HERE
 
 SPRITE_ANIMS = HERE / "data" / "sprite_anims.json"
 
-SHEET_W = 1024          # atlas width; the height follows the frames, capped per sheet
+SHEET_W = 1024          # a sheet's width at most; its height follows the frames, capped
 SHEET_MAX_H = 2048
-SHEETS_DIR = "sprites"  # under a game's cams directory, one set of sheets in it
+SHEETS_DIR = "sprites"  # under a game's cams directory, its family sheets in it
+FONT_FAMILY = "Font"
 
 # alpha states a texel can take in an atlas: the viewer blends the marked ones
 # only where the object's polygon is semi-transparent, which is the object's
@@ -345,34 +346,37 @@ def anim_frames(data, anim, game_key, clut=None):
         out.append((w, h, px, fi["xoff"], fi["yoff"], ref, fi["bound"]))
     return out
 
-def pack(frames):
-    """shelf-pack (w, h) rectangles, tallest first, into SHEET_W-wide sheets:
-    returns [(sheet, x, y)] in the input order and the sheets' heights"""
-    order = sorted(range(len(frames)), key=lambda i: (-frames[i][1], -frames[i][0], i))
-    placed = [None] * len(frames)
-    sheets, sheet, x, y, shelf_h = [], 0, 0, 0, 0
-    for i in order:
-        w, h = frames[i]
-        if x + w > SHEET_W:
-            x, y, shelf_h = 0, y + shelf_h, 0
-        if y + h > SHEET_MAX_H:
-            sheets.append(y + shelf_h)
-            sheet, x, y, shelf_h = sheet + 1, 0, 0, 0
-        placed[i] = (sheet, x, y)
-        x += w
-        shelf_h = max(shelf_h, h)
-    sheets.append(y + shelf_h)
-    return placed, sheets
+def pack(anims):
+    """shelf-pack one family's frames, given per animation as (w, h) lists in the
+    order they sit on the sheet: an animation starts a new shelf where the current
+    one cannot hold it whole, and runs onto more than one only when it is wider
+    than the sheet. Returns [(x, y)] for every frame in order and the sheet's
+    size, cut to its widest shelf"""
+    placed, x, y, shelf, width = [], 0, 0, 0, 0
+    for frames in anims:
+        if x and x + sum(w for w, _ in frames) > SHEET_W:
+            x, y, shelf = 0, y + shelf, 0
+        for w, h in frames:
+            if x + w > SHEET_W:
+                x, y, shelf = 0, y + shelf, 0
+            placed.append((x, y))
+            x += w
+            shelf = max(shelf, h)
+            width = max(width, x)
+    return placed, width, y + shelf
 
 def load_anim_table(game_key):
-    """the curated animation list for a game: name -> {file, rid, anim} or
-    {bg: rid, anim?}, with an optional palette override [file, rid]"""
+    """the curated animation list for a game: name -> {family, file, rid, anim} or
+    {family, bg: rid, anim?}, with an optional palette override [file, rid]; an
+    animation that names no family fails the build, having no sheet to go on"""
     table = json.loads(SPRITE_ANIMS.read_text())
     out = {}
-    for name, per_game in table.items():
-        entry = per_game.get(game_key.lower())
-        if entry:
-            out[name] = entry
+    for name, entry in table.items():
+        spec = entry.get(game_key.lower())
+        if spec:
+            if not entry.get("family"):
+                raise SystemExit(f"sprites: {name} names no family in {SPRITE_ANIMS.name}")
+            out[name] = {**spec, "family": entry["family"]}
     return out
 
 def gather_chunks(levels):
@@ -400,7 +404,8 @@ def gather_chunks(levels):
     return unwrap(anims), unwrap(palts), unwrap(cams)
 
 def build_sprites(game_key, levels):
-    """decode every listed animation: (frames to pack, sidecar animations, misses)"""
+    """decode every listed animation: (frames to pack, each with its family, the
+    sidecar's animations, each with the family it packs in, misses)"""
     table = load_anim_table(game_key)
     anims, palts, cams = gather_chunks(levels)
     frames, index, entries, misses = [], {}, {}, []
@@ -425,15 +430,16 @@ def build_sprites(game_key, levels):
                 misses.append(name)
                 continue
             clut = read_palt(pal)
+        family = spec["family"]
         refs = []
         for w, h, px, xoff, yoff, ref, b in anim_frames(data, anim, game_key, clut):
-            key = (spec.get("file"), spec.get("rid", spec.get("bg")), ref, tuple(spec.get("pal", ())))
+            key = (family, spec.get("file"), spec.get("rid", spec.get("bg")), ref, tuple(spec.get("pal", ())))
             if key not in index:
                 index[key] = len(frames)
-                frames.append((w, h, px))
+                frames.append((family, w, h, px))
             refs.append([index[key], xoff, yoff, b])
-        entries[name] = {"fps": anim["fps"], "loop": anim["loop"], "loop_start": anim["loop_start"],
-                         "frames": refs}
+        entries[name] = {"family": family, "fps": anim["fps"], "loop": anim["loop"],
+                         "loop_start": anim["loop_start"], "frames": refs}
     return frames, entries, misses
 
 def permutation_windows(data):
@@ -542,66 +548,92 @@ def index_map_rgba(texels):
     """a texture of palette indices as RGBA8: the index in every channel, opaque"""
     return bytes(b for i in texels for b in (i, i, i, 255))
 
-def sheet_set_name(sheets):
-    """a game's sheets are named as one set for their pixels, so a changed sheet is a
-    new URL while an unchanged rebuild or a re-encode keeps the old one"""
-    h = hashlib.sha1()
-    for w, hh, rgba in sheets:
-        h.update(struct.pack("<II", w, hh))
-        h.update(hashlib.sha1(rgba).digest())
-    return h.hexdigest()[:12]
+def sheet_name(w, h, rgba):
+    """a sheet is named for its pixels and its shape, so a changed one is a new URL
+    while an unchanged rebuild or a re-encode keeps the old one"""
+    s = hashlib.sha1(struct.pack("<II", w, h))
+    s.update(hashlib.sha1(rgba).digest())
+    return s.hexdigest()[:12]
+
+def family_sheet(family, names, entries, frames):
+    """(w, h, rgba) of a family's sheet and where each of its frames went: its
+    animations in the order given, each frame once, where it first appears"""
+    order, anims, seen = [], [], set()
+    for name in names:
+        group = []
+        for i, *_ in entries[name]["frames"]:
+            if i not in seen:
+                seen.add(i)
+                group.append(i)
+        order += group
+        anims.append([frames[i][1:3] for i in group])
+    spots, w, h = pack(anims)
+    if h > SHEET_MAX_H:
+        raise SystemExit(f"sprites: the {family} sheet needs {h} rows, past {SHEET_MAX_H}: "
+                         f"split the family in {SPRITE_ANIMS.name}")
+    img = bytearray(w * h * 4)
+    for i, (x, y) in zip(order, spots):
+        _, fw, fh, px = frames[i]
+        for yy in range(fh):
+            at = ((y + yy) * w + x) * 4
+            img[at:at + fw * 4] = px[yy * fw * 4:(yy + 1) * fw * 4]
+    return (w, h, bytes(img)), dict(zip(order, spots))
 
 def write_sprites(game_key, levels, out, sheets_rel, abe=None, links=None):
-    """the game's sprite atlases and the LCD font's index map as the one set under
-    `sheets_rel`, and its sprites sidecar beside the data file, carrying the font's
-    glyph table, the per-path Abe start where the game places a device by it and
-    each collision line's previous and next links, which the engine's line following
-    walks; misses fail the build, since a name the viewer may ask for must not be
-    left out silently"""
+    """a sheet per family and the LCD font's index map, each under `sheets_rel`
+    named for its family and its pixels, nothing else left there, and the game's
+    sprites sidecar beside the data file, carrying the font's glyph table, the
+    per-path Abe start where the game places a device by it and each collision
+    line's previous and next links, which the engine's line following walks;
+    misses fail the build, since a name the viewer may ask for must not be left
+    out silently"""
     frames, entries, misses = build_sprites(game_key, levels)
     if misses:
         raise SystemExit(f"sprites: {len(misses)} listed animations not found on the discs: "
                          + ", ".join(misses))
-    placed, heights = pack([(w, h) for w, h, _ in frames])
-    images = [bytearray(SHEET_W * hh * 4) for hh in heights]
-    for (w, h, px), (s, x, y) in zip(frames, placed):
-        img = images[s]
-        for yy in range(h):
-            at = ((y + yy) * SHEET_W + x) * 4
-            img[at:at + w * 4] = px[yy * w * 4:(yy + 1) * w * 4]
-    sheets = [(SHEET_W, hh, bytes(img)) for img, hh in zip(images, heights)]
+    families = {}
+    for name, entry in entries.items():
+        families.setdefault(entry.pop("family"), []).append(name)
+    if FONT_FAMILY in families:
+        raise SystemExit(f"sprites: {FONT_FAMILY} is the LCD font's own sheet, which no animation may name")
+    sheets, placed = {}, {}
+    for family, names in sorted(families.items()):
+        sheets[family], spots = family_sheet(family, names, entries, frames)
+        placed.update({i: (family, x, y) for i, (x, y) in spots.items()})
     font = read_font(levels)
-    sheets.append((font["w"], font["h"], index_map_rgba(font["texels"])))
-    name = sheet_set_name(sheets)
-    sheets_dir = out / sheets_rel
-    (sheets_dir / name).mkdir(parents=True, exist_ok=True)
-    sheet_files = []
-    for s, (w, hh, rgba) in enumerate(sheets):
-        rel = f"{sheets_rel}/{name}/{'font' if s == len(sheets) - 1 else s}.png"
-        write_png(out / rel, w, hh, rgba, keep_alpha=True)
-        sheet_files.append(rel)
+    sheets[FONT_FAMILY] = (font["w"], font["h"], index_map_rgba(font["texels"]))
+    sheet_files = {family: f"{sheets_rel}/{family}.{sheet_name(*sheet)}.png" for family, sheet in sorted(sheets.items())}
     for entry in entries.values():
-        entry["frames"] = [[*placed[i], *frames[i][:2], xoff, yoff, *bound]
+        entry["frames"] = [[*placed[i], *frames[i][1:3], xoff, yoff, *bound]
                            for i, xoff, yoff, bound in entry["frames"]]
     dice = {tuple(read_dice(disc)) for disc in {lvl.disc for _, lvl in levels}}
     if len(dice) != 1:
         raise SystemExit("sprites: the discs disagree on the random table")
     sidecar = {"sheets": sheet_files, "anims": entries, "dice": list(dice.pop()),
-               "font": {"sheet": len(sheet_files) - 1, "w": font["w"], "h": font["h"], "glyphs": font["glyphs"]}}
+               "font": {"sheet": FONT_FAMILY, "w": font["w"], "h": font["h"], "glyphs": font["glyphs"]}}
     if abe:
         sidecar["abe"] = abe
     if links:
         sidecar["links"] = {short: {pid: [row[:2] for row in rows] for pid, rows in paths.items()}
                             for short, paths in sorted(links.items())}
+
+    # what is no sheet of this build goes before the sheets are written, so a
+    # family renamed only in case is written afresh on a filesystem blind to case
+    def remove(p):
+        if p.is_dir():
+            shutil.rmtree(p)
+        else:
+            p.unlink()
+    sheets_dir = out / sheets_rel
+    kept = {rel.rsplit("/", 1)[1] for rel in sheet_files.values()}
+    for old in sheets_dir.iterdir() if sheets_dir.is_dir() else ():
+        if old.name not in kept or not old.is_file():
+            remove(old)
+    sheets_dir.mkdir(parents=True, exist_ok=True)
+    for family, (w, h, rgba) in sheets.items():
+        write_png(out / sheet_files[family], w, h, rgba, keep_alpha=True)
     dst = out / f"sprites_{game_key.lower()}.json"
     dst.write_text(json.dumps(sidecar, indent=1))
-    for old in sheets_dir.iterdir():
-        if old.name == name:
-            continue
-        if old.is_dir():
-            shutil.rmtree(old)
-        else:
-            old.unlink()
-    print(f"sprites -> {dst} ({len(entries)} animations, {len(frames)} frames on {len(sheet_files)} sheets "
-          f"in set {name})")
+    print(f"sprites -> {dst} ({len(entries)} animations, {len(frames)} frames on {len(sheet_files)} sheets, "
+          f"one per family and the font)")
     return dst

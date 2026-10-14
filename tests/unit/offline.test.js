@@ -11,25 +11,27 @@ const GAMES = [
   ["map_data_ao.json", 1006, "sprites_ao.json"],
   ["map_data_ae.json", 2185, "sprites_ae.json"],
 ];
-const sheets = (file) => load(file).sheets;
+const sheets = (file) => Object.values(load(file).sheets);
 // a sheet is stored by the same worker rule as a cam, so it has to sit where that rule looks
 const CAM_RULE = "/^\\/cams\\/.+\\.png$/";
 for (const [, , file] of GAMES)
   test(`${file}: the sheets sit under the cams the worker caches`, () => {
     assert.ok(read("sw.js").includes(CAM_RULE), "the worker's cam rule is the one quoted here");
     for (const f of sheets(file))
-      assert.match(f, /^cams\/[a-z]{2}\/sprites\/[0-9a-f]{12}\/(?:\d+|font)\.png$/);
+      assert.match(f, /^cams\/[a-z]{2}\/sprites\/[A-Z][A-Za-z0-9]*\.[0-9a-f]{12}\.png$/);
   });
 
-// the worker retires a game's other sheet sets by its own rule, so the sheets
-// have to read to it as one set of their own game
+// the worker retires a family's other sheets by its own rule, so each sheet has
+// to read to it as its family's, of its own game
 for (const [, , file] of GAMES)
-  test(`${file}: the worker reads the sheets as one set of their game`, () => {
-    const rule = new RegExp(/^const SHEET_SET = \/(.+)\/;$/m.exec(read("sw.js"))[1]);
-    const found = sheets(file).map((f) => rule.exec(`/${f}`));
-    assert.ok(found.every(Boolean), "every sheet answers the worker's set rule");
-    assert.equal(new Set(found.map(([, game, set]) => `${game}/${set}`)).size, 1);
-    assert.equal(found[0][1], /^sprites_([a-z]{2})\.json$/.exec(file)[1]);
+  test(`${file}: the worker reads each sheet as its family's, of its game`, () => {
+    const rule = new RegExp(/^const SHEET = \/(.+)\/;$/m.exec(read("sw.js"))[1]);
+    const game = /^sprites_([a-z]{2})\.json$/.exec(file)[1];
+    for (const [family, f] of Object.entries(load(file).sheets)) {
+      const found = rule.exec(`/${f}`);
+      assert.ok(found, `${f} answers the worker's sheet rule`);
+      assert.deepEqual(found.slice(1, 3), [game, family]);
+    }
   });
 
 for (const [file, files] of GAMES)
@@ -62,17 +64,12 @@ test("the cap comment and the viewer doc quote the artwork as it ships", () => {
   const files = GAMES.map(([file, , sp]) => [camFiles(load(file)).length, sheets(sp).length]);
   const total = files.reduce((n, [c, s]) => n + c + s, 0);
   assert.equal(Number(/complete artwork \((\d+) files\)/.exec(read("sw.js"))[1]), total);
-  // the atlases are sized as sheets; the font map is a few hundred bytes
-  const atlases = GAMES.map(([, , sp]) => sheets(sp).filter((f) => /\/\d+\.png$/.test(f)).length);
   const masks = GAMES.map(
     ([file]) => camFiles(load(file)).filter((f) => /_fg\d+\.png$/.test(f)).length,
   );
-  const mb = files.map(([c], i) =>
+  const mb = files.map(([c, s], i) =>
     Math.round(
-      ((c - masks[i]) * CAM_FILE_BYTES +
-        masks[i] * MASK_FILE_BYTES +
-        atlases[i] * SHEET_FILE_BYTES) /
-        1e6,
+      ((c - masks[i]) * CAM_FILE_BYTES + masks[i] * MASK_FILE_BYTES + s * SHEET_FILE_BYTES) / 1e6,
     ),
   );
   const doc = readFileSync(new URL("../../docs/viewer.md", import.meta.url), "utf8");

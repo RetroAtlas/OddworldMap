@@ -1021,7 +1021,7 @@ test("the mode draws every marker, whatever Markers for the rest says", async ({
   );
   await page.goto("/#AE/MI/1");
   await settleAny(page);
-  // the sheet lands after the first paint; the canvas is read only once it has
+  // the sheets land after the first paint; the canvas is read only once they have
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const st = await import(u("state.js"));

@@ -81,3 +81,7 @@ The map data came out byte for byte as before. The Oddysee sheet now has 96 rows
 ## Measured (2026-10-13)
 
 The rebuild that added the Oddysee rocks' waiting art (`AO_FallingRock_Waiting`, `F2ROCK.BAN` 2007 ordinal 1) and rock debris (`Explosion_Rock`, `DEBRIS00.BAN` 1105) and the two F1 P2 walk-ins took the Oddysee sheet from 972,239 bytes and 1,952 rows to two PNGs of 1,010,514 bytes and 2,043 rows and 960 bytes and 7 rows, the builder's 2048-row cap passed by seven. The map data and the Exoddus sheet came out byte for byte as before.
+
+## Grown since filing
+
+Since 2026-10-14 the sheets are one per family ([99](item-099-sprite-sheets-per-family.md)), so a rebuild re-packs only the sheets of the families it changes, and the cost that had these animations ship ahead is a family's sheet rather than the whole game's.

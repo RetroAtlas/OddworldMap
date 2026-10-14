@@ -165,3 +165,7 @@ A read-only pass over the images, before any decoder is ported; the answers deci
 - **Drawing sprites under or over the fg pass as it stands.** The pass is a tinted diagnostic over a flattened four-layer mask, and correct compositing needs the per-layer split, which is a disc rebuild. What shipped draws the sprites under an untinted copy of that same flattened mask: right in Oddysee, whose mask layers all sit above its sprites, and approximate under the two Exoddus layers that sit below them, which the geometry doc states.
 - **Putting the sprite reference into `map_data`.** It would change the data file on every rule fix; a sidecar of its own keeps the data file stable and is fetched beside the first paint, which draws the artwork without waiting for it.
 - **Loading the sprite modules on demand.** A dynamic `import()` the first time the toggle came on would keep them out of the initial load, but with the objects shown by default the modules are needed at boot, and the import graph stays the one `imports.test.js` reads.
+
+## Grown since filing
+
+Since 2026-10-14 each game's atlas is a sheet per family ([99](item-099-sprite-sheets-per-family.md)), so a rebuild re-packs and re-encodes only the families it changes, where every re-pack above was the whole game's.

@@ -1,8 +1,8 @@
 """Tests for the sprite stage's pure functions: the animation-table walk over a
 synthetic chunk, each frame codec against a frame lifted off a disc with the
-rows it decodes to, the texel alpha states, the deterministic packing, the
-sheet set's name, in a build and in the committed tree, and the LCD font's
-texture and glyph table."""
+rows it decodes to, the texel alpha states, the packing of a family's sheet,
+each sheet's name and directory, in a build and in the committed tree, and the
+LCD font's texture and glyph table."""
 
 import contextlib
 import hashlib
@@ -127,29 +127,60 @@ class Texels(unittest.TestCase):
 
 
 class Pack(unittest.TestCase):
-    def test_places_tallest_first_without_overlap_and_deterministically(self):
-        frames = [(10, 5), (300, 40), (1000, 7), (24, 24), (10, 5)]
-        placed, heights = sprites.pack(frames)
-        self.assertEqual(placed, sprites.pack(frames)[0])
-        rects = [(s, x, y, x + w, y + h) for (s, x, y), (w, h) in zip(placed, frames)]
-        for i, a in enumerate(rects):
-            self.assertLessEqual(a[3], sprites.SHEET_W)
-            for b in rects[i + 1:]:
-                if a[0] != b[0]:
-                    continue
-                self.assertTrue(a[3] <= b[1] or b[3] <= a[1] or a[4] <= b[2] or b[4] <= a[2], (a, b))
-        self.assertEqual(len(heights), 1 + max(s for s, _, _ in placed))
-        self.assertEqual(heights[0], max(r[4] for r in rects))
+    def test_a_family_packs_in_order_each_animation_whole_on_a_shelf(self):
+        anims = [[(300, 40), (300, 40)], [(500, 10)], [(10, 5)], [(1000, 7), (30, 9)]]
+        placed, w, h = sprites.pack(anims)
+        self.assertEqual(sprites.pack(anims), (placed, w, h))
+        # the second will not fit beside the first and starts a shelf, the third
+        # fits beside it, and the fourth, wider than the sheet, runs onto a second
+        self.assertEqual(placed, [(0, 0), (300, 0), (0, 40), (500, 40), (0, 50), (0, 57)])
+        self.assertEqual((w, h), (1000, 66))
+
+    def test_the_sheet_is_cut_to_its_widest_shelf(self):
+        self.assertEqual(sprites.pack([[(10, 4)], [], [(5, 6)]]), ([(0, 0), (10, 0)], 15, 6))
+
+    def test_a_frame_two_animations_share_is_packed_once_where_it_first_appears(self):
+        def px(v, n):
+            return bytes([v, v, v, 255]) * n
+        frames = [("F", 2, 1, px(1, 2)), ("F", 1, 1, px(2, 1))]
+        entries = {"A": {"frames": [[1, 0, 0, None], [0, 0, 0, None]]}, "B": {"frames": [[0, 0, 0, None]]}}
+        (w, h, rgba), spots = sprites.family_sheet("F", ["A", "B"], entries, frames)
+        self.assertEqual(spots, {1: (0, 0), 0: (1, 0)})
+        self.assertEqual((w, h, rgba), (3, 1, px(2, 1) + px(1, 2)))
+
+    def test_a_family_past_the_height_cap_fails_naming_it(self):
+        frames = [("Tall", 1, 5, bytes(20))]
+        with mock.patch.object(sprites, "SHEET_MAX_H", 4), self.assertRaises(SystemExit) as caught:
+            sprites.family_sheet("Tall", ["A"], {"A": {"frames": [[0, 0, 0, None]]}}, frames)
+        self.assertIn("Tall", str(caught.exception))
 
 
+class Build(unittest.TestCase):
+    def test_a_chunk_two_families_name_is_decoded_onto_each(self):
+        chunk = anim_chunk([(2, [0], True, 0)])
+        table = {"A_Idle": {"family": "A", "file": "X.BAN", "rid": 7, "anim": 0},
+                 "B_Idle": {"family": "B", "file": "X.BAN", "rid": 7, "anim": 0}}
+        with mock.patch.object(sprites, "load_anim_table", return_value=table), \
+                mock.patch.object(sprites, "gather_chunks", return_value=({("X.BAN", 7): chunk}, {}, {})):
+            frames, entries, misses = sprites.build_sprites("AO", [])
+        self.assertEqual(misses, [])
+        self.assertEqual([f[0] for f in frames], ["A", "B"])
+        self.assertEqual(frames[0][1:], frames[1][1:])
+        self.assertEqual([entries[n]["frames"][0][0] for n in ("A_Idle", "B_Idle")], [0, 1])
 
-class SheetSet(unittest.TestCase):
-    """a game's sheets are one set, named for their pixels, alone in their directory"""
+
+class Sheets(unittest.TestCase):
+    """each family's sheet is named for its family and its pixels, alone among the game's sheets"""
 
     FONT = {"w": 1, "h": 1, "texels": b"\x07", "glyphs": [[0, 0, 3, 0], [0, 0, 10, 0]]}
 
-    def write(self, out, px, links=None):
-        frames, entries = [(1, 1, px)], {"A": {"frames": [(0, 0, 0, [0, 0, 1, 1])]}}
+    def write(self, out, pixels, links=None):
+        """a build of one one-frame animation per family, `pixels` giving each family's texel"""
+        frames, entries = [], {}
+        for k, (family, px) in enumerate(pixels.items()):
+            frames.append((family, 1, 1, px))
+            entries[f"{family}_Idle"] = {"family": family, "fps": 1, "loop": False, "loop_start": 0,
+                                         "frames": [[k, 0, 0, [0, 0, 1, 1]]]}
         with mock.patch.object(sprites, "build_sprites", return_value=(frames, entries, [])), \
                 mock.patch.object(sprites, "read_dice", return_value=list(range(256))), \
                 mock.patch.object(sprites, "read_font", return_value=dict(self.FONT)), \
@@ -160,42 +191,94 @@ class SheetSet(unittest.TestCase):
                                         links=links)
         return json.loads(dst.read_text())
 
-    def test_a_set_is_named_for_its_pixels_and_their_shape(self):
-        a = (2, 1, bytes(8))
-        name = sprites.sheet_set_name([a])
-        self.assertEqual(name, sprites.sheet_set_name([(2, 1, bytes(8))]))
-        self.assertNotEqual(name, sprites.sheet_set_name([(2, 1, bytes(7) + b"\1")]))
-        self.assertNotEqual(name, sprites.sheet_set_name([(1, 2, bytes(8))]))
-        self.assertNotEqual(name, sprites.sheet_set_name([a, a]))
+    def test_a_sheet_is_named_for_its_pixels_and_its_shape(self):
+        name = sprites.sheet_name(2, 1, bytes(8))
+        self.assertEqual(name, sprites.sheet_name(2, 1, bytes(8)))
+        self.assertNotEqual(name, sprites.sheet_name(2, 1, bytes(7) + b"\1"))
+        self.assertNotEqual(name, sprites.sheet_name(1, 2, bytes(8)))
+        self.assertRegex(name, r"^[0-9a-f]{12}$")
 
-    def test_a_build_leaves_its_set_alone_in_the_directory(self):
+    def test_a_build_leaves_each_family_its_one_sheet_and_nothing_else(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp)
             sheets = out / "cams/ao/sprites"
-            (sheets / "0123456789ab").mkdir(parents=True)
-            (sheets / "0123456789ab/0.png").write_bytes(b"x")
-            (sheets / "0.png").write_bytes(b"x")
+            # a family renamed only in case: where the filesystem ignores case this
+            # is the file A's sheet is written to
+            renamed = f"a.{sprites.sheet_name(1, 1, bytes([1, 2, 3, 255]))}.png"
+            for stale in ("0123456789ab/0.png", "A.000000000000.png", "Gone.000000000000.png", "0.png", renamed):
+                (sheets / stale).parent.mkdir(parents=True, exist_ok=True)
+                (sheets / stale).write_bytes(b"x")
 
             def shipped():
                 return sorted(p.relative_to(out).as_posix() for p in sheets.rglob("*") if p.is_file())
-            first = self.write(out, bytes([1, 2, 3, 255]))["sheets"]
-            self.assertEqual(shipped(), first)
-            self.assertEqual(len(list(sheets.iterdir())), 1)
-            self.assertEqual(self.write(out, bytes([1, 2, 3, 255]))["sheets"], first)
-            second = self.write(out, bytes([1, 2, 4, 255]))["sheets"]
-            self.assertNotEqual(second, first)
-            self.assertEqual(shipped(), second)
-            self.assertEqual(len(list(sheets.iterdir())), 1)
+            first = self.write(out, {"A": bytes([1, 2, 3, 255]), "B": bytes([4, 5, 6, 255])})["sheets"]
+            self.assertEqual(shipped(), sorted(first.values()))
+            self.assertEqual(sorted(p.name for p in sheets.iterdir()), sorted(Path(r).name for r in first.values()))
+            for family, rel in first.items():
+                self.assertEqual(Path(rel).name.split(".")[0], family)
+            self.assertEqual(self.write(out, {"A": bytes([1, 2, 3, 255]), "B": bytes([4, 5, 6, 255])})["sheets"],
+                             first)
+            second = self.write(out, {"A": bytes([1, 2, 3, 255]), "B": bytes([4, 5, 7, 255])})["sheets"]
+            self.assertEqual(second["A"], first["A"])
+            self.assertNotEqual(second["B"], first["B"])
+            self.assertEqual(shipped(), sorted(second.values()))
 
-    def test_the_font_is_the_set_s_last_sheet_as_an_index_map(self):
+    def test_every_frame_reads_back_from_its_family_s_sheet_and_one_family_leaves_the_rest_alone(self):
+        def build(b_texel):
+            def tex(v, n):
+                return bytes([v, v + 1, v + 2, 255]) * n
+            frames = [("A", 2, 2, tex(10, 4)), ("A", 3, 1, tex(20, 3)), ("B", 1, 3, tex(b_texel, 3))]
+            def anim(*refs):
+                return {"fps": 1, "loop": False, "loop_start": 0, "frames": [[i, 0, 0, [0, 0, 1, 1]] for i in refs]}
+            entries = {"A_One": {"family": "A", **anim(0, 1)}, "A_Two": {"family": "A", **anim(1)},
+                       "B_One": {"family": "B", **anim(2)}}
+            return frames, entries
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp)
-            side = self.write(out, bytes([1, 2, 3, 255]))
+            runs = []
+            for b_texel in (30, 40):
+                frames, entries = build(b_texel)
+                written = {}
+                with mock.patch.object(sprites, "build_sprites", return_value=(frames, entries, [])), \
+                        mock.patch.object(sprites, "read_dice", return_value=list(range(256))), \
+                        mock.patch.object(sprites, "read_font", return_value=dict(self.FONT)), \
+                        mock.patch.object(sprites, "write_png",
+                                          side_effect=lambda path, w, h, rgba, keep_alpha:
+                                          written.__setitem__(Path(path).relative_to(out).as_posix(), (w, h, rgba))), \
+                        contextlib.redirect_stdout(io.StringIO()):
+                    side = json.loads(sprites.write_sprites("AO", [("R1", SimpleNamespace(disc="d"))], out,
+                                                            "cams/ao/sprites").read_text())
+                for name, a in side["anims"].items():
+                    for (family, x, y, w, h, *_), (i, *_) in zip(a["frames"], build(b_texel)[1][name]["frames"]):
+                        sw, _, rgba = written[side["sheets"][family]]
+                        cut = b"".join(rgba[((y + yy) * sw + x) * 4:((y + yy) * sw + x + w) * 4] for yy in range(h))
+                        self.assertEqual((family, cut), frames[i][::3], name)
+                runs.append(side)
+            first, second = runs
+            self.assertEqual(second["sheets"]["A"], first["sheets"]["A"])
+            self.assertNotEqual(second["sheets"]["B"], first["sheets"]["B"])
+            self.assertEqual({n: a for n, a in second["anims"].items() if n.startswith("A_")},
+                             {n: a for n, a in first["anims"].items() if n.startswith("A_")})
+
+    def test_a_frame_names_its_family_s_sheet_and_its_place_on_it(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            side = self.write(Path(tmp), {"A": bytes([1, 2, 3, 255]), "B": bytes([4, 5, 6, 255])})
+            self.assertEqual(side["anims"]["B_Idle"], {"fps": 1, "loop": False, "loop_start": 0,
+                                                     "frames": [["B", 0, 0, 1, 1, 0, 0, 0, 0, 1, 1]]})
+
+    def test_the_font_is_its_own_family_s_sheet_as_an_index_map(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            side = self.write(out, {"A": bytes([1, 2, 3, 255])})
             font = side["font"]
-            self.assertEqual(font["sheet"], len(side["sheets"]) - 1)
-            self.assertEqual(Path(side["sheets"][font["sheet"]]).name, "font.png")
+            self.assertEqual(font["sheet"], sprites.FONT_FAMILY)
             self.assertEqual((font["w"], font["h"], font["glyphs"]), (1, 1, self.FONT["glyphs"]))
             self.assertEqual((out / side["sheets"][font["sheet"]]).read_bytes(), bytes([7, 7, 7, 255]))
+
+    def test_no_animation_may_take_the_font_s_family(self):
+        with tempfile.TemporaryDirectory() as tmp, self.assertRaises(SystemExit) as caught:
+            self.write(Path(tmp), {sprites.FONT_FAMILY: bytes([1, 2, 3, 255])})
+        self.assertIn(sprites.FONT_FAMILY, str(caught.exception))
 
     def test_the_same_links_in_another_order_write_the_same_bytes(self):
         links = {"R1": {"1": [[-1, 1], [0, -1]], "10": [[-1, -1]]}, "E1": {"3": [[-1, -1]]},
@@ -204,22 +287,28 @@ class SheetSet(unittest.TestCase):
             out = Path(tmp)
             written = []
             for handed in (links, dict(reversed(links.items()))):
-                self.assertEqual(self.write(out, bytes([1, 2, 3, 255]), handed)["links"], links)
+                self.assertEqual(self.write(out, {"A": bytes([1, 2, 3, 255])}, handed)["links"], links)
                 written.append((out / "sprites_ao.json").read_bytes())
         self.assertEqual(written[0], written[1])
 
-    def test_each_game_ships_the_one_set_its_sidecar_names(self):
+    def test_each_game_ships_the_sheets_its_sidecar_names_each_named_for_its_pixels(self):
         for game in ("ao", "ae"):
             with self.subTest(game=game):
                 listed = json.loads((SITE / f"sprites_{game}.json").read_text())["sheets"]
                 sheets = SITE / "cams" / game / sprites.SHEETS_DIR
                 self.assertEqual(sorted(p.relative_to(SITE).as_posix() for p in sheets.rglob("*") if p.is_file()),
-                                 sorted(listed))
-                names = {Path(f).parent.name for f in listed}
-                self.assertEqual(len(names), 1, names)
-                pixels = [image.read_png((SITE / f).read_bytes()) for f in listed]
-                self.assertEqual(names.pop(), sprites.sheet_set_name(pixels),
-                                 "a sheet set's directory is named for its pixels: rebuild the sprites")
+                                 sorted(listed.values()))
+                sizes = {}
+                for family, rel in listed.items():
+                    w, h, rgba = image.read_png((SITE / rel).read_bytes())
+                    self.assertEqual(Path(rel).name, f"{family}.{sprites.sheet_name(w, h, rgba)}.png",
+                                     f"{rel}: a sheet is named for its family and its pixels: rebuild the sprites")
+                    sizes[family] = (w, h)
+                anims = json.loads((SITE / f"sprites_{game}.json").read_text())["anims"]
+                for name, a in anims.items():
+                    for family, x, y, w, h, *_ in a["frames"]:
+                        sw, sh = sizes[family]
+                        self.assertTrue(x + w <= sw and y + h <= sh, f"{game} {name} lies outside its sheet")
 
 
 def container(*chunks):
@@ -258,15 +347,24 @@ class Gather(unittest.TestCase):
 
 
 class AnimTable(unittest.TestCase):
-    """the curated animation list: every entry names a chunk the builder can open"""
+    """the curated animation list: every entry names a family and a chunk the builder can open"""
 
     def setUp(self):
         self.table = json.loads(sprites.SPRITE_ANIMS.read_text())
 
+    @staticmethod
+    def games(entry):
+        return {k: v for k, v in entry.items() if k != "family"}
+
     def test_every_entry_is_well_formed(self):
-        for name, per_game in self.table.items():
-            self.assertTrue(per_game, name)
-            for game, e in per_game.items():
+        for name, entry in self.table.items():
+            with self.subTest(name=name):
+                # a family is a directory the worker reads as one and a sidecar key, and
+                # the font's is the builder's own
+                self.assertRegex(entry.get("family", ""), r"^[A-Z][A-Za-z0-9]*$")
+                self.assertNotEqual(entry["family"], sprites.FONT_FAMILY)
+                self.assertTrue(self.games(entry))
+            for game, e in self.games(entry).items():
                 with self.subTest(name=name, game=game):
                     self.assertIn(game, ("ao", "ae"))
                     if "bg" in e:
@@ -281,12 +379,35 @@ class AnimTable(unittest.TestCase):
                         self.assertEqual(len(e["pal"]), 2)
                         self.assertRegex(e["pal"][0], r"^[A-Z0-9]+\.(BAN|BND)$")
 
-    def test_a_variant_shares_its_base_chunk(self):
-        for name, per_game in self.table.items():
+    def test_families_stay_apart_on_a_filesystem_blind_to_case(self):
+        families = {e["family"] for e in self.table.values()}
+        self.assertEqual(len({f.casefold() for f in families}), len(families))
+
+    # the objects that draw a camera's own animation, by the id their fields carry
+    DRAWS_BG = {"ao": {"BackgroundAnimation", "WellLocal", "WellExpress"}, "ae": {"BackgroundAnimation"}}
+
+    def test_a_camera_s_own_animation_packs_with_the_first_path_that_draws_it(self):
+        first = {}
+        for game, types in self.DRAWS_BG.items():
+            data = json.loads((SITE / f"map_data_{game}.json").read_text())
+            for lvl in data["levels"]:
+                for path in sorted(lvl["paths"], key=lambda p: p["id"]):
+                    for t in path["tlvs"]:
+                        rid = (t.get("fields") or {}).get("animation_id")
+                        if t["name"] in types and rid:
+                            first.setdefault(f"bg:{rid}", f"{lvl['short']}P{path['id']:02d}")
+        for name, entry in self.table.items():
+            if name.startswith("bg:"):
+                self.assertEqual(entry["family"], first.get(name), name)
+
+    def test_a_variant_shares_its_base_chunk_and_its_family(self):
+        for name, entry in self.table.items():
             base, _, variant = name.partition("@")
             if not variant:
                 continue
-            for game, e in per_game.items():
+            if base in self.table:
+                self.assertEqual(entry["family"], self.table[base]["family"], name)
+            for game, e in self.games(entry).items():
                 b = self.table.get(base, {}).get(game)  # a palette variant may stand without its base
                 if "pal" in e:
                     if b:
@@ -297,11 +418,21 @@ class AnimTable(unittest.TestCase):
                     self.assertEqual({k: v for k, v in e.items() if k != "file"},
                                      {k: v for k, v in b.items() if k != "file"}, name)
 
-    def test_load_anim_table_filters_by_game(self):
+    def test_load_anim_table_filters_by_game_and_carries_the_family(self):
         ao, ae = sprites.load_anim_table("AO"), sprites.load_anim_table("AE")
         self.assertTrue(ao and ae)
-        self.assertEqual(set(ao), {n for n, g in self.table.items() if "ao" in g})
-        self.assertEqual(set(ae), {n for n, g in self.table.items() if "ae" in g})
+        self.assertEqual(set(ao), {n for n, e in self.table.items() if "ao" in e})
+        self.assertEqual(set(ae), {n for n, e in self.table.items() if "ae" in e})
+        for name, spec in ao.items():
+            self.assertEqual(spec, {**self.table[name]["ao"], "family": self.table[name]["family"]})
+
+    def test_an_entry_without_a_family_fails_the_build(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            table = Path(tmp) / "sprite_anims.json"
+            table.write_text(json.dumps({"Slig_Idle": {"ao": {"file": "SLIG.BND", "rid": 412, "anim": 2}}}))
+            with mock.patch.object(sprites, "SPRITE_ANIMS", table), self.assertRaises(SystemExit) as caught:
+                sprites.load_anim_table("AO")
+        self.assertIn("Slig_Idle", str(caught.exception))
 
 
 class Font(unittest.TestCase):

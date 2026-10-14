@@ -13,7 +13,7 @@ export const TOAST_MAX = 3;                              // toasts on screen at 
 export const CACHE_MAX_IMAGES = 500;                     // cam bitmaps kept before eviction (~70 KB compressed each)
 export const CAM_FILE_BYTES = 112000;                    // typical cam PNG, for sizing a download before it runs
 export const MASK_FILE_BYTES = 5000;                     // typical foreground mask, the same sizing
-export const SHEET_FILE_BYTES = 780000;                  // typical sprite sheet, the same sizing
+export const SHEET_FILE_BYTES = 13000;                   // typical family sheet, the same sizing
 export const KEY_PAN_PX = 75, KEY_ZOOM_STEP = 1.25;      // keyboard pan step (screen px) / zoom factor per press
 export const GRID_UNIT = 25;                             // world units per in-game grid square
 export const LOGIC_FPS = 30;                             // logic frames the engine counts to the second

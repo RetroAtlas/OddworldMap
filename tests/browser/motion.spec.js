@@ -65,7 +65,7 @@ test.describe("Objects as themselves", () => {
       const sidebar = await import(u("sidebar.js"));
       sidebar.toggleShow("objects");
     });
-    // the sidecar and the sheet land, then a paint carries the sprite
+    // the sidecar and the sheets land, then a paint carries the sprite
     await page.waitForFunction(() => document.getElementById("tObjects").checked);
     await page.evaluate(async () => {
       const u = (m) => new URL("js/" + m, location.href).href;
@@ -193,6 +193,36 @@ test.describe("Objects as themselves", () => {
     await second;
     expect(asks.length).toBe(2);
     expect(errors.filter((e) => !/404|Failed to load/.test(e))).toEqual([]);
+  });
+
+  test("a sidecar of another shape is refused, and the objects stand as markers", async ({
+    page,
+  }) => {
+    const errors = trackErrors(page);
+    await page.route(/sprites_ae\.json$/, (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          sheets: ["cams/ae/sprites/000000000000/0.png"],
+          anims: {},
+          font: { sheet: 0 },
+        }),
+      }),
+    );
+    await seedView(page, { show: { objects: true }, cats: ALL_CATS });
+    const landed = page.waitForResponse(/sprites_ae\.json$/);
+    await page.goto(`/?embed=1#AE/MI/1/${SLIG.x1 + 12}/${SLIG.y1 - 10}/1.00`);
+    await settle(page, SLIG);
+    await landed;
+    const drawn = await page.evaluate(async (s) => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const render = await import(u("render.js"));
+      const t = st.state.path.tlvs.find((o) => o.name === "Slig" && o.x1 === s.x1 && o.y1 === s.y1);
+      return render.hitBoxes(t, st.LAYOUT).map((b) => b.drawn);
+    }, SLIG);
+    expect(drawn).toEqual([true]);
+    expect(errors).toEqual([]);
   });
 
   test("Patrols needs the objects shown: greyed and refusing its key until they are, then following them", async ({
