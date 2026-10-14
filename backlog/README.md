@@ -47,7 +47,6 @@ Item-specific reasoning and cross-references stay inside this folder. An item ma
 ## Code and build
 
 - [**95.** A bare link's fit zoom is read off the canvas mid-slide](item-095-fit-zoom-boot-slide.md) — `fitView` reads the canvas width during the sidebar's boot slide, so the same path link opens at a slightly different zoom each visit; wait for the slide, or fit again when it ends. _Small._
-- [**99.** Sprite sheets per family, fetched by the path on screen](item-099-sprite-sheets-per-family.md) — each game's sprites on a sheet per creature, device and path, so a rebuild rewrites only the families it changes, and a path fetches only its own; nothing before the zoom makes them out still to land. _Medium._
 - [**57.** One module lifecycle: explicit `init()`](item-057-module-lifecycle.md) — the current boot order is a load-bearing accident. _Medium._
 
 ## Moonshot
@@ -82,6 +81,7 @@ Rejected or disproved, kept so they are not re-proposed.
 
 Newest first, and a finished item is worth reading for the same reason an open one is: whether shipped or retired, each records what was decided, what was ruled out and where its own sketch turned out wrong.
 
+- [**99.** Sprite sheets per family, fetched by the path on screen](item-099-sprite-sheets-per-family.md) — each game's sprites on a sheet per creature, device and path, so a rebuild rewrites only the families it changes; a path fetches only its own, and none while the view is zoomed out past where a creature reads, as a phone opens it. _2026-10-14._
 - [**92.** The member-type parser's remaining blind spots](item-092-member-type-parser-blind-spots.md) — a `class`-declared data struct, an uppercase member and a dotted ADD reading a sub-struct arm; the sweep walks out from the data structs through every aggregate they declare, so 560 objects over ten types read their values as words, and the union arm [41](item-041-inherited-field-types.md) left raw came with it. _2026-09-19._
 - [**93.** SecurityClaw's archive labels sit one word to the left](item-093-securityclaw-layout.md) — `Scale_int` is four bytes wide, so every member name after it numbers one word low; one corrections entry and the rebuild it waited for, and the glossary needed no touch-up because only the words move. _2026-09-05._
 - [**90.** Export the world graph as an image](item-090-export-the-world-graph.md) — save svg / save png in the diagram's own bar, both from one serializer: a self-contained SVG built from the same layout the screen draws, and the PNG that string rasterized at twice the screen. The route the sketch ranked first is the one that shipped, and it made the second painter unnecessary. _2026-09-02._

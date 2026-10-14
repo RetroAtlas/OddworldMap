@@ -3,6 +3,12 @@
   {
    "date": "2026-10-14",
    "tag": "improved",
+   "title": "On a phone, the screens come first",
+   "detail": "Zoomed out as far as a phone opens the map, where a creature is a few pixels tall, the map no longer downloads the sprites, or the foreground they stand behind, until you zoom in. The screens get the whole connection, and the doors, creatures and devices are still there to hover and tap, their wires drawn. Once the sprites have arrived they stay at every zoom. Turning \"Objects as themselves\" on, or editing, fetches them at once."
+  },
+  {
+   "date": "2026-10-14",
+   "tag": "improved",
    "title": "Only the sprites a path draws",
    "detail": "With \"Objects as themselves\" on, the map used to download a whole game's sprites, a megabyte for Oddysee, before the first creature appeared. It now fetches only the sprites of the creatures and devices on the path you open, about a fifth of that on Rupture Farms' first path, and they appear together once they have arrived. An object whose sprite fails to load keeps its marker."
   },

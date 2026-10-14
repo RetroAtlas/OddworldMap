@@ -10,6 +10,7 @@ import {
   FLASH_MS,
   LINE_COLORS,
   PENS,
+  SPRITE_ZOOM,
   WIRE_COLOR,
   barrierDir,
   catOf,
@@ -199,19 +200,44 @@ function pathSheets(path, set) {
   return spriteCache.sheets;
 }
 
+// what the standing path's sprites are drawn with: its sheets and the foreground
+// masks that go down among them
+const spriteArt = (set) => [
+  ...state.path.cams.flatMap((c) => (c.masks ?? []).map(([, src]) => src)),
+  ...pathSheets(state.path, set),
+];
+
 // the places whose sprites have drawn: an edit there, and a family it brings,
 // draw as their sheets land rather than holding back what already stands
 const shownPlaces = new Set();
 const place = () => `${state.data.id}/${state.lvl.short}/${state.path.id}`;
 const placeShown = () => !!state.path && shownPlaces.has(place());
+// the places where the objects were turned on, which asks for them at any zoom
+const askedPlaces = new Set();
+
+// a place yet to draw its sprites asks for their art a frame after the paint
+// that wants it, against the view as it settles, since a link paints its path
+// at the fit zoom before its own zoom lands; below SPRITE_ZOOM it waits, unless
+// the objects were turned on there or the mode is editing them
+let asking = false;
+function askSoon() {
+  if (asking) return;
+  asking = true;
+  requestAnimationFrame(() => {
+    asking = false;
+    const set = state.show.objects && state.data && spriteSets[state.data.id];
+    if (!set || !state.path) return;
+    if (state.cam.z < SPRITE_ZOOM && !state.edit && !askedPlaces.has(place())) return;
+    for (const src of spriteArt(set)) img(src);
+  });
+}
+
 // the standing path's sprites draw once its sheets and its foreground masks have
 // all arrived or failed, so they appear together, and the scene starts then
 function spritesReady(set, live) {
-  const art = [
-    ...state.path.cams.flatMap((c) => (c.masks ?? []).map(([, src]) => src)),
-    ...pathSheets(state.path, set),
-  ];
-  for (const src of art) img(src);
+  const art = spriteArt(set);
+  if (!live || placeShown()) for (const src of art) img(src);
+  else askSoon();
   if (placeShown()) return true;
   if (!art.every(settled)) return false;
   if (live) {
@@ -505,6 +531,7 @@ export function syncMotion() {
   const flippedOn = shown && objectsShown === false;
   const switched = shownGame !== null && game !== shownGame;
   if (flippedOn || switched) retrySprites(game);
+  if (flippedOn && state.path) askedPlaces.add(place());
   if (shown && !objectsShown) resetScene();
   objectsShown = shown;
   shownGame = game;

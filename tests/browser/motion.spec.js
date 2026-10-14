@@ -1104,6 +1104,159 @@ test.describe("Objects as themselves", () => {
     expect(errors.filter((e) => !/404|Failed to load/.test(e))).toEqual([]);
   });
 
+  test.describe("below the zoom a creature reads at", () => {
+    const FAR = `#AE/MI/1/${SLIG.x1 + 12}/${SLIG.y1 - 10}/0.08`;
+    const record = (page) => {
+      const asked = { sheets: 0, masks: 0 };
+      page.on("request", (q) => {
+        if (/\/sprites\//.test(q.url())) asked.sheets++;
+        if (/_fg\d+\.png$/.test(q.url())) asked.masks++;
+      });
+      return asked;
+    };
+    const screensIn = async (page) => {
+      await page.evaluate(async () => {
+        window.__state = (await import(new URL("js/state.js", location.href).href)).state;
+      });
+      await page.waitForFunction(() => {
+        const p = window.__state.path;
+        const names = new Set(performance.getEntriesByType("resource").map((e) => e.name));
+        return (
+          p?.id === 1 &&
+          p.cams.filter((c) => c.png).every((c) => names.has(new URL(c.png, location.href).href))
+        );
+      });
+      await page.waitForTimeout(500);
+    };
+    const slig = (page) =>
+      page.evaluate(async (s) => {
+        const u = (m) => new URL("js/" + m, location.href).href;
+        const st = await import(u("state.js"));
+        const render = await import(u("render.js"));
+        const motion = await import(u("motion.js"));
+        render.draw();
+        const t = st.state.path.tlvs.find(
+          (o) => o.name === "Slig" && o.x1 === s.x1 && o.y1 === s.y1,
+        );
+        return {
+          present: render.objectShown(t),
+          painted: render.hitBoxes(t, st.LAYOUT).length > 1,
+          running: motion.motionRunning(),
+        };
+      }, SLIG);
+    const zoomTo = (page, z) =>
+      page.evaluate(async (z) => {
+        const u = (m) => new URL("js/" + m, location.href).href;
+        const st = await import(u("state.js"));
+        const model = await import(u("model.js"));
+        const render = await import(u("render.js"));
+        const cv = document.getElementById("cv");
+        const c = model.camCenter(st.state.cam, cv.clientWidth, cv.clientHeight);
+        Object.assign(
+          st.state.cam,
+          model.centerCam({ x: c.x, y: c.y, z }, cv.clientWidth, cv.clientHeight),
+        );
+        render.draw();
+      }, z);
+
+    test("a path asks for no sprites or masks until the view reaches it, and keeps them after", async ({
+      page,
+    }) => {
+      const errors = trackErrors(page);
+      const asked = record(page);
+      await seedView(page, { show: { objects: true }, cats: ALL_CATS });
+      await page.goto(`/?embed=1${FAR}`);
+      await screensIn(page);
+      expect(asked).toEqual({ sheets: 0, masks: 0 });
+      expect(await slig(page)).toEqual({ present: true, painted: false, running: false });
+      await zoomTo(page, 0.2);
+      await expect.poll(async () => (await slig(page)).painted, { timeout: 20000 }).toBe(true);
+      expect(asked.sheets).toBeGreaterThan(0);
+      expect(asked.masks).toBeGreaterThan(0);
+      await zoomTo(page, 0.08);
+      expect(await slig(page)).toEqual({ present: true, painted: true, running: true });
+      expect(errors).toEqual([]);
+    });
+
+    test("an export there still waits for the path's sprites and draws them", async ({ page }) => {
+      const errors = trackErrors(page);
+      const asked = record(page);
+      await seedView(page, { show: { objects: true }, cats: ALL_CATS });
+      await page.goto(`/?embed=1${FAR}`);
+      await screensIn(page);
+      expect(asked).toEqual({ sheets: 0, masks: 0 });
+      // the export's own paint, before a live one can make the place shown
+      const exported = await page.evaluate(async (s) => {
+        const u = (m) => new URL("js/" + m, location.href).href;
+        const st = await import(u("state.js"));
+        const render = await import(u("render.js"));
+        const motion = await import(u("motion.js"));
+        await render.preloadPath(st.state.path);
+        const ready = render.artworkReady(st.state.path);
+        const oc = document.createElement("canvas");
+        oc.width = 640;
+        oc.height = 480;
+        render.paint(oc.getContext("2d"), { ...st.state.cam }, 640, 480, 1, false);
+        const t = st.state.path.tlvs.find(
+          (o) => o.name === "Slig" && o.x1 === s.x1 && o.y1 === s.y1,
+        );
+        return {
+          ready,
+          painted: render.hitBoxes(t, st.LAYOUT).length > 1,
+          running: motion.motionRunning(),
+        };
+      }, SLIG);
+      expect(exported).toEqual({ ready: true, painted: true, running: false });
+      expect(asked.sheets).toBeGreaterThan(0);
+      expect(errors).toEqual([]);
+    });
+
+    test("the foreground toggle still asks for its masks there, the sheets waiting", async ({
+      page,
+    }) => {
+      const errors = trackErrors(page);
+      const asked = record(page);
+      await seedView(page, { show: { objects: true, fg: true }, cats: ALL_CATS });
+      await page.goto(`/?embed=1${FAR}`);
+      await screensIn(page);
+      expect(asked.masks).toBeGreaterThan(0);
+      expect(asked.sheets).toBe(0);
+      expect(errors).toEqual([]);
+    });
+
+    test("turning the objects on there asks for the path's sprites at once", async ({ page }) => {
+      const errors = trackErrors(page);
+      const asked = record(page);
+      await seedView(page, { show: { objects: false }, cats: ALL_CATS });
+      await page.goto(`/?embed=1${FAR}`);
+      await screensIn(page);
+      await page.evaluate(async () => {
+        const sidebar = await import(new URL("js/sidebar.js", location.href).href);
+        sidebar.toggleShow("objects");
+      });
+      await expect.poll(async () => (await slig(page)).painted, { timeout: 20000 }).toBe(true);
+      expect(asked.sheets).toBeGreaterThan(0);
+      expect(errors).toEqual([]);
+    });
+
+    test("the edit mode asks for the path's sprites there", async ({ page }) => {
+      const errors = trackErrors(page);
+      const asked = record(page);
+      await seedView(page, { show: { objects: true }, cats: ALL_CATS });
+      await page.addInitScript(() =>
+        localStorage.setItem("owm:settings", JSON.stringify({ editObjects: true })),
+      );
+      await page.goto(`/${FAR}`);
+      await screensIn(page);
+      expect(asked.sheets).toBe(0);
+      await page.keyboard.press("e");
+      await page.waitForFunction(() => window.__state.edit === true);
+      await expect.poll(async () => (await slig(page)).painted, { timeout: 20000 }).toBe(true);
+      expect(asked.sheets).toBeGreaterThan(0);
+      expect(errors).toEqual([]);
+    });
+  });
+
   test("Dim backgrounds dims the foreground masks drawn over the sprites too", async ({ page }) => {
     const errors = trackErrors(page);
     // no categories on: with the objects off every marker draws, and one could cover the pixel

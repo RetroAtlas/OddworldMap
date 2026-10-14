@@ -5,6 +5,7 @@
 export const ZOOM_MIN = 0.02, ZOOM_MAX = 4;              // manual zoom clamp (px per draw unit)
 export const FOCUS_ZOOM_MIN = 0.5, FOCUS_ZOOM_MAX = 1.6; // zoom clamp when jumping to an object
 export const FOCUS_SCREENS = 2.6;                        // jump target: ~this many screens across
+export const SPRITE_ZOOM = 0.12;                         // below this zoom a path waits to fetch its sprites
 export const FLASH_MS = 1600;                            // follow-destination highlight duration
 export const FLASH_HOLD_MAX_MS = 30000;                  // held highlight's cap when no interaction comes
 export const TOAST_MS = 3000;                            // toast lifetime, and its countdown bar's drain
