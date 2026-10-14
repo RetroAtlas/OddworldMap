@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { seedView, settle, trackErrors } from "./helpers.js";
+import { pixels, seedView, settle, trackErrors } from "./helpers.js";
 
 // the sleeping slig at the mouth of the Mines, read off the shipped data: its
 // marker box and where its sprite stands
@@ -28,22 +28,6 @@ const BOUND = { game: "AE", level: "MI", path: 1, x1: 1175, y1: 700, x2: 1199, y
 const LCD = { game: "AE", level: "MI", path: 1, x1: 1159, y1: 625, x2: 1362, y2: 645 };
 // the tally board under the zulag sign beside it, and the four rows of digits it writes
 const TALLY = { x1: 1283, y1: 539, x2: 1316, y2: 601 };
-
-// the canvas pixels under a world rectangle, as [r, g, b, a] rows
-async function pixels(page, rect) {
-  return page.evaluate(async (r) => {
-    const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
-    const cv = document.getElementById("cv");
-    const ctx = cv.getContext("2d");
-    const z = st.state.cam.z;
-    const x = (st.dX(r.x1) - st.state.cam.x) * z,
-      y = (st.dY(r.y1) - st.state.cam.y) * z;
-    const w = (st.dX(r.x2) - st.dX(r.x1)) * z,
-      h = (st.dY(r.y2) - st.dY(r.y1)) * z;
-    return [...ctx.getImageData(Math.round(x), Math.round(y), Math.round(w), Math.round(h)).data];
-  }, rect);
-}
 
 const ALL_CATS = {
   board: true,

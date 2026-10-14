@@ -46,6 +46,22 @@ export function trackErrors(page) {
   return errors;
 }
 
+// the canvas pixels under a world rectangle, as [r, g, b, a] rows
+export async function pixels(page, rect) {
+  return page.evaluate(async (r) => {
+    const u = (m) => new URL("js/" + m, location.href).href;
+    const st = await import(u("state.js"));
+    const cv = document.getElementById("cv");
+    const ctx = cv.getContext("2d");
+    const z = st.state.cam.z;
+    const x = (st.dX(r.x1) - st.state.cam.x) * z,
+      y = (st.dY(r.y1) - st.state.cam.y) * z;
+    const w = (st.dX(r.x2) - st.dX(r.x1)) * z,
+      h = (st.dY(r.y2) - st.dY(r.y1)) * z;
+    return [...ctx.getImageData(Math.round(x), Math.round(y), Math.round(w), Math.round(h)).data];
+  }, rect);
+}
+
 // seed the display/filter snapshot before any module runs, the way a remembered
 // visit would; rememberView defaults on, so the sidebar applies it at boot
 export async function seedView(page, { show = {}, cats = {} } = {}) {
