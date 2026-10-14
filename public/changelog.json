@@ -4,6 +4,13 @@
    "date": "2026-10-14",
    "tag": "improved",
    "tiny": true,
+   "title": "A link opens on its own path alone",
+   "detail": "A shared link to one of a level's later paths, and the spot the map remembers from your last visit, used to download every screen of the level's first path on the way there. Now only the path you asked for is fetched, which on a phone can spare several megabytes."
+  },
+  {
+   "date": "2026-10-14",
+   "tag": "improved",
+   "tiny": true,
    "title": "A dragged object moves whole",
    "detail": "In edit mode, dragging an object used to move only a dashed box, while the object itself waited at its old place. Now the object travels with the pointer, its sprite standing where the game would stand it at each spot you carry it over. Its outline, its label and the wires and arrows that reach it come along too. The move still lands when you let go, and Escape still puts it back."
   },

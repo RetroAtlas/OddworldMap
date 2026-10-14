@@ -47,6 +47,40 @@ test("a view permalink lands where it points and reproduces itself", async ({ pa
   expect(errors).toEqual([]);
 });
 
+test("a link into a level's later path fetches none of the level's first path's screens", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  const first = [];
+  page.on("request", (q) => {
+    if (/\/cams\/ae\/MI\/MIP01C/.test(q.url())) first.push(q.url());
+  });
+  await page.goto("/#AE/MI/4");
+  await settle(page, { game: "AE", level: "MI", path: 4 });
+  expect(first).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
+test("a link naming a path its level lacks selects nothing on the way", async ({ page }) => {
+  const errors = trackErrors(page);
+  const brewery = [];
+  page.on("request", (q) => {
+    if (/\/cams\/ae\/BR\//.test(q.url())) brewery.push(q.url());
+  });
+  await page.goto("/#AE/BR/99");
+  await settle(page, { game: "AE", level: "MI", path: 1 });
+  expect(brewery).toEqual([]);
+  await page.evaluate(() => (location.hash = "#AE/BR/98"));
+  await page.waitForTimeout(500);
+  const at = await page.evaluate(async () => {
+    const { state } = await import(new URL("js/state.js", location.href).href);
+    return [state.lvl.short, state.path.id, state.lvl.paths.includes(state.path)];
+  });
+  expect(at).toEqual(["MI", 1, true]);
+  expect(brewery).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
 test("clicking a door follows it to the level and path it names", async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto(`/${TRIP_HASH}`);

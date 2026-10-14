@@ -464,14 +464,11 @@ export async function applyHash() {
   const G = state.games.find((g) => g.id === p.game);
   if (!G) return false;
   const L = G.levels.find((l) => l.short === p.level);
-  if (!L) return false;
+  if (!L || !L.paths.some((q) => q.id === p.path)) return false;
   applyingHash = true;
   if (state.data !== G) selectGame(G, true);
-  if (state.lvl !== L) selectLevel(L);
-  if (!selectPathById(p.path)) {
-    applyingHash = false;
-    return false;
-  }
+  if (state.lvl !== L) setLevel(L);
+  selectPathById(p.path);
   // the geometry is the link's own from here, which is what world coordinates
   // in it are waiting on
   const { view, route } = hashToDraw(p, LAYOUT);
