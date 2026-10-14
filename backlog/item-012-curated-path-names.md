@@ -1,6 +1,6 @@
 # 12. Curated path names
 
-**Status:** open — content pass · **Effort:** incremental curation · **Where:** anywhere, viewer data only
+**Status:** shipped 2026-10-14 · **Effort:** incremental curation · **Where:** anywhere, viewer data only
 
 ## What and why
 
@@ -26,3 +26,5 @@ Coverage, measured 2026-08-26: AO 41 of 74 paths curated, AE 114 of 117, and no 
 **It shipped alongside the off-map-destination fix**, which belongs to the same concern: a destination the map cannot follow — a missing level, or one of the 45 AE one-way doors, teleporters and wells with placeholder `P0` returns — used to offer a pointer cursor and a false "click to follow", and dumped you on the destination level's first path. Those lost the cursor and the promise, the click falls through to the screen list, and the tooltip says where the data points. Connection-arrow stubs still draw the raw `→ MI P0` labels deliberately: that is passive data display, not a claim you can go there.
 
 Then the AO batch, and later all of AE.
+
+**The last thirteen Oddysee names, 2026-10-14.** Nothing citable names them: the game's own level tables stop at the level, the Prima official guide captions them screen by screen, the Barebones guide skips Monsaic Lines and titles Paramonia P6 only as a joke, and the wikis, nine web walkthroughs, the 1997-98 print guides, the speedrun community and the remake all describe these stretches without naming them. What the game does do is speak on them, so the names rest on its own words read off the camera art, the way the Exoddus names rest on the boards: the hint flies (`Leap of Faith`, `Run Elum Run`, `Farewell Elum`), the painted boards (`Password Lift` under the PASSWORD board, `Honey and Bees` beside ELUM LIKES HONEY BUT HATES BEES! and NEED BEES?, `The Trial Wells` under the boards reading PARAMONIA and SCRABANIA) and the story stones (`The Flintlock` from the stone headed FLINT LOCK, `The Bell Song` from the puzzle map's GET BELL SONG HERE), and where a path says nothing, on the thing it is built around (`The Sentries`, `The Beehive`, `The Bee Chase`, `The Trap Doors`, `The Guarded Well`). All thirteen are names, none a nickname: the only players' labels found are one speedrun guide's split names, which is not what a nickname records. The sketch's derived list counted fifteen because it counted the credits and the menu level, which are not places and stay unnamed in both games; the gap is now defined as the paths a player walks, and both games have none left. The Exoddus clause stands as written: nothing found contradicts Terminal 3 by elimination.

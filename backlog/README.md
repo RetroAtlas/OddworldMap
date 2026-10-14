@@ -28,7 +28,7 @@ Item-specific reasoning and cross-references stay inside this folder. An item ma
 
 **Next up**:
 
-- [12. Curated path names](item-012-curated-path-names.md) — a content pass, a sitting at a time.
+- Nothing queued.
 
 **Field system:** every gameplay object carries its full field archive, each value transform is write-once and collision-safe and keyed by the field's game type, enum values are generated straight from the decomp, and per-object default visibility is curated. A bare-int field carries the unit it is measured in ([28](item-028-readable-units.md)). The one open branch is upstream label fixes ([29](item-029-decomp-label-sweep.md), ongoing).
 
@@ -38,7 +38,6 @@ Item-specific reasoning and cross-references stay inside this folder. An item ma
 
 ## Map-native features
 
-- [**12.** Curated path names](item-012-curated-path-names.md) — the remaining curation: the still-unnamed AO paths, and one AE name that stands by elimination. _Content pass, anywhere._
 - [**29.** Decomp label-correctness sweep](item-029-decomp-label-sweep.md) — confirmed `scale` and `level` misdeclarations, batched into one upstream PR, then a sidecar regen. _Ongoing._
 - [**94.** Live map](item-094-live-map.md) — shipped as the game's own view: every object as its sprite, the creatures' brains and patrols on the engine's clock under the no-player reading, the effects, Markers for the rest for the reference view, the pulsing lights, the Scenery filter, what the game shows kept unseen and the foreground on the game's own layers; the map opens with the objects as themselves and the patrols walking. Open: a Fleech's hoist climb, the fall at a line's end, the Elum and the drop shadows. _Small to medium._
 - [**96.** A Scrab's pen on hover](item-096-scrab-pens.md) — a Scrab keeps no zone and its bounds carry no id, so it was left with posts and no pen; it turns at the nearest post its probe meets, so its pen is the nearest post of each side on its floor, and every patrolling Scrab that has both walks between them. _Small._
@@ -81,6 +80,7 @@ Rejected or disproved, kept so they are not re-proposed.
 
 Newest first, and a finished item is worth reading for the same reason an open one is: whether shipped or retired, each records what was decided, what was ruled out and where its own sketch turned out wrong.
 
+- [**12.** Curated path names](item-012-curated-path-names.md) — every path either game lets you walk now carries a name: the plumbing, the Oddysee batch from New 'n' Tasty's chapters and the Barebones titles, the Exoddus names off the signage and the wiki, and last the thirteen Oddysee paths no guide titles, named from the game's own hint flies, boards and story stones; the credits and title screens stay unnamed as non-places. _2026-10-14._
 - [**99.** Sprite sheets per family, fetched by the path on screen](item-099-sprite-sheets-per-family.md) — each game's sprites on a sheet per creature, device and path, so a rebuild rewrites only the families it changes; a path fetches only its own, and none while the view is zoomed out past where a creature reads, as a phone opens it. _2026-10-14._
 - [**92.** The member-type parser's remaining blind spots](item-092-member-type-parser-blind-spots.md) — a `class`-declared data struct, an uppercase member and a dotted ADD reading a sub-struct arm; the sweep walks out from the data structs through every aggregate they declare, so 560 objects over ten types read their values as words, and the union arm [41](item-041-inherited-field-types.md) left raw came with it. _2026-09-19._
 - [**93.** SecurityClaw's archive labels sit one word to the left](item-093-securityclaw-layout.md) — `Scale_int` is four bytes wide, so every member name after it numbers one word low; one corrections entry and the rebuild it waited for, and the glossary needed no touch-up because only the words move. _2026-09-05._

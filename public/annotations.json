@@ -15,8 +15,19 @@
     "4": "Free-Fire Zone IV",
     "6": "Stockyards Entrance"
    },
+   "L1": {
+    "1": "The Sentries",
+    "2": "The Bell Song",
+    "3": "The Flintlock",
+    "5": "Leap of Faith",
+    "6": "The Trial Wells"
+   },
    "F1": {
     "1": "The Bell Tower",
+    "2": "The Beehive",
+    "5": "The Bee Chase",
+    "6": "The Trap Doors",
+    "7": "Password Lift",
     "8": "The Info Tower",
     "9": "Outside the Temple"
    },
@@ -36,7 +47,11 @@
    "D1": {
     "1": "The Bell Tower",
     "2": "The Rings",
+    "3": "Run Elum Run",
+    "4": "Honey and Bees",
+    "6": "The Guarded Well",
     "7": "Mine Run",
+    "8": "Farewell Elum",
     "9": "Outside the Temple"
    },
    "D2": {

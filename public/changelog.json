@@ -2,6 +2,12 @@
  "entries": [
   {
    "date": "2026-10-14",
+   "tag": "new",
+   "title": "Every Oddysee area now has a name",
+   "detail": "The last thirteen unnamed paths of Abe's Oddysee, all of Monsaic Lines and the Paramonia and Scrabania country between the bell towers and the temples, now say where you are. Monsaic Lines reads The Sentries, The Bell Song, The Flintlock, Leap of Faith and The Trial Wells. Paramonia gains The Beehive, The Bee Chase, The Trap Doors and Password Lift. Scrabania gains Run Elum Run, Honey and Bees, The Guarded Well and Farewell Elum. No guide names these places, so the names come from what the game itself says there: the hint flies, the boards painted into the scenery and the story stones. Where it says nothing, the name is the thing the place is built around. Only the credits and the title screen stay unnamed, in both games, since neither is a place you walk."
+  },
+  {
+   "date": "2026-10-14",
    "tag": "improved",
    "title": "On a phone, the screens come first",
    "detail": "Zoomed out as far as a phone opens the map, where a creature is a few pixels tall, the map no longer downloads the sprites, or the foreground they stand behind, until you zoom in. The screens get the whole connection, and the doors, creatures and devices are still there to hover and tap, their wires drawn. Once the sprites have arrived they stay at every zoom. Turning \"Objects as themselves\" on, or editing, fetches them at once."
