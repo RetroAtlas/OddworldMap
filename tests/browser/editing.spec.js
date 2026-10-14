@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { test, expect } from "@playwright/test";
-import { DEFAULT_CATS, seedView, settleAny, trackErrors } from "./helpers.js";
+import { DEFAULT_CATS, pixels, seedView, settleAny, trackErrors } from "./helpers.js";
 import { canonical } from "../../public/js/reliveexport.js";
 
 const DIGESTS = JSON.parse(
@@ -613,6 +613,61 @@ test("the selection drags where the pointer carries it, nudges on the arrows and
     return [Math.round(c.x - cx), Math.round(c.y - cy)];
   }, door);
   expect(centre).toEqual([0, 0]);
+  expect(errors).toEqual([]);
+});
+
+test("a carried object stands where the pointer holds it, as its release will stand it", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  // every sprite on its first frame, so two reads of one scene agree
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await armEditing(page);
+  await seedView(page, { show: { objects: true }, cats: DEFAULT_CATS });
+  await page.goto("/#AE");
+  await settleAny(page);
+  await attach(page);
+  await page.keyboard.press("e");
+  await page.waitForFunction(() => window.__st.edit === true);
+  const door = await aimAtDoor(page);
+  await page.mouse.click(door.x, door.y);
+  await expect(page.locator("#editPanel")).toBeVisible();
+  // the door and every place the drags below carry it
+  const around = { x1: door.x1 - 40, y1: door.y1 - 100, x2: door.x2 + 90, y2: door.y2 + 60 };
+  const painted = async () => {
+    await page.evaluate(
+      () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
+    );
+    return pixels(page, around);
+  };
+  const carry = async (dx, dy) => {
+    const at = await aimAtDoorNow(page);
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    await page.mouse.move(at.x + dx / 2, at.y + dy / 2);
+    await page.mouse.move(at.x + dx, at.y + dy);
+  };
+  // a first move marks the door edited, so its mark stands in every read below
+  await carry(50, 0);
+  await page.mouse.up();
+  await page.waitForFunction((d) => window.__st.sel?.x1 === d.x1 + 25, door);
+  const rest = await painted();
+
+  // carried, the door leaves its place and stands as the release then stands it
+  await carry(50, 20);
+  const carried = await painted();
+  expect(carried).not.toEqual(rest);
+  await page.mouse.up();
+  await page.waitForFunction((d) => window.__st.sel?.x1 === d.x1 + 50, door);
+  const landed = await painted();
+  expect(landed).toEqual(carried);
+
+  // let go with Escape, it stands where it was
+  await carry(40, 0);
+  expect(await painted()).not.toEqual(landed);
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  expect(await painted()).toEqual(landed);
   expect(errors).toEqual([]);
 });
 

@@ -40,7 +40,7 @@ import {
   setHighlight,
   hitBoxes,
   objectShown,
-  setMoveGhost,
+  setCarried,
   setPatrol,
   setWireFocus,
 } from "./render.js";
@@ -182,7 +182,7 @@ function cancelMove() {
   if (!moving) return;
   moving.cancelled = true;
   moving.preview = null;
-  setMoveGhost(null);
+  setCarried(null);
   cv.style.cursor = modeCursor();
 }
 
@@ -280,7 +280,7 @@ cv.addEventListener("pointermove", (e) => {
       let rect = [nx, ny, nx + x2 - x1, ny + y2 - y1];
       if (e.shiftKey) rect = snapRect(state.data.id, GEO, moving.t, rect);
       moving.preview = fitRect(state.path, GEO, rect);
-      setMoveGhost(moving.preview);
+      setCarried(moving.preview);
       cv.style.cursor = "grabbing";
     }
     return;
@@ -304,7 +304,7 @@ function endPointer(e) {
   if (moving && !pointers.size) {
     const m = moving;
     moving = null;
-    setMoveGhost(null);
+    setCarried(null);
     cv.style.cursor = modeCursor();
     panMoved = m.moved || m.cancelled; // no click follows a carried or a let-go press
     if (m.moved && !m.cancelled) {

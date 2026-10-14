@@ -395,14 +395,41 @@ export function setPatrol(z) {
 }
 window.addEventListener("selection-changed", () => setPatrol(null));
 
-// the rect a drag would commit, outlined while the pointer carries the selection
-let moveGhost = null;
-export function setMoveGhost(rect) {
-  if (rect === moveGhost) return;
-  moveGhost = rect;
+// the rect a drag would commit, where the selection stands while the pointer carries it
+let carriedRect = null;
+export function setCarried(rect) {
+  if (rect === carriedRect) return;
+  carriedRect = rect;
   scheduleDraw();
 }
-window.addEventListener("selection-changed", () => setMoveGhost(null));
+window.addEventListener("selection-changed", () => setCarried(null));
+
+// the carried object: a copy standing at the carried rect, in a copy of the
+// path holding it in the original's place, with the records its rule draws
+// there. A live paint stands it in for the original in every pass
+let held = null;
+let heldCache = null;
+function holding(data, lvl, path, set, from, rect) {
+  const key = rect.join();
+  const c = heldCache;
+  if (c?.from === from && c.path === path && c.set === set && c.key === key) return c;
+  const to = { ...from, x1: rect[0], y1: rect[1], x2: rect[2], y2: rect[3] };
+  const there = { ...path, tlvs: path.tlvs.map((o) => (o === from ? to : o)) };
+  const recs = set ? spriteDraws(data, lvl, there, to, set) : [];
+  heldCache = { from, path, set, key, to, recs };
+  return heldCache;
+}
+const at = (t) => (held && t === held.from ? held.to : t);
+// the standing records with the carried object's own in its place
+function heldRecords(path, sprites) {
+  const out = new Map();
+  for (const t of path.tlvs) {
+    if (t !== held.from) {
+      if (sprites.has(t)) out.set(t, sprites.get(t));
+    } else if (held.recs.length) out.set(held.to, held.recs);
+  }
+  return out;
+}
 
 // an edit stands the path as new objects, which none of these point at any more
 window.addEventListener("data-changed", () => {
@@ -569,8 +596,10 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   // the sprites and the foreground masks share the game's layers; an export
   // draws the first frame, so two exports agree
   const set = show.objects ? spriteSet(data.id) : null;
-  const sprites = set ? spriteRecords(data, lvl, path, set) : null;
-  paintedSprites = sprites;
+  const standing = set ? spriteRecords(data, lvl, path, set) : null;
+  paintedSprites = standing;
+  held = transients && sel && carriedRect ? holding(data, lvl, path, set, sel, carriedRect) : null;
+  const sprites = held && standing ? heldRecords(path, standing) : standing;
   if (sprites) {
     const live = transients && motionRunning();
     paintSprites(f, sprites, set, live ? sceneTick() : 0, live ? patrolTick() : 0, show.dim);
@@ -586,9 +615,8 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   if (show.wires) paintWires(f, transients ? wireFocus : null);
   if (show.conn) paintConnections(f, transients ? connFocus : null);
   if (transients && state.edit) paintGhosts(f, removedObjects(path));
-  if (transients && highlight) paintHighlight(f, highlight);
-  if (transients && sel) paintSelection(f, sel);
-  if (transients && moveGhost) paintMoveGhost(f, moveGhost);
+  if (transients && highlight) paintHighlight(f, at(highlight));
+  if (transients && sel) paintSelection(f, at(sel));
   if (ruler) paintRuler(f, ruler);
   if (route) paintRoute(f, route);
   if (transients && flash) paintFlash(f, flash);
@@ -688,15 +716,17 @@ const labelled = (t) => !catOf(t).quietLabels || getSettings().labelScenery;
 function paintMarkers(f, sprites) {
   const { ctx, cam, data, path, layout } = f;
   ctx.font = `${11 / cam.z}px sans-serif`;
-  for (const t of path.tlvs) {
+  for (const o of path.tlvs) {
+    const t = at(o);
     const as = drawnAs(t, sprites);
     if (!as) continue;
     const showLabels = f.showLabels && labelled(t);
+    const edited = isEdited(o);
     if (as !== "marker") {
       // the sprite stands for the marker; the edited mark stays, and the label
       // where there is a sprite to name
       const label = showLabels && as === "sprite";
-      if (label || isEdited(t)) paintMarkerNotes(f, t, label);
+      if (label || edited) paintMarkerNotes(f, t, label, edited);
       continue;
     }
     const dir = PENS.on ? barrierDir(t) : null; // pens off: barriers are plain meta boxes
@@ -754,7 +784,7 @@ function paintMarkers(f, sprites) {
       ctx.restore();
     }
     // an edited object says so on the map itself, exports included
-    if (isEdited(t)) {
+    if (edited) {
       const pad = 3 / cam.z;
       ctx.strokeStyle = `rgb(${COLOR.editRgb})`;
       ctx.lineWidth = 1.5 / cam.z;
@@ -809,11 +839,13 @@ function paintSprites(f, sprites, set, tick, patrolAt, dim) {
     order++;
     list.forEach((r, k) => recs.push([r, order, k, t]));
   }
+  // the carried object stands in its first frame
+  const still = (t) => t === held?.to;
   // what the brains give off joins the records, on layers of its own
   const fx = [];
   for (const [r, order, k, t] of recs)
     if (r.cycle?.kind === "brain")
-      resolveEffects(r, set, tick, patrolAt).forEach((e, i) =>
+      resolveEffects(r, set, still(t) ? 0 : tick, still(t) ? 0 : patrolAt).forEach((e, i) =>
         fx.push([e, order, k + 1 + i / 1000, t, true]),
       );
   recs.push(...fx);
@@ -831,7 +863,7 @@ function paintSprites(f, sprites, set, tick, patrolAt, dim) {
       paintEffect(ctx, layout, set, r, ae, f.view);
       continue;
     }
-    const shown = resolveRecord(r, set, tick, patrolAt);
+    const shown = resolveRecord(r, set, still(t) ? 0 : tick, still(t) ? 0 : patrolAt);
     if (!shown) continue;
     const frame = shown.anim.frames[shown.frame];
     const tile = processedFrame(set.sheets[frame[0]], frame, r.semi, shown.rgb);
@@ -1177,12 +1209,12 @@ export function hitBoxes(t, layout) {
 }
 
 // the label and the edited mark of an object its sprite stands for
-function paintMarkerNotes({ ctx, cam, layout }, t, label) {
+function paintMarkerNotes({ ctx, cam, layout }, t, label, edited) {
   const box = standingBox(t, layout);
   if (!box) return;
   const w = Math.max(box.w, 10),
     h = Math.max(box.h, 10);
-  if (isEdited(t)) {
+  if (edited) {
     const pad = 3 / cam.z;
     ctx.strokeStyle = `rgb(${COLOR.editRgb})`;
     ctx.lineWidth = 1.5 / cam.z;
@@ -1193,17 +1225,6 @@ function paintMarkerNotes({ ctx, cam, layout }, t, label) {
     ctx.fillStyle = catOf(t).color;
     ctx.fillText(t.name, box.x, box.y - 3 / cam.z);
   }
-}
-
-function paintMoveGhost({ ctx, cam, layout }, [x1, y1, x2, y2]) {
-  const box = drawBox({ x1, y1, x2, y2 }, layout);
-  const w = Math.max(box.w, 10),
-    h = Math.max(box.h, 10);
-  ctx.strokeStyle = `rgb(${COLOR.editRgb})`;
-  ctx.lineWidth = 2 / cam.z;
-  ctx.setLineDash([6 / cam.z, 4 / cam.z]);
-  ctx.strokeRect(box.x, box.y, w, h);
-  ctx.setLineDash([]);
 }
 
 // the objects removed from the path, where they last stood; the mode alone shows them
@@ -1250,8 +1271,8 @@ function paintWires({ ctx, cam, data, path, layout }, focus) {
     const focused = focusActive && (e.src === focus || e.dst === focus);
     ctx.globalAlpha = focusActive ? (focused ? 0.95 : 0.12) : 0.5;
     ctx.lineWidth = (focused ? 2.5 : 1.25) / cam.z;
-    const [sx, sy] = centre(e.src);
-    const [tx, ty] = centre(e.dst);
+    const [sx, sy] = centre(at(e.src));
+    const [tx, ty] = centre(at(e.dst));
     const len = Math.hypot(tx - sx, ty - sy);
     if (len < 1) continue;
     ctx.beginPath();
@@ -1286,14 +1307,14 @@ function paintConnections({ ctx, cam, data, lvl, path, layout, showLabels }, foc
     ctx.globalAlpha = focusActive ? (focused ? 0.95 : 0.15) : 0.65;
     ctx.lineWidth = (focused ? 3 : 2) / cam.z;
     ctx.strokeStyle = ctx.fillStyle = CONN_COLORS[e.src.name] || "#ffffff";
-    const [sx, sy] = markerCentre(e.src, layout);
+    const [sx, sy] = markerCentre(at(e.src), layout);
     if (e.label !== undefined) {
       // off-path stub, along the direction the graph gives it or a constant
       // diagonal, which reads as "leaves this path" without pretending to know
       // which way an off-path door leads; it runs at least to the marker's edge,
       // since a transition's marker spans its whole edge zone
       const [dx, dy] = e.dir ?? diagonal;
-      const b = drawBox(e.src, layout);
+      const b = drawBox(at(e.src), layout);
       const edge = Math.min(
         dx ? b.w / 2 / Math.abs(dx) : Infinity,
         dy ? b.h / 2 / Math.abs(dy) : Infinity,
@@ -1317,7 +1338,7 @@ function paintConnections({ ctx, cam, data, lvl, path, layout, showLabels }, foc
       }
       continue;
     }
-    const [tx, ty] = e.dst ? markerCentre(e.dst, layout) : cellCentre(e.cell, path, layout);
+    const [tx, ty] = e.dst ? markerCentre(at(e.dst), layout) : cellCentre(e.cell, path, layout);
     const dx = tx - sx,
       dy = ty - sy;
     const len = Math.hypot(dx, dy);
