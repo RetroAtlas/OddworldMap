@@ -1028,20 +1028,21 @@ both("Slig", (c) => {
   let cycle = asleep ? brain(c, "sligSleep") : null;
   if (f.start_state === 1) {
     const { left, right } = sligBounds(t, c.path, c.geo, c.game);
-    // a side with none reads zero, as Oddysee's decomp clears the zone before
-    // its scan; a slig there that no bound matched at all takes the decomp's
-    // hack values
-    const zone =
-      ae || left || right ? { x: left?.x1 ?? 0, w: right?.x1 ?? 0 } : { x: 12809, w: 6405 };
-    const p = {
-      pauseTime: f.pause_time,
-      leftMin: f.pause_left_min,
-      leftMax: f.pause_left_max,
-      rightMin: f.pause_right_min,
-      rightMax: f.pause_right_max,
-      zone,
-    };
-    cycle = patrol(c, "slig", p, { x: spawnX, y: t.y1 });
+    // Oddysee's decomp clears the zone before its scan, so a side with none
+    // reads zero, and gives a slig no bound matched at all its hack values;
+    // Exoddus never sets a side its scan misses, so a slig short of one stands
+    if (!ae || (left && right)) {
+      const zone = left || right ? { x: left?.x1 ?? 0, w: right?.x1 ?? 0 } : { x: 12809, w: 6405 };
+      const p = {
+        pauseTime: f.pause_time,
+        leftMin: f.pause_left_min,
+        leftMax: f.pause_left_max,
+        rightMin: f.pause_right_min,
+        rightMax: f.pause_right_max,
+        zone,
+      };
+      cycle = patrol(c, "slig", p, { x: spawnX, y: t.y1 });
+    }
   }
   return [
     draw(c, anim, x, y, { layer: c.half ? 14 : 33, flip: f.start_direction === 0, rgb, cycle }),

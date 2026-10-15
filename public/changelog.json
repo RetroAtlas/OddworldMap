@@ -1,6 +1,13 @@
 {
  "entries": [
   {
+   "date": "2026-10-15",
+   "tag": "fixed",
+   "tiny": true,
+   "title": "Exoddus Sligs missing a marker stand their ground",
+   "detail": "Seventeen Exoddus Sligs have a bound marker on one side only, or on neither. The game leaves the missing side to whatever its memory held, so where they would walk can't be known. The map read that side as zero, which sent six of them a short way off. All seventeen now stand where the level placed them."
+  },
+  {
    "date": "2026-10-14",
    "tag": "new",
    "title": "Every Oddysee area now has a name",
