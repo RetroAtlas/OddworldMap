@@ -3,18 +3,17 @@
 // the relive_export_* sidecar so the two implementations answer alike.
 // No DOM, so it stays importable in bare Node.
 
-// which cell a rect was authored under is the path chunk's own index table to
-// answer, and the games answer it differently: Oddysee places a rect by its
-// top-left corner, Exoddus by its midpoint
+import { filedAt, filedCell } from "./model.js";
+
+// a path's objects by the cell whose camera lists them
 export function bucketCells(gameId, path, geometry) {
-  const midpoint = gameId === "AE";
   const cells = new Map();
   for (const t of path.tlvs) {
-    const x = midpoint ? Math.floor((t.x1 + t.x2) / 2) : t.x1;
-    const y = midpoint ? Math.floor((t.y1 + t.y2) / 2) : t.y1;
-    const cell = Math.floor(y / geometry.worldH) * path.w + Math.floor(x / geometry.worldW);
-    if (!(cell >= 0 && cell < path.w * path.h))
+    const cell = filedCell(t, path, geometry, gameId);
+    if (!(cell >= 0 && cell < path.w * path.h)) {
+      const { x, y } = filedAt(t, gameId);
       throw new Error(`${t.name} at ${x},${y} lands outside the grid`);
+    }
     if (!cells.has(cell)) cells.set(cell, []);
     cells.get(cell).push(t);
   }

@@ -179,6 +179,18 @@ export function camCell(path, camId) {
 export const tlvCell = (t, path, geo) =>
   Math.floor(t.y1 / geo.worldH) * path.w + Math.floor(t.x1 / geo.worldW);
 
+// the point a path chunk's index table files a rect's camera by
+const FILED_BY_MIDPOINT = { AO: false, AE: true };
+export function filedAt(t, gameId) {
+  if (!perGame(FILED_BY_MIDPOINT, gameId)) return { x: t.x1, y: t.y1 };
+  return { x: Math.floor((t.x1 + t.x2) / 2), y: Math.floor((t.y1 + t.y2) / 2) };
+}
+// the grid cell whose camera lists a TLV, and so builds it
+export function filedCell(t, path, geo, gameId) {
+  const { x, y } = filedAt(t, gameId);
+  return Math.floor(y / geo.worldH) * path.w + Math.floor(x / geo.worldW);
+}
+
 // the draw-space runs a world span lands on, one per window it reaches into.
 // The packing folds the slack out, so a span that crosses it whole comes back
 // as touching runs, one that stops inside it leaves a gap, and one that never
@@ -421,7 +433,10 @@ export function sligBounds(t, path, geo, gameId) {
   const win = perGame(BOUND_WINDOW, gameId);
   const id = t.fields?.slig_bound_persist_id;
   if (id == null) return { left: null, right: null };
-  const cellOf = (o) => [Math.floor(o.x1 / geo.worldW), Math.floor(o.y1 / geo.worldH)];
+  const cellOf = (o) => {
+    const { x, y } = filedAt(o, gameId);
+    return [Math.floor(x / geo.worldW), Math.floor(y / geo.worldH)];
+  };
   const [tc, tr] = cellOf(t);
   const near = (o) => {
     const [c, r] = cellOf(o);

@@ -7,6 +7,7 @@ import {
   destOf,
   destTrusted,
   drawBox,
+  filedCell,
   isLoopback,
   lineRuns,
   offScreen,
@@ -73,6 +74,23 @@ for (const [file, id, geometry] of [
     assert.ok(Object.keys(computeEntryPaths(data)).length > 0, "entry paths found");
   });
 }
+
+// a camera builds its objects in its list's order, and the path's list is read
+// as that build order
+test("every path lists its objects in the order of the cameras that file them", () => {
+  for (const [file, id] of [
+    ["map_data_ao.json", "AO"],
+    ["map_data_ae.json", "AE"],
+  ]) {
+    const data = load(file);
+    for (const L of data.levels)
+      for (const P of L.paths) {
+        const cells = P.tlvs.map((t) => filedCell(t, P, data.geometry, id));
+        const back = cells.findIndex((c, i) => i > 0 && c < cells[i - 1]);
+        assert.equal(back, -1, `${id} ${L.short} P${P.id}: ${P.tlvs[back]?.name} out of order`);
+      }
+  }
+});
 
 // the paths the games arrive at from elsewhere, pinned whole: the set is only as
 // good as the destinations behind it, and a link whose partner is absent used to

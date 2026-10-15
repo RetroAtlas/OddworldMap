@@ -7,7 +7,7 @@
 
 import { onBackgroundPlane } from "./fields.js";
 import { raycastDiag, raycastDown, snapAt as snapWorldX, snapX } from "./collide.js";
-import { sligBounds, tlvCell } from "./model.js";
+import { filedAt, filedCell, sligBounds, tlvCell } from "./model.js";
 import { lcdMessages } from "./messages.js";
 import { AE_MUDOKONS_IN_LEVEL, AO_MUDOKONS, TALLY_EDGE, lcdIds } from "./lcd.js";
 
@@ -25,9 +25,6 @@ const snapAt = (c, x) => snapWorldX(c.game, c.geo, x, c.half);
 const trunc = Math.trunc;
 const mid = (t) => trunc((t.x1 + t.x2) / 2);
 const midY = (t) => trunc((t.y1 + t.y2) / 2);
-// a point in the cell of the camera whose object list holds an object: the one
-// its rect's corner falls in in Oddysee, its midpoint in Exoddus
-const listedAt = (game, t) => (game === "AE" ? { x: mid(t), y: midY(t) } : { x: t.x1, y: t.y1 });
 const cellOf = (geo, at) => `${Math.floor(at.x / geo.worldW)},${Math.floor(at.y / geo.worldH)}`;
 const ALL_LINES = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 // the levels whose themed art and tints differ
@@ -377,7 +374,7 @@ const AO_ROPE_NUDGE = { D1: [2, 1], D2: [2, 1], D7: [2, 1] };
 // the same lift id), so of two start points on one shaft the first builds it
 function liftStanding(c) {
   const { t, path, geo } = c;
-  const cell = (o) => `${Math.floor(o.x1 / geo.worldW)},${Math.floor(o.y1 / geo.worldH)}`;
+  const cell = (o) => filedCell(o, path, geo, c.game);
   const built = [];
   for (const o of path.tlvs) {
     if (o.name !== "LiftPoint" || o.fields?.start_point !== 1 || cell(o) !== cell(t)) continue;
@@ -518,7 +515,7 @@ rule("AE", "BoneBag", (c) => [
 // screen
 function fallingItem(c, [art, waiting], y, debris, blast = false) {
   const { t, f, geo } = c;
-  const cam = listedAt(c.game, t);
+  const cam = filedAt(t, c.game);
   const left = Math.floor(cam.x / geo.worldW) * geo.worldW + geo.winX;
   const top = Math.floor(cam.y / geo.worldH) * geo.worldH + geo.winY;
   const win = [left, top, left + geo.visW, top + geo.visH];
@@ -554,7 +551,7 @@ function stoppers(c, cam) {
   const out = [];
   c.path.tlvs.forEach((o, index) => {
     const half = onBackgroundPlane(c.game, o);
-    if (!STOPPERS[o.name] || half !== c.half || cellOf(c.geo, listedAt(c.game, o)) !== here) return;
+    if (!STOPPERS[o.name] || half !== c.half || cellOf(c.geo, filedAt(o, c.game)) !== here) return;
     const recs = rules.AE[o.name]({ ...c, t: o, f: o.fields || {}, index, half });
     const rec = recs.find((r) => r.anim.startsWith(STOPPERS[o.name]));
     if (rec) out.push({ rec, first: index < c.index });
@@ -570,7 +567,7 @@ rule("AE", "FallingItem", (c) => {
     ? ["FallingCrate_Falling", "FallingCrate_Waiting"]
     : ["AE_FallingRock_Falling", "AE_FallingRock_Waiting"];
   // the item waits no lower than the top of the camera that builds it
-  const camTop = Math.floor(midY(t) / c.geo.worldH) * c.geo.worldH + c.geo.winY;
+  const camTop = Math.floor(filedAt(t, c.game).y / c.geo.worldH) * c.geo.worldH + c.geo.winY;
   const y = Math.min(t.y1, camTop);
   const debris = bw
     ? { anim: "Explosion_Stick", type: "sticks", count: 20 }
@@ -1002,7 +999,7 @@ both("BackgroundAnimation", (c) => {
 const STACK = [0, 3, -3, 6, -6, 2];
 function stackOffset(c) {
   const { t, path, geo } = c;
-  const cell = (o) => `${Math.floor(o.x1 / geo.worldW)},${Math.floor(o.y1 / geo.worldH)}`;
+  const cell = (o) => filedCell(o, path, geo, c.game);
   const here = cell(t);
   let n = 0;
   for (const o of path.tlvs) {
@@ -1012,11 +1009,7 @@ function stackOffset(c) {
   const s = c.game === "AE" ? (c.half ? 0.5 : 1) : 1;
   return trunc(STACK[n % 6] * s);
 }
-const camOf = (c, t) =>
-  c.path.cams.find(
-    (cm) =>
-      cm.cell === Math.floor(t.y1 / c.geo.worldH) * c.path.w + Math.floor(t.x1 / c.geo.worldW),
-  );
+const camOf = (c, t) => c.path.cams.find((cm) => cm.cell === filedCell(t, c.path, c.geo, c.game));
 
 both("Slig", (c) => {
   const { t, f } = c;
