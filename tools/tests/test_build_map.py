@@ -446,6 +446,67 @@ class StringTableParse(unittest.TestCase):
         self.assertIsNone(messages.string_table(blob, "alpha", 0, len(self.WORDS) + 1))
 
 
+class TablesByShape(unittest.TestCase):
+    """the message tables found by their shape, with no anchor string"""
+
+    BASE = 0x800A0000
+
+    def overlay(self, strings, count=None, extra=()):
+        """strings laid out 4-byte aligned, then the table naming each, then a
+        word that names nothing"""
+        blob, offsets = bytearray(), []
+        for s in strings:
+            offsets.append(len(blob))
+            blob += s.encode("latin1") + b"\x00"
+            blob += b"\x00" * (-len(blob) % 4)
+        blob += struct.pack("<I", 0)
+        for off in list(offsets) + list(extra):
+            blob += struct.pack("<I", self.BASE + off)
+        return bytes(blob) + struct.pack("<I", 0)
+
+    LCD = ["", " " * 31 + "The profits justify the means.", " " * 31 + "Work!", " " * 31 + "Eat.",
+           " " * 31 + "Sleep now.", " " * 31 + "Again", " " * 31 + "Go on then", " " * 31 + "Rest",
+           " " * 31 + "The end of it"]
+
+    def test_the_table_opening_on_the_lead_is_found_and_gives_the_load_address(self):
+        strings, base = messages.lead_table(self.overlay(self.LCD), len(self.LCD))
+        self.assertEqual((strings, base), (self.LCD, self.BASE))
+
+    def test_a_lead_in_another_character_is_a_lead(self):
+        lcd = [s.replace(" ", "\x02") for s in self.LCD]
+        self.assertEqual(messages.lead_table(self.overlay(lcd), len(lcd))[0], lcd)
+
+    HINTS = ["SNEAK TO BOMB", "ABE WAS HERE", "TEST THREE", "LEARN THE SONG", "BRAVE THE RING",
+             "OUT OF SHADOWS"]
+
+    def test_a_table_of_text_pointers_is_found_at_the_load_address(self):
+        self.assertEqual(messages.pointer_tables(self.overlay(self.HINTS), 6, self.BASE), [self.HINTS])
+
+    def test_a_table_of_one_pointer_repeated_is_no_message_table(self):
+        self.assertEqual(messages.pointer_tables(self.overlay(["P"], extra=[0] * 5), 6, self.BASE), [])
+
+    def test_a_longer_run_than_the_table_is_none(self):
+        self.assertEqual(messages.pointer_tables(self.overlay(self.HINTS), 5, self.BASE), [])
+
+    class Disc:
+        def __init__(self, blobs):
+            self.blobs = blobs
+            self.files = {name: (i, len(b)) for i, (name, b) in enumerate(blobs.items())}
+
+        def read(self, lba, size):
+            return list(self.blobs.values())[lba]
+
+    def test_an_overlay_no_path_loads_is_left_out_of_the_agreement(self):
+        stale = self.LCD[:2] + [" " * 31 + "Older wording"] + self.LCD[3:]
+        disc = self.Disc({"R1.OVL": self.overlay(self.LCD), "D6.OVL": self.overlay(stale)})
+        with mock.patch.dict(messages.MESSAGE_TABLES, {"AO": {"lcd": (len(self.LCD), True)}}), \
+                contextlib.redirect_stdout(io.StringIO()):
+            with self.assertRaises(RuntimeError):
+                messages.extract_messages("AO", [disc])
+            got = messages.extract_messages("AO", [disc], overlays={"R1.OVL"})
+        self.assertEqual(got["lcd"][1], "The profits justify the means.")
+
+
 class MessageJson(unittest.TestCase):
     def test_a_button_code_is_written_as_an_escape_not_as_whitespace(self):
         text = messages.message_json({"lcd": ["hold \x0a then \x09"]})
