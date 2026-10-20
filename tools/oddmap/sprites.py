@@ -19,6 +19,7 @@ import shutil
 import struct
 
 from oddmap.disc import parse_chunks
+from oddmap.exe import executable
 from oddmap.image import decompress_4or5, write_png
 from oddmap.messages import MESSAGE_BUTTONS
 from oddmap.paths import HERE
@@ -458,11 +459,6 @@ def permutation_windows(data):
         if distinct == 256:
             hits.append(i - 255)
     return hits
-
-def executable(disc):
-    """(name, bytes) of the disc's executable"""
-    name = next(n for n in sorted(disc.files) if n.startswith("SLUS_"))
-    return name, disc.read(*disc.files[name])
 
 def read_dice(disc):
     """the engine's random table, read off the disc's executable: Math_NextRandom

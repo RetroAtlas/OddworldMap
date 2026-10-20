@@ -27,6 +27,7 @@ GAMES = {
         "line_links": (("previous", 0x0C, "i"), ("next", 0x10, "i")),
         # the render layer each FG1 block layer id draws on
         "fg1_layers": (37, 18),
+        "path_record": {"rect": 4, "objects": 20, "collision": 12, "overlay": 12, "files_from": "\\S1.OVL;1"},
         "parse_tables": parse_pathdata_cpp_ao,
     },
     "AE": {
@@ -50,6 +51,7 @@ GAMES = {
         "line_links": (("previous", 0x0A, "h"), ("next", 0x0C, "h"), ("previous_2", 0x0E, "h"),
                        ("next_2", 0x10, "h"), ("length", 0x12, "h")),
         "fg1_layers": (4, 18, 23, 37),
+        "path_record": {"rect": 0, "objects": 12, "collision": 0, "abe": 20},
         "parse_tables": parse_pathdata_cpp_ae,
     },
 }
