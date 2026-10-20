@@ -1,6 +1,6 @@
 # 100. Every release of both games beside NTSC-U
 
-**Status:** open · decided, nothing built yet; the mechanism first, on the disc machine, then the releases one at a time · **Effort:** large (one census and build that any release runs through, a viewer layer, the Japanese character tables) · **Where:** `tools/build_map.py` and `tools/oddmap/` for the release build, a hand-curated release table under `tools/data/`, an overlay and its art per game and release under `public/`, the viewer's datasets, permalinks, edit store, marks and clock, and `public/sw.js`
+**Status:** open · slice 1 shipped 2026-10-20: the mechanism and the four overlays the site carries first; the viewer next · **Effort:** large (one census and build that any release runs through, a viewer layer, the Japanese character tables) · **Where:** `tools/build_map.py` and `tools/oddmap/` for the release build, a hand-curated release table under `tools/data/`, an overlay and its art per game and release under `public/`, the viewer's datasets, permalinks, edit store, marks and clock, and `public/sw.js`
 
 **Filed:** 2026-10-20, from a census of every retail release of both games against the North American ones.
 
@@ -35,7 +35,7 @@ Redump's PlayStation list, read 2026-10-20, holds these retail releases, demos l
 
 ## Census
 
-Measured 2026-10-20 against every release in the table, with throwaway scripts that are the mechanism's prototype; each method is stated with its finding, so the census can be run again from them.
+Measured 2026-10-20 against every release in the table, with throwaway scripts that were the mechanism's prototype; `build_map.py --census` runs it again and reproduces every count below the comparison it makes (the path lineage aside, which it does not report), the code figures being its own.
 
 - **Archives:** every member of every level archive hashed, taking the largest copy of each level across a game's discs as the builder does.
 - **Paths:** each `Path` chunk decoded with the builder's own `resolve_path_meta`, `tlv_header_ok` and `object_fields`. Objects were grouped by camera through the index table at the chunk's end, the filing the game itself builds from, then aligned per camera by type with a longest-common-run diff. A matched pair counts as changed where its rect or a field differs; the TLV header's end-of-list bit is left out, since it only follows the list's length. Collision lines were aligned the same way on their coordinates and type.
@@ -48,24 +48,24 @@ Measured 2026-10-20 against every release in the table, with throwaway scripts t
 
 ### At a glance
 
-Collision lines are counted as moved, gone and new; objects as changed, removed and added; cameras as files differing, those whose pixels differ, those that look different (Oddysee's gate 7, Exoddus's 16, below) and those whose foreground coverage differs. Code is the executable's differing blocks and the range of differing functions over the level overlays, addresses masked, leaving out `D6.OVL`, the overlay of a level the map does not draw, which four European editions carry as another build altogether (242 to 600 functions apart).
+Collision lines are counted as moved, gone and new; objects as changed, removed and added; cameras as files differing, those whose pixels differ, those that look different (Oddysee's gate 7, Exoddus's 16, below) and those whose foreground coverage differs. Code is the executable's differing blocks over its text, as its header sizes it, and the range of differing functions over the overlays both builds' paths load, addresses masked. Oddysee's executable names each path's overlay, which leaves out `C1.OVL` and `D6.OVL`, overlays no path loads (four European editions carry a `D6.OVL` built from other sources altogether); Exoddus's does not, so every overlay on its discs counts, the per-camera ones and the test level's among them.
 
 | Release | Clock | Collision lines | Objects | Cameras | Text | Sprite animations | Code |
 |---|---|---|---|---|---|---|---|
-| Oddysee `us-r0` | 30 Hz | 11, 3, 0 in 8 paths | 28, 0, 0 in 14 paths | 43, 3, 3, 4 | the base's | 22 | 45; 5 to 31 |
-| Oddysee `us-r1` | 30 Hz | the base's | the base's | 2 menu cameras fewer | the base's | the base's | 34; 0 to 14 |
-| Oddysee `eu` | 25 Hz | 385, 8, 4 in 64 paths | 51, 2, 1 in 20 paths | 35, 2, 2, 8 | the base's | the base's | 79; 5 to 32 |
-| Oddysee `fr` | 25 Hz | 11, 3, 0 in 8 paths | 28, 0, 0 in 14 paths | 190, 167, 166, 12 | French | 14 | 47; 5 to 31 |
-| Oddysee `de` | 25 Hz | 11, 3, 0 in 8 paths | 29, 0, 0 in 15 paths | 152, 147, 147, 1 | German | the base's | 47; 5 to 30 |
-| Oddysee `it` | 25 Hz | 8, 3, 0 in 6 paths | 21, 0, 0 in 12 paths | 179, 174, 173, 2 | Italian | 1 | 40; 5 to 29 |
-| Oddysee `es` | 25 Hz | 8, 3, 0 in 6 paths | 21, 0, 0 in 12 paths | 208, 178, 177, 4 | Spanish | 22 | 40; 5 to 30 |
-| Oddysee `jp` | 30 Hz | the base's | the base's | 189, 188, 185, 0 | Japanese | 1 | 52; 0 to 22 |
+| Oddysee `us-r0` | 30 Hz | 11, 3, 0 in 8 paths | 28, 0, 0 in 14 paths | 43, 3, 3, 4 | the base's | 22 | 44; 5 to 31 |
+| Oddysee `us-r1` | 30 Hz | the base's | the base's | 2 menu cameras fewer | the base's | the base's | 33; 0 to 14 |
+| Oddysee `eu` | 25 Hz | 385, 8, 4 in 64 paths | 51, 2, 1 in 20 paths | 35, 2, 2, 8 | the base's | the base's | 78; 5 to 32 |
+| Oddysee `fr` | 25 Hz | 11, 3, 0 in 8 paths | 28, 0, 0 in 14 paths | 190, 167, 166, 12 | French | 14 | 46; 5 to 31 |
+| Oddysee `de` | 25 Hz | 11, 3, 0 in 8 paths | 29, 0, 0 in 15 paths | 152, 147, 147, 1 | German | the base's | 46; 5 to 30 |
+| Oddysee `it` | 25 Hz | 8, 3, 0 in 6 paths | 21, 0, 0 in 12 paths | 179, 174, 173, 2 | Italian | 1 | 39; 5 to 29 |
+| Oddysee `es` | 25 Hz | 8, 3, 0 in 6 paths | 21, 0, 0 in 12 paths | 208, 178, 177, 4 | Spanish | 22 | 39; 5 to 30 |
+| Oddysee `jp` | 30 Hz | the base's | the base's | 189, 188, 185, 0 | Japanese | 1 | 51; 0 to 22 |
 | Exoddus `eu` | 25 Hz | the base's | the base's | the base's | the base's | the base's | 8; 0 to 2 |
-| Exoddus `fr` | 25 Hz | 2, 0, 0 in 1 path | the base's | 389, 359, 359, 1 | French | 1 | 13; 0 to 6 |
-| Exoddus `de` | 25 Hz | 2, 0, 0 in 1 path | the base's | 389, 358, 358, 1 | German | the base's | 21; 0 to 3 |
-| Exoddus `it` | 25 Hz | the base's | the base's | 387, 355, 355, 1 | Italian | 1 | 15; 0 to 6 |
-| Exoddus `es` | 25 Hz | the base's | the base's | 387, 355, 355, 1 | Spanish | 1 | 13; 2 to 5 |
-| Exoddus `jp` | 30 Hz | 3, 0, 5 in 5 paths | 15, 0, 3 in 8 paths | 1,155, 1,155, 351, 12 | Japanese | the base's | 36; 1 to 20 |
+| Exoddus `fr` | 25 Hz | 2, 0, 0 in 1 path | the base's | 389, 359, 359, 1 | French | 1 | 12; 0 to 22 |
+| Exoddus `de` | 25 Hz | 2, 0, 0 in 1 path | the base's | 389, 358, 358, 1 | German | the base's | 20; 0 to 114 |
+| Exoddus `it` | 25 Hz | the base's | the base's | 387, 355, 355, 1 | Italian | 1 | 14; 0 to 456 |
+| Exoddus `es` | 25 Hz | the base's | the base's | 387, 355, 355, 1 | Spanish | 1 | 12; 0 to 29 |
+| Exoddus `jp` | 30 Hz | 3, 0, 5 in 5 paths | 15, 0, 3 in 8 paths | 1,155, 1,155, 351, 12 | Japanese | the base's | 35; 0 to 114 |
 
 What every release shares: the camera grids and the 368×240 window, the TLV formats, every path's grid, the 256-byte random table `read_dice` finds, the FG1 render-layer tables (the halfword runs 37, 18 and 4, 18, 23, 37 sit in all sixteen executables), and the frame pacing itself: every executable flips its frame on `VSync(2)`, two vertical blanks a frame, so a release runs at 30 Hz where it calls `SetVideoMode(0)` and at 25 Hz where it calls `SetVideoMode(1)`, as every European edition does.
 
@@ -82,7 +82,7 @@ Oddysee's level data falls into four families, read off which `Path` chunks each
 - **Cameras.** Of the 35 files, 2 change pixels: D2P10C04, the Scrabania map screen, redraws two rows of its path blocks, and F1P02C04 loses a leaning stake from the scene, the screen whose edge, death drop and path transition Europe also reworks. 8 change their foreground coverage: blocks added on four screens (the Paramite story screen and the Board Room's two ending text screens among them, where a tile of the screen's own pixels draws nothing new), removed on three, cut on one. 20 more carry FG1 bytes that draw the same masks. 4 preload a different set of camera-resident resources: Europe adds a 4×16 resource, id 1000, to cameras in D1 and F1, and its D1 and F1 copies differ. S1P01C23 differs only past its last chunk. The menu path drops three cameras from its name table and the disc: the Shaman's bio screen (C11) and the base disc's two Exoddus promo screens (C32, C33).
 - **Messages.** The LCD table (37 of 90 filled) and the hint fly table (36) are identical in every overlay of a level the map draws. `D6.OVL`, the overlay of a level the builder never reads, carries an older LCD table with one space more in message 58, which `extract_messages`'s rule that every copy agrees refuses.
 - **Fonts and sprites.** The LCD font and its glyph table are identical; so are all 267 animations. The release still fails `gather_chunks`, which holds every camera's copy of a resource id to the first and meets id 1000 differing between D1 and F1, although no listed animation reads it.
-- **Code.** `SetVideoMode(1)` where NTSC-U calls it with 0, and `VSync(2)` at the same three sites, so a frame is 1/25 s. The save screen's play time divides elapsed frames by 25 where NTSC-U divides by 30, so a PAL save shows real hours and minutes; the Board Room's gas countdown still computes 120 less the elapsed frames over 30, so on a PAL console its 120 shown seconds last 144. Otherwise this is a revised build, not a port: 79 blocks of the executable differ with addresses masked, and every level overlay differs, by 5 to 32 functions (the unused `D6.OVL` by 242). The changes read as logic: an attached object's release dropped from a routine, branches restructured. None of it is catalogued.
+- **Code.** `SetVideoMode(1)` where NTSC-U calls it with 0, and `VSync(2)` at the same three sites, so a frame is 1/25 s. The save screen's play time divides elapsed frames by 25 where NTSC-U divides by 30, so a PAL save shows real hours and minutes; the Board Room's gas countdown still computes 120 less the elapsed frames over 30, so on a PAL console its 120 shown seconds last 144. Otherwise this is a revised build, not a port: 78 blocks of the executable differ with addresses masked, and every overlay its paths load differs, by 5 to 32 functions. The changes read as logic: an attached object's release dropped from a routine, branches restructured. None of it is catalogued.
 
 ### Oddysee `jp` (Abe a GoGo)
 
@@ -91,7 +91,7 @@ Oddysee's level data falls into four families, read off which `Path` chunks each
 - **Messages.** The LCD table has the same 90 slots, the same 37 filled, in the same 8 overlays, its text in the JP font's own code page: single bytes from 0x14 to 0xDB, the button codes 0x08 to 0x13 as in NTSC-U. The hint fly table has the same 36 entries at the same place, re-encoded; entries 2 and 4, which no hint fly names, hold a placeholder.
 - **Font.** The LCD font is 240×182, 9×12 glyphs: katakana, hiragana, about a hundred kanji, digits and the PlayStation's buttons. Its glyph table has 224 entries, and `glyph_table_windows`, which looks for a table whose lowercase letters repeat its uppercase ones, finds none.
 - **Sprites.** 266 of 267 identical; L1P01's camera animation `bg:5007` draws the same pixels 2 units further left.
-- **Code.** `SetVideoMode(0)` and `VSync(2)`, so 30 Hz. 52 blocks of the executable differ, and at most 4 functions of each level overlay (22 of the menu's), the paths that draw text.
+- **Code.** `SetVideoMode(0)` and `VSync(2)`, so 30 Hz. 51 blocks of the executable differ, and at most 4 functions of each overlay its paths load (22 of the menu's), the paths that draw text.
 
 ### Exoddus `eu`
 
@@ -109,13 +109,13 @@ Oddysee's level data falls into four families, read off which `Path` chunks each
 - **Messages.** The LCD table has the same 101 slots, the same 70 filled, in the same 10 overlays. A space is 0x02 and the scroll-in lead is 31 of them; single bytes from 0x02 to 0xFE are glyphs, and 0xFF escapes to a second byte for the glyphs past them, so the button codes are no longer 0x08 to 0x13.
 - **Fonts.** The LCD font is per level. The five levels with LCD screens (BR, BW, FD, MI, ST) carry a 208×192 texture of 12×12 glyphs; the five without (BA, BM, NE, PV, SV) carry a 104×12 strip of the digits and a colon, which the tally boards draw; TL carries a 256×256. The strip's glyphs sit where the full font's first row puts them, so one glyph table serves both: 327 entries in the executable, 277 distinct. `ABE2.FNT`, the menu font, differs too; the map draws neither menu.
 - **Sprites.** All 202 animations identical.
-- **Code.** `SetVideoMode(0)` and `VSync(2)`, so 30 Hz. 36 blocks of the executable and 1 to 20 functions of each level overlay differ, the text paths and whatever fixes go with the data above; uncatalogued.
+- **Code.** `SetVideoMode(0)` and `VSync(2)`, so 30 Hz. 35 blocks of the executable differ, and up to 114 functions of an overlay, the text paths and whatever fixes go with the data above; uncatalogued.
 - **The test level.** `TL` holds two paths and 13 cameras: three brewery screens (P1, 3×1, two Fleeches, five hoists, a lever, two explosion sets, a colourful meter) and ten developer screens (P2, 5×7), checkerboards with the camera's number drawn on them, holding nine doors and two express wells whose destinations were never set. No executable of any release holds a path record for it, so nothing in the PlayStation code can load it. Only the decomp's PC table has rows for it, and those say P1 holds 20 collision lines with its objects at 424, where the chunk holds 14 and its objects elsewhere.
 
 ### Oddysee's other US pressings
 
-- **`us-r1`** is the base without the two Exoddus promo screens the menu shows (C32, C33): beside its menu path and those two cameras, its archives differ only in two menu cameras' foreground bytes, which draw the same masks. Its code differs in 34 blocks of the executable and in 0 to 14 functions of a level overlay (the menu's 14), 18 of the 28 level overlays matching the base's.
-- **`us-r0`** is the first pressing, and its levels are the ones the base revised. 11 collision lines move and 3 more are gone, in 8 paths; 28 objects change in 14 paths. 43 cameras differ: 3 change pixels (the Scrabania map screen and F1P02C04's stake, which Rev 1 redrew, and a credits screen naming another QA team), 4 change their foreground coverage, and the rest differ in foreground bytes, camera-resident resources or a font chunk. 52 animation banks differ, and 22 of the animations the map draws with them: the background Glukkons' idle and gestures in both their palettes, the green glow and the crouching chant among them. The LCD font, the messages and the voices are the base's. Its code differs in 45 blocks of the executable and 5 to 31 functions of every level overlay.
+- **`us-r1`** is the base without the two Exoddus promo screens the menu shows (C32, C33): beside its menu path and those two cameras, its archives differ only in two menu cameras' foreground bytes, which draw the same masks. Its code differs in 33 blocks of the executable and in 0 to 14 functions of an overlay its paths load (the menu's 14), 18 of the 27 matching the base's.
+- **`us-r0`** is the first pressing, and its levels are the ones the base revised. 11 collision lines move and 3 more are gone, in 8 paths; 28 objects change in 14 paths. 43 cameras differ: 3 change pixels (the Scrabania map screen and F1P02C04's stake, which Rev 1 redrew, and a credits screen naming another QA team), 4 change their foreground coverage, and the rest differ in foreground bytes, camera-resident resources or a font chunk. 52 animation banks differ, and 22 of the animations the map draws with them: the background Glukkons' idle and gestures in both their palettes, the green glow and the crouching chant among them. The LCD font, the messages and the voices are the base's. Its code differs in 44 blocks of the executable and 5 to 31 functions of every overlay its paths load.
 
 ### Oddysee's localized editions
 
@@ -131,7 +131,7 @@ Oddysee's level data falls into four families, read off which `Path` chunks each
 - **Cameras.** 355 to 359 look different, translated as Oddysee's are (MAP becomes PLAN on the Brewery's signs, the tally boards' captions in French); none is a re-encode alone, and the smallest edit sits at 26.3 on the window measure. One camera in each changes its foreground coverage.
 - **Text.** The LCD table has the base's 101 slots and 69 or 70 filled, in IBM code page 437 like Oddysee's editions; `LCDFONT.FNT` is redrawn in every level and `ABE2.FNT`, the menu font, is the base's.
 - **Sprites.** French and Italian draw the Necrum rope differently and Spanish the air explosion; German draws all 202 animations as the base does.
-- **Code.** 13 to 21 blocks of the executable and at most 6 functions of a level overlay differ.
+- **Code.** 12 to 20 blocks of the executable differ, and 0 to 456 functions of an overlay, every overlay on the discs counted.
 
 ## Decided
 
@@ -141,7 +141,7 @@ Oddysee's level data falls into four families, read off which `Path` chunks each
 - **Oddysee takes no block gate.** Its edited screens were re-encoded whole, so about half of a patched screen's blocks differ by noise alone, and a gate leaving those to the base would cut its art again: Abe a GoGo's 16 MB comes to about 14 MB with a gate of 2 on the window measure and about 8.5 MB with a gate of 5, each with the blocks it keeps grown by one. But a gate needs the camera gate's proof, an empty margin around it, and Oddysee has none at either scale: its smallest real edit, D2P03C03's hand print, measures 6.0 against its re-encodes' 2.8 to 4.8, and inside its edited screens every unit of the window measure from 4 to 30 holds 82 to 531 blocks in each localized or Japanese release, so any gate would decide blocks on noise, and how many is what moves the size from 14 MB to 8.5.
 - **Every release's screens draw its own glyphs from the first slice; text is read through its code page.** The European editions' code page is IBM 437, a standard one, so their messages read as text from the start. The Japanese code pages are hand-curated, a slice of their own after the release ships: about 475 distinct glyphs (198 Oddysee, 277 Exoddus), mostly kana, a few careful hours. Until a Japanese table exists the sign panel says the text is Japanese and search skips it. Either way a test holds that every code a message uses reads as a character and has a glyph.
 - **Every release the map carries is on the switch, Exoddus's English European edition included.** "Same levels, 25 frames a second" is itself what a European player wants to know, and its note adds that the gas countdowns show 240 seconds and last 288.
-- **A release whose code is not the base's runs the base's brains.** Every release's code differs from the base's somewhere, Oddysee's English European edition in 79 blocks of its executable and every overlay, so its lines, objects, art and foreground come off its own discs while its creatures run the base's brains on its own clock. That is the map's doing, not the release's, so a release's note leaves it out and says only what the release changes. The map claims nothing it has not read; cataloguing a release's code is a job of its own.
+- **A release whose code is not the base's runs the base's brains.** Every release's code differs from the base's somewhere, Oddysee's English European edition in 78 blocks of its executable and every overlay, so its lines, objects, art and foreground come off its own discs while its creatures run the base's brains on its own clock. That is the map's doing, not the release's, so a release's note leaves it out and says only what the release changes. The map claims nothing it has not read; cataloguing a release's code is a job of its own.
 - **The test level stays out.** No executable can load it, in the Japanese release or in the three localized Exoddus editions that carry it, so the census above is its record. It may come later as a curiosity, for which the overlay would need a shape.
 - **A release is named for where it was sold, and its link token is that code.** The map shows a release's content, not its video standard, so `pal` names the wrong thing, and where a release was sold is what tells the releases apart: Europe sold each game as five editions, each on a disc and serial of its own and each a build of its own. So `eu` names the English European edition, a localized one takes the ISO code of the country its Redump entry is tagged with (`fr`, `de`, `it`, `es`), as `jp` does, and a US pressing other than the base takes `us` and Redump's revision (`us-r0` for the first, `us-r1` for Rev 1); the base never takes a token. A reissue shares its edition's dump and needs no code. The codes are bare like `graph`, since none can clash with another token, which is the only thing a keyed `region=…` would buy. The same codes name the overlays, the art directories, the disc variables and the edit stores, so a release is added with nothing renamed.
 
@@ -207,6 +207,20 @@ Without discs: the release table's shape; each overlay's shape; every key resolv
 2. **The release in the viewer:** the materialization over the base, the switch, the token, the clock, the mark and its toggle, every release's glyphs on the screens and the European text, the per-release edit stores, the worker's rule for regional art, the docs, and the What's New entry.
 3. **The Japanese code pages:** the two hand-curated tables beside `tools/data/sprite_anims.json`, and the sign panel and search reading Japanese as text.
 4. **Every further release,** an addition each: turned on in the release table, built, its overlay and art reviewed and committed, with its What's New entry.
+
+## Shipped (2026-10-20): slice 1
+
+The mechanism and the first four overlays. `build_map.py --census` reads any release off its own discs and reports what differs from the committed base on every layer the map draws, and `--release <code>` writes it as an overlay; nothing in the comparison names a release. All fourteen releases run through the census in a minute or two, and the four the table marks as carried are committed: Oddysee `eu` (9 images, 0.2 MB), Oddysee `jp` (288 images, 16 MB), Exoddus `eu` (its identity, clock and note alone) and Exoddus `jp` (838 images, 13 MB). Exoddus `jp` carries 357 cameras, its 351 edits, the 5 re-encodes whose foreground coverage changes and the menu's added title logo, and shares the base's art for the other 799; the margin test passes with no camera inside it. Its edits ship as 532 patches over 337 screens and 14 screens whole, the 5 re-encodes as their masks over the base's screens; Oddysee `jp`'s 188 cameras ship as 110 patches over 109 screens and 79 whole, every patched screen its own pixel for pixel. A scratch build of each reproduces it byte for byte, and a full scratch rebuild of both base games matched all 3,305 committed files before the builder changed and again after.
+
+Where the slice drifted from the design:
+
+- **The path table is read for every release through its BLY records,** which name each path's path data and collision record and, on Oddysee, the overlay the path loads through the executable's file table. Over the base discs these agree with every chunk `audit_path_meta` reads, where the decomp's PC tables are off in twelve Oddysee rows.
+- **A path reads the message table its own overlay carries.** The French Oddysee's menu and Stockyards overlays spell a button out as `/013` in one message where its Rupture Farms overlays carry the code, so a release's table is the one most paths read and a path whose overlay says otherwise carries its differing entries. Oddysee's executable names the overlays; Exoddus's does not, and there every copy must agree, which every Exoddus release's do. Read from the overlays paths load, the base's LCD table counts seven copies where it counted eight: `C1.OVL` is loaded by no path.
+- **The tables are found by shape:** the LCD table opens on the 31-character lead in whatever character the font spaces with (`0x02` for Abe '99), and the hint fly table is the run of exactly 36 pointers to text at the address the LCD table gives every overlay.
+- **How a release reads its text is read by running its own code.** Its glyph table is the one the executable sets the LCD font up with, and the measuring routine runs over every byte in a small R3000 interpreter, which gives each code's glyph, a space, or a two-byte code's: Abe a GoGo shifts its codes onto a kana table, and Abe '99 indexes its 12-pixel grid directly and reaches past entry 253 behind `0xff`. The European editions' accented letters sit in their glyph table's own rectangles, so they carry their glyphs and codes as the Japanese releases do, not only their texture. A font carrying codes also records the code its messages' lead runs in (`lead`), since Abe '99's is `0x02` and its `0x20` a glyph.
+- **Oddysee's camera rule counts the masks too:** with no gate, any difference in the art or in a mask makes a camera the release's.
+- **A release is read over the levels the base draws,** so the test level the Japanese and three localized Exoddus discs carry stays out of the fonts and sprites.
+- **The builder fails two things an overlay could not carry:** a release that lists the base's objects in another order, since an addition stands after its `after` in the base's order, and an Exoddus path whose Abe start differs, which the overlay has no field for and the level editor's export reads off the base. Every release in the table passes both.
 
 ## Ruled out
 
