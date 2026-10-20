@@ -381,9 +381,11 @@ def load_anim_table(game_key):
             out[name] = {**spec, "family": entry["family"]}
     return out
 
-def gather_chunks(levels):
+def gather_chunks(levels, cam_rids=None):
     """(file, rid) -> chunk data over the levels' BAN/BND/CAM files; a chunk repeats
-    across levels, and every copy is held to the first"""
+    across levels, and every copy is held to the first. A camera's animations are
+    the resources it preloads, under ids another level's cameras may use for
+    others, so only the ids in `cam_rids` are gathered from them."""
     anims, palts, cams = {}, {}, {}
     def keep(table, key, data, where, short):
         first, kept = table.setdefault(key, (short, data))
@@ -397,7 +399,8 @@ def gather_chunks(levels):
             for (tag, rid), data in parse_chunks(lvl.read(fn)).items():
                 if tag == "Anim":
                     if ext == "CAM":
-                        keep(cams, rid, data, f"camera animation {rid}", short)
+                        if cam_rids is None or rid in cam_rids:
+                            keep(cams, rid, data, f"camera animation {rid}", short)
                     else:
                         keep(anims, (fn, rid), data, f"{fn} {rid}", short)
                 elif tag == "Palt":
@@ -409,7 +412,7 @@ def build_sprites(game_key, levels):
     """decode every listed animation: (frames to pack, each with its family, the
     sidecar's animations, each with the family it packs in, misses)"""
     table = load_anim_table(game_key)
-    anims, palts, cams = gather_chunks(levels)
+    anims, palts, cams = gather_chunks(levels, {spec["bg"] for spec in table.values() if "bg" in spec})
     frames, index, entries, misses = [], {}, {}, []
     for name in sorted(table):
         spec = table[name]

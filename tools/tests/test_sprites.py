@@ -352,6 +352,16 @@ class Gather(unittest.TestCase):
                                    ("R2", Level(**{"X.BAN": container(("Anim", 7, b))}))])
         self.assertIn("X.BAN 7 differs between R1 and R2", str(caught.exception))
 
+    def test_a_camera_resource_under_an_id_no_animation_reads_is_left_alone(self):
+        a = anim_chunk([(2, [0], True, 0)])
+        b = anim_chunk([(1, [0], True, 0)])
+        levels = [("D1", Level(**{"D1P01C03.CAM": container(("Anim", 1000, a), ("Anim", 5007, a))})),
+                  ("F1", Level(**{"F1P06C01.CAM": container(("Anim", 1000, b))}))]
+        _, _, cams = sprites.gather_chunks(levels, {5007})
+        self.assertEqual(cams, {5007: a})
+        with self.assertRaises(SystemExit):
+            sprites.gather_chunks(levels)
+
 
 class AnimTable(unittest.TestCase):
     """the curated animation list: every entry names a family and a chunk the builder can open"""
