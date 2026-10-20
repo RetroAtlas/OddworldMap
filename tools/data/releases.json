@@ -1,0 +1,193 @@
+{
+ "AO": {
+  "base": {
+   "name": "USA, Rev 2",
+   "language": "English",
+   "title": "Oddworld: Abe's Oddysee",
+   "executable": "SLUS_001.90",
+   "discs": [
+    {"redump": 1142, "bytes": 675489696, "sha1": "3507fb96d6c5d60f30b1d1b9e4b6dfc468f7cef0"}
+   ]
+  },
+  "releases": {
+   "us-r0": {
+    "name": "USA, first pressing",
+    "language": "English",
+    "title": "Oddworld: Abe's Oddysee",
+    "executable": "SLUS_001.90",
+    "discs": [
+     {"redump": 1858, "bytes": 702027312, "sha1": "1548537c91722628414dc5ed49e7ee28c379bced"}
+    ],
+    "code_page": "cp437",
+    "ships": false
+   },
+   "us-r1": {
+    "name": "USA, Rev 1",
+    "language": "English",
+    "title": "Oddworld: Abe's Oddysee",
+    "executable": "SLUS_001.90",
+    "discs": [
+     {"redump": 67997, "bytes": 702612960, "sha1": "e4c1a4455ea25b36ec371ee78b53d79b023d07dd"}
+    ],
+    "code_page": "cp437",
+    "ships": false
+   },
+   "eu": {
+    "name": "Europe",
+    "language": "English",
+    "title": "Oddworld: Abe's Oddysee",
+    "executable": "SLES_006.64",
+    "discs": [
+     {"redump": 702, "bytes": 701912064, "sha1": "c7bf6de86049408445704a66cf59c90149657e9a"}
+    ],
+    "code_page": "cp437",
+    "ships": true,
+    "note": "Hundreds of collision lines and dozens of objects reworked, a few screens and foregrounds redrawn, and 25 frames a second."
+   },
+   "fr": {
+    "name": "France",
+    "language": "French",
+    "title": "Oddworld: L'Odyssée d'Abe",
+    "executable": "SLES_008.38",
+    "discs": [
+     {"redump": 33068, "bytes": 701992032, "sha1": "2acca308d9549475d74f4f16e22d465e30a0b319"}
+    ],
+    "code_page": "cp437",
+    "ships": false
+   },
+   "de": {
+    "name": "Germany",
+    "language": "German",
+    "title": "Oddworld: Abe's Oddysee",
+    "executable": "SLES_008.39",
+    "discs": [
+     {"redump": 15209, "bytes": 702173136, "sha1": "1db7f2b08119e39fee5689d5770031e6e4c8b161"}
+    ],
+    "code_page": "cp437",
+    "ships": false
+   },
+   "it": {
+    "name": "Italy",
+    "language": "Italian",
+    "title": "Oddworld: Abe's Oddysee",
+    "executable": "SLES_008.40",
+    "discs": [
+     {"redump": 9977, "bytes": 702196656, "sha1": "8be89ab071828b408bafa3debdbe77aff0413546"}
+    ],
+    "code_page": "cp437",
+    "ships": false
+   },
+   "es": {
+    "name": "Spain",
+    "language": "Spanish",
+    "title": "Oddworld: Abe's Oddysee",
+    "executable": "SLES_008.41",
+    "discs": [
+     {"redump": 1096, "bytes": 702173136, "sha1": "abe8d2d1ee64c6712ebd979febdf075f0b81f02f"}
+    ],
+    "code_page": "cp437",
+    "ships": false
+   },
+   "jp": {
+    "name": "Japan",
+    "language": "Japanese",
+    "title": "Abe a GoGo",
+    "executable": "SLPS_011.18",
+    "discs": [
+     {"redump": 18872, "bytes": 751663920, "sha1": "f3d6545fabea9cd6f984d86814c2d31b414ee4e7"}
+    ],
+    "code_page": null,
+    "ships": true,
+    "note": "Japanese text on the signs and screens and the hand prints on the stones redrawn, over the North American release's levels."
+   }
+  }
+ },
+ "AE": {
+  "base": {
+   "name": "USA",
+   "language": "English",
+   "title": "Oddworld: Abe's Exoddus",
+   "executable": "SLUS_007.10",
+   "discs": [
+    {"redump": 1859, "bytes": 611978640, "sha1": "cb3e7d0fafc6a4b05dd24e38611b4c1b486962ff"},
+    {"redump": 1860, "bytes": 483947520, "sha1": "ff160dda9cd026d6b1cc3bce9e81b4d25e4a93ce"}
+   ]
+  },
+  "releases": {
+   "eu": {
+    "name": "Europe",
+    "language": "English",
+    "title": "Oddworld: Abe's Exoddus",
+    "executable": "SLES_014.80",
+    "discs": [
+     {"redump": 700, "bytes": 611978640, "sha1": "68ff5eca6617a00044b6c95dc73cf83a0b1167ed"},
+     {"redump": 701, "bytes": 483947520, "sha1": "8b26c8e3ffe3f32228c3b813de20f6d5f1737608"}
+    ],
+    "code_page": "cp437",
+    "ships": true,
+    "note": "The same levels as the North American release, at 25 frames a second. The gas countdowns still count frames by 30, so one of 7200 frames shows 240 seconds and lasts 288."
+   },
+   "fr": {
+    "name": "France",
+    "language": "French",
+    "title": "Oddworld: L'Exode d'Abe",
+    "executable": "SLES_015.02",
+    "discs": [
+     {"redump": 16754, "bytes": 616489776, "sha1": "2aaf308808a1473cb64cd83ef4f7d55a0fe069cc"},
+     {"redump": 16755, "bytes": 483794640, "sha1": "b3344c7a72b47be132900eabff90cd678aff215d"}
+    ],
+    "code_page": "cp437",
+    "ships": false
+   },
+   "de": {
+    "name": "Germany",
+    "language": "German",
+    "title": "Oddworld: Abe's Exoddus",
+    "executable": "SLES_015.03",
+    "discs": [
+     {"redump": 7741, "bytes": 612056256, "sha1": "ea88585a0167eb609c7cef6455ae09d79e3b2c98"},
+     {"redump": 10341, "bytes": 483241920, "sha1": "ee9c3a3037f10d609742246f6ee77e1c9a8cb436"}
+    ],
+    "code_page": "cp437",
+    "ships": false
+   },
+   "it": {
+    "name": "Italy",
+    "language": "Italian",
+    "title": "Oddworld: Abe's Exoddus",
+    "executable": "SLES_015.04",
+    "discs": [
+     {"redump": 9980, "bytes": 616823760, "sha1": "5345151a87772060f679d8f48d9d2208128ca529"},
+     {"redump": 9981, "bytes": 483858144, "sha1": "afbc953d1a2b6eda3e319e47dbc1c6c2c449da4b"}
+    ],
+    "code_page": "cp437",
+    "ships": false
+   },
+   "es": {
+    "name": "Spain",
+    "language": "Spanish",
+    "title": "Oddworld: Abe's Exoddus",
+    "executable": "SLES_015.05",
+    "discs": [
+     {"redump": 1093, "bytes": 615621888, "sha1": "0ed43e2a5d124ba13c40f1aca9c6ed26190b91a1"},
+     {"redump": 1094, "bytes": 483143136, "sha1": "e561e58232813fcb36850d95a5a5b690fc901da3"}
+    ],
+    "code_page": "cp437",
+    "ships": false
+   },
+   "jp": {
+    "name": "Japan",
+    "language": "Japanese",
+    "title": "Abe '99",
+    "executable": "SLPS_020.95",
+    "discs": [
+     {"redump": 36825, "bytes": 615146784, "sha1": "e10dd0a4d3a0d8bb5879fa4853913fc2fbf1288d"},
+     {"redump": 36826, "bytes": 483084336, "sha1": "ba43ceb1a9bf45bc307e07526b48fac2681c1bee"}
+    ],
+    "code_page": null,
+    "ships": true,
+    "note": "Japanese text on the signs and screens, and fixes the North American release lacks: floors added in Necrum Mines, gas countdowns in the Brewery's return, and doors and switches reworked in FeeCo and Bonewerkz."
+   }
+  }
+ }
+}
