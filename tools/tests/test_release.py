@@ -216,11 +216,12 @@ class Messages(unittest.TestCase):
         original = release.overlay_tables
         release.overlay_tables = lambda *a: tables
         try:
-            main, per_path = release.release_messages(self.Fake(loads), self.Base(), range(0x08, 0x14))
+            main, per_path, lead = release.release_messages(self.Fake(loads), self.Base(), range(0x08, 0x14))
         finally:
             release.overlay_tables = original
         self.assertEqual(main["lcd"], ["", "Work!", "Press \x0b"])
         self.assertEqual(per_path, {"E1/3": {"lcd": {"2": "Press /013"}}})
+        self.assertEqual(lead, 0x20)
 
 
 class CommittedOverlays(unittest.TestCase):

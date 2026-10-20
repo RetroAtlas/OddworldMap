@@ -13,12 +13,13 @@ import tempfile
 from concurrent.futures import ProcessPoolExecutor
 
 from oddmap.disc import Disc, Lvl, parse_chunks
-from oddmap.exe import code_differences, executable, frame_rate, path_overlays, path_records, text
+from oddmap.exe import (Image, code_differences, executable, frame_rate, lcd_glyph_table, path_overlays,
+                        path_records, text, text_codes)
 from oddmap.image import cam_masks, cam_pixels, read_png, write_png
-from oddmap.messages import MESSAGE_BUTTONS, clean_table, message_json, overlay_tables
+from oddmap.messages import MESSAGE_BUTTONS, MESSAGE_TABLES, clean_table, message_json, overlay_tables
 from oddmap.paths import HERE, SITE
-from oddmap.sprites import (FONT_FAMILY, SHEETS_DIR, build_sprites, family_sheet, index_map_rgba,
-                            read_dice, read_font, sheet_name)
+from oddmap.sprites import (FONT_FAMILY, SHEETS_DIR, build_sprites, family_sheet, font_chunks, font_texture,
+                            glyph_index, index_map_rgba, read_dice, sheet_name)
 from oddmap.tlv import walk_obj_region
 
 CAMERA_NAME = re.compile(r"[A-Z0-9]{4,8}")
@@ -382,14 +383,16 @@ def camera_verdict(game, entry, cam):
 
 
 def release_messages(release, base, controls):
-    """the release's message tables and, per path, the entries where the table
-    its own overlay carries says otherwise. Each path reads the table compiled
+    """the release's message tables, per path the entries where the table its
+    own overlay carries says otherwise, and the code the scroll-in lead runs in. Each path reads the table compiled
     into the overlay it loads, and a release may carry different copies (the
     French Oddysee's menu and Stockyards overlays spell a button out in one
     message); where the executable names no overlay per path, every copy must
     agree. The release's table is the one most paths read."""
-    tables, per_path = {}, {}
+    tables, per_path, lead = {}, {}, None
     for name, copies in sorted(overlay_tables(release.game_key, release.discs, release.overlays).items()):
+        if MESSAGE_TABLES[release.game_key][name][1] and copies:
+            lead = ord(next(iter(copies.values()))[1][0])
         cleaned = {ovl: clean_table(release.game_key, name, t, controls) for ovl, t in copies.items()}
         if not cleaned:
             raise SystemExit(f"{release.game_key} {release.code}: no overlay carries the {name} message table")
@@ -411,7 +414,7 @@ def release_messages(release, base, controls):
         for key, t in reads.items():
             if t != main:
                 per_path.setdefault(key, {})[name] = {str(i): m for i, (m, n) in enumerate(zip(t, main)) if m != n}
-    return tables, per_path
+    return tables, per_path, lead
 
 
 def compare_sprites(release, base):
@@ -455,15 +458,62 @@ def compare_sprites(release, base):
     return sorted(differ), sheets, anims
 
 
-def compare_font(release, base):
-    """the LCD font's texture and glyph table, where either differs from the base's"""
-    font = read_font(sorted(release.archives.items()))
-    rgba = index_map_rgba(font["texels"])
+def message_codes(tables, escapes):
+    """(the single-byte codes, the two-byte codes) the messages use, the tally
+    boards' digits and colon among the first"""
+    singles, pairs = set(range(0x30, 0x3B)), set()
+    for table in tables.values():
+        for msg in table:
+            raw = msg.encode("latin1")
+            i = 0
+            while i < len(raw):
+                if raw[i] in escapes and i + 1 < len(raw):
+                    pairs.add((raw[i], raw[i + 1]))
+                    i += 2
+                else:
+                    singles.add(raw[i])
+                    i += 1
+    return singles, pairs
+
+
+def release_font(release, messages):
+    """the release's LCD font: the largest of its levels' textures, every other
+    one held to be its corner, the glyph table its executable sets the font up
+    with, cut after the last entry a message reaches, and how its own measuring
+    routine reads each code"""
+    textures = [(short, font_texture(data)) for short, data in font_chunks(sorted(release.archives.items()))]
+    w, h, texels = max((t for _, t in textures), key=lambda t: t[0] * t[1])
+    for short, (tw, th, tt) in textures:
+        if tw > w or th > h or any(tt[y * tw:(y + 1) * tw] != texels[y * w:y * w + tw] for y in range(th)):
+            raise SystemExit(f"{release.game_key} {release.code}: {short}'s LCD font is no corner of the largest")
+    table = lcd_glyph_table(release.exe)
+    codes, escapes = text_codes(release.exe, table)
+    singles, pairs = message_codes(messages, escapes)
+    reached = {codes[c] for c in singles if codes[c] is not None} | {escapes[e][b] for e, b in pairs}
+    at = Image(release.exe).offset(table)
+    glyphs = [list(release.exe[at + 4 * i:at + 4 * i + 4]) for i in range(max(reached | {1}) + 1)]
+    return {"w": w, "h": h, "texels": texels, "glyphs": glyphs, "codes": codes, "escapes": escapes,
+            "singles": singles}
+
+
+def compare_font(release, base, messages):
+    """the LCD font where it differs from the base's: its texture, and where a
+    code a message uses reaches another glyph than the base's port draws for
+    it, the glyph table and how the release reads its codes"""
+    font = release_font(release, messages)
     old = base.sprites["font"]
+    out = {}
     _w, _h, sheet = base.sheet(FONT_FAMILY)
-    if (font["w"], font["h"], font["glyphs"]) == (old["w"], old["h"], old["glyphs"]) and rgba == sheet:
-        return None
-    return {"w": font["w"], "h": font["h"], "glyphs": font["glyphs"], "rgba": rgba}
+    rgba = index_map_rgba(font["texels"])
+    if (font["w"], font["h"]) != (old["w"], old["h"]) or rgba != sheet:
+        out.update({"w": font["w"], "h": font["h"], "rgba": rgba})
+    def drawn(i, glyphs):
+        return None if i is None else (i, glyphs[i] if i < len(glyphs) else None)
+    if font["escapes"] or any(drawn(font["codes"][c], font["glyphs"]) != drawn(glyph_index(c), old["glyphs"])
+                              for c in font["singles"]):
+        out.update({"w": font["w"], "h": font["h"], "rgba": rgba, "glyphs": font["glyphs"],
+                    "codes": font["codes"], "escapes": {str(k): v for k, v in sorted(font["escapes"].items())}})
+    return out or None
 
 
 def compare(game_key, game, code, entry, images, base=None, workers=None):
@@ -540,7 +590,7 @@ def compare(game_key, game, code, entry, images, base=None, workers=None):
                          f"release table: {', '.join(margin)}")
     overlay["paths"] = {k: paths[k] for k in sorted(paths)}
     controls = MESSAGE_BUTTONS if entry["code_page"] else range(1, 0x20)
-    messages, per_path = release_messages(release, base, controls)
+    messages, per_path, lead = release_messages(release, base, controls)
     changed = {name: table for name, table in messages.items() if base.messages.get(name) != table}
     if changed:
         overlay["messages"] = changed
@@ -553,11 +603,13 @@ def compare(game_key, game, code, entry, images, base=None, workers=None):
     if differ:
         overlay["sprites"] = {"anims": anims}
         counts["sprite animations"] = len(differ)
-    font = compare_font(release, base)
+    font = compare_font(release, base, {**base.messages, **messages})
     if font:
-        overlay["font"] = {k: font[k] for k in ("w", "h", "glyphs")}
+        overlay["font"] = {k: v for k, v in font.items() if k != "rgba"}
+        if "codes" in font:
+            overlay["font"]["lead"] = lead
         sheets[FONT_FAMILY] = (font["w"], font["h"], font["rgba"])
-        counts["font"] = 1
+        counts["font"] = 1 if "codes" not in font else "its own glyphs and codes"
     dice = {tuple(read_dice(d)) for d in release.discs}
     if len(dice) != 1:
         raise SystemExit(f"{game_key} {code}: the discs disagree on the random table")

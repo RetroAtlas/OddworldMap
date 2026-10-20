@@ -137,3 +137,41 @@ class PathRecords(unittest.TestCase):
     def test_records_naming_no_overlay_name_none(self):
         layout = {k: v for k, v in self.LAYOUT.items() if k not in ("overlay", "files_from")}
         self.assertIsNone(exe.path_overlays(self.program(), layout))
+
+
+def bne(rs, rt, off): return (5 << 26) | (rs << 21) | (rt << 16) | (off & 0xFFFF)
+def beq(rs, rt, off): return (4 << 26) | (rs << 21) | (rt << 16) | (off & 0xFFFF)
+def lbu(rt, imm, rs): return (36 << 26) | (rs << 21) | (rt << 16) | (imm & 0xFFFF)
+def sll(rd, rt, sh): return (rt << 16) | (rd << 11) | (sh << 6)
+
+
+class Text(unittest.TestCase):
+    """the LCD font's glyph table and how the measuring routine reads codes"""
+    V1, T0, T1, S1, S3, A1 = 3, 8, 9, 17, 19, 5
+
+    def program(self, offset):
+        """a font set up with a table when its kind is 2, and a routine measuring
+        a string that draws code c with entry c - offset"""
+        p = Program()
+        p.blob(bytes(32))
+        table = p.blob(bytes(i & 255 for i in range(4 * 256)))
+        p.words(JR_RA, NOP)
+        hi, lo = split(table)
+        p.words(ori(V0, 0, 2), bne(self.S3, V0, 4), NOP, lui(V0, hi), addiu(V0, V0, lo), sw(V0, 8, self.S1))
+        p.words(JR_RA, NOP)
+        p.words(lbu(self.V1, 0, self.A1), beq(self.V1, 0, 13), NOP,
+                lw(V0, 0x2C, A0), NOP, lw(V0, 8, V0),
+                addiu(self.V1, self.V1, -offset), sll(self.V1, self.V1, 2), addu(self.V1, self.V1, V0),
+                lbu(self.T0, 2, self.V1), lbu(self.T1, 2, V0), addiu(self.A1, self.A1, 1),
+                lbu(self.V1, 0, self.A1), bne(self.V1, 0, -11), NOP,
+                JR_RA, NOP)
+        return p.image(), table
+
+    def test_the_table_the_lcd_font_is_set_up_with_is_found(self):
+        data, table = self.program(5)
+        self.assertEqual(exe.lcd_glyph_table(data), table)
+
+    def test_each_code_reads_the_glyph_the_routine_reaches(self):
+        data, table = self.program(5)
+        codes, escapes = exe.text_codes(data, table)
+        self.assertEqual((codes[0x30], codes[0x41], escapes), (0x30 - 5, 0x41 - 5, {}))

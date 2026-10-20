@@ -292,3 +292,163 @@ def code_differences(a, b):
     sm = difflib.SequenceMatcher(a=functions(a), b=functions(b), autojunk=False)
     ops = [o for o in sm.get_opcodes() if o[0] != "equal"]
     return len(ops), sum(max(i2 - i1, j2 - j1) for _, i1, i2, j1, j2 in ops)
+
+
+# --- the LCD font's glyph table and how text reaches it ---
+
+def lcd_glyph_table(data):
+    """the address of the glyph table a font of kind 2, the LCD screens' font, is
+    set up with: the store of a built address into the font's +8 that follows
+    the test of its kind against 2"""
+    img = Image(data)
+    found = set()
+    for at in range(0x800, len(data) - 40, 4):
+        w0, w1 = struct.unpack_from("<2I", data, at)
+        if not (_op(w0) in (9, 13) and _rs(w0) == ZERO and _imm(w0) == 2 and _op(w1) in (4, 5)
+                and _rt(w1) == _rt(w0)):
+            continue
+        hi = None
+        for k in range(2, 9):
+            w = struct.unpack_from("<I", data, at + 4 * k)[0]
+            if _op(w) == 15:
+                hi = (_rt(w), _imm(w) << 16)
+            elif hi and _op(w) == 9 and _rs(w) == hi[0]:
+                addr = (hi[1] + _simm(w)) & 0xFFFFFFFF
+                for j in range(k + 1, k + 4):
+                    s = struct.unpack_from("<I", data, at + 4 * j)[0]
+                    if _op(s) == 43 and _imm(s) == 8 and _rt(s) == _rt(w):
+                        found.add(addr)
+                break
+    if len(found) != 1 or not img.holds(next(iter(found))):
+        raise SystemExit(f"executable: {len(found)} candidate LCD glyph tables, expected one")
+    return found.pop()
+
+
+def _leaf_run(img, start, regs, memory, limit=2000):
+    """run a leaf function to its `jr ra`, returning every byte address it read
+    with `lbu`: enough of the R3000 for the text measuring routines, which read
+    the font through a0 and a string through a1"""
+    regs = dict(regs)
+    regs[ZERO] = 0
+    reads = []
+    def get(r):
+        return regs.get(r, 0) & 0xFFFFFFFF
+    def load(addr, size, signed=False):
+        addr &= 0xFFFFFFFF
+        if addr in memory:
+            v = memory[addr]
+        elif img.holds(addr):
+            v = int.from_bytes(img.data[img.offset(addr):img.offset(addr) + size], "little")
+        else:
+            raise SystemExit(f"executable: a read of {addr:#x} the routine was not given")
+        if signed and v >> (8 * size - 1):
+            v -= 1 << (8 * size)
+        return v
+    pc, delay = start, None
+    for _ in range(limit):
+        w = img.word(pc)
+        nxt, target = pc + 4, None
+        op, rs, rt, rd, imm, simm = _op(w), _rs(w), _rt(w), (w >> 11) & 31, _imm(w), _simm(w)
+        if w == JR_RA:
+            target = "return"
+        elif op == 0:
+            fn, sh = w & 63, (w >> 6) & 31
+            ops = {33: lambda: get(rs) + get(rt), 35: lambda: get(rs) - get(rt), 36: lambda: get(rs) & get(rt),
+                   37: lambda: get(rs) | get(rt), 38: lambda: get(rs) ^ get(rt),
+                   42: lambda: int((get(rs) ^ 0x80000000) < (get(rt) ^ 0x80000000)),
+                   43: lambda: int(get(rs) < get(rt)), 0: lambda: get(rt) << sh, 2: lambda: get(rt) >> sh,
+                   3: lambda: (get(rt) - ((get(rt) & 0x80000000) << 1)) >> sh}
+            if fn in ops:
+                if rd:
+                    regs[rd] = ops[fn]() & 0xFFFFFFFF
+            elif w:
+                raise SystemExit(f"executable: instruction {w:#010x} at {pc:#x} is past this reader")
+        elif op in (4, 5):
+            if (get(rs) == get(rt)) == (op == 4):
+                target = pc + 4 + simm * 4
+        elif op in (6, 7):
+            v = get(rs) - ((get(rs) & 0x80000000) << 1)
+            if (v <= 0) == (op == 6):
+                target = pc + 4 + simm * 4
+        elif op == 1 and rt in (0, 1):
+            v = get(rs) - ((get(rs) & 0x80000000) << 1)
+            if (v < 0) == (rt == 0):
+                target = pc + 4 + simm * 4
+        elif op == 2:
+            target = ((pc + 4) & 0xF0000000) | ((w & 0x3FFFFFF) << 2)
+        elif op == 9:
+            regs[rt] = (get(rs) + simm) & 0xFFFFFFFF
+        elif op == 10:
+            regs[rt] = int((get(rs) - ((get(rs) & 0x80000000) << 1)) < simm)
+        elif op == 11:
+            regs[rt] = int(get(rs) < (simm & 0xFFFFFFFF))
+        elif op == 12:
+            regs[rt] = get(rs) & imm
+        elif op == 13:
+            regs[rt] = get(rs) | imm
+        elif op == 15:
+            regs[rt] = imm << 16
+        elif op in (32, 33, 35, 36, 37):
+            addr = (get(rs) + simm) & 0xFFFFFFFF
+            size = {32: 1, 33: 2, 35: 4, 36: 1, 37: 2}[op]
+            if op == 36:
+                reads.append(addr)
+            regs[rt] = load(addr, size, op in (32, 33)) & 0xFFFFFFFF
+        else:
+            raise SystemExit(f"executable: instruction {w:#010x} at {pc:#x} is past this reader")
+        regs[ZERO] = 0
+        if delay is not None:
+            if delay == "return":
+                return reads
+            pc, delay = delay, target
+            continue
+        pc, delay = nxt, target
+    raise SystemExit("executable: a text routine that does not return")
+
+
+def text_codes(data, table):
+    """how the LCD screens' measuring routine reads text into glyphs: for each
+    byte, the glyph table entry it draws, None for a space, or, for a byte that
+    opens a two-byte code, the entry each second byte draws. Read by running the
+    routine itself over every code, so the answer is the release's own code's."""
+    img = Image(data)
+    starts = set()
+    for at in range(0x800, len(data) - 16, 4):
+        w = struct.unpack_from("<I", data, at)[0]
+        if _op(w) == 36 and _imm(w) == 2:                       # lbu x, 2(y)
+            start = function_start(img, img.addr(at))
+            first = img.word(start) if start else 0
+            if _op(first) == 36 and _rs(first) == 5 and _imm(first) == 0:   # opens on lbu x, 0(a1)
+                starts.add(start)
+    leaves = []
+    for s in sorted(starts):
+        a, table_load = s, False
+        while img.word(a) != JR_RA and _op(img.word(a)) != 3:
+            table_load |= _op(img.word(a)) == 35 and _imm(img.word(a)) == 8      # lw x, 8(font)
+            a += 4
+        if img.word(a) == JR_RA and table_load:
+            leaves.append(s)
+    if len(leaves) != 1:
+        raise SystemExit(f"executable: {len(leaves)} candidate text measuring routines, expected one")
+    obj, font, text_at = 0x10000000, 0x10001000, 0x10002000
+    memory = {obj + k: font for k in range(0, 0x100, 4)}
+    memory.update({font + k: table for k in range(0, 0x100, 4)})
+    def glyphs(codes):
+        mem = dict(memory)
+        for i, c in enumerate(list(codes) + [0] * 4):
+            mem[text_at + i] = c
+        reads = _leaf_run(img, leaves[0], {4: obj, 5: text_at}, mem)
+        out, at = [], [r - table for r in reads if 0 <= r - table < 0x1000]
+        for i, off in enumerate(at):
+            if off == 2:
+                continue                                        # the gap after every glyph
+            out.append(None if off == 6 and 2 not in at[i:i + 2] else (off - 2) // 4)
+        return out
+    codes, escapes = [None] * 256, {}
+    for c in range(1, 256):
+        one, two, three = glyphs([c]), glyphs([c, 1]), glyphs([c, 2])
+        if len(two) == 1 and two != three:
+            escapes[c] = [None] + [glyphs([c, b])[0] for b in range(1, 256)]
+        else:
+            codes[c] = one[0] if one else None
+    return codes, escapes

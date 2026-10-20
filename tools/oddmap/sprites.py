@@ -498,23 +498,23 @@ def glyph_table_windows(exe, w, h):
             hits.append(off)
     return hits
 
-def read_font_texture(levels):
-    """(w, h, texels) of the LCD font, every level's copy held to the first: its 4bpp
-    texels, low nibble first, unpacked to one palette index a texel"""
-    first = None
+def font_chunks(levels):
+    """(level short, Font chunk) of every level carrying the LCD font"""
+    out = []
     for short, lvl in levels:
         if FONT_FILE not in lvl.files:
             continue
         data = parse_chunks(lvl.read(FONT_FILE)).get(("Font", FONT_RID))
         if data is None:
             raise SystemExit(f"sprites: {short}'s {FONT_FILE} holds no Font chunk {FONT_RID}")
-        if first is None:
-            first = (short, data)
-        elif first[1] != data:
-            raise SystemExit(f"sprites: {FONT_FILE} differs between {first[0]} and {short}")
-    if first is None:
+        out.append((short, data))
+    if not out:
         raise SystemExit(f"sprites: no level carries {FONT_FILE}")
-    data = first[1]
+    return out
+
+def font_texture(data):
+    """(w, h, texels) of a Font chunk: its 4bpp texels, low nibble first, unpacked
+    to one palette index a texel"""
     w, h, depth, colours = struct.unpack_from("<hhhh", data, 0)
     if depth != 4 or w % 2:
         raise SystemExit(f"sprites: {FONT_FILE} is {w} wide at {depth} bits a texel, expected an even width at 4")
@@ -524,6 +524,14 @@ def read_font_texture(levels):
         texels[2 * i] = b & 0xF
         texels[2 * i + 1] = b >> 4
     return w, h, bytes(texels)
+
+def read_font_texture(levels):
+    """(w, h, texels) of the LCD font, every level's copy held to the first"""
+    chunks = font_chunks(levels)
+    for short, data in chunks[1:]:
+        if data != chunks[0][1]:
+            raise SystemExit(f"sprites: {FONT_FILE} differs between {chunks[0][0]} and {short}")
+    return font_texture(chunks[0][1])
 
 def read_glyph_table(discs, w, h):
     """the LCD font's glyph table, read off every disc's executable, which must agree"""
