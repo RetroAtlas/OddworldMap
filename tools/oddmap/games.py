@@ -28,6 +28,11 @@ GAMES = {
         # the render layer each FG1 block layer id draws on
         "fg1_layers": (37, 18),
         "path_record": {"rect": 4, "objects": 20, "collision": 12, "overlay": 12, "files_from": "\\S1.OVL;1"},
+        # whether a camera lists an object by its rect's midpoint, else its top-left corner
+        "filed_by_midpoint": False,
+        # a release's camera is its own where any pixel differs: the smallest
+        # edit the census found sits among the re-encodes
+        "camera_gate": None,
         "parse_tables": parse_pathdata_cpp_ao,
     },
     "AE": {
@@ -52,6 +57,10 @@ GAMES = {
                        ("next_2", 0x10, "h"), ("length", 0x12, "h")),
         "fg1_layers": (4, 18, 23, 37),
         "path_record": {"rect": 0, "objects": 12, "collision": 0, "abe": 20},
+        "filed_by_midpoint": True,
+        # a release's camera is its own where some window's mean luma moves this
+        # far, and a camera inside the margin needs a verdict
+        "camera_gate": 16, "camera_margin": 4,
         "parse_tables": parse_pathdata_cpp_ae,
     },
 }

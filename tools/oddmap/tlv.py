@@ -286,8 +286,9 @@ def resolve_path_meta(blob, path_id, tabulated, fmt, cell_w, cell_h):
               f"{meta['coll_count']} in the chunk")
     return meta
 
-def walk_obj_region(blob, obj_off, region_end, game, level_short):
-    """linear walk of the packed TLV region with resync on garbage"""
+def walk_obj_region(blob, obj_off, region_end, game, level_short, positions=None):
+    """linear walk of the packed TLV region with resync on garbage, each record's
+    offset into the region appended to `positions` where one is given"""
     fmt = game["tlv"]
     rect_off, payload = fmt["rect_off"], fmt["extra_fn"]
     names, schema = game["tlv_names"], game["schema"]
@@ -311,6 +312,8 @@ def walk_obj_region(blob, obj_off, region_end, game, level_short):
             if fields:
                 tlv["fields"] = fields
             tlvs.append(tlv)
+            if positions is not None:
+                positions.append(pos - obj_off)
             pos += length
         else:
             pos += 2  # resync

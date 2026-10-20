@@ -5,6 +5,7 @@ executable differently.
 
 The executable is a PS-X EXE: its text from byte 0x800, loaded at the address
 the header holds at 0x18."""
+import difflib
 import re
 import struct
 
@@ -241,3 +242,53 @@ def path_overlays(data, layout):
     if not files:
         raise SystemExit("executable: no file table")
     return {key: files[row["overlay"]] for key, row in path_records(data, layout).items()}
+
+
+# --- code compared across builds ---
+
+def _normalized(w):
+    """an instruction or data word with the addresses a build's linking moves
+    masked: pointers, jump targets, `lui` halves and the immediates that pair
+    with them, keeping those off the stack and zero registers"""
+    if 0x80000000 <= w < 0x80200000:
+        return 0x80000000
+    op = _op(w)
+    if op in (2, 3):
+        return w & 0xFC000000
+    if op == 15:
+        return w & 0xFFFF0000
+    if op in (9, 13, 32, 33, 34, 35, 36, 37, 38, 40, 41, 42, 43, 46, 50, 58) and _rs(w) not in (0, 29):
+        return w & 0xFFFF0000
+    return w
+
+
+def functions(blob):
+    """a blob of code split after every `jr ra` and its delay slot, each piece
+    as its normalized words"""
+    words = struct.unpack_from(f"<{len(blob) // 4}I", blob, 0)
+    out, cur, i = [], [], 0
+    while i < len(words):
+        cur.append(_normalized(words[i]))
+        if words[i] == JR_RA:
+            if i + 1 < len(words):
+                cur.append(_normalized(words[i + 1]))
+            out.append(tuple(cur))
+            cur, i = [], i + 2
+            continue
+        i += 1
+    if cur:
+        out.append(tuple(cur))
+    return out
+
+
+def text(data):
+    """an executable's text, as its header sizes it"""
+    return data[0x800:0x800 + struct.unpack_from("<I", data, 0x1C)[0]]
+
+
+def code_differences(a, b):
+    """(the blocks of differing functions, the functions they span) between two
+    builds of the same code"""
+    sm = difflib.SequenceMatcher(a=functions(a), b=functions(b), autojunk=False)
+    ops = [o for o in sm.get_opcodes() if o[0] != "equal"]
+    return len(ops), sum(max(i2 - i1, j2 - j1) for _, i1, i2, j1, j2 in ops)

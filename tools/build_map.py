@@ -32,6 +32,8 @@ from oddmap.games import GAMES, game_setup
 from oddmap.image import decode_cam, ensure_oxipng, ensure_tools, reencode_pngs
 from oddmap.messages import write_messages
 from oddmap.paths import HERE, SITE
+from oddmap.release import Base, Release, census_lines, compare, compare_code, write_release
+from oddmap.releases import load_releases, order_discs, release_images
 from oddmap.sprites import SHEETS_DIR, write_sprites
 from oddmap.tables import AE_LEVEL_DISPLAY, AO_R2_ZULAGS
 from oddmap.tlv import resolve_path_meta, walk_obj_region
@@ -42,6 +44,38 @@ def write_sprite_data(game_key, archives, out, sheets_rel, abe, line_links, link
     links = write_line_links(game_key, line_links, links_dst, merge)
     write_sprites(game_key, archives, out, sheets_rel, abe, links)
     return links
+
+
+def run_releases(args, ap):
+    """a release's census or its overlay, from its images and the committed base"""
+    table = load_releases()
+    codes = args.release or (sorted(table[args.game]["releases"]) if args.census else None)
+    if not codes:
+        ap.error("--release needs a code, or --census to report on every release")
+    if args.disc and len(codes) != 1:
+        ap.error("--disc names the images of one release")
+    game = game_setup(args.game)
+    ensure_tools()
+    base = Base(args.game, game)
+    base_images = [p for p in os.environ.get(game["env"], "").split(os.pathsep) if p]
+    if base_images:
+        base_images = order_discs(base_images, table[args.game]["base"], f"{args.game} base")
+    out = Path(args.out)
+    for code in codes:
+        entry = table[args.game]["releases"].get(code)
+        if entry is None:
+            ap.error(f"{args.game} has no release {code}")
+        images = release_images(args.game, code, args.disc, table, args.releases_dir)
+        overlay, art, counts = compare(args.game, game, code, entry, images, base)
+        if args.census:
+            code_ = compare_code(base_images, Release(args.game, game, code, entry, images)) if base_images else None
+            print("\n".join(census_lines(overlay, counts, code_)))
+            if not base_images:
+                print(f"  code: not compared, ${game['env']} names no base images")
+        else:
+            dst, files = write_release(args.game, game, overlay, art, out)
+            print("\n".join(census_lines(overlay, counts)))
+            print(f"release -> {dst} ({files} images)")
 
 
 def main():
@@ -61,7 +95,19 @@ def main():
                     help="re-emit every PNG under --out/cams from its own pixels through the installed "
                          "oxipng, restamp sw.js and exit (no disc needed): the committed pixels are the "
                          "builder's own raw input, so this is the encoding half of a rebuild")
+    ap.add_argument("--release", nargs="*", metavar="CODE",
+                    help="build the overlay of the release a code in tools/data/releases.json names, "
+                         "beside the committed base; with --census, report on it instead, every release "
+                         "of the game where no code is given")
+    ap.add_argument("--census", action="store_true",
+                    help="compare releases with the committed base layer by layer and print what differs, "
+                         "writing nothing")
+    ap.add_argument("--releases-dir", help="a directory holding release images, found by their SHA-1s")
     args = ap.parse_args()
+
+    if args.census or args.release is not None:
+        run_releases(args, ap)
+        return
 
     if args.emit_field_data:
         for gk in sorted(GAMES):

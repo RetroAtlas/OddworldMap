@@ -10,6 +10,7 @@ from oddmap import relive
 from oddmap.decomp import load_cache
 from oddmap.games import game_setup
 from oddmap.paths import HERE
+from oddmap.releases import load_releases
 from oddmap.schema import load_enum_labels
 from oddmap.sprites import SHEETS_DIR
 
@@ -139,11 +140,13 @@ CACHE_NAME_LINE = re.compile(r'(?m)^const CACHE_NAME = "[^"]*";$')
 def cams_stamp(cams_dir):
     """name the artwork cache after the cameras and masks, so regenerating one expires
     it and a build that decodes nothing leaves every visitor's copy alone. One worker
-    serves both games, so the stamp answers to either tree. The sprite sheets stay
-    out: a sheet is named for its pixels, so a changed one arrives under a new URL."""
+    serves both games, so the stamp answers to either tree. The sprite sheets and a
+    release's art stay out: each is named for its pixels, so a changed one arrives
+    under a new URL."""
+    own = {SHEETS_DIR} | {code for entry in load_releases().values() for code in entry["releases"]}
     h = hashlib.sha1()
     for rel in sorted(p.relative_to(cams_dir).as_posix() for p in cams_dir.rglob("*.png")
-                      if p.relative_to(cams_dir).parts[1:2] != (SHEETS_DIR,)):
+                      if p.relative_to(cams_dir).parts[1] not in own):
         h.update(rel.encode())
         h.update(hashlib.sha1((cams_dir / rel).read_bytes()).digest())
     return f"cams-{h.hexdigest()[:12]}"
