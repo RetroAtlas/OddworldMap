@@ -1,0 +1,12 @@
+{
+ "game": "AE",
+ "code": "eu",
+ "name": "Europe",
+ "title": "Oddworld: Abe's Exoddus",
+ "language": "English",
+ "executable": "SLES_014.80",
+ "hz": 25,
+ "code_page": "cp437",
+ "note": "The same levels as the North American release, at 25 frames a second. The gas countdowns still count frames by 30, so one of 7200 frames shows 240 seconds and lasts 288.",
+ "paths": {}
+}

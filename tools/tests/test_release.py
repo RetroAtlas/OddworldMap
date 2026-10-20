@@ -221,3 +221,142 @@ class Messages(unittest.TestCase):
             release.overlay_tables = original
         self.assertEqual(main["lcd"], ["", "Work!", "Press \x0b"])
         self.assertEqual(per_path, {"E1/3": {"lcd": {"2": "Press /013"}}})
+
+
+class CommittedOverlays(unittest.TestCase):
+    """every committed overlay still answers to the committed base"""
+
+    def overlays(self):
+        from oddmap.paths import SITE
+        return SITE, sorted(SITE.glob("release_*.json"))
+
+    def test_each_names_a_release_the_table_carries(self):
+        import json
+        from oddmap.releases import load_releases
+        table = load_releases()
+        site, files = self.overlays()
+        for f in files:
+            o = json.loads(f.read_text())
+            self.assertEqual(f.name, f"release_{o['game'].lower()}_{o['code']}.json")
+            self.assertTrue(table[o["game"]]["releases"][o["code"]]["ships"], f.name)
+
+    def test_every_key_and_field_is_the_base_objects(self):
+        import json
+        site, files = self.overlays()
+        for f in files:
+            o = json.loads(f.read_text())
+            data = json.loads((site / f"map_data_{o['game'].lower()}.json").read_text())
+            paths = {f"{L['short']}/{P['id']}": P for L in data["levels"] for P in L["paths"]}
+            for key, entry in o["paths"].items():
+                P = paths[key]
+                tlvs = dict(zip(release.object_keys(P["tlvs"]), P["tlvs"]))
+                for k, d in entry.get("objects", {}).items():
+                    if k.startswith("+"):
+                        continue
+                    self.assertIn(k, tlvs, f"{f.name} {key}")
+                    for field in d.get("fields", {}):
+                        self.assertIn(field, tlvs[k].get("fields", {}), f"{f.name} {key} {k}")
+                for name, cam in entry.get("cams", {}).items():
+                    if cam is not None:
+                        self.assertLess(cam["cell"], P["w"] * P["h"])
+
+    def test_every_image_is_there_and_named_for_its_pixels(self):
+        import json
+        from oddmap.image import read_png
+        from oddmap.sprites import sheet_name
+        site, files = self.overlays()
+        for f in files:
+            o = json.loads(f.read_text())
+            cams = [c for p in o["paths"].values() for c in p.get("cams", {}).values() if c]
+            images = [c["png"] for c in cams if "png" in c]
+            images += [m for c in cams for _x, _y, m in c.get("patches", [])]
+            images += [m for c in cams for _layer, m in c.get("masks", [])]
+            images += list(o.get("sheets", {}).values())
+            for rel in images:
+                w, h, rgba = read_png((site / rel).read_bytes())
+                self.assertEqual(rel.rsplit(".", 2)[1], sheet_name(w, h, rgba), rel)
+
+    def cameras(self):
+        """(game, camera name, its overlay entry, the base's camera) of every
+        camera an overlay draws over one the base holds"""
+        import json
+        site, files = self.overlays()
+        for f in files:
+            o = json.loads(f.read_text())
+            data = json.loads((site / f"map_data_{o['game'].lower()}.json").read_text())
+            paths = {f"{L['short']}/{P['id']}": P for L in data["levels"] for P in L["paths"]}
+            for key, p in o["paths"].items():
+                for name, cam in p.get("cams", {}).items():
+                    base = [c for c in paths[key]["cams"] if c["name"] == name]
+                    if cam and base:
+                        yield o["game"], name, cam, base[0]
+
+    def floor(self, game_key):
+        from oddmap.games import GAMES
+        game = GAMES[game_key]
+        return None if game["camera_gate"] is None else game["camera_gate"] - game["camera_margin"]
+
+    def test_a_camera_without_a_screen_of_its_own_draws_over_the_base_s(self):
+        import json
+        site, files = self.overlays()
+        for f in files:
+            o = json.loads(f.read_text())
+            data = json.loads((site / f"map_data_{o['game'].lower()}.json").read_text())
+            paths = {f"{L['short']}/{P['id']}": P for L in data["levels"] for P in L["paths"]}
+            for key, p in o["paths"].items():
+                for name, cam in p.get("cams", {}).items():
+                    if cam and "png" not in cam:
+                        base = [c for c in paths[key]["cams"] if c["name"] == name]
+                        self.assertEqual(len(base), 1, f"{f.name} {name}")
+                        self.assertTrue(base[0].get("png"), f"{f.name} {name}")
+
+    def test_every_patch_lies_on_the_block_grid_inside_the_base_s_screen(self):
+        import struct
+        site, _files = self.overlays()
+
+        def size(rel):
+            return struct.unpack(">II", (site / rel).read_bytes()[16:24])
+        for _game, _name, cam, under in self.cameras():
+            w, h = size(under["png"])
+            for x, y, rel in cam.get("patches", []):
+                pw, ph = size(rel)
+                self.assertEqual((x % release.BLOCK, y % release.BLOCK), (0, 0), rel)
+                self.assertTrue(0 < pw and 0 < ph and x + pw <= w and y + ph <= h, rel)
+                self.assertTrue(pw % release.BLOCK == 0 or x + pw == w, rel)
+                self.assertTrue(ph % release.BLOCK == 0 or y + ph == h, rel)
+
+    def test_no_patch_lies_inside_another_of_its_camera_s(self):
+        import struct
+        site, _files = self.overlays()
+        for _game, name, cam, _under in self.cameras():
+            rects = [(x, y, *struct.unpack(">II", (site / rel).read_bytes()[16:24])) for x, y, rel in
+                     cam.get("patches", [])]
+            for r in rects:
+                self.assertFalse(any(o != r and o[0] <= r[0] and o[1] <= r[1] and r[0] + r[2] <= o[0] + o[2]
+                                     and r[1] + r[3] <= o[1] + o[3] for o in rects), f"{name} {r}")
+
+    def test_a_camera_the_base_holds_ships_whole_only_where_its_patches_would_cover_it(self):
+        from oddmap.image import read_png
+        site, _files = self.overlays()
+        for game, name, cam, under in self.cameras():
+            if "png" in cam:
+                w, h, px = read_png((site / under["png"]).read_bytes())
+                own = read_png((site / cam["png"]).read_bytes())[2]
+                self.assertEqual(release.patch_cover(px, own, w, h, self.floor(game)), [(0, 0, w, h)], name)
+
+    def test_without_a_gate_the_patches_are_the_rectangles_of_the_blocks_they_change(self):
+        """drawn over the base's screen, none sits off its change or reaches past it"""
+        from oddmap.image import read_png
+        site, _files = self.overlays()
+        for game, name, cam, under in self.cameras():
+            if self.floor(game) is not None or not cam.get("patches"):
+                continue
+            w, h, px = read_png((site / under["png"]).read_bytes())
+            drawn, rects = bytearray(px), []
+            for x, y, rel in cam["patches"]:
+                pw, ph, patch = read_png((site / rel).read_bytes())
+                rects.append((x, y, pw, ph))
+                for r in range(ph):
+                    drawn[((y + r) * w + x) * 4:((y + r) * w + x + pw) * 4] = patch[r * pw * 4:(r + 1) * pw * 4]
+            self.assertEqual(release.patch_rects(release.changed_blocks(px, bytes(drawn), w, h, None), w, h),
+                             rects, name)
