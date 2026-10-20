@@ -251,6 +251,44 @@ def decode_fg1(parts, cam_rgba, w, h):
                     overlay[(yy * w + xx) * 4:(yy * w + xx) * 4 + 4] = rgb555(px)
     return {layer: bytes(o) for layer, o in overlays.items() if any(o[3::4])}, clean
 
+VISIBLE_W = 368
+
+def cam_pixels(cam, tmpdir):
+    """(w, h, RGBA8, FG1 chunks) of a .CAM file's bytes, or None where it holds
+    no image or its image does not decode"""
+    chunks = parse_chunks(cam)
+    bits = next((v for (tag, _), v in chunks.items() if tag == "Bits"), None)
+    if not bits:
+        return None
+    bits_file = Path(tmpdir) / "cam.bits"
+    rgba_file = Path(tmpdir) / "cam.rgba"
+    bits_file.write_bytes(bits)
+    r = subprocess.run([str(CAM2RGBA), str(bits_file), str(rgba_file)], capture_output=True)
+    if r.returncode != 0:
+        return None
+    raw = rgba_file.read_bytes()
+    w, h = struct.unpack_from("<II", raw, 0)
+    rgba = raw[8:]
+    # the MDEC stream pads 368 visible columns up to 384 (24 macroblocks);
+    # crop the junk columns off
+    if w > VISIBLE_W:
+        rgba = b"".join(rgba[y*w*4:(y*w + VISIBLE_W)*4] for y in range(h))
+        w = VISIBLE_W
+    return w, h, rgba, [v for (tag, _), v in chunks.items() if tag == "FG1 "]
+
+def cam_masks(fg_parts, rgba, w, h, layers):
+    """({render layer: mask RGBA}, walked clean, [block layer ids with no render
+    layer]) of a camera's FG1 chunks, `layers` mapping a block's layer id to the
+    layer it draws on"""
+    overlays, clean = decode_fg1(fg_parts, rgba, w, h)
+    masks, stray = {}, []
+    for layer_id, overlay in overlays.items():
+        if layer_id >= len(layers):
+            stray.append(layer_id)
+        else:
+            masks[layers[layer_id]] = overlay
+    return masks, clean, stray
+
 def decode_cam(lvl, cam_name, out_png, tmpdir, layers):
     """write a cam's artwork, and beside it a foreground mask per render layer
     its FG1 blocks draw on, `layers` mapping a block's layer id to that layer"""
@@ -259,36 +297,20 @@ def decode_cam(lvl, cam_name, out_png, tmpdir, layers):
     except KeyError:
         print(f"    ! cam file missing: {cam_name}.CAM")
         return False
-    chunks = parse_chunks(cam)
-    bits = next((v for (tag, _), v in chunks.items() if tag == "Bits"), None)
-    if not bits:
+    decoded = cam_pixels(cam, tmpdir)
+    if decoded is None:
+        if any(tag == "Bits" for tag, _ in parse_chunks(cam)):
+            print(f"    ! cam decode failed: {cam_name}")
         return False
-    bits_file = tmpdir / "cam.bits"
-    rgba_file = tmpdir / "cam.rgba"
-    bits_file.write_bytes(bits)
-    r = subprocess.run([str(CAM2RGBA), str(bits_file), str(rgba_file)], capture_output=True)
-    if r.returncode != 0:
-        print(f"    ! cam decode failed: {cam_name}")
-        return False
-    raw = rgba_file.read_bytes()
-    w, h = struct.unpack_from("<II", raw, 0)
-    rgba = raw[8:]
-    # the MDEC stream pads 368 visible columns up to 384 (24 macroblocks);
-    # crop the junk columns off before writing
-    VISIBLE_W = 368
-    if w > VISIBLE_W:
-        rgba = b"".join(rgba[y*w*4:(y*w + VISIBLE_W)*4] for y in range(h))
-        w = VISIBLE_W
+    w, h, rgba, fg_parts = decoded
     write_png(out_png, w, h, rgba)
 
     # foreground occlusion overlays from the FG1 chunk(s)
-    fg_parts = [v for (tag, _), v in chunks.items() if tag == "FG1 "]
-    overlays, clean = decode_fg1(fg_parts, rgba, w, h)
+    masks, clean, stray = cam_masks(fg_parts, rgba, w, h, layers)
     if not clean:
         print(f"    ! FG1 stream not walked clean: {cam_name}")
-    for layer_id, overlay in overlays.items():
-        if layer_id >= len(layers):
-            print(f"    ! FG1 layer {layer_id} has no render layer: {cam_name}")
-            continue
-        write_png(out_png.with_name(f"{out_png.stem}_fg{layers[layer_id]}.png"), w, h, overlay, keep_alpha=True)
+    for layer_id in stray:
+        print(f"    ! FG1 layer {layer_id} has no render layer: {cam_name}")
+    for layer, mask in masks.items():
+        write_png(out_png.with_name(f"{out_png.stem}_fg{layer}.png"), w, h, mask, keep_alpha=True)
     return True
