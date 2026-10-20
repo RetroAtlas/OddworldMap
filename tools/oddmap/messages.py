@@ -119,32 +119,29 @@ def pointer_tables(blob, count, base):
         run = 0
     return found
 
-def extract_messages(game_key, discs, overlays=None, controls=MESSAGE_BUTTONS):
-    """the game's message tables, read from every overlay carrying them.
+def overlay_tables(game_key, discs, overlays=None):
+    """{table: {overlay: its strings}} over every overlay carrying a table.
 
     `overlays` limits the sweep to the overlays the game's paths load, where the
     executable names them: a disc can carry an overlay no path loads, built
-    from older sources. Each table is compiled into every overlay whose level
-    needs it, so the copies are a free cross-check: they must all agree, and one
-    disagreeing means the tables are per-level and nothing here holds. Every
-    overlay of a build loads at one address, which the tables opening on the
-    lead give and the others are found at."""
+    from older sources. Every overlay of a build loads at one address, which
+    the tables opening on the lead give and the others are found at."""
     specs = sorted(MESSAGE_TABLES[game_key].items())
     blobs = []
     for disc in discs:
         for ovl in sorted(f for f in disc.files if f.endswith(".OVL")):
             if overlays is None or ovl in overlays:
                 blobs.append((ovl, disc.read(*disc.files[ovl])))   # read once, offered to every table
-    seen = {name: {} for name, _ in specs}
+    found = {name: {} for name, _ in specs}
     bases = set()
     for name, (count, lead) in specs:
         if not lead:
             continue
         for ovl, blob in blobs:
-            found = lead_table(blob, count)
-            if found:
-                seen[name].setdefault(tuple(found[0]), []).append(ovl)
-                bases.add(found[1])
+            table = lead_table(blob, count)
+            if table:
+                found[name].setdefault(ovl, table[0])
+                bases.add(table[1])
     if len(bases) > 1:
         raise RuntimeError(f"{game_key}: the overlays load at {len(bases)} addresses: "
                            + ", ".join(hex(b) for b in sorted(bases)))
@@ -152,28 +149,49 @@ def extract_messages(game_key, discs, overlays=None, controls=MESSAGE_BUTTONS):
         if lead:
             continue
         for ovl, blob in blobs:
-            for table in (pointer_tables(blob, count, base) for base in bases):
-                for found in table:
-                    seen[name].setdefault(tuple(found), []).append(ovl)
+            for base in bases:
+                tables = pointer_tables(blob, count, base)
+                if len(tables) > 1:
+                    raise RuntimeError(f"{game_key}: {ovl} holds {len(tables)} candidate {name} tables")
+                if tables:
+                    found[name][ovl] = tables[0]
+    return found
+
+def clean_table(game_key, name, table, controls=MESSAGE_BUTTONS):
+    """a table's messages without the scroll-in lead, every code below a space
+    one of `controls`"""
+    # the lead is the font's space; stripping whitespace would also eat a
+    # trailing button code, 0x09-0x0d being both
+    lead = table[1][:1] if MESSAGE_TABLES[game_key][name][1] and len(table) > 1 and table[1] else " "
+    out = [s.strip(lead) for s in table]
+    for msg in out:
+        unknown = {c for c in msg if ord(c) < 0x20 and ord(c) not in controls}
+        if unknown:
+            raise RuntimeError(f"{game_key} {name}: unnamed button code(s) "
+                               f"{sorted(hex(ord(c)) for c in unknown)} in {msg!r}")
+    return out
+
+def extract_messages(game_key, discs, overlays=None, controls=MESSAGE_BUTTONS):
+    """the game's message tables, read from every overlay carrying them.
+
+    Each table is compiled into every overlay whose level needs it, so the
+    copies are a free cross-check: they must all agree, and one disagreeing
+    means the tables are per-level and nothing here holds."""
     out = {}
-    for name, (count, _) in specs:
-        if not seen[name]:
+    for name, copies in sorted(overlay_tables(game_key, discs, overlays).items()):
+        count = MESSAGE_TABLES[game_key][name][0]
+        variants = {}
+        for ovl, table in copies.items():
+            variants.setdefault(tuple(table), []).append(ovl)
+        if not variants:
             raise RuntimeError(f"{game_key}: no overlay carries the {name} message table")
-        if len(seen[name]) > 1:
+        if len(variants) > 1:
             raise RuntimeError(f"{game_key}: overlays disagree on the {name} message table: "
-                               + "; ".join(",".join(v) for v in seen[name].values()))
-        # the scroll-in lead is spaces; stripping whitespace would also eat a
-        # trailing button code, 0x09-0x0d being both
-        table = [s.strip(" ") for s in next(iter(seen[name]))]
-        for msg in table:
-            unknown = {c for c in msg if ord(c) < 0x20 and ord(c) not in controls}
-            if unknown:
-                raise RuntimeError(f"{game_key} {name}: unnamed button code(s) "
-                                   f"{sorted(hex(ord(c)) for c in unknown)} in {msg!r}")
+                               + "; ".join(",".join(v) for v in variants.values()))
+        table = clean_table(game_key, name, list(next(iter(variants))), controls)
         out[name] = table
-        copies = sum(len(v) for v in seen[name].values())
         print(f"  {name}: {sum(1 for s in table if s)} of {count} messages, "
-              f"{copies} identical copies")
+              f"{len(copies)} identical copies")
     return out
 
 def message_json(tables):
