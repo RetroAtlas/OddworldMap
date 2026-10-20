@@ -508,6 +508,12 @@ class TablesByShape(unittest.TestCase):
 
 
 class MessageJson(unittest.TestCase):
+    def test_a_backslash_drawn_as_a_glyph_survives_beside_a_button_code(self):
+        tables = {"lcd": ["a\\b\x0bc", "\\"]}
+        text = messages.message_json(tables)
+        self.assertEqual(json.loads(text), tables)
+        self.assertIn("\\u000b", text)
+
     def test_a_button_code_is_written_as_an_escape_not_as_whitespace(self):
         text = messages.message_json({"lcd": ["hold \x0a then \x09"]})
         self.assertIn("hold \\u000a then \\u0009", text)

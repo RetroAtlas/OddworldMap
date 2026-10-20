@@ -194,17 +194,17 @@ def extract_messages(game_key, discs, overlays=None, controls=MESSAGE_BUTTONS):
               f"{len(copies)} identical copies")
     return out
 
+SHORTHAND = re.compile(r"(?<!\\)((?:\\\\)*)\\([btnfr])")
+
 def message_json(tables):
-    """the tables as JSON, every button code written \\u00XX.
+    """the tables as JSON, every code below a space written \\u00XX.
 
     json's shorthand for 0x08-0x0d would put \\n and \\t in the middle of a
     sentence, where they read as whitespace rather than as the button they are.
-    No message contains a backslash, which is what makes rewriting them exact."""
-    text = json.dumps(tables, indent=1)
-    for shorthand, code in (("b", 0x08), ("t", 0x09), ("n", 0x0A),
-                            ("f", 0x0C), ("r", 0x0D)):
-        text = text.replace("\\" + shorthand, "\\u%04x" % code)
-    return text
+    A shorthand is rewritten only where its backslash is no escaped one, so a
+    release whose font draws a glyph at the backslash's code reads exactly."""
+    codes = {"b": 0x08, "t": 0x09, "n": 0x0A, "f": 0x0C, "r": 0x0D}
+    return SHORTHAND.sub(lambda m: m.group(1) + "\\u%04x" % codes[m.group(2)], json.dumps(tables, indent=1))
 
 def write_messages(game_key, discs, dst, overlays=None):
     """the viewer's message sidecar for one game: {table: [message by id]}.

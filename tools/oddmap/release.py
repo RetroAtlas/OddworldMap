@@ -15,7 +15,7 @@ from concurrent.futures import ProcessPoolExecutor
 from oddmap.disc import Disc, Lvl, parse_chunks
 from oddmap.exe import code_differences, executable, frame_rate, path_overlays, path_records, text
 from oddmap.image import cam_masks, cam_pixels, read_png, write_png
-from oddmap.messages import MESSAGE_BUTTONS, clean_table, overlay_tables
+from oddmap.messages import MESSAGE_BUTTONS, clean_table, message_json, overlay_tables
 from oddmap.paths import HERE, SITE
 from oddmap.sprites import (FONT_FAMILY, SHEETS_DIR, build_sprites, family_sheet, index_map_rgba,
                             read_dice, read_font, sheet_name)
@@ -636,7 +636,7 @@ def write_release(game_key, game, overlay, art, out):
     with ProcessPoolExecutor() as pool:
         list(pool.map(_art_job, jobs, chunksize=4))
     dst = out / f"release_{game_key.lower()}_{code}.json"
-    dst.write_text(json.dumps(overlay, indent=1))
+    dst.write_text(message_json(overlay))
     return dst, len(jobs)
 
 
