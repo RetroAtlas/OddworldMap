@@ -80,3 +80,45 @@ test("storing a family's sprite sheet retires that family's other sheets and wha
   await expect.poll(stored, { timeout: 20000 }).toEqual([...kept, ...requested].sort());
   expect(errors).toEqual([]);
 });
+
+test("storing a release's file retires that file's earlier copies, and nothing else", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  const [[x, y, own]] = JSON.parse(pub("release_ao_jp.json")).paths["R1/15"].cams.R1P15C02.patches;
+  // a stale copy of the same patch, a patch of the same screen at another
+  // place, one of a file of another name the page never asks for, and the
+  // base's own picture of the screen
+  const OLD = `cams/ao/jp/R1/R1P15C02_${x}_${y}.000000000000.png`;
+  const PLACE = `cams/ao/jp/R1/R1P15C02_${x + 16}_${y}.000000000000.png`;
+  const OTHER = "cams/ao/jp/R2/R2P01C01_fg37.000000000000.png";
+  const BASE = "cams/ao/R1/R1P15C02.png";
+  await page.goto("/#AO/R1/15/2470/180/3.00/jp");
+  await settle(page, VIEW);
+  await page.click("#settingsBtn");
+  await page.check("#sCacheMap");
+  await page.click("#settingsClose");
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+  await page.evaluate(
+    async ({ name, own, seeded }) => {
+      const cache = await caches.open(name);
+      await cache.delete(new URL(own, location.href).href);
+      for (const f of seeded) await cache.put(new URL(f, location.href).href, new Response(f));
+      await (await fetch(own)).blob();
+    },
+    { name: CACHE_NAME, own, seeded: [OLD, PLACE, OTHER, BASE] },
+  );
+  const stored = () =>
+    page.evaluate(
+      async ({ name, files }) => {
+        const keys = await (await caches.open(name)).keys();
+        return keys
+          .map((k) => new URL(k.url).pathname.slice(1))
+          .filter((p) => files.includes(p))
+          .sort();
+      },
+      { name: CACHE_NAME, files: [own, OLD, PLACE, OTHER, BASE] },
+    );
+  await expect.poll(stored, { timeout: 20000 }).toEqual([BASE, OTHER, PLACE, own].sort());
+  expect(errors).toEqual([]);
+});

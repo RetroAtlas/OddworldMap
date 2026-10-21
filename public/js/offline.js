@@ -2,11 +2,12 @@
 // setting goes on, and the Settings panel that stores a whole game's artwork in
 // one go, so a place you have never opened still opens with no connection.
 
-import { CAM_FILE_BYTES, MASK_FILE_BYTES, SHEET_FILE_BYTES } from "./config.js";
+import { CAM_FILE_BYTES, MASK_FILE_BYTES, PATCH_FILE_BYTES, SHEET_FILE_BYTES } from "./config.js";
 import { GAME_FILES, GAME_IDS, loadSprites } from "./data.js";
 import { hasAnyStoredEdits } from "./edits.js";
 import { $ } from "./dom.js";
 import { camFiles } from "./model.js";
+import { releaseSprites } from "./release.js";
 import {
   MARKER_CACHE,
   displayLabel,
@@ -25,9 +26,11 @@ const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 const bytesOf = (url) =>
   /\/sprites\//.test(url)
     ? SHEET_FILE_BYTES
-    : /_fg\d+\.png$/.test(url)
+    : /_fg\d+(\.[0-9a-f]{12})?\.png$/.test(url)
       ? MASK_FILE_BYTES
-      : CAM_FILE_BYTES;
+      : /_\d+_\d+\.[0-9a-f]{12}\.png$/.test(url)
+        ? PATCH_FILE_BYTES
+        : CAM_FILE_BYTES;
 const estimateMB = (urls) => Math.round(urls.reduce((n, u) => n + bytesOf(u), 0) / 1e6);
 
 // the worker only answers fetches on a page it controls, so nothing is worth
@@ -62,7 +65,13 @@ async function warmShell() {
     "index.html",
     ...Object.values(GAME_FILES),
     ...GAME_IDS.map((id) => `sprites_${id.toLowerCase()}.json`),
-    ...GAME_IDS.filter(hasAnyStoredEdits).map((id) => `relive_export_${id.toLowerCase()}.json`),
+    "releases.json",
+    ...state.games
+      .filter((G) => G.release)
+      .map((G) => `release_${G.id.toLowerCase()}_${G.release.code}.json`),
+    ...GAME_IDS.filter(
+      (id) => hasAnyStoredEdits(id) || state.games.some((G) => G.id === id && G.release),
+    ).map((id) => `relive_export_${id.toLowerCase()}.json`),
   ];
   const urls = new Set(named.map((f) => new URL(f, location.href).href));
   for (const e of performance.getEntriesByType("resource")) {
@@ -100,17 +109,35 @@ const idle = (row) => !row.running && !row.queued;
 const pending = (row) => idle(row) && !complete(row);
 const allUrls = () => [...rows.values()].flatMap((row) => row.urls);
 
-function addSheets(row, sprites) {
-  for (const f of Object.values(sprites.sheets)) {
+// a game's files as the release in hand draws them: its screens and masks,
+// and its sheets once the sidecar is in, a release's own over the base's
+function listFiles(row) {
+  row.urls = camFiles(row.G).map((f) => new URL(f, location.href).href);
+  if (!row.sprites) return;
+  const set = row.G.release ? releaseSprites(row.sprites, row.G) : row.sprites;
+  for (const f of Object.values(set.sheets)) {
     const url = new URL(f, location.href).href;
     if (!row.urls.includes(url)) row.urls.push(url);
   }
 }
 
+// a row follows its game's release in hand, between downloads
+function retarget(row, G) {
+  row.G = G;
+  row.name = displayLabel(G.id, G.game, true);
+  row.nameEl.textContent = row.name;
+  row.bar.setAttribute("aria-label", `${row.name} artwork stored`);
+  listFiles(row);
+}
+
 function buildRows() {
   const host = $("oflRows");
   for (const G of state.games) {
-    if (rows.has(G.id)) continue;
+    const had = rows.get(G.id);
+    if (had) {
+      if (had.G !== G && idle(had)) retarget(had, G);
+      continue;
+    }
     const el = document.createElement("div");
     el.className = "ofl-row";
     const name = document.createElement("div");
@@ -137,8 +164,11 @@ function buildRows() {
     host.append(el);
     const row = {
       id: G.id,
+      G,
       name: name.textContent,
-      urls: camFiles(G).map((f) => new URL(f, location.href).href),
+      nameEl: name,
+      urls: [],
+      sprites: null,
       stat,
       btn,
       bar,
@@ -152,6 +182,7 @@ function buildRows() {
       abort: null,
     };
     btn.onclick = () => (idle(row) ? start(row) : stop(row));
+    listFiles(row);
     rows.set(G.id, row);
   }
   askSheets();
@@ -166,7 +197,8 @@ function askSheets() {
     row.asked = true;
     loadSprites(row.id, row.id !== state.data.id).then((d) => {
       if (!d) return;
-      addSheets(row, d);
+      row.sprites = d;
+      listFiles(row);
       refresh();
     });
   }
@@ -277,12 +309,12 @@ async function download(row) {
   // housekeeping, which is free to evict a merely-cached origin
   navigator.storage?.persist?.().catch(() => {});
   // the sheets are known only once the sidecar is in, so the list is settled here
-  const sprites = await loadSprites(row.id);
-  if (!sprites) {
+  row.sprites = await loadSprites(row.id);
+  if (!row.sprites) {
     row.error = "The sprite sheets could not be listed: reload the page and try again";
     return true;
   }
-  addSheets(row, sprites);
+  listFiles(row);
   const have = await storedUrls();
   const todo = row.urls.filter((url) => !have.has(url));
   row.done = row.urls.length - todo.length;

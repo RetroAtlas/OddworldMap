@@ -13,6 +13,10 @@ const CACHE_NAME = "cams-342b2d9b482c";
 // no family's sheet
 const SHEET = /^\/cams\/([^/]+)\/sprites\/([A-Z][A-Za-z0-9]*)\.([0-9a-f]{12})\.png$/;
 const SPRITES = /^\/cams\/([^/]+)\/sprites\//;
+// a release's own art sits under its code, each file named for what it is and
+// for its pixels, outside the hash too: storing one retires the release's other
+// files of the same name
+const RELEASE_ART = /^\/cams\/([^/]+)\/([a-z]{2}(?:-r\d+)?)\/(.+)\.([0-9a-f]{12})\.png$/;
 // the shell bucket self-refreshes per request, so its name never has to move;
 // bumping it is only for retiring an incompatible storage scheme
 const SHELL = "shell-v1";
@@ -20,9 +24,10 @@ const SHELL = "shell-v1";
 // unregistration can't stop a controlling worker until reload, and a
 // module flag wouldn't survive an idle-worker restart
 const ENABLED = "cams-on";
-// has to clear both games' complete artwork (3291 files), which the page can
-// ask for outright; a cap under that would evict the download's own head
-const MAX_ENTRIES = 4000; // ≈280 MB
+// has to clear the complete artwork (4426 files) of both games and every
+// release, which the page can ask for outright; a cap under that would evict
+// the download's own head
+const MAX_ENTRIES = 5000; // ≈350 MB
 const TRIM_SLACK = 50; // hysteresis so trim doesn't scan keys() on every put
 
 self.addEventListener("install", () => self.skipWaiting());
@@ -77,6 +82,15 @@ async function retireSheets(cache, request) {
   }
 }
 
+async function retireReleaseArt(cache, request) {
+  const [, game, code, file, name] = RELEASE_ART.exec(new URL(request.url).pathname) || [];
+  if (!name) return;
+  for (const key of await cache.keys()) {
+    const [, g, c, f, n] = RELEASE_ART.exec(new URL(key.url).pathname) || [];
+    if (g === game && c === code && f === file && n !== name) await cache.delete(key);
+  }
+}
+
 async function camResponse(event) {
   let cache = null;
   try {
@@ -93,6 +107,7 @@ async function camResponse(event) {
     try {
       await cache.put(event.request, response.clone());
       event.waitUntil(retireSheets(cache, event.request).catch(() => {}));
+      event.waitUntil(retireReleaseArt(cache, event.request).catch(() => {}));
       event.waitUntil(trim(cache).catch(() => {}));
     } catch {
       /* the response still counts even if it can't be stored */
