@@ -1,6 +1,6 @@
 # 100. Every release of both games beside NTSC-U
 
-**Status:** open · slice 1 shipped 2026-10-20: the mechanism and the four overlays the site carries first; the viewer next · **Effort:** large (one census and build that any release runs through, a viewer layer, the Japanese character tables) · **Where:** `tools/build_map.py` and `tools/oddmap/` for the release build, a hand-curated release table under `tools/data/`, an overlay and its art per game and release under `public/`, the viewer's datasets, permalinks, edit store, marks and clock, and `public/sw.js`
+**Status:** open · slices 1 and 2 shipped 2026-10-20 and 2026-10-21: the mechanism, the four overlays the site carries first and the release in the viewer; the Japanese code pages next · **Effort:** large (one census and build that any release runs through, a viewer layer, the Japanese character tables) · **Where:** `tools/build_map.py` and `tools/oddmap/` for the release build, a hand-curated release table under `tools/data/`, an overlay and its art per game and release under `public/`, the viewer's datasets, permalinks, edit store, marks and clock, and `public/sw.js`
 
 **Filed:** 2026-10-20, from a census of every retail release of both games against the North American ones.
 
@@ -221,6 +221,20 @@ Where the slice drifted from the design:
 - **Oddysee's camera rule counts the masks too:** with no gate, any difference in the art or in a mask makes a camera the release's.
 - **A release is read over the levels the base draws,** so the test level the Japanese and three localized Exoddus discs carry stays out of the fonts and sprites.
 - **The builder fails two things an overlay could not carry:** a release that lists the base's objects in another order, since an addition stands after its `after` in the base's order, and an Exoddus path whose Abe start differs, which the overlay has no field for and the level editor's export reads off the base. Every release in the table passes both.
+
+## Shipped (2026-10-21): slice 2
+
+The release in the viewer. `releases.json`, written from the release table by every build, names what the site carries, and the game's row offers it; a release's dataset is its overlay stood up over the base as it shipped (`release.js`), and choosing one swaps it in with the place and the view kept, its title on the game button and its note in its button's tooltip. The link carries it as its bare code, an object link names the base's origin, and a code the site does not carry lands on the base with a toast. Each release keeps its own edit store, runs the live map and reads its frame counts at its own clock, draws its own sprites, font and screens, and is marked in violet behind a Display toggle; the worker stores its art beside the base's and retires a file's earlier copies, and the offline rows follow the release in hand.
+
+Where the slice drifted from the design:
+
+- **The page learns what the site carries from an index,** `releases.json`, which the design left implicit: the overlays name themselves, but the switch has to be offered before any is fetched. A test re-emits it and holds every release it lists to a committed overlay.
+- **A release's note sits in its button's tooltip** rather than beside the switch, where a paragraph appearing and going under the row would move the whole sidebar whenever a release was chosen.
+- **The release buttons are named for where each was sold,** `USA`, `Europe` and `Japan`, the full name where two were sold in one place, and the full-names setting leaves them as they are.
+- **The mark also draws the collision lines a release drops,** as dotted ghosts beside the objects it drops, and its words follow the toggle, so every Display toggle announces its flip (`show-changed`). The spoken place sentence names the release and says when it changes the path whatever the toggle says.
+- **The European text has none of its own to read yet:** the European editions the site carries read their words as the base does, so IBM 437's high half is in place for the localized ones. A Japanese sign answers one line of no text and a note saying it is in Japanese, which the tooltip, the screen list and a search hit share, and search leaves it out.
+- **Exports follow the release:** every file is named for it, and the level editor's document of a path whose lines the release changes joins the release's own links, carried whole beside its lines.
+- **The cache cap holds every release's art too,** 5000 entries for 4,426 files.
 
 ## Ruled out
 
