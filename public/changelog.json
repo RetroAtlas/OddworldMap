@@ -1,6 +1,13 @@
 {
  "entries": [
   {
+   "date": "2026-10-21",
+   "tag": "new",
+   "flagship": true,
+   "title": "The European and Japanese releases join the map",
+   "detail": "Both games now come in three releases, chosen under the game buttons: the North American one the map is built on, and the European and Japanese ones, each read off its own discs. Oddysee's European release reworks hundreds of collision lines and dozens of objects, and redraws a few screens. Abe '99, the Japanese Exoddus, adds floors in Necrum Mines and gas countdowns in the Brewery Ender, and reworks doors and switches in FeeCo and Bonewerkz. Both Japanese releases redraw their signs in Japanese and scroll their boards in kana, in their own fonts. Switching keeps your place, and the European releases run at their own 25 frames a second. A violet mark shows what a release changes: an object moved or set differently, a ghost where it drops one, its own collision lines, and a tag on each screen it redraws. A link carries the release, so whoever opens it sees the same one. The Japanese signs can't be read as text yet, so search leaves them out for now."
+  },
+  {
    "date": "2026-10-15",
    "tag": "fixed",
    "tiny": true,
