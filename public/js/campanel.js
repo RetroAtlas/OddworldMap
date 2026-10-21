@@ -173,7 +173,7 @@ function list(cam, focus) {
       body.appendChild(wrap);
       // the whole rotation, outside the row so a board with a pool doesn't
       // grow the jump-to target
-      const says = objectMessages(state.data.id, t);
+      const says = objectMessages(state.data, t, state.path);
       if (says) {
         const said = document.createElement("div");
         said.className = "cp-said";
@@ -181,7 +181,7 @@ function list(cam, focus) {
           ? says
               .map(
                 ({ text, note }) =>
-                  `<div class="said">${note ? `<span class="note">${esc(note)}</span> ` : ""}${esc(`“${text}”`)}</div>`,
+                  `<div class="said">${note ? `<span class="note">${esc(note)}</span> ` : ""}${text == null ? "" : esc(`“${text}”`)}</div>`,
               )
               .join("")
           : `<div class="e">${esc(DARK_NOTE)}</div>`;

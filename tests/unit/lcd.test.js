@@ -225,7 +225,8 @@ test("lcd: a shipped board draws one text record on the engine's layer, or nothi
       const recs = spriteDraws(data[g], lvl, path, t, sheets[g]);
       if (recs.length === 0) {
         dark++;
-        if (g === "AO") assert.deepEqual(objectMessages(g, t), [], `${g} ${t.x1},${t.y1} dark`);
+        if (g === "AO")
+          assert.deepEqual(objectMessages({ id: g }, t), [], `${g} ${t.x1},${t.y1} dark`);
         continue;
       }
       drawn++;
@@ -236,7 +237,7 @@ test("lcd: a shipped board draws one text record on the engine's layer, or nothi
       assert.equal(r.cycle.brain, "lcd");
       assert.deepEqual([r.cycle.p.x1, r.cycle.p.x2], [t.x1, t.x2]);
       assert.equal(r.cycle.p.y, Math.trunc((t.y1 + t.y2) / 2) - 7);
-      if (g === "AO") assert.ok(objectMessages(g, t).length > 0);
+      if (g === "AO") assert.ok(objectMessages({ id: g }, t).length > 0);
       const e = textAt(r, sheets[g], 600);
       assert.ok(LCD_PALETTES[g].includes(e.palette));
       for (const gl of e.run) assert.ok(gl.x < t.x2 && gl.x >= t.x1 - 21, `${g} glyph inside`);
@@ -253,16 +254,16 @@ test("lcd: the Mines board's first letter reaches its right edge on tick 36", ()
   const p1 = mi.paths.find((p) => p.id === 1);
   const t = p1.tlvs.find((o) => o.name === "LCD" && o.x1 === 1159);
   const [r] = spriteDraws(data.AE, mi, p1, t, sheets.AE);
-  assert.equal(lcdMessages("AE")[t.fields.message_1_id][0], "T");
+  assert.equal(lcdMessages({ id: "AE" })[t.fields.message_1_id][0], "T");
   assert.deepEqual(textAt(r, sheets.AE, 35).run, []);
   const [first] = textAt(r, sheets.AE, 36).run;
   assert.deepEqual([first.g, first.x], [glyphOf(84), 1361]);
 });
 
 test("lcd: the raw table is on hand for the painter and null before it lands", () => {
-  assert.equal(lcdMessages("AO").length, 90);
-  assert.equal(lcdMessages("AE").length, 101);
-  assert.equal(lcdMessages("XX"), null);
+  assert.equal(lcdMessages({ id: "AO" }).length, 90);
+  assert.equal(lcdMessages({ id: "AE" }).length, 101);
+  assert.equal(lcdMessages({ id: "XX" }), null);
 });
 
 // ---- the tally boards ------------------------------------------------------

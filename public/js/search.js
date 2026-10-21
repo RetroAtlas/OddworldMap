@@ -22,8 +22,9 @@ const HIT_CAP = 1500,
 let searchTimer = null;
 let searchScope = "all"; // all | game | level | path (relative to the current selection)
 
-// one cache per representation: the blob varies only with the raw flag (a TLV's
-// game is fixed), so a WeakMap key needs no invalidation as datasets come and go
+// one cache per representation and dataset: the blob varies only with the raw
+// flag and with the release whose words a sign reads (an object a release leaves
+// alone stands in both), so WeakMap keys need no invalidation as datasets come and go
 const searchTextCache = { raw: new WeakMap(), pretty: new WeakMap() };
 
 // search matches the full field set regardless of the user's display prefs, so
@@ -31,11 +32,14 @@ const searchTextCache = { raw: new WeakMap(), pretty: new WeakMap() };
 // value transform by the field's per-game type; raw follows the display setting
 // so a query matches whichever representation the user sees (raw ints or words).
 // A sign's own words join the blob, so a remembered slogan finds the board.
-function tlvSearchText(t, game, raw) {
-  const cache = raw ? searchTextCache.raw : searchTextCache.pretty;
+function tlvSearchText(t, G, P, raw) {
+  const byData = raw ? searchTextCache.raw : searchTextCache.pretty;
+  let cache = byData.get(G);
+  if (!cache) byData.set(G, (cache = new WeakMap()));
   let s = cache.get(t);
   if (s === undefined) {
-    const says = (objectMessages(game, t) ?? []).map((m) => m.text).join(" ");
+    const game = G.id;
+    const says = (objectMessages(G, t, P) ?? []).map((m) => m.text ?? "").join(" ");
     s = (t.name + " " + extrasText(t, " ", { mode: "all", game, raw }) + " " + says).toLowerCase();
     cache.set(t, s);
   }
@@ -192,7 +196,7 @@ function runSearch(q) {
       for (const P of L.paths) {
         const shown = pathVisible(P);
         for (const t of P.tlvs)
-          if (matchesQuery(tlvSearchText(t, G.id, raw), orGroups)) {
+          if (matchesQuery(tlvSearchText(t, G, P, raw), orGroups)) {
             const h = { G, L, P, t };
             if (!scopeAccepts(h)) continue;
             if (!shown) {

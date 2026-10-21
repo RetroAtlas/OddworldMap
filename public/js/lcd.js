@@ -62,19 +62,29 @@ export function glyphOf(code) {
   if (code >= 0x07 && code <= 0x1f) return code + 137;
   return -1;
 }
+// a code's glyph in a font: a release that reads its codes its own way carries
+// how, the rest read as glyphOf does
+export const codeGlyph = (font, code) => (font.codes ? (font.codes[code] ?? -1) : glyphOf(code));
+// a string as the glyphs the engine draws for it, an escape byte and the byte
+// after it reading as one
+export function glyphRun(font, text) {
+  const run = [];
+  for (let i = 0; i < text.length; i++) {
+    const escape = font.escapes?.[text.charCodeAt(i)];
+    if (escape && i + 1 < text.length) run.push(escape[text.charCodeAt(++i)] ?? -1);
+    else run.push(codeGlyph(font, text.charCodeAt(i)));
+  }
+  return run;
+}
 // a glyph's [x, y, w, h] on the font's texture; one past the table draws nothing
 export const glyphRect = (font, g) => font.glyphs[g] ?? NO_GLYPH;
-// how far the pen moves past a code: the glyph's width and the gap, or the space
-export function advanceOf(font, code) {
-  const g = glyphOf(code);
-  return g < 0 ? font.glyphs[1][2] : glyphRect(font, g)[2] + font.glyphs[0][2];
-}
+// how far the pen moves past a glyph: its width and the gap, or the space
+export const advance = (font, g) =>
+  g < 0 ? font.glyphs[1][2] : glyphRect(font, g)[2] + font.glyphs[0][2];
+export const advanceOf = (font, code) => advance(font, codeGlyph(font, code));
 // a string's width as the engine measures one, the gap after every glyph counted
-export function measureOf(font, text) {
-  let w = 0;
-  for (let i = 0; i < text.length; i++) w += advanceOf(font, text.charCodeAt(i));
-  return w;
-}
+export const measureOf = (font, text) =>
+  glyphRun(font, text).reduce((w, g) => w + advance(font, g), 0);
 const fontTall = (font) => Math.max(...font.glyphs.map((g) => g[3]));
 
 const flicker = (st, rnd) =>
@@ -90,11 +100,13 @@ export function lcdIds(p) {
   return ids;
 }
 
+// a message opens on the lead in whatever code its release spaces with
 function show(st, id) {
-  const raw = st.p.table[id] ?? "";
-  st.msg = raw ? " ".repeat(LCD_LEAD) + raw : "";
+  const { font, table } = st.p;
+  const raw = table[id] ?? "";
+  st.run = raw ? glyphRun(font, String.fromCharCode(font.lead ?? 0x20).repeat(LCD_LEAD) + raw) : [];
   st.pos = 0;
-  st.cw = advanceOf(st.p.font, st.msg.charCodeAt(0) || 0);
+  st.cw = advance(font, st.run[0] ?? -1);
 }
 
 STARTS.lcd = (st) => {
@@ -110,7 +122,7 @@ BRAINS.lcd = (st, now, rnd) => {
   if (st.xo > st.cw) {
     st.xo -= st.cw;
     st.pos++;
-    if (st.pos >= st.msg.length) {
+    if (st.pos >= st.run.length) {
       st.n++;
       let id;
       if (st.n === 1) id = randomRange(st, rnd, p.pool[0], p.pool[1]);
@@ -120,18 +132,14 @@ BRAINS.lcd = (st, now, rnd) => {
       }
       show(st, id);
       st.pal ^= 1;
-    } else st.cw = advanceOf(p.font, st.msg.charCodeAt(st.pos));
+    } else st.cw = advance(p.font, st.run[st.pos]);
   }
   const run = [];
   let x = p.x1 - st.xo;
-  for (let i = st.pos; i < st.msg.length && x < p.x2; i++) {
-    const g = glyphOf(st.msg.charCodeAt(i));
-    if (g < 0) {
-      x += p.font.glyphs[1][2];
-      continue;
-    }
-    run.push({ g, x, dy: 0, rgb: flicker(st, rnd) });
-    x += glyphRect(p.font, g)[2] + p.font.glyphs[0][2];
+  for (let i = st.pos; i < st.run.length && x < p.x2; i++) {
+    const g = st.run[i];
+    if (g >= 0) run.push({ g, x, dy: 0, rgb: flicker(st, rnd) });
+    x += advance(p.font, g);
   }
   st.text = {
     kind: "text",
@@ -151,10 +159,9 @@ STARTS.tally = (st) => {
   lines.forEach((text, row) => {
     let x = x1 - measureOf(font, text) + edge;
     left = Math.min(left, x);
-    for (let i = 0; i < text.length; i++) {
-      const g = glyphOf(text.charCodeAt(i));
+    for (const g of glyphRun(font, text)) {
       if (g >= 0) st.rows.push({ g, x, dy: row * TALLY_ROW });
-      x += advanceOf(font, text.charCodeAt(i));
+      x += advance(font, g);
     }
   });
   st.box = [left, y1, x1 + edge, y1 + (lines.length - 1) * TALLY_ROW + fontTall(font)];

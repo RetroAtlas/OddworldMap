@@ -49,6 +49,7 @@ import {
   setPatrolsRunning,
 } from "./motion.js";
 import { ownSheet, recordSheets, spriteDraws, spriteTypes } from "./sprites.js";
+import { releaseSprites } from "./release.js";
 
 // canvas colors shared with the stylesheet, read once from the tokens
 const COLOR = {
@@ -172,10 +173,20 @@ function spriteSet(gameId) {
   return null;
 }
 const spritesFailed = (gameId) => spriteSets[gameId] === false;
+// the sidecar a dataset draws from: its game's, a release's own parts over it
+const releaseSets = new WeakMap();
+function setOf(G) {
+  const base = spriteSets[G.id];
+  if (!base || !G.release) return base;
+  let set = releaseSets.get(G);
+  if (!set) releaseSets.set(G, (set = releaseSprites(base, G)));
+  return set;
+}
 export function warmSprites(gameId) {
   spriteSet(gameId);
 }
-const sheetSrcs = (gameId) => Object.values(spriteSets[gameId]?.sheets ?? {});
+const sheetSrcs = (gameId) =>
+  Object.values((state.data?.id === gameId ? setOf(state.data) : spriteSets[gameId])?.sheets ?? {});
 const settled = (src) => !!images[src]?.complete;
 const failed = (src) => settled(src) && !images[src].naturalWidth;
 function retrySprites(gameId) {
@@ -273,7 +284,7 @@ function askSoon() {
   asking = true;
   requestAnimationFrame(() => {
     asking = false;
-    const set = state.show.objects && state.data && spriteSets[state.data.id];
+    const set = state.show.objects && state.data && setOf(state.data);
     if (!set || !state.path) return;
     if (state.cam.z < SPRITE_ZOOM && !state.edit && !askedPlaces.has(place())) return;
     for (const src of spriteArt(set)) img(src);
@@ -339,7 +350,7 @@ function kept(t) {
 }
 // a record whose own sheet failed to load leaves its object a marker
 function lostSheet(r) {
-  const set = spriteSets[state.data.id];
+  const set = setOf(state.data);
   const k = set && ownSheet(set, r);
   return !!k && failed(set.sheets[k]);
 }
@@ -378,7 +389,7 @@ export async function preloadPath(path) {
     // the sheets are known only once the sidecar is in
     spriteSet(state.data.id);
     if (spriteSets[state.data.id] === null) await loadSprites(state.data.id);
-    const set = spriteSets[state.data.id];
+    const set = setOf(state.data);
     if (set) srcs.push(...pathSheets(path, set));
   }
   await Promise.all(
@@ -421,7 +432,7 @@ export function artworkReady(path) {
   }
   if (state.show.objects) {
     // a sidecar still coming keeps the paint waiting; a failed one has nothing more to wait for
-    const set = spriteSets[state.data.id];
+    const set = setOf(state.data);
     if (!set && !spritesFailed(state.data.id)) return false;
     if (set) for (const s of pathSheets(path, set)) if (!decoded(s)) return false;
   }
@@ -734,7 +745,7 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   paintScreens(f, show.dim);
   // the sprites and the foreground masks share the game's layers; an export
   // draws the first frame, so two exports agree
-  const set = show.objects ? spriteSet(data.id) : null;
+  const set = show.objects && spriteSet(data.id) ? setOf(data) : null;
   const standing = set ? spriteRecords(data, lvl, path, set) : null;
   spritesDrawn = !!standing && spritesReady(set, transients);
   paintedSprites = standing;

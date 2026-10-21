@@ -143,3 +143,25 @@ export function releaseChanges(t) {
 export const isRegional = (cam) => regional.has(cam);
 // what the release changes on a path, or null where it is the base's
 export const pathRelease = (P) => P?.release ?? null;
+
+// a release's sprite sidecar: the base's with the release's own parts over it,
+// and its line links for every path whose lines the release carries
+export function releaseSprites(base, R) {
+  const rel = R.release;
+  const links = { ...base.links };
+  for (const L of R.levels)
+    for (const P of L.paths)
+      if (P.release?.links)
+        links[L.short] = {
+          ...links[L.short],
+          [P.id]: P.release.links.map((row) => row.slice(0, 2)),
+        };
+  return {
+    ...base,
+    anims: { ...base.anims, ...rel.sprites?.anims },
+    sheets: { ...base.sheets, ...rel.sheets },
+    font: rel.font ? { ...rel.font, sheet: base.font.sheet } : base.font,
+    dice: rel.dice ?? base.dice,
+    links,
+  };
+}

@@ -1,10 +1,11 @@
 // What a sign in the world actually says.
 //
 // The games keep their marquee and hint-swarm text in tables addressed by id,
-// which the builder lifts off the discs into messages_{ao,ae}.json; an object
-// carries the id and this module resolves the words. objectMessages() is the
-// one place that knows how each type picks from its table, so no two surfaces
-// can disagree about what a board says.
+// which the builder lifts off the discs into messages_{ao,ae}.json, a release
+// carrying its own tables where they differ; an object carries the id and this
+// module resolves the words. objectMessages() is the one place that knows how
+// each type picks from its table, so no two surfaces can disagree about what a
+// board says.
 //
 // Leaf module: no DOM/state imports, importable in bare Node for tests.
 
@@ -41,33 +42,65 @@ const READERS = {
 export const DARK_NOTE =
   "Runs dark: every message this board names is blank, so it scrolls nothing.";
 
+// a release whose code page the map cannot read yet shows this in place of its words
+export const unreadNote = (language) => `In ${language}, which the map cannot read yet.`;
+
+// the high half of the code pages a release's messages may read through, the
+// low half being ASCII's
+const CODE_PAGES = {
+  cp437:
+    "ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■\u00a0",
+};
+
 let MESSAGES = {};
 
 export function setMessages(byGame) {
   MESSAGES = byGame || {};
 }
 
-export const lcdMessages = (game) => MESSAGES[game]?.lcd ?? null;
+// a dataset's tables: its game's, a release's own over them, and the entries
+// the overlay a path loads says otherwise over those
+const releaseTables = new WeakMap();
+function tablesOf(G, P) {
+  const base = MESSAGES[G.id];
+  if (!base || !G.release) return base ?? null;
+  let own = releaseTables.get(G);
+  if (!own) releaseTables.set(G, (own = { ...base, ...G.release.messages }));
+  const per = P?.release?.messages;
+  if (!per) return own;
+  const out = { ...own };
+  for (const [name, entries] of Object.entries(per)) {
+    out[name] = [...out[name]];
+    for (const [i, msg] of Object.entries(entries)) out[name][+i] = msg;
+  }
+  return out;
+}
 
-// a stored message as words: button codes become the command they name
-export function messageText(raw) {
+export const lcdMessages = (G, P = null) => tablesOf(G, P)?.lcd ?? null;
+
+// a stored message as words, read through its code page: button codes become
+// the command they name
+export function messageText(raw, page = "cp437") {
+  const high = CODE_PAGES[page];
   let out = "";
   for (const ch of raw) {
     const code = ch.codePointAt(0);
-    out += code < 0x20 ? `[${BUTTONS[code] ?? "?"}]` : ch;
+    out +=
+      code < 0x20 ? `[${BUTTONS[code] ?? "?"}]` : code >= 0x80 && high ? high[code - 0x80] : ch;
   }
   return out;
 }
 
 // every message an object can show, in the order it shows them, as
-// { text, note } where a note qualifies a line the text alone cannot explain.
-// `[]` is the positive claim that the board can only run dark; anything that
-// leaves the question unanswered is null, so a caller never reports darkness
-// it has not established.
-export function objectMessages(game, t) {
+// { text, note } where a note qualifies a line the text alone cannot explain,
+// and one line of no text whose note says so where the release's code page is
+// none the map reads. `[]` is the positive claim that the board can only run
+// dark; anything that leaves the question unanswered is null, so a caller never
+// reports darkness it has not established.
+export function objectMessages(G, t, P = null) {
   const reader = READERS[t.name];
   if (!reader) return null;
-  const table = MESSAGES[game]?.[reader.table];
+  const table = tablesOf(G, P)?.[reader.table];
   if (!table) return null;
   const f = t.fields || {};
   const picks = [];
@@ -84,14 +117,16 @@ export function objectMessages(game, t) {
     const note = to > from ? "at random" : "";
     for (let id = from; id <= to; id++) picks.push([id, note]);
   }
+  const page = G.release ? G.release.code_page : "cp437";
   const out = [];
   const seen = new Set();
   for (const [id, note] of picks) {
     const raw = table[id];
     if (!raw || seen.has(id)) continue;
     seen.add(id);
-    out.push({ text: messageText(raw), note });
+    out.push({ text: messageText(raw, page), note });
   }
+  if (!page && out.length) return [{ text: null, note: unreadNote(G.release.language) }];
   // a pool that survives as one line is not a draw between anything
   const pool = out.filter((m) => m.note === "at random");
   if (pool.length === 1) pool[0].note = "";

@@ -1283,7 +1283,7 @@ rule("AO", "HintFly", (c) => [
 rule("AO", "LCDScreen", lcdScreen);
 rule("AE", "LCD", lcdScreen);
 function lcdScreen(c) {
-  const table = lcdMessages(c.game);
+  const table = lcdMessages(c.data, c.path);
   if (!table || !c.font) return [];
   const { t, f } = c;
   const p = {
@@ -1523,6 +1523,7 @@ export function spriteDraws(data, lvl, path, t, set) {
   const fn = rules[data.id]?.[t.name];
   if (!fn) return [];
   const c = {
+    data,
     game: data.id,
     geo: data.geometry,
     lvl,

@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 import { deriveExtra } from "../../public/js/extra.js";
+import { glyphRun } from "../../public/js/lcd.js";
 import {
   baseObject,
   isRegional,
@@ -14,6 +15,7 @@ import {
   pathRelease,
   releaseAdded,
   releaseChanges,
+  releaseSprites,
 } from "../../public/js/release.js";
 import { AE_GEOMETRY } from "./fixtures.js";
 
@@ -242,4 +244,72 @@ test("additions follow the object the release lists them after, and a change car
   assert.deepEqual([...pathRelease(P).lines], [1]);
   assert.deepEqual(pathRelease(P).gone, []);
   assert.equal(pathRelease(base.levels[0].paths[0]), null);
+});
+
+for (const [game, { releases }] of Object.entries(index))
+  for (const { code } of releases)
+    test(`${game} ${code}: every code its messages use reaches a glyph its font draws`, () => {
+      const g = game.toLowerCase();
+      const overlay = load(`release_${g}_${code}.json`);
+      const sprites = load(`sprites_${g}.json`);
+      const font = overlay.font ?? sprites.font;
+      const tables = { ...load(`messages_${g}.json`), ...overlay.messages };
+      // each glyph the run draws beside the byte it was read from, an escape
+      // byte and its second byte reading as one; only a space may draw none
+      for (const [name, table] of Object.entries(tables))
+        for (const msg of table) {
+          const run = glyphRun(font, msg);
+          const from = [];
+          for (let i = 0; i < msg.length; i++) {
+            from.push(msg[i]);
+            if (font.escapes?.[msg.charCodeAt(i)] && i + 1 < msg.length) i++;
+          }
+          assert.equal(run.length, from.length);
+          run.forEach((g, i) => {
+            const where = `${name}: ${JSON.stringify(msg)} at ${i}`;
+            assert.ok(g < font.glyphs.length, `${where} reaches past the glyph table`);
+            if (g < 0) assert.equal(from[i], " ", `${where} has no glyph`);
+          });
+        }
+    });
+
+test("a release's sprite sidecar is the base's with the release's own parts over it", () => {
+  const base = load("map_data_ao.json");
+  const sprites = load("sprites_ao.json");
+  const shorts = load("relive_export_ao.json").level_short;
+  const jp = materializeRelease(base, load("release_ao_jp.json"), shorts);
+  const set = releaseSprites(sprites, jp);
+  assert.equal(set.sheets.Font, jp.release.sheets.Font);
+  assert.equal(set.font.sheet, sprites.font.sheet);
+  assert.equal(set.font.codes, jp.release.font.codes);
+  assert.equal(set.anims["bg:5002"], jp.release.sprites.anims["bg:5002"]);
+  assert.equal(set.anims.Slig_Idle, sprites.anims.Slig_Idle);
+  assert.equal(set.links.D1, sprites.links.D1);
+  const eu = materializeRelease(load("map_data_ao.json"), load("release_ao_eu.json"), shorts);
+  const euSet = releaseSprites(sprites, eu);
+  const overlay = load("release_ao_eu.json");
+  for (const [key, e] of Object.entries(overlay.paths))
+    if (e.links) {
+      const [lv, pa] = key.split("/");
+      assert.deepEqual(euSet.links[lv][pa], e.links, key);
+    }
+  assert.equal(euSet.font, sprites.font);
+  // Exoddus's lines carry more words than the sprites read
+  const aeSprites = load("sprites_ae.json");
+  const aeOverlay = load("release_ae_jp.json");
+  const ae = materializeRelease(
+    load("map_data_ae.json"),
+    aeOverlay,
+    load("relive_export_ae.json").level_short,
+  );
+  const aeSet = releaseSprites(aeSprites, ae);
+  for (const [key, e] of Object.entries(aeOverlay.paths))
+    if (e.links) {
+      const [lv, pa] = key.split("/");
+      assert.deepEqual(
+        aeSet.links[lv][pa],
+        e.links.map((row) => row.slice(0, 2)),
+        key,
+      );
+    }
 });

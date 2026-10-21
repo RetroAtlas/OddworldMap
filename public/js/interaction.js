@@ -743,10 +743,10 @@ function updateHover() {
           // what the sign says, capped: a tooltip has no room for a whole
           // rotation. A board that can only ever run dark says so, since
           // silence would read as the map not knowing
-          const says = objectMessages(state.data.id, t);
+          const says = objectMessages(state.data, t, state.path);
           const said = (says ?? []).map(
             ({ text, note }) =>
-              `<br><span class="said">${note ? `<span class="note">${esc(note)}</span> ` : ""}${esc(`“${text}”`)}</span>`,
+              `<br><span class="said">${note ? `<span class="note">${esc(note)}</span> ` : ""}${text == null ? "" : esc(`“${text}”`)}</span>`,
           );
           const messages =
             says?.length === 0

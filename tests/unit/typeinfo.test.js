@@ -226,7 +226,7 @@ const CLAIMS = {
   LCD: () => {
     const boards = listed(AE, "LCD").filter((r) => f(r, "toggle_message_switch_id") === 110);
     const says = (r, note, re) =>
-      objectMessages("AE", r.t).some((m) => m.note === note && re.test(m.text));
+      objectMessages({ id: "AE" }, r.t).some((m) => m.note === note && re.test(m.text));
     return (
       n(boards) === 7 &&
       within(boards, "MI") &&
@@ -238,7 +238,7 @@ const CLAIMS = {
   },
   LCDScreen: () => {
     const r2 = allOf(AO, "LCDScreen").filter((r) => r.lv.short === "R2");
-    return n(r2) === 22 && count(r2, (r) => objectMessages("AO", r.t).length > 0) === 2;
+    return n(r2) === 22 && count(r2, (r) => objectMessages({ id: "AO" }, r.t).length > 0) === 2;
   },
   LCDStatusBoard: () => {
     const sb = listed(AE, "LCDStatusBoard");
