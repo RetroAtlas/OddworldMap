@@ -9,6 +9,8 @@
   --accent: rgb(var(--accent-rgb));
   /* edited data, wherever it shows: the marker's outline, the mode's button, the panel's head */
   --edit-rgb: 95, 216, 232;
+  /* what a release changes from the base, wherever the mark shows it */
+  --release-rgb: 196, 140, 240;
   /* the flagship foil; it ends where it starts, so a sweep loops */
   --foil: linear-gradient(90deg, var(--accent), #ffe6b8, #c48cf0, #5fd8e8, var(--accent));
   --foil-glow: rgba(196, 140, 240, 0.35);
@@ -175,6 +177,10 @@ body.editing #editTools {
   color: rgb(var(--edit-rgb));
   margin-left: 4px;
   font-size: 9px;
+}
+/* a path the release in hand changes, beside any edited mark */
+.btnrow button.released {
+  box-shadow: inset 0 -2px rgb(var(--release-rgb));
 }
 .btnrow button.entry.on::before {
   color: var(--bg);
@@ -1403,7 +1409,16 @@ body.embed #openSiteBtn {
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
-#placeEdited[hidden] {
+#placeRelease {
+  flex: none;
+  color: rgb(var(--release-rgb));
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+#placeEdited[hidden],
+#placeRelease[hidden],
+#releaseRow[hidden] {
   display: none;
 }
 /* the path's details, under the chip that opens them */
@@ -1442,6 +1457,12 @@ body.embed #openSiteBtn {
 #camPanel .edited,
 #searchResults .edited {
   color: rgb(var(--edit-rgb));
+}
+.pl-release,
+#tip .released,
+#camPanel .released,
+#searchResults .released {
+  color: rgb(var(--release-rgb));
 }
 .pl-note {
   margin-top: 7px;

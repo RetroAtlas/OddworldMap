@@ -14,6 +14,7 @@ import { fieldPrefsFor, getSettings } from "./settings.js";
 import { jumpToPlace, jumpToTlv } from "./navigate.js";
 import { pathIn } from "./model.js";
 import { isAdded, isEdited } from "./edits.js";
+import { releaseNote } from "./release.js";
 import { ADDED_NOTE, EDITED_NOTE } from "./config.js";
 import { toggleMenu } from "./interaction.js";
 
@@ -138,6 +139,9 @@ function hitButton(h, terms) {
     `<span class="loc">${h.L.short} P${h.P.id}</span> ${highlight(h.t.name, terms)}` +
     (isEdited(h.t)
       ? ` <span class="ex edited">${esc(isAdded(h.t) ? ADDED_NOTE : EDITED_NOTE)}</span>`
+      : "") +
+    (state.show.release && releaseNote(h.G, h.t)
+      ? ` <span class="ex released">${esc(releaseNote(h.G, h.t))}</span>`
       : "") +
     (ex ? ` <span class="ex">${highlight(ex, terms)}</span>` : "");
   b.onclick = () => jumpToTlv(h.G, h.L, h.P, h.t);
@@ -289,6 +293,11 @@ searchInput.addEventListener("input", () => {
 // before anything is selected, and runSearch groups its hits around a selection
 window.addEventListener("games-changed", () => {
   if (state.path && searchInput.value.trim().length >= 2) runSearch(searchInput.value);
+});
+// the mark turned on or off adds or takes away the release's words on a hit
+window.addEventListener("show-changed", (e) => {
+  if (e.detail.key === "release" && state.path && searchInput.value.trim().length >= 2)
+    runSearch(searchInput.value);
 });
 // an edit stands a path as new objects, whose text the index has yet to read
 window.addEventListener("data-changed", () => {

@@ -15,7 +15,10 @@ import {
   pathRelease,
   releaseAdded,
   releaseChanges,
+  releaseNote,
+  releaseNotes,
   releaseSprites,
+  pathReleased,
 } from "../../public/js/release.js";
 import { AE_GEOMETRY } from "./fixtures.js";
 
@@ -187,6 +190,7 @@ test("additions follow the object the release lists them after, and a change car
     {
       game: "AE",
       code: "jp",
+      name: "Japan",
       title: "Abe '99",
       hz: 30,
       paths: {
@@ -244,6 +248,13 @@ test("additions follow the object the release lists them after, and a change car
   assert.deepEqual([...pathRelease(P).lines], [1]);
   assert.deepEqual(pathRelease(P).gone, []);
   assert.equal(pathRelease(base.levels[0].paths[0]), null);
+  assert.deepEqual(releaseNotes(P.tlvs[2]), ["camera 1 → 2", "moved"]);
+  assert.deepEqual(releaseNotes(P.tlvs[0]), ["added"]);
+  assert.deepEqual(releaseNotes(P.tlvs[3]), []);
+  assert.equal(releaseNote(R, P.tlvs[2]), "Japan: camera 1 → 2, moved");
+  assert.equal(releaseNote(base, P.tlvs[2]), null);
+  assert.ok(pathReleased(P));
+  assert.equal(pathReleased(base.levels[0].paths[0]), false);
 });
 
 for (const [game, { releases }] of Object.entries(index))

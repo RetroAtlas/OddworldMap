@@ -88,6 +88,7 @@ import {
   removedObjects,
   snapRect,
 } from "./edits.js";
+import { releaseNote } from "./release.js";
 import { toggleGraph } from "./graphview.js";
 import { addRoutePoint, routeArrive, routeSeam, undoRoutePoint } from "./route.js";
 import { closeDialog, openDialog, trapDialogKeys } from "./dialog.js";
@@ -754,6 +755,7 @@ function updateHover() {
               : said.slice(0, 3).join("") +
                 (said.length > 3 ? `<br><span class="e">+${said.length - 3} more</span>` : "");
           const edited = editNotes(t);
+          const released = state.show.release && releaseNote(state.data, t);
           const d = shownDest(t);
           let follow = "";
           if (state.edit) {
@@ -824,6 +826,7 @@ function updateHover() {
               : edited.length
                 ? `<br><span class="e edited">${esc(`${EDITED_NOTE}: ${edited.join(", ")}`)}</span>`
                 : "") +
+            (released ? `<br><span class="e released">${esc(released)}</span>` : "") +
             (about ? `<br><span class="e about">${esc(about)}</span>` : "") +
             messages +
             (ex ? `<br><span class="kv">${ex}</span>` : "") +

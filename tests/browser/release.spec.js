@@ -100,6 +100,37 @@ test("a code the map does not carry lands on the base and says so", async ({ pag
   expect(errors).toEqual([]);
 });
 
+test("the mark is offered while a release is in hand, and its toggle takes it away", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  // the European release drops a DeathDrop on this path and adds one of its own
+  await page.goto("/#AO/F1/5/8100/2300/1.20/eu");
+  await settle(page, { game: "AO", level: "F1", path: 5 });
+  await releaseIs(page, "eu");
+  const row = page.locator("#releaseRow");
+  const tag = page.locator("#placeRelease");
+  await expect(row).toBeVisible();
+  await expect(tag).toBeVisible();
+  await expect(tag).toHaveText("eu");
+  await expect(page.locator("#pathBtns button.released")).not.toHaveCount(0);
+  await row.locator("input").uncheck();
+  await expect(tag).toBeHidden();
+  await expect(page.locator("#pathBtns button.released")).toHaveCount(0);
+  await row.locator("input").check();
+  await expect(tag).toBeVisible();
+  // the canvas's name is the sentence the status region says once the steps settle
+  await expect(page.locator("#cv")).toHaveAttribute(
+    "aria-label",
+    /Abe's Oddysee, Europe, .*changed in the Europe release/,
+  );
+  await page.locator("#releaseBtns button", { hasText: "USA" }).click();
+  await releaseIs(page, null);
+  await expect(row).toBeHidden();
+  await expect(tag).toBeHidden();
+  expect(errors).toEqual([]);
+});
+
 // a viewer from before releases reads only owm:edits and writes back what its
 // sanitizer kept, so a release's edits must never land under that key
 test("an edit in a release keeps a store of its own, and survives a reload", async ({ page }) => {

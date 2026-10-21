@@ -63,6 +63,7 @@ $("fReset").onclick = () => setFilters((c) => catDefaults.get(c.key));
 const showUI = new Map(); // show key -> its checkbox
 function syncShow(key, cb) {
   state.show[key] = cb.checked;
+  window.dispatchEvent(new CustomEvent("show-changed", { detail: { key } }));
   if (key === "pens") PENS.on = cb.checked; // the barrier gate lives in config
   if (key === "spaced") setPitch(cb.checked); // moves every draw coordinate; it redraws itself
   if (key === "objects") {
@@ -102,6 +103,7 @@ for (const [key, id] of Object.entries({
   objects: "tObjects",
   patrols: "tPatrols",
   markers: "tMarkers",
+  release: "tRelease",
   ruler: "tRuler",
   route: "tRoute",
 })) {

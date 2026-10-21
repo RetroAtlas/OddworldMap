@@ -165,3 +165,25 @@ export function releaseSprites(base, R) {
     links,
   };
 }
+
+// releaseChanges as words, none for an object the release leaves as the base has it
+export function releaseNotes(t) {
+  const c = releaseChanges(t);
+  if (!c) return [];
+  if (c.added) return ["added"];
+  return [
+    ...c.fields.map(([f, from, to]) => `${f} ${from} → ${to}`),
+    ...(c.moved ? ["moved"] : []),
+    ...(c.resized ? ["resized"] : []),
+  ];
+}
+// a release's own words for an object, `Europe: zone_number 31 → 29`, or null
+export function releaseNote(G, t) {
+  const notes = G?.release ? releaseNotes(t) : [];
+  return notes.length ? `${G.release.name}: ${notes.join(", ")}` : null;
+}
+// whether a release changes anything on a path: its objects, lines or screens
+export const pathReleased = (P) => {
+  const r = pathRelease(P);
+  return !!r && (r.objects || !!r.lines || r.cams);
+};

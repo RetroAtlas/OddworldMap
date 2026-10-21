@@ -205,6 +205,14 @@
         >
         <label
           class="checkrow"
+          id="releaseRow"
+          data-tip="Marks in violet what the chosen release changes from the North American one: its objects, collision lines and screens."
+          hidden
+          ><input type="checkbox" id="tRelease" autocomplete="off" checked /> Release
+          differences</label
+        >
+        <label
+          class="checkrow"
           data-tip="Drag on the map to measure; world units and grid squares.&#10;Ends snap to nearby objects."
           ><input type="checkbox" id="tRuler" autocomplete="off" /> Ruler<kbd>m</kbd></label
         >
@@ -333,7 +341,8 @@
           aria-controls="placePanel"
         >
           <span id="placeCode"></span><span id="placeName"></span
-          ><span id="placeEdited" hidden>edited</span><span id="placeDot" aria-hidden="true"></span>
+          ><span id="placeEdited" hidden>edited</span><span id="placeRelease" hidden></span
+          ><span id="placeDot" aria-hidden="true"></span>
         </button>
         <button
           id="shuffleBtn"

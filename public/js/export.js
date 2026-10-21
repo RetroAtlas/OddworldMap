@@ -32,8 +32,10 @@ function download(blob, name) {
 
 // an export of an edited path says so in its name, as the graph's does of its demo copies
 const edited = (path) => (path && pathEdited(path) ? "-edited" : "");
+// a release other than the base names itself after the game
+const game = (data) => `${data.id.toLowerCase()}${data.release ? "-" + data.release.code : ""}`;
 const exportName = (kind) =>
-  `oddworld-${state.data.id.toLowerCase()}${state.lvl ? "-" + state.lvl.short : ""}${state.path ? "-P" + state.path.id : ""}-${kind}${edited(state.path)}.png`;
+  `oddworld-${game(state.data)}${state.lvl ? "-" + state.lvl.short : ""}${state.path ? "-P" + state.path.id : ""}-${kind}${edited(state.path)}.png`;
 
 $("exportBtn").onclick = () => {
   const name = exportName("view");
@@ -138,7 +140,7 @@ jsonBtn.onclick = async () => {
     }
     download(
       new Blob([JSON.stringify(doc, null, 1)], { type: "application/json" }),
-      `oddworld-${data.id.toLowerCase()}-${lvl.short}-P${path.id}${edited(path)}.json`,
+      `oddworld-${game(data)}-${lvl.short}-P${path.id}${edited(path)}.json`,
     );
     toast(
       `saved${edited(path) ? " with your edits" : ""} — importing it drops this path's foreground masks`,
@@ -155,7 +157,7 @@ jsonBtn.onclick = async () => {
 $("graphSvgBtn").onclick = () => {
   const { svg, demo, edited } = graphSvg(state.data, { entry: state.entry });
   const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
-  download(blob, graphName(state.data.id, demo, edited, "svg"));
+  download(blob, graphName(state.data.id, demo, edited, "svg", state.data.release?.code));
 };
 
 const gPngBtn = $("graphPngBtn");
@@ -180,7 +182,13 @@ gPngBtn.onclick = async () => {
       toast("export failed");
       return;
     }
-    const name = graphName(state.data.id, sized.demo, sized.edited, "png");
+    const name = graphName(
+      state.data.id,
+      sized.demo,
+      sized.edited,
+      "png",
+      state.data.release?.code,
+    );
     const url = URL.createObjectURL(new Blob([sized.svg], { type: "image/svg+xml;charset=utf-8" }));
     const img = new Image();
     try {

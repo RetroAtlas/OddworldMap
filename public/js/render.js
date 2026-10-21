@@ -49,7 +49,7 @@ import {
   setPatrolsRunning,
 } from "./motion.js";
 import { ownSheet, recordSheets, spriteDraws, spriteTypes } from "./sprites.js";
-import { releaseSprites } from "./release.js";
+import { isRegional, pathRelease, releaseNotes, releaseSprites } from "./release.js";
 
 // canvas colors shared with the stylesheet, read once from the tokens
 const COLOR = {
@@ -59,6 +59,7 @@ const COLOR = {
   cellEmpty: cssVar("--cell-empty"),
   accentRgb: cssVar("--accent-rgb"),
   editRgb: cssVar("--edit-rgb"),
+  releaseRgb: cssVar("--release-rgb"),
 };
 
 const images = {}; // png -> Image
@@ -741,6 +742,8 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
     origin: cellOrigin(),
     view: { x: cam.x, y: cam.y, w: w / cam.z, h: h / cam.z },
     showLabels: show.labels && cam.z > 0.45,
+    // what the release in hand changes, marked while the toggle is on
+    released: show.release && !!data.release,
   };
   paintScreens(f, show.dim);
   // the sprites and the foreground masks share the game's layers; an export
@@ -761,11 +764,13 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   if (show.fg) paintMasks(f);
   if (show.grid) paintGrid(f);
   if (show.coll) paintLines(f);
+  if (f.released) paintReleaseGhosts(f, pathRelease(path)?.removed ?? []);
   if (transients && patrol) paintPatrol(f, patrol);
   paintMarkers(f, sprites);
   if (show.wires) paintWires(f, transients ? wireFocus : null);
   if (show.conn) paintConnections(f, transients ? connFocus : null);
   if (transients && state.edit) paintGhosts(f, removedObjects(path));
+  if (f.released) paintReleaseTags(f);
   if (transients && highlight) paintHighlight(f, at(highlight));
   if (transients && sel) paintSelection(f, at(sel));
   if (ruler) paintRuler(f, ruler);
@@ -839,13 +844,26 @@ function paintGrid({ ctx, cam, path, layout, origin }) {
   }
 }
 
-// collision lines, dotted over the slack the packing folded away, as markers are
-function paintLines({ ctx, cam, path, layout }) {
+// collision lines, dotted over the slack the packing folded away, as markers are;
+// a line a release moves or adds in the mark's colour, and one it drops a ghost
+function paintLines({ ctx, cam, path, layout, released }) {
   ctx.lineWidth = 2.5 / cam.z;
   const bg = [8 / cam.z, 6 / cam.z],
     slack = [2 / cam.z, 3 / cam.z];
-  for (const [x1, y1, x2, y2, t] of path.lines) {
-    ctx.strokeStyle = LINE_COLORS[t] || "#999";
+  const own = released ? pathRelease(path)?.lines : null;
+  if (released)
+    for (const [x1, y1, x2, y2] of pathRelease(path)?.gone ?? []) {
+      ctx.strokeStyle = `rgba(${COLOR.releaseRgb}, 0.55)`;
+      ctx.setLineDash(slack);
+      for (const r of lineRuns(x1, y1, x2, y2, layout)) {
+        ctx.beginPath();
+        ctx.moveTo(r.x1, r.y1);
+        ctx.lineTo(r.x2, r.y2);
+        ctx.stroke();
+      }
+    }
+  path.lines.forEach(([x1, y1, x2, y2, t], i) => {
+    ctx.strokeStyle = own?.has(i) ? `rgb(${COLOR.releaseRgb})` : LINE_COLORS[t] || "#999";
     for (const r of lineRuns(x1, y1, x2, y2, layout)) {
       ctx.setLineDash(r.on ? (t >= 4 ? bg : []) : slack);
       ctx.beginPath();
@@ -853,7 +871,7 @@ function paintLines({ ctx, cam, path, layout }) {
       ctx.lineTo(r.x2, r.y2);
       ctx.stroke();
     }
-  }
+  });
   ctx.setLineDash([]);
 }
 
@@ -873,11 +891,12 @@ function paintMarkers(f, sprites) {
     if (!as) continue;
     const showLabels = f.showLabels && labelled(t);
     const edited = isEdited(o);
+    const released = f.released && releaseNotes(o).length > 0;
     if (as !== "marker") {
-      // the sprite stands for the marker; the edited mark stays, and the label
-      // where there is a sprite to name
+      // the sprite stands for the marker; the edited and release marks stay,
+      // and the label where there is a sprite to name
       const label = showLabels && as === "sprite";
-      if (label || edited) paintMarkerNotes(f, t, label, edited);
+      if (label || edited || released) paintMarkerNotes(f, t, label, edited, released);
       continue;
     }
     const dir = PENS.on ? barrierDir(t) : null; // pens off: barriers are plain meta boxes
@@ -934,14 +953,10 @@ function paintMarkers(f, sprites) {
       onScreen();
       ctx.restore();
     }
-    // an edited object says so on the map itself, exports included
-    if (edited) {
-      const pad = 3 / cam.z;
-      ctx.strokeStyle = `rgb(${COLOR.editRgb})`;
-      ctx.lineWidth = 1.5 / cam.z;
-      ctx.setLineDash([]);
-      ctx.strokeRect(x1 - pad, y1 - pad, w + 2 * pad, h + 2 * pad);
-    }
+    // an edited object says so on the map itself, exports included, and so
+    // does one the release changes, outside the edit's outline when it has both
+    if (edited) outline(f, x1, y1, w, h, 3, COLOR.editRgb);
+    if (released) outline(f, x1, y1, w, h, edited ? 6 : 3, COLOR.releaseRgb);
     if (showLabels) {
       ctx.fillStyle = c.color;
       ctx.fillText(t.name, x1, y1 - 3 / cam.z);
@@ -1360,18 +1375,22 @@ export function hitBoxes(t, layout) {
 }
 
 // the label and the edited mark of an object its sprite stands for
-function paintMarkerNotes({ ctx, cam, layout }, t, label, edited) {
+function outline({ ctx, cam }, x, y, w, h, pad, rgb) {
+  const p = pad / cam.z;
+  ctx.strokeStyle = `rgb(${rgb})`;
+  ctx.lineWidth = 1.5 / cam.z;
+  ctx.setLineDash([]);
+  ctx.strokeRect(x - p, y - p, w + 2 * p, h + 2 * p);
+}
+
+function paintMarkerNotes(f, t, label, edited, released) {
+  const { ctx, cam, layout } = f;
   const box = standingBox(t, layout);
   if (!box) return;
   const w = Math.max(box.w, 10),
     h = Math.max(box.h, 10);
-  if (edited) {
-    const pad = 3 / cam.z;
-    ctx.strokeStyle = `rgb(${COLOR.editRgb})`;
-    ctx.lineWidth = 1.5 / cam.z;
-    ctx.setLineDash([]);
-    ctx.strokeRect(box.x - pad, box.y - pad, w + 2 * pad, h + 2 * pad);
-  }
+  if (edited) outline(f, box.x, box.y, w, h, 3, COLOR.editRgb);
+  if (released) outline(f, box.x, box.y, w, h, edited ? 6 : 3, COLOR.releaseRgb);
   if (label) {
     ctx.fillStyle = catOf(t).color;
     ctx.fillText(t.name, box.x, box.y - 3 / cam.z);
@@ -1396,6 +1415,44 @@ function paintGhosts(f, ghosts) {
   }
   ctx.globalAlpha = 1;
   ctx.setLineDash([]);
+}
+
+// the objects the release drops, where the base has them
+function paintReleaseGhosts(f, ghosts) {
+  const { ctx, cam, layout, data } = f;
+  ctx.strokeStyle = ctx.fillStyle = `rgb(${COLOR.releaseRgb})`;
+  ctx.lineWidth = 1.5 / cam.z;
+  ctx.setLineDash([2 / cam.z, 3 / cam.z]);
+  ctx.globalAlpha = 0.55;
+  ctx.font = `${11 / cam.z}px sans-serif`;
+  for (const g of ghosts) {
+    if (!markerShown(g)) continue;
+    const box = drawBox(g, layout);
+    ctx.strokeRect(box.x, box.y, Math.max(box.w, 10), Math.max(box.h, 10));
+    if (f.showLabels && labelled(g))
+      ctx.fillText(`${g.name} · not in ${data.release.name}`, box.x, box.y - 3 / cam.z);
+  }
+  ctx.globalAlpha = 1;
+  ctx.setLineDash([]);
+}
+
+// a screen whose picture is the release's own wears its code in a corner
+function paintReleaseTags({ ctx, cam, path, layout, data }) {
+  if (layout.visW * cam.z <= 90) return;
+  const tag = data.release.code.toUpperCase();
+  ctx.font = `600 ${10 / cam.z}px sans-serif`;
+  const pad = 4 / cam.z,
+    h = 14 / cam.z,
+    w = ctx.measureText(tag).width + 2 * pad;
+  for (const c of path.cams) {
+    if (!isRegional(c)) continue;
+    const x = (c.cell % path.w) * layout.cellW + layout.visW - w - pad,
+      y = Math.floor(c.cell / path.w) * layout.cellH + pad;
+    ctx.fillStyle = `rgba(${COLOR.releaseRgb}, 0.85)`;
+    ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = COLOR.bg;
+    ctx.fillText(tag, x + pad, y + h - 4 / cam.z);
+  }
 }
 
 // switch wiring: dotted hairlines from each producer to its id's consumers,

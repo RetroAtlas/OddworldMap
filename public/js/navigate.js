@@ -48,7 +48,7 @@ import {
   removedObjects,
   takeReport,
 } from "./edits.js";
-import { baseObject, pathRelease } from "./release.js";
+import { baseObject, pathRelease, pathReleased } from "./release.js";
 import { setFrameRate } from "./fields.js";
 import { setTickRate } from "./motion.js";
 
@@ -136,7 +136,13 @@ function buildReleaseButtons() {
     releaseBtns.appendChild(b);
   }
   markOn(releaseBtns, releaseCode(G));
+  $("releaseRow").hidden = !G?.release;
 }
+
+// the mark turned on or off relabels the path buttons it tags
+window.addEventListener("show-changed", (e) => {
+  if (e.detail?.key === "release" && state.lvl) buildPathButtons();
+});
 
 // a game's release in hand, or the base: the game keeps the place and the
 // view, every release sharing the base's geometry and places
@@ -242,6 +248,10 @@ function buildPathButtons() {
     if (pathEdited(P)) {
       b.classList.add("edited");
       tip.push(EDITED_NOTE);
+    }
+    if (state.show.release && pathReleased(P)) {
+      b.classList.add("released");
+      tip.push(`changed in the ${state.data.release.name} release`);
     }
     if (tip.length) b.title = tip.join(" — ");
     b.onclick = () => selectPathById(P.id);

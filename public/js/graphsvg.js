@@ -42,8 +42,8 @@ export function wirePath({ e, pts }, attrs = "") {
   );
 }
 
-export const graphName = (id, demo, edited, ext) =>
-  `oddworld-${id.toLowerCase()}-graph${demo ? "-demos" : ""}${edited ? "-edited" : ""}.${ext}`;
+export const graphName = (id, demo, edited, ext, release = null) =>
+  `oddworld-${id.toLowerCase()}${release ? `-${release}` : ""}-graph${demo ? "-demos" : ""}${edited ? "-edited" : ""}.${ext}`;
 
 // `scale` multiplies only the root width/height over a constant viewBox, so a
 // rasterizer that draws at intrinsic size is still crisp at 2x. Numeric
@@ -58,7 +58,9 @@ export function graphSvg(data, { entry = computeEntryPaths(data), scale = 1 } = 
   const demo = [...g.nodes.values()].some((n) => isDemoPath(n.P));
   const edited = [...g.nodes.values()].some((n) => pathEdited(n.P));
   const kinds = [...new Set(g.edges.map((e) => e.kind))].sort();
-  const name = (data.game || data.id).replace(/^Oddworld:\s*/, "");
+  const name =
+    (data.game || data.id).replace(/^Oddworld:\s*/, "") +
+    (data.release ? `, ${data.release.name}` : "");
   const title =
     `${name} — ${g.nodes.size} paths, ${g.edges.length} links` +
     `${demo ? ", with demo paths" : ""}${edited ? ", with edits made on this device" : ""}`;

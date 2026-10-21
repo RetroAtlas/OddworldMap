@@ -4,6 +4,7 @@
 import { pathDisplayName, pathNote } from "./annotations.js";
 import { EDITED_NOTE } from "./config.js";
 import { pathEdited } from "./edits.js";
+import { pathReleased } from "./release.js";
 
 export function placeSummary(data, lvl, path) {
   const n = path.tlvs.length;
@@ -16,6 +17,7 @@ export function placeSummary(data, lvl, path) {
     `${n} object${n === 1 ? "" : "s"}`,
     pathNote(data.id, lvl.short, path) && "with a note",
     pathEdited(path) && EDITED_NOTE,
+    data.release && pathReleased(path) && `changed in the ${data.release.name} release`,
   ]
     .filter(Boolean)
     .join(", ");

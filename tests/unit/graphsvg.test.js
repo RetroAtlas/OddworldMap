@@ -204,6 +204,7 @@ test("the export names the game and the diagram it holds", () => {
   assert.equal(graphName("AE", true, false, "png"), "oddworld-ae-graph-demos.png");
   assert.equal(graphName("AE", false, true, "svg"), "oddworld-ae-graph-edited.svg");
   assert.equal(graphName("AE", true, true, "png"), "oddworld-ae-graph-demos-edited.png");
+  assert.equal(graphName("AO", false, false, "svg", "jp"), "oddworld-ao-jp-graph.svg");
 });
 
 test("a head sits on the travel end, whichever way the route was drawn", () => {

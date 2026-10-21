@@ -8,12 +8,21 @@ import { state } from "./state.js";
 import { pathDisplayName, pathNickname, pathNote } from "./annotations.js";
 import { isDemoPath } from "./demo.js";
 import { pathEdited, revertPath } from "./edits.js";
+import { pathReleased } from "./release.js";
 
 const btn = $("placeBtn"),
   panel = $("placePanel"),
   codeEl = $("placeCode"),
   nameEl = $("placeName"),
-  editedEl = $("placeEdited");
+  editedEl = $("placeEdited"),
+  releaseEl = $("placeRelease");
+
+// the chip's tag for a path the release in hand changes, while the mark is shown
+function tagRelease() {
+  const { data, path } = state;
+  releaseEl.hidden = !(state.show.release && data.release && pathReleased(path));
+  releaseEl.textContent = data.release?.code ?? "";
+}
 
 let shown = null; // the place the open panel describes
 const here = () => state.path && `${state.data.id}/${state.lvl.short}/${state.path.id}`;
@@ -33,6 +42,9 @@ function fill() {
     (isDemoPath(path) ? `<div class="pl-demo">${esc(DEMO_NOTE)}</div>` : "") +
     (pathEdited(path)
       ? `<div class="pl-edited">${esc(EDITED_NOTE)} · <button type="button" class="linkbtn pl-revert">revert this path</button></div>`
+      : "") +
+    (state.show.release && data.release && pathReleased(path)
+      ? `<div class="pl-release">${esc(`changed in the ${data.release.name} release`)}</div>`
       : "") +
     (note ? `<div class="pl-note">${esc(note)}</div>` : "");
   const revert = panel.querySelector(".pl-revert");
@@ -80,6 +92,7 @@ window.addEventListener("selection-changed", () => {
   nameEl.textContent = pathDisplayName(data.id, lvl.short, path) || "";
   btn.classList.toggle("hasnote", !!pathNote(data.id, lvl.short, path));
   editedEl.hidden = !pathEdited(path);
+  tagRelease();
   btn.hidden = false;
   syncPlace();
 });
@@ -88,6 +101,13 @@ window.addEventListener("selection-changed", () => {
 window.addEventListener("data-changed", () => {
   if (!state.path) return;
   editedEl.hidden = !pathEdited(state.path);
+  tagRelease();
+  if (!panel.hidden) fill();
+});
+
+window.addEventListener("show-changed", (e) => {
+  if (e.detail.key !== "release" || !state.path) return;
+  tagRelease();
   if (!panel.hidden) fill();
 });
 

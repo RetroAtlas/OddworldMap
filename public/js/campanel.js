@@ -14,6 +14,7 @@ import { setHighlight } from "./render.js";
 import { fieldPrefsFor, getSettings } from "./settings.js";
 import { jumpToTlv } from "./navigate.js";
 import { currentOf, editNotes, isAdded, isRemoved, removedObjects } from "./edits.js";
+import { releaseNote } from "./release.js";
 import { restoreHere, selectObject } from "./editpanel.js";
 
 const panel = $("camPanel"),
@@ -129,7 +130,11 @@ function list(cam, focus) {
         : changed.length
           ? ` <span class="e">· <span class="edited">${esc(`${EDITED_NOTE}: ${changed.join(", ")}`)}</span></span>`
           : "";
-      b.innerHTML = esc(t.name) + off + removed + edited + (ex ? " " + ex : "");
+      const note = state.show.release && releaseNote(state.data, t);
+      const released = note
+        ? ` <span class="e">· <span class="released">${esc(note)}</span></span>`
+        : "";
+      b.innerHTML = esc(t.name) + off + removed + edited + released + (ex ? " " + ex : "");
       b.onclick = (e) => {
         jumpToTlv(state.data, state.lvl, state.path, t);
         if (state.edit) selectObject(t, { focus: e.detail === 0 }); // Enter counts no presses
@@ -219,6 +224,11 @@ $("camPanelClose").onclick = closeCamPanel;
 // yank the list away mid-browse
 window.addEventListener("selection-changed", () => {
   if (!panel.hidden && here() !== listedAt) closeCamPanel();
+});
+
+// the mark turned on or off names what the release changes, or stops
+window.addEventListener("show-changed", (e) => {
+  if (e.detail.key === "release" && !panel.hidden && lastOpen) list(lastOpen.cam, lastOpen.focus);
 });
 
 // an edit stands the listed path as new objects: the same screen, listed again
