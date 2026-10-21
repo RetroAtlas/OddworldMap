@@ -1,0 +1,48 @@
+{
+ "AE": {
+  "base": {
+   "name": "USA",
+   "title": "Oddworld: Abe's Exoddus",
+   "language": "English"
+  },
+  "releases": [
+   {
+    "code": "eu",
+    "name": "Europe",
+    "title": "Oddworld: Abe's Exoddus",
+    "language": "English",
+    "note": "The same levels as the North American release, at 25 frames a second. The gas countdowns still count frames by 30, so one of 7200 frames shows 240 seconds and lasts 288."
+   },
+   {
+    "code": "jp",
+    "name": "Japan",
+    "title": "Abe '99",
+    "language": "Japanese",
+    "note": "Japanese text on the signs and screens, and fixes the North American release lacks: floors added in Necrum Mines, gas countdowns in the Brewery's return, and doors and switches reworked in FeeCo and Bonewerkz."
+   }
+  ]
+ },
+ "AO": {
+  "base": {
+   "name": "USA, Rev 2",
+   "title": "Oddworld: Abe's Oddysee",
+   "language": "English"
+  },
+  "releases": [
+   {
+    "code": "eu",
+    "name": "Europe",
+    "title": "Oddworld: Abe's Oddysee",
+    "language": "English",
+    "note": "Hundreds of collision lines and dozens of objects reworked, a few screens and foregrounds redrawn, and 25 frames a second."
+   },
+   {
+    "code": "jp",
+    "name": "Japan",
+    "title": "Abe a GoGo",
+    "language": "Japanese",
+    "note": "Japanese text on the signs and screens and the hand prints on the stones redrawn, over the North American release's levels."
+   }
+  ]
+ }
+}

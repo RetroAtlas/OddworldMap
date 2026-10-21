@@ -241,6 +241,13 @@ class CommittedOverlays(unittest.TestCase):
             self.assertEqual(f.name, f"release_{o['game'].lower()}_{o['code']}.json")
             self.assertTrue(table[o["game"]]["releases"][o["code"]]["ships"], f.name)
 
+    def test_every_release_the_index_lists_is_committed(self):
+        import json
+        site, files = self.overlays()
+        index = json.loads((site / "releases.json").read_text())
+        listed = {f"release_{game.lower()}_{r['code']}.json" for game, e in index.items() for r in e["releases"]}
+        self.assertEqual(listed, {f.name for f in files})
+
     def test_every_key_and_field_is_the_base_objects(self):
         import json
         site, files = self.overlays()

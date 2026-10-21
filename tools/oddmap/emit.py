@@ -135,6 +135,22 @@ def write_enum_labels(game_key, out):
     print(f"enum labels -> {dst} ({len(kept)} of {len(labels)} enum types used)")
     return dst
 
+def write_release_index(out):
+    """the releases the site carries beside each game's base, as the release
+    table names them, so the page can offer them before fetching any overlay"""
+    index = {}
+    for game_key, entry in sorted(load_releases().items()):
+        base = entry["base"]
+        index[game_key] = {
+            "base": {"name": base["name"], "title": base["title"], "language": base["language"]},
+            "releases": [{"code": code, "name": r["name"], "title": r["title"], "language": r["language"],
+                          "note": r["note"]} for code, r in entry["releases"].items() if r["ships"]]}
+    dst = out / "releases.json"
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.write_text(json.dumps(index, indent=1))
+    print(f"release index -> {dst} ({sum(len(g['releases']) for g in index.values())} releases)")
+    return dst
+
 CACHE_NAME_LINE = re.compile(r'(?m)^const CACHE_NAME = "[^"]*";$')
 
 def cams_stamp(cams_dir):

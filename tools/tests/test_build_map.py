@@ -895,6 +895,12 @@ class Sidecars(unittest.TestCase):
     def test_relive_export_ae(self):
         self.assertReproduces(emit.write_relive_export, "AE", "relive_export_ae.json")
 
+    def test_release_index(self):
+        with tempfile.TemporaryDirectory() as tmp, contextlib.redirect_stdout(io.StringIO()):
+            fresh = emit.write_release_index(Path(tmp)).read_bytes()
+        self.assertEqual(fresh, (SITE / "releases.json").read_bytes(),
+                         "releases.json differs from a fresh emit: rebuild it or fix the emitter")
+
     def test_the_served_export_data_is_the_caches_verbatim(self):
         """the page reads relive's schema and the collision links through this
         file, so a copy that drifted from the cache would export documents the

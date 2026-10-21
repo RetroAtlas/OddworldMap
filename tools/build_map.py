@@ -27,7 +27,7 @@ from oddmap.disc import Disc, Lvl, parse_chunks
 from oddmap.exe import executable, path_overlays
 from oddmap.emit import (print_build_summary, require_stampable, stamp_cache_name,
                          write_enum_labels, write_field_types, write_line_links,
-                         write_relive_export)
+                         write_relive_export, write_release_index)
 from oddmap.games import GAMES, game_setup
 from oddmap.image import decode_cam, ensure_oxipng, ensure_tools, reencode_pngs
 from oddmap.messages import write_messages
@@ -74,6 +74,7 @@ def run_releases(args, ap):
                 print(f"  code: not compared, ${game['env']} names no base images")
         else:
             dst, files = write_release(args.game, game, overlay, art, out)
+            write_release_index(out)
             print("\n".join(census_lines(overlay, counts)))
             print(f"release -> {dst} ({files} images)")
 
@@ -90,7 +91,8 @@ def main():
     ap.add_argument("--emit-field-data", action="store_true",
                     help="regenerate the viewer sidecars field_types_{ao,ae}.json, "
                          "enum_labels_{ao,ae}.json and relive_export_{ao,ae}.json from the "
-                         "committed caches (no disc needed) and exit")
+                         "committed caches, and releases.json from the release table (no disc "
+                         "needed) and exit")
     ap.add_argument("--reencode-images", action="store_true",
                     help="re-emit every PNG under --out/cams from its own pixels through the installed "
                          "oxipng, restamp sw.js and exit (no disc needed): the committed pixels are the "
@@ -114,6 +116,7 @@ def main():
             write_field_types(gk, Path(args.out))
             write_enum_labels(gk, Path(args.out))
             write_relive_export(gk, Path(args.out))
+        write_release_index(Path(args.out))
         return
 
     if args.reencode_images:
@@ -310,6 +313,7 @@ def main():
     line_links = write_sprite_data(args.game, sorted(archives.items()), out, f"{game['cams_dir']}/{SHEETS_DIR}", abe,
                                    line_links, links_dir / game["links_file"], bool(only))
     write_relive_export(args.game, out, links_dir)  # carries the links, so after them
+    write_release_index(out)
     sw_file = out / "sw.js"
     # a scratch --out holds no worker, so a verification build stamps nothing
     cache_name = stamp_cache_name(sw_file, out / "cams") if sw_file.exists() else None
