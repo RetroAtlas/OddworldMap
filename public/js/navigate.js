@@ -2,9 +2,9 @@
 // Fires a "selection-changed" window event (detail.fromHash) whenever a path is picked.
 
 import { clamp, esc } from "./util.js";
-import { DEMO_NOTE, EDITED_NOTE, ENTRY_NOTE, ZOOM_MIN, ZOOM_MAX } from "./config.js";
-import { $, cv, gameBtns, levelBtns, pathBtns } from "./dom.js";
-import { knownGame, loadGame } from "./data.js";
+import { DEMO_NOTE, EDITED_NOTE, ENTRY_NOTE, LOGIC_FPS, ZOOM_MIN, ZOOM_MAX } from "./config.js";
+import { $, cv, gameBtns, levelBtns, pathBtns, releaseBtns } from "./dom.js";
+import { knownGame, loadGame, loadRelease, loadReleaseIndex } from "./data.js";
 import { toast } from "./toast.js";
 import {
   state,
@@ -42,13 +42,15 @@ import { orderPaths } from "./pathorder.js";
 import { displayLabel, getSettings, rememberLocation } from "./settings.js";
 import {
   currentOf,
-  ghostOf,
   isRemoved,
   pathEdited,
   pristineOf,
   removedObjects,
   takeReport,
 } from "./edits.js";
+import { baseObject, pathRelease } from "./release.js";
+import { setFrameRate } from "./fields.js";
+import { setTickRate } from "./motion.js";
 
 function markOn(box, key) {
   for (const b of box.children) b.classList.toggle("on", b.dataset.key === key);
@@ -77,20 +79,101 @@ export function addGame(G) {
     state.games.push(G);
     const b = document.createElement("button");
     b.dataset.code = G.id;
-    b.dataset.full = G.game;
-    setLabel(b);
-    b.title = G.game;
     b.dataset.key = G.id;
-    b.onclick = () => selectGame(G);
+    b.onclick = () => selectGame(state.games.find((g) => g.id === G.id));
     gameBtns.appendChild(b);
-    // what the saved edits met on the way in
-    const said = takeReport(G.id);
-    const edits = (n) => `${n} saved edit${n === 1 ? "" : "s"}`;
-    if (said?.dropped)
-      toast(`${edits(said.dropped)} no longer match the map data and were forgotten`);
-    if (said?.unapplied)
-      toast(`${edits(said.unapplied)} not applied: the editor data did not load`);
+    nameGame(G);
+    sayReport(G);
   }
+  window.dispatchEvent(new CustomEvent("games-changed"));
+}
+
+// the game's button carries the title of the release in hand
+function nameGame(G) {
+  const b = [...gameBtns.children].find((x) => x.dataset.key === G.id);
+  if (!b) return;
+  b.dataset.full = G.game;
+  setLabel(b);
+  b.title = G.game;
+}
+
+// what the saved edits met on the way in
+function sayReport(G) {
+  const said = takeReport(G.id, G.release?.code ?? "");
+  const edits = (n) => `${n} saved edit${n === 1 ? "" : "s"}`;
+  if (said?.dropped)
+    toast(`${edits(said.dropped)} no longer match the map data and were forgotten`);
+  if (said?.unapplied) toast(`${edits(said.unapplied)} not applied: the editor data did not load`);
+}
+
+// ---- releases ------------------------------------------------------------
+let releaseIndex = null;
+loadReleaseIndex().then((d) => {
+  releaseIndex = d;
+  buildReleaseButtons();
+});
+const releaseCode = (G) => G?.release?.code ?? "";
+const carried = (id, code) => !!releaseIndex?.[id]?.releases.some((r) => r.code === code);
+
+// the releases the site carries for the game in hand, the base first, each
+// named for where it was sold, or by its full name where two were sold in one
+// place; shown only where there is a choice
+function buildReleaseButtons() {
+  const G = state.data;
+  const entry = G && releaseIndex?.[G.id];
+  const choices = entry ? [{ code: "", ...entry.base }, ...entry.releases] : [];
+  const where = (r) => r.name.split(",")[0];
+  releaseBtns.innerHTML = "";
+  releaseBtns.hidden = choices.length < 2;
+  for (const r of choices) {
+    const b = document.createElement("button");
+    b.textContent = choices.some((o) => o !== r && where(o) === where(r)) ? r.name : where(r);
+    b.dataset.key = r.code;
+    b.title = [`${r.name}: ${r.title.replace(/^Oddworld:\s*/, "")}, in ${r.language}.`, r.note]
+      .filter(Boolean)
+      .join(" ");
+    b.onclick = () => switchRelease(G.id, r.code);
+    releaseBtns.appendChild(b);
+  }
+  markOn(releaseBtns, releaseCode(G));
+}
+
+// a game's release in hand, or the base: the game keeps the place and the
+// view, every release sharing the base's geometry and places
+export async function switchRelease(id, code) {
+  const G = code ? carried(id, code) && (await loadRelease(id, code)) : await loadGame(id);
+  if (!G) {
+    toast(`the ${code} release did not load`);
+    return false;
+  }
+  standRelease(G);
+  scheduleHash(true);
+  return true;
+}
+
+function standRelease(G) {
+  const j = state.games.findIndex((g) => g.id === G.id);
+  if (j < 0 || state.games[j] === G) return;
+  state.games[j] = G;
+  nameGame(G);
+  sayReport(G);
+  setFrameRate(G.id, G.release?.hz ?? LOGIC_FPS);
+  if (state.data?.id === G.id) {
+    const lv = state.lvl?.short,
+      pa = state.path?.id;
+    state.sel = null;
+    selectGame(G, true);
+    const L = levelOf(lv);
+    if (L) {
+      setLevel(L);
+      selectPathById(pa, false);
+    }
+  }
+  window.dispatchEvent(
+    new CustomEvent("data-changed", {
+      detail: { game: G.id, lv: state.lvl?.short, pa: state.path?.id },
+    }),
+  );
   window.dispatchEvent(new CustomEvent("games-changed"));
 }
 
@@ -106,8 +189,10 @@ export function selectGame(G, keepView) {
   state.data = G;
   setGeometry(G.geometry);
   setSpacing(state.show.spaced);
+  setTickRate(G.release?.hz ?? LOGIC_FPS);
   markOn(gameBtns, G.id);
   $("gameName").textContent = G.game;
+  buildReleaseButtons();
   state.entry = computeEntryPaths(G);
   levelBtns.innerHTML = "";
   G.levels.forEach((L) => {
@@ -191,10 +276,11 @@ window.addEventListener("settings-changed", (e) => {
   buildPathButtons();
 });
 
-function selectPath(P) {
+// `fit` frames the path; a release swapped in keeps the view on the place it shares
+function selectPath(P, fit = true) {
   state.path = P;
   markOn(pathBtns, String(P.id));
-  fitView();
+  if (fit) fitView();
   draw();
   scheduleHash(true);
   window.dispatchEvent(
@@ -202,11 +288,11 @@ function selectPath(P) {
   );
 }
 
-function selectPathById(id) {
+function selectPathById(id, fit = true) {
   const P = state.lvl.paths.find((p) => p.id === id);
   if (!P) return false;
   if (revealPath(P)) buildPathButtons(); // a hidden path arrives with no button of its own
-  selectPath(P);
+  selectPath(P, fit);
   return true;
 }
 
@@ -288,10 +374,16 @@ export function objectHash(t) {
     state.lvl.short,
     state.path.id,
     v,
-    pristineOf(t),
+    linkOrigin(t),
     state.route,
+    false,
+    releaseCode(state.data),
   );
 }
+
+// the origin a link names an object by: the base object it stands for, so a
+// link opens on it in every release, else its own where only this release has it
+const linkOrigin = (t) => baseObject(t) ?? pristineOf(t);
 
 // ---- follow (click a door/portal/well to jump to its destination) -----
 export function navigateToDest(d) {
@@ -405,6 +497,7 @@ export function viewHash() {
     null,
     state.route,
     state.graph,
+    releaseCode(state.data),
   );
 }
 
@@ -461,8 +554,32 @@ export async function applyHash() {
     }
     if (location.hash !== asked) return false; // a newer link answers for itself
   }
-  const G = state.games.find((g) => g.id === p.game);
+  let G = state.games.find((g) => g.id === p.game);
   if (!G) return false;
+  // a link names its release, no code the base; one the map does not carry
+  // lands on the base, saying so
+  const want = p.release ?? "";
+  if (releaseCode(G) !== want) {
+    const asked = location.hash;
+    awaitingGame++;
+    clearTimeout(hashTimer);
+    hashTimer = null;
+    let R;
+    try {
+      if (want) await loadReleaseIndex().then((d) => (releaseIndex ??= d));
+      R = want
+        ? carried(p.game, want) && (await loadRelease(p.game, want))
+        : await loadGame(p.game);
+    } finally {
+      awaitingGame--;
+    }
+    if (location.hash !== asked) return false;
+    if (want && !R)
+      toast(`this map carries no ${want} release of ${G.game.replace(/^Oddworld:\s*/, "")}`);
+    if (!R && want) R = await loadGame(p.game);
+    if (R) standRelease(R);
+    G = state.games.find((g) => g.id === p.game);
+  }
   const L = G.levels.find((l) => l.short === p.level);
   if (!L || !L.paths.some((q) => q.id === p.path)) return false;
   applyingHash = true;
@@ -477,22 +594,24 @@ export async function applyHash() {
   if (p.obj) {
     // a link to a specific object: center it and hold a marker on it. The link
     // names the shipped origin; the marker lands on what now stands for it
-    const origin = findTlv(
-      [...state.path.tlvs, ...removedObjects(state.path)].map(pristineOf),
-      p.obj,
-    );
-    const t = origin && (currentOf(origin, state.path) ?? ghostOf(origin, state.path));
+    const standing = [...state.path.tlvs, ...removedObjects(state.path)];
+    const origins = standing.map(linkOrigin);
+    const origin = findTlv(origins, p.obj);
+    const t = origin && standing[origins.indexOf(origin)];
     const c = t && markerCentre(t, LAYOUT);
     const fx = c ? c[0] : (view?.x ?? dX(p.obj.x1)),
       fy = c ? c[1] : (view?.y ?? dY(p.obj.y1));
     centerOn(fx, fy, null); // re-derives the focus zoom for this viewport
     flashAt(fx, fy, true);
+    const dropped = !t && findTlv(pathRelease(state.path)?.removed ?? [], p.obj);
     toast(
-      !t
-        ? `no ${p.obj.name} at that spot`
-        : isRemoved(t)
-          ? `${t.name} removed on this device`
-          : `marker on ${t.name}`,
+      dropped
+        ? `${dropped.name} is not in the ${state.data.release.name} release`
+        : !t
+          ? `no ${p.obj.name} at that spot`
+          : isRemoved(t)
+            ? `${t.name} removed on this device`
+            : `marker on ${t.name}`,
     );
   }
   state.route = route; // the hash is the source of truth: absent means no route

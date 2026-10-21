@@ -2,6 +2,7 @@
 // game the link names, and the other arrives behind it.
 // No DOM, so it stays importable in bare Node.
 
+import { RELEASE_CODE } from "./config.js";
 import { parseHash } from "./model.js";
 import { applyStoredEdits, hasStoredEdits, reportUnapplied, setLevelShort } from "./edits.js";
 import { armFieldData } from "./fields.js";
@@ -65,8 +66,6 @@ export function loadReleaseIndex() {
   });
   return releaseIndex;
 }
-
-export const RELEASE_CODE = /^[a-z]{2}(-r\d+)?$/;
 
 // a release's dataset, stood up over the base as it shipped: one per game and
 // release however many callers ask, a failed one forgotten so the next ask

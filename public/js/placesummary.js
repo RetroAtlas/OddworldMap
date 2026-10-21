@@ -9,6 +9,7 @@ export function placeSummary(data, lvl, path) {
   const n = path.tlvs.length;
   return [
     data.game.replace(/^Oddworld:\s*/, ""),
+    data.release?.name,
     lvl.name,
     `path ${path.id}`,
     pathDisplayName(data.id, lvl.short, path),

@@ -18,6 +18,7 @@ export const SHEET_FILE_BYTES = 13000;                   // typical family sheet
 export const KEY_PAN_PX = 75, KEY_ZOOM_STEP = 1.25;      // keyboard pan step (screen px) / zoom factor per press
 export const GRID_UNIT = 25;                             // world units per in-game grid square
 export const LOGIC_FPS = 30;                             // logic frames the engine counts to the second
+export const RELEASE_CODE = /^[a-z]{2}(-r\d+)?$/;        // a release's code: where it was sold, and a US pressing's revision
 export const PAGE_ZOOM_MIN = 1.02;                       // browser zoom counted as zoomed (a pinch settles a hair off 1)
 export const MAX_ROUTE_PTS = 512;                        // route waypoints a permalink may carry (parser sanity cap)
 export const EXPORT_MAX_PX = 4096 * 4096;                // whole-path export: canvas area cap, past which the image scales to fit

@@ -11,6 +11,7 @@ import {
   FOCUS_ZOOM_MAX,
   FOCUS_SCREENS,
   MAX_ROUTE_PTS,
+  RELEASE_CODE,
   EXPORT_MAX_PX,
   EXPORT_MAX_DIM,
   BARRIERS,
@@ -702,23 +703,25 @@ export const focusZoom = (cw, ch, geo) =>
     FOCUS_ZOOM_MAX,
   );
 
-// - permalinks: #GAME/LEVEL/PATH/cx/cy/zoom[/Name@x1,y1][/graph][/route=…] -
+// - permalinks: #GAME/LEVEL/PATH/cx/cy/zoom[/Name@x1,y1][/code][/graph][/route=…] -
 // cx/cy is the view's center, not the corner the renderer works in, so a link
 // lands on the same spot whatever the size of the window it opens in. Trailing
 // segments are matched by shape, not position, and unknown ones are ignored.
 // A route is a list of per-path segments {lv, pa, pts}, and its token is
 // "route=nCOUNT;sLV.PA;x,y;…;end": every segment names its path, so no
 // waypoint can ever rebind to artwork it was not plotted on. The world graph
-// reads as a place of its own, so a bare word carries it.
+// reads as a place of its own, so a bare word carries it, and a release other
+// than the base is the bare code it is named by; no code is the base.
 //
 // Every coordinate a link carries is a world coordinate, the object segment's
 // included: draw space is a packing of the world that a change of pitch would
 // slide under a link, while a world point names a place in the game.
 const GRAPH_TOKEN = "graph";
 
-export function formatHash(layout, gameId, levelShort, pathId, view, obj, route, graph) {
+export function formatHash(layout, gameId, levelShort, pathId, view, obj, route, graph, release) {
   let h = `#${gameId}/${levelShort}/${pathId}/${Math.round(worldX(view.x, layout))}/${Math.round(worldY(view.y, layout))}/${view.z.toFixed(2)}`;
   if (obj) h += `/${obj.name}@${obj.x1},${obj.y1}`;
+  if (release) h += `/${release}`;
   if (graph) h += `/${GRAPH_TOKEN}`;
   const count = route?.reduce((n, s) => n + s.pts.length, 0);
   if (count) {
@@ -814,6 +817,7 @@ export function parseHash(hash) {
     route: route ? route.segs : null,
     routeLost: route ? route.lost : 0,
     graph: tail.includes(GRAPH_TOKEN),
+    release: tail.map((s) => s.toLowerCase()).find((s) => RELEASE_CODE.test(s)) ?? null,
   };
 }
 

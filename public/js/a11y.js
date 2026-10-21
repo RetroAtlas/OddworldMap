@@ -15,7 +15,7 @@ let announced = null,
 
 window.addEventListener("selection-changed", () => {
   const { data, lvl, path } = state;
-  const at = path && `${data.id}/${lvl.short}/${path.id}`;
+  const at = path && `${data.id}/${data.release?.code ?? ""}/${lvl.short}/${path.id}`;
   if (!path || at === announced) return;
   announced = at;
   const summary = placeSummary(data, lvl, path);

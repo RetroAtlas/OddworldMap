@@ -23,6 +23,7 @@ export const sidebar = $("sidebar"),
   copyLinkBtn = $("copyLinkBtn"),
   openSiteBtn = $("openSiteBtn");
 export const gameBtns = $("gameBtns"),
+  releaseBtns = $("releaseBtns"),
   levelBtns = $("levelBtns"),
   pathBtns = $("pathBtns");
 export const filterBox = $("filterBox");

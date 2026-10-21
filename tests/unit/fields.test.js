@@ -9,6 +9,7 @@ import {
   valueMap,
   fieldEntries,
   fieldHelp,
+  setFrameRate,
   unitNote,
   onBackgroundPlane,
   defaultVisible,
@@ -503,5 +504,14 @@ test("fieldHelp: a timer's help states the rate its seconds are derived at", () 
     "The engine counts thirty frames to the second.",
   );
   assert.equal(unitNote("G", "Fleech", "patrol_range"), null);
+  // a release on a PAL clock counts its frames at its own rate
+  setFrameRate("G", 25);
+  assert.equal(
+    unitNote("G", "Slig", "pause_time"),
+    "The engine counts twenty-five frames to the second.",
+  );
+  assert.equal(prettify("G", "Slig", "pause_time", 7200), "7200\u00a0frames ≈ 288s");
+  setFrameRate("G", 30);
+  assert.equal(prettify("G", "Slig", "pause_time", 7200), "7200\u00a0frames ≈ 240s");
   setGlossary(null);
 });

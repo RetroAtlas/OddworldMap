@@ -191,6 +191,10 @@ body.fullnames .btnrow {
 body.fullnames .btnrow button {
   text-align: left;
 }
+/* a release's face is its name already, so its row stays a row */
+body.fullnames #releaseBtns {
+  flex-direction: row;
+}
 .filters {
   padding: 4px 12px 12px;
 }

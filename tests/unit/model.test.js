@@ -970,6 +970,7 @@ test("parseHash round-trips a formatted hash (against the rounded values)", () =
     route: null,
     routeLost: 0,
     graph: false,
+    release: null,
   });
   // the world point the link names, back in the space the renderer works in
   assert.deepEqual(hashToDraw(p, AO_GEOMETRY).view, { x: 177, y: 55, z: 2.23 });
@@ -1020,6 +1021,7 @@ test("parseHash: case-insensitive, partial and garbage inputs", () => {
     route: null,
     routeLost: 0,
     graph: false,
+    release: null,
   });
   assert.deepEqual(parseHash("#AO"), {
     game: "AO",
@@ -1030,6 +1032,7 @@ test("parseHash: case-insensitive, partial and garbage inputs", () => {
     route: null,
     routeLost: 0,
     graph: false,
+    release: null,
   });
   // x/y without z: the view is ignored as a whole
   assert.deepEqual(parseHash("#AO/R2/1/10/20"), {
@@ -1041,8 +1044,25 @@ test("parseHash: case-insensitive, partial and garbage inputs", () => {
     route: null,
     routeLost: 0,
     graph: false,
+    release: null,
   });
   assert.ok(Number.isNaN(parseHash("#AO/R2/junk").path));
+});
+
+test("a release rides a link as its bare code, and no code is the base", () => {
+  const view = { x: 177.4, y: 54.6, z: 2.234 };
+  const obj = { name: "Door", x1: 8746, y1: 1232 };
+  const h = formatHash(AO_GEOMETRY, "AO", "R1", 18, view, obj, null, true, "jp");
+  assert.equal(h, "#AO/R1/18/433/175/2.23/Door@8746,1232/jp/graph");
+  const p = parseHash(h);
+  assert.equal(p.release, "jp");
+  assert.deepEqual(p.obj, obj);
+  assert.equal(p.graph, true);
+  assert.equal(parseHash("#AO/R1/18/433/175/2.23/us-r0").release, "us-r0");
+  assert.equal(parseHash("#AO/R1/18/433/175/2.23/EU").release, "eu");
+  assert.equal(parseHash("#AO/R1/18/433/175/2.23").release, null);
+  assert.equal(parseHash("#AO/R1/18/433/175/2.23/graph").release, null);
+  assert.equal(formatHash(AO_GEOMETRY, "AO", "R1", 18, view), "#AO/R1/18/433/175/2.23");
 });
 
 test("a permalinked object is found by name and origin, whatever its capitals", () => {

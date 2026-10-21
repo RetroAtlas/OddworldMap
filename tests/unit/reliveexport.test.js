@@ -7,6 +7,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { materializeRelease } from "../../public/js/release.js";
 
 import {
   bucketCells,
@@ -193,4 +194,30 @@ test("norm reduces a display string the way the builder's does", () => {
   assert.equal(norm("Next 2"), "next_2");
   assert.equal(norm("ID (Unused?)"), "id");
   assert.equal(norm("Abe's Start"), "abes_start");
+});
+
+test("a release's path exports its own lines with their own links", () => {
+  for (const g of GAMES)
+    for (const { code } of load("releases.json")[g].releases) {
+      const overlay = load(`release_${g.toLowerCase()}_${code}.json`);
+      const R = materializeRelease(data[g], overlay, side[g].level_short);
+      for (const level of R.levels)
+        for (const path of level.paths) {
+          const e = overlay.paths[`${level.short}/${path.id}`];
+          if (!e?.lines) continue;
+          const { doc, manifest } = exportPath(g, R.geometry, level, path, side[g]);
+          assert.equal(manifest.missing.size, 0);
+          const items = doc.map.collisions.items;
+          assert.equal(items.length, e.lines.length, `${g} ${code} ${level.short} P${path.id}`);
+          const names = side[g].schema.collision_structure.slice(5).map((r) => r.name);
+          const cols = side[g].links.columns;
+          items.forEach((item, i) =>
+            assert.deepEqual(
+              names.map((n) => item[n]),
+              names.map((n) => e.links[i][cols.indexOf(norm(n))]),
+              `${g} ${code} ${level.short} P${path.id} line ${i}`,
+            ),
+          );
+        }
+    }
 });

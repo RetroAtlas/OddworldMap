@@ -175,13 +175,13 @@ export const TRANSFORM = {
 // reads as a second field. The derived reading stays breakable, being long
 // enough that forcing it onto one line would overflow the sidebar instead.
 export const UNITS = {
-  frames: (n) => {
+  frames: (n, hz = LOGIC_FPS) => {
     // a frame count cannot run backwards, so a negative one is the payload being
     // read at the wrong signedness and the value is not ours to build a reading on
     if (!(n >= 0)) return n;
     // a stored frame count keeps its exact value and gains the reading; the
     // second is dropped where it rounds away, rather than saying "0s"
-    const s = Math.round((n / LOGIC_FPS) * 10) / 10;
+    const s = Math.round((n / hz) * 10) / 10;
     return `${n}\u00a0${Math.abs(n) === 1 ? "frame" : "frames"}${s ? ` ≈ ${s}s` : ""}`;
   },
   grid: (n) => `${n}\u00a0grid`,
@@ -189,13 +189,20 @@ export const UNITS = {
   seconds: (n) => `${n}s`,
 };
 
+// per game, the clock its dataset in hand runs at, a release's own where it is one
+const FRAME_RATE = {};
+export const setFrameRate = (game, hz) => {
+  FRAME_RATE[game] = hz;
+};
+const frameRate = (game) => FRAME_RATE[game] ?? LOGIC_FPS;
+const RATE_WORDS = { 25: "twenty-five", 30: "thirty" };
+
 // the one unit whose reading is derived rather than stored, so the one that
 // owes the reader its factor
-const FRAME_RATE_NOTE = "The engine counts thirty frames to the second.";
-
-// what a field's unit owes the reader, or null
 export const unitNote = (game, type, key) =>
-  fieldUnit(type, key, fieldType(game, type, key)) === "frames" ? FRAME_RATE_NOTE : null;
+  fieldUnit(type, key, fieldType(game, type, key)) === "frames"
+    ? `The engine counts ${RATE_WORDS[frameRate(game)] ?? frameRate(game)} frames to the second.`
+    : null;
 
 // object -> field -> game type, and the generated enum labels (type -> value ->
 // text), both per game; the boot loads the sidecars and hands them over. Empty
@@ -235,7 +242,12 @@ export const resolve = (entry, value) =>
 // unit where the glossary names one, else the raw int
 export const prettify = (game, type, key, value) => {
   const label = resolve(valueMap(game, type, key), value);
-  return label ?? resolve(UNITS[fieldUnit(type, key, fieldType(game, type, key))], value) ?? value;
+  if (label != null) return label;
+  const unit = fieldUnit(type, key, fieldType(game, type, key));
+  return (
+    (unit === "frames" ? UNITS.frames(value, frameRate(game)) : resolve(UNITS[unit], value)) ??
+    value
+  );
 };
 
 // a "what is this field" for the tooltip: the curated glossary prose plus the

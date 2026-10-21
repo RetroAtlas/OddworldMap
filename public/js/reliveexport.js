@@ -146,7 +146,8 @@ export function exportPath(gameId, geometry, level, path, side) {
   });
 
   const linkNames = side.schema.collision_structure.slice(5).map((r) => r.name);
-  const rows = side.links.paths[level.short][String(path.id)];
+  // a release that carries its own lines carries their links beside them
+  const rows = path.release?.links ?? side.links.paths[level.short][String(path.id)];
   if (rows.length !== path.lines.length)
     throw new Error(
       `${level.short} P${path.id}: ${rows.length} link rows for ${path.lines.length} lines`,

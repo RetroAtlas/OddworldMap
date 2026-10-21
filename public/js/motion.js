@@ -1,6 +1,6 @@
-// The engine's 30 Hz tick, advanced only while it is set running, and the
-// frame-advance rule an animation left alone follows. The painter reads the
-// tick; this module never draws.
+// The engine's tick, at the clock of the release in hand, advanced only while
+// it is set running, and the frame-advance rule an animation left alone
+// follows. The painter reads the tick; this module never draws.
 // No DOM at module top level, so it stays importable in bare Node.
 
 import { LOGIC_FPS } from "./config.js";
@@ -27,7 +27,10 @@ let last = 0;
 let carry = 0;
 let onTick = null;
 let frame = 0;
-const TICK_MS = 1000 / LOGIC_FPS;
+let tickMs = 1000 / LOGIC_FPS;
+export const setTickRate = (hz) => {
+  tickMs = 1000 / hz;
+};
 
 export const motionTick = () => tick;
 
@@ -38,8 +41,8 @@ export function advance(now) {
   carry += now - last;
   last = now;
   let advanced = 0;
-  while (carry >= TICK_MS) {
-    carry -= TICK_MS;
+  while (carry >= tickMs) {
+    carry -= tickMs;
     tick += 1;
     advanced += 1;
   }

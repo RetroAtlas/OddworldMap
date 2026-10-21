@@ -16,6 +16,7 @@ import { onBackgroundPlane, valueMap } from "./fields.js";
 import { gridSize, snapAt } from "./collide.js";
 import { buildTypeTable, newObject } from "./objecttypes.js";
 import { store } from "./settings.js";
+import { RELEASE_CODE } from "./config.js";
 
 const S16_MIN = -32768,
   S16_MAX = 32767;
@@ -39,7 +40,6 @@ export const setEnabled = (on) => {
 // is all the read checks, each delta answering to its object. One store per
 // release, the base's under the bare key and each other release's under its code
 const EDITS_KEY = "owm:edits";
-const RELEASE_CODE = /^[a-z]{2}(-r\d+)?$/;
 const storeKey = (code) => (code ? `${EDITS_KEY}:${code}` : EDITS_KEY);
 const stores = new Map();
 function all(code) {
