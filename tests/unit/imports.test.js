@@ -35,6 +35,7 @@ test("pure modules import in bare Node", async () => {
     "data",
     "demo",
     "pathvisible",
+    "release",
     "fields",
     "state",
     "geometry",

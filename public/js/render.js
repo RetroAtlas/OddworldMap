@@ -71,6 +71,54 @@ function img(src) {
   return images[src];
 }
 
+// a patched screen as one picture, the base's screen with the release's patches
+// drawn over it once every part has arrived, so the base never shows alone, and
+// made an image again, since a browser scales a canvas down otherwise than an
+// image; held under its first patch, which leaves the cache when the camera's
+// files do
+const composed = {};
+function compose(c) {
+  const key = c.patches[0][2];
+  if (composed[key]) return composed[key];
+  const base = img(c.png);
+  const parts = c.patches.map(([, , src]) => img(src));
+  if (![base, ...parts].every((p) => p.complete && p.naturalWidth)) return null; // retried next draw
+  const oc = document.createElement("canvas");
+  oc.width = base.naturalWidth;
+  oc.height = base.naturalHeight;
+  const octx = oc.getContext("2d");
+  octx.drawImage(base, 0, 0);
+  c.patches.forEach(([x, y], i) => octx.drawImage(parts[i], x, y));
+  const entry = { im: new Image(), ready: false };
+  entry.done = new Promise((res) => oc.toBlob(res))
+    .then((blob) => {
+      entry.im.src = URL.createObjectURL(blob);
+      return entry.im.decode();
+    })
+    .then(
+      () => {
+        entry.ready = true;
+      },
+      () => {
+        if (composed[key] === entry) delete composed[key];
+      },
+    )
+    .finally(() => {
+      URL.revokeObjectURL(entry.im.src);
+      scheduleDraw();
+    });
+  composed[key] = entry;
+  return entry;
+}
+function screenOf(c) {
+  if (c.patches) {
+    const entry = compose(c);
+    return entry?.ready ? entry.im : null;
+  }
+  const im = img(c.png);
+  return im.complete && im.naturalWidth ? im : null;
+}
+
 const tintCache = {};
 // the foreground masks under Dim: the mask's pixels dimmed the way the screens
 // are, but opaque, so a sprite behind a piece of foreground stays hidden
@@ -323,6 +371,7 @@ export async function preloadPath(path) {
   const srcs = [];
   for (const c of path.cams) {
     if (c.png) srcs.push(c.png);
+    for (const [, , src] of c.patches ?? []) srcs.push(src);
     for (const [, src] of c.masks ?? []) srcs.push(src);
   }
   if (state.show.objects) {
@@ -332,13 +381,14 @@ export async function preloadPath(path) {
     const set = spriteSets[state.data.id];
     if (set) srcs.push(...pathSheets(path, set));
   }
-  return Promise.all(
+  await Promise.all(
     srcs.map((src) => {
       let im = img(src);
       // a load that failed reports itself complete with no width, so it would
       // pass for arrived forever; drop it and let this attempt refetch
       if (im.complete && !im.naturalWidth) {
         delete images[src];
+        delete composed[src];
         delete tintCache[src];
         delete dimCache[src];
         im = img(src);
@@ -350,6 +400,8 @@ export async function preloadPath(path) {
       });
     }),
   );
+  // a patched screen paints from its composed picture, which follows its parts
+  await Promise.all(path.cams.filter((c) => c.patches).map((c) => compose(c)?.done));
 }
 
 // whether a paint of this path would reach a decoded image everywhere it draws
@@ -363,6 +415,7 @@ export function artworkReady(path) {
   };
   for (const c of path.cams) {
     if (c.png && !decoded(c.png)) return false;
+    if (c.patches && !composed[c.patches[0][2]]?.ready) return false;
     if (state.show.fg || state.show.objects)
       for (const [, src] of c.masks ?? []) if (!decoded(src)) return false;
   }
@@ -382,12 +435,14 @@ window.addEventListener("selection-changed", () => {
   const keep = new Set(sheetSrcs(state.data.id));
   for (const c of state.path.cams) {
     if (c.png) keep.add(c.png);
+    for (const [, , src] of c.patches ?? []) keep.add(src);
     for (const [, src] of c.masks ?? []) keep.add(src);
   }
   for (const src of Object.keys(images)) {
     if (keep.has(src)) continue;
     images[src].onload = images[src].onerror = null; // in-flight loads must not repaint after eviction
     delete images[src];
+    delete composed[src];
     delete tintCache[src];
     delete dimCache[src];
   }
@@ -715,8 +770,8 @@ function paintScreens({ ctx, path, layout }, dim) {
     // a screen is its window, never the whole cell: (cx, cy) is where the
     // transform puts the window's corner at either pitch, so the slack stays bare
     if (c.png) {
-      const im = img(c.png);
-      if (im.complete && im.naturalWidth) {
+      const im = screenOf(c);
+      if (im) {
         ctx.globalAlpha = dim ? 0.35 : 1;
         ctx.drawImage(im, 0, 0, layout.visW, layout.visH, cx, cy, layout.visW, layout.visH);
         ctx.globalAlpha = 1;

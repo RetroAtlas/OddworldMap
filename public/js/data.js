@@ -5,6 +5,7 @@
 import { parseHash } from "./model.js";
 import { applyStoredEdits, hasStoredEdits, reportUnapplied, setLevelShort } from "./edits.js";
 import { armFieldData } from "./fields.js";
+import { materializeRelease } from "./release.js";
 
 // the games in canonical order; the first is what a visit boots on when
 // nothing names one
@@ -51,6 +52,48 @@ export function loadGame(id, low) {
         .then((d) => withStoredEdits(d, low))
         .finally(() => settled.add(id))),
     );
+  return p;
+}
+
+// the releases the site carries beside each game's base, fetched once, a failed
+// fetch forgotten so the next ask retries
+let releaseIndex = null;
+export function loadReleaseIndex() {
+  releaseIndex ??= loadJson("releases.json").then((d) => {
+    if (!d) releaseIndex = null;
+    return d;
+  });
+  return releaseIndex;
+}
+
+export const RELEASE_CODE = /^[a-z]{2}(-r\d+)?$/;
+
+// a release's dataset, stood up over the base as it shipped: one per game and
+// release however many callers ask, a failed one forgotten so the next ask
+// retries. The level map a changed object's destinations derive through rides
+// the editor sidecar, fetched only for an overlay that changes objects
+const releases = new Map();
+export function loadRelease(id, code, low) {
+  if (!knownGame(id) || !RELEASE_CODE.test(code)) return Promise.resolve(null);
+  const key = `${id}:${code}`;
+  let p = releases.get(key);
+  if (!p) {
+    const opts = low ? { priority: "low" } : null;
+    p = Promise.all([loadGame(id, low), loadJson(`release_${id.toLowerCase()}_${code}.json`, opts)])
+      .then(async ([base, overlay]) => {
+        if (!base || overlay?.game !== id || overlay.code !== code) return null;
+        const objects = Object.values(overlay.paths ?? {}).some((e) => e.objects);
+        const side = objects ? await loadEditorData(id, low) : null;
+        if (objects && !side) return null;
+        return materializeRelease(base, overlay, side?.level_short ?? {});
+      })
+      .then((R) => withStoredEdits(R, low))
+      .then((R) => {
+        if (!R) releases.delete(key);
+        return R;
+      });
+    releases.set(key, p);
+  }
   return p;
 }
 
