@@ -1190,3 +1190,42 @@ test("a duplicate stands beside its original as an added copy of it, fields as t
   assert.equal(state.path, P1);
   restoreEdits({});
 });
+
+test("a release's edits keep a store and a trail of their own", () => {
+  restoreEdits({});
+  restoreEdits({}, "jp");
+  const base = world();
+  const R = { ...world(), release: { code: "jp" } };
+  const [RL0] = R.levels;
+  stand(R);
+  applyFieldEdit(R.levels[0].paths[0].tlvs[0], "camera", 18);
+  assert.deepEqual(editStore("jp").AE["MI/1"].objects["Door@10,10"], { fields: { camera: 18 } });
+  assert.deepEqual(editStore(), {});
+  assert.ok(hasStoredEdits("AE", "jp"));
+  assert.equal(hasStoredEdits("AE", ""), false);
+  assert.ok(canUndo("AE", "MI", 1));
+  stand(base);
+  assert.equal(canUndo("AE", "MI", 1), false);
+  applyFieldEdit(base.levels[0].paths[0].tlvs[0], "camera", 19);
+  assert.deepEqual(gameEdits("AE"), { objects: 2, paths: 2 });
+  // a forgetting reaches the release standing off the page as well
+  assert.notEqual(R.levels[0], RL0);
+  forgetAll();
+  assert.equal(R.levels[0], RL0);
+  assert.deepEqual(editStore("jp"), {});
+  assert.deepEqual(gameEdits("AE"), { objects: 0, paths: 0 });
+});
+
+test("a release's stored edits apply over its dataset alone and report under it", () => {
+  restoreEdits({});
+  restoreEdits({ AE: { "MI/1": { objects: { "Door@10,10": { fields: { camera: 20 } } } } } }, "jp");
+  const base = world();
+  const R = { ...world(), release: { code: "jp" } };
+  applyStoredEdits(base);
+  applyStoredEdits(R);
+  assert.equal(base.levels[0].paths[0].tlvs[0].fields.camera, 17);
+  assert.equal(R.levels[0].paths[0].tlvs[0].fields.camera, 20);
+  assert.deepEqual(takeReport("AE", "jp"), { applied: 1, dropped: 0, unapplied: 0 });
+  assert.deepEqual(takeReport("AE"), { applied: 0, dropped: 0, unapplied: 0 });
+  restoreEdits({}, "jp");
+});

@@ -36,20 +36,43 @@ export const setEnabled = (on) => {
 // {game: {"LV/PA": {next, objects: {key: {fields: {name: value}, rect: [x1,
 // y1, x2, y2], removed: true}, "+n": {name, rect, fields}}}}}, each part
 // optional, read from the device once and written back on every change; shape
-// is all the read checks, each delta answering to its object
+// is all the read checks, each delta answering to its object. One store per
+// release, the base's under the bare key and each other release's under its code
 const EDITS_KEY = "owm:edits";
-let edits = null;
-const all = () => (edits ??= sanitizeEdits(store.get(EDITS_KEY)));
-export const restoreEdits = (obj) => {
-  edits = obj;
+const RELEASE_CODE = /^[a-z]{2}(-r\d+)?$/;
+const storeKey = (code) => (code ? `${EDITS_KEY}:${code}` : EDITS_KEY);
+const stores = new Map();
+function all(code) {
+  let s = stores.get(code);
+  if (!s) stores.set(code, (s = sanitizeEdits(store.get(storeKey(code)))));
+  return s;
+}
+// the releases the device holds a store for, the base's always among them
+const storedCodes = () =>
+  new Set([
+    "",
+    ...stores.keys(),
+    ...store
+      .keys()
+      .filter((k) => k.startsWith(`${EDITS_KEY}:`))
+      .map((k) => k.slice(EDITS_KEY.length + 1))
+      .filter((c) => RELEASE_CODE.test(c)),
+  ]);
+export const restoreEdits = (obj, code = "") => {
+  stores.set(code, obj);
   histories.clear();
   minted.clear();
 };
-export const editStore = () => all();
-function persist() {
-  if (Object.keys(all()).length) store.set(EDITS_KEY, JSON.stringify(edits));
-  else store.remove(EDITS_KEY);
+export const editStore = (code = "") => all(code);
+function persist(code) {
+  const s = all(code);
+  if (Object.keys(s).length) store.set(storeKey(code), JSON.stringify(s));
+  else store.remove(storeKey(code));
 }
+// a dataset's release, the base's being none
+const codeOfData = (G) => G?.release?.code ?? "";
+// where a place's trail and report are kept: its game, and its release beside it
+const spaceOf = (gameId, code) => (code ? `${gameId}:${code}` : gameId);
 
 export function sanitizeEdits(raw) {
   let parsed;
@@ -114,22 +137,22 @@ const histories = new Map();
 // again while a stale handle may still name it, though the entry went and came back
 const minted = new Map();
 const clone = (pe) => (pe ? JSON.parse(JSON.stringify(pe)) : null);
-function trail(gameId, pk) {
-  const k = `${gameId}/${pk}`;
+function trail(space, pk) {
+  const k = `${space}/${pk}`;
   let h = histories.get(k);
   if (!h) histories.set(k, (h = { undo: [], redo: [] }));
   return h;
 }
-function record(gameId, pk, before, tag = null) {
-  const h = trail(gameId, pk);
+function record(space, pk, before, tag = null) {
+  const h = trail(space, pk);
   const top = h.undo[h.undo.length - 1];
   if (!tag || !top || top.tag !== tag) h.undo.push({ snap: before, tag });
   h.redo.length = 0;
 }
 export const canUndo = (gameId, lv, pa) =>
-  (histories.get(`${gameId}/${pathKey(lv, pa)}`)?.undo.length ?? 0) > 0;
+  (histories.get(`${spaceOf(gameId, codeOf(gameId))}/${pathKey(lv, pa)}`)?.undo.length ?? 0) > 0;
 export const canRedo = (gameId, lv, pa) =>
-  (histories.get(`${gameId}/${pathKey(lv, pa)}`)?.redo.length ?? 0) > 0;
+  (histories.get(`${spaceOf(gameId, codeOf(gameId))}/${pathKey(lv, pa)}`)?.redo.length ?? 0) > 0;
 
 // a pristine path's objects by origin: name and top-left, with an ordinal where
 // the tuple repeats inside the path, so a delta names one object and not the first
@@ -174,11 +197,7 @@ const added = new WeakSet();
 const tables = new WeakMap();
 export function typeTable(G) {
   let table = tables.get(G);
-  if (!table)
-    tables.set(
-      G,
-      (table = buildTypeTable(G.levels.map((L) => shipped(G).levels.get(L.short) ?? L))),
-    );
+  if (!table) tables.set(G, (table = buildTypeTable(pristineLevels(G))));
   return table;
 }
 export const typeNames = (G) => Object.keys(typeTable(G)).sort((a, b) => a.localeCompare(b));
@@ -189,6 +208,8 @@ function shipped(G) {
   if (!r) pristine.set(G, (r = { levels: new Map(), paths: new Map() }));
   return r;
 }
+// a dataset's levels as it shipped, whatever stands in it now
+export const pristineLevels = (G) => G.levels.map((L) => shipped(G).levels.get(L.short) ?? L);
 
 // an added object is its own origin: nothing shipped stands behind it
 export const pristineOf = (t) => origin.get(t)?.pristine ?? t;
@@ -235,16 +256,22 @@ export function ghostOf(t, path = state.path) {
   return removedObjects(path).find((g) => origin.get(g).pristine === p) ?? null;
 }
 
-export const hasStoredEdits = (gameId) => enabled && Object.keys(all()[gameId] ?? {}).length > 0;
+export const hasStoredEdits = (gameId, code = codeOf(gameId)) =>
+  enabled && Object.keys(all(code)[gameId] ?? {}).length > 0;
+// whether the device holds edits over any release of the game
+export const hasAnyStoredEdits = (gameId) =>
+  [...storedCodes()].some((code) => hasStoredEdits(gameId, code));
 
+// what the device holds over every release of the game
 export function gameEdits(gameId) {
   let objects = 0,
     paths = 0;
-  for (const pe of Object.values(all()[gameId] ?? {})) {
-    const n = Object.keys(pe.objects).length;
-    if (n) paths++;
-    objects += n;
-  }
+  for (const code of storedCodes())
+    for (const pe of Object.values(all(code)[gameId] ?? {})) {
+      const n = Object.keys(pe.objects).length;
+      if (n) paths++;
+      objects += n;
+    }
   return { objects, paths };
 }
 
@@ -413,7 +440,12 @@ function rebuildLevel(G, j) {
   const paths = PL.paths.map((P, i) => {
     const pk = pathKey(L.short, P.id);
     if (!was.paths.has(pk)) was.paths.set(pk, P);
-    const fresh = materializePath(G.id, was.paths.get(pk), all()[G.id]?.[pk], typeTable(G));
+    const fresh = materializePath(
+      G.id,
+      was.paths.get(pk),
+      all(codeOfData(G))[G.id]?.[pk],
+      typeTable(G),
+    );
     // a path already standing as these deltas keeps its identity
     const standing = L.paths[i];
     return standing !== was.paths.get(pk) && sameDeltas(standing, fresh) ? standing : fresh;
@@ -470,6 +502,9 @@ function swapPath(G, lv, pa) {
 }
 
 const gameOf = (gameId) => state.games.find((g) => g.id === gameId) ?? null;
+const codeOf = (gameId) => codeOfData(gameOf(gameId));
+// every dataset a store has stood in, so a forgetting reaches one off the page too
+const held = new Set();
 
 // the place a funnel works on: its dataset, its store key, its pristine path
 // and the path now standing, with the level map every materialization needs
@@ -480,21 +515,23 @@ function placeOf(where) {
   const G = gameOf(gameId);
   if (!hasLevelShort(gameId))
     throw new Error(`${gameId}: no level map to derive destinations with`);
+  held.add(G);
+  const code = codeOfData(G);
   const pk = pathKey(lv, pa);
   const standingPath = () => G.levels.find((L) => L.short === lv).paths.find((p) => p.id === pa);
   const P = shipped(G).paths.get(pk) ?? standingPath();
-  return { gameId, lv, pa, G, pk, P, standingPath };
+  return { gameId, code, space: spaceOf(gameId, code), lv, pa, G, pk, P, standingPath };
 }
 
 // what a funnel works on: the place and the object's key in its store entry
 function locate(t, where, { ghost = false } = {}) {
   const place = placeOf(where);
-  const { gameId, lv, pa, pk, P } = place;
+  const { gameId, code, lv, pa, pk, P } = place;
   const pristine = pristineOf(t);
   const o = origin.get(t);
   const addedHere = !!o && !o.pristine;
   const key = addedHere ? o.key : objectKey(P, pristine);
-  const entry = key && all()[gameId]?.[pk]?.objects?.[key];
+  const entry = key && all(code)[gameId]?.[pk]?.objects?.[key];
   if (!key || (addedHere && !entry)) throw new Error(`${pristine.name} is not on ${lv} P${pa}`);
   // a ghost by identity, or a handle taken before the store removed its object
   const removed = isRemoved(t) || !!entry?.removed;
@@ -504,36 +541,39 @@ function locate(t, where, { ghost = false } = {}) {
 
 // the entry a funnel writes into, minted on the way; a delta left with nothing
 // in it goes, and the path's and the game's entries with it
-const deltaOf = (gameId, pk, key) =>
-  (((all()[gameId] ??= {})[pk] ??= { objects: {} }).objects[key] ??= {});
-function prune(gameId, pk, key) {
-  const game = all()[gameId],
+const deltaOf = (code, gameId, pk, key) =>
+  (((all(code)[gameId] ??= {})[pk] ??= { objects: {} }).objects[key] ??= {});
+function prune(code, gameId, pk, key) {
+  const game = all(code)[gameId],
     path = game?.[pk];
   if (!path) return;
   const delta = path.objects[key];
   if (delta?.fields && !Object.keys(delta.fields).length) delete delta.fields;
   if (delta && !liveDelta(delta)) delete path.objects[key];
   if (!Object.keys(path.objects).length) delete game[pk];
-  if (!Object.keys(game).length) delete edits[gameId];
+  if (!Object.keys(game).length) delete all(code)[gameId];
 }
 
 // one field of one object, on the path in hand; the value it had shipped with
 // takes the delta away again, while an added object's fields stay whole.
 // Returns the object now standing for it.
 export function applyFieldEdit(t, field, value, where = {}) {
-  const { gameId, lv, pa, G, pristine, pk, key, added, standingPath } = locate(t, where);
+  const { gameId, code, space, lv, pa, G, pristine, pk, key, added, standingPath } = locate(
+    t,
+    where,
+  );
   const shippedFields = added ? typeTable(G)[t.name].defaults : pristine.fields;
   if (!validValue(gameId, t.name, field, value, shippedFields))
     throw new Error(`${t.name}.${field}: ${value} is not a value the archive holds`);
-  const standing = all()[gameId]?.[pk]?.objects?.[key]?.fields?.[field] ?? shippedFields[field];
+  const standing = all(code)[gameId]?.[pk]?.objects?.[key]?.fields?.[field] ?? shippedFields[field];
   if (standing === value) return currentOf(t, standingPath());
-  record(gameId, pk, clone(all()[gameId]?.[pk] ?? null));
-  const delta = deltaOf(gameId, pk, key);
+  record(space, pk, clone(all(code)[gameId]?.[pk] ?? null));
+  const delta = deltaOf(code, gameId, pk, key);
   delta.fields ??= {};
   if (!added && value === pristine.fields[field]) delete delta.fields[field];
   else delta.fields[field] = value;
-  prune(gameId, pk, key);
-  persist();
+  prune(code, gameId, pk, key);
+  persist(code);
   swapPath(G, lv, pa);
   return currentOf(t, standingPath());
 }
@@ -542,18 +582,21 @@ export function applyFieldEdit(t, field, value, where = {}) {
 // shipped with takes the delta away again, and a merging call (a nudge) joins
 // the merging step before it on the same object. Returns the object now standing for it.
 export function applyRectEdit(t, rect, { merge = false, ...where } = {}) {
-  const { gameId, lv, pa, G, pristine, pk, P, key, added, standingPath } = locate(t, where);
+  const { gameId, code, space, lv, pa, G, pristine, pk, P, key, added, standingPath } = locate(
+    t,
+    where,
+  );
   const was = added ? null : rectOf(pristine);
   if (!validRect(P, G.geometry, rect, was))
     throw new Error(`${t.name}: ${rect.join(",")} is not a place on the path's grid`);
-  const standing = all()[gameId]?.[pk]?.objects?.[key]?.rect ?? was;
+  const standing = all(code)[gameId]?.[pk]?.objects?.[key]?.rect ?? was;
   if (sameRect(rect, standing)) return currentOf(t, standingPath());
-  record(gameId, pk, clone(all()[gameId]?.[pk] ?? null), merge ? `rect:${key}` : null);
-  const delta = deltaOf(gameId, pk, key);
+  record(space, pk, clone(all(code)[gameId]?.[pk] ?? null), merge ? `rect:${key}` : null);
+  const delta = deltaOf(code, gameId, pk, key);
   if (!added && sameRect(rect, was)) delete delta.rect;
   else delta.rect = [...rect];
-  prune(gameId, pk, key);
-  persist();
+  prune(code, gameId, pk, key);
+  persist(code);
   swapPath(G, lv, pa);
   return currentOf(t, standingPath());
 }
@@ -561,13 +604,15 @@ export function applyRectEdit(t, rect, { merge = false, ...where } = {}) {
 // one object off the path, a shipped one's deltas kept for a restore and an
 // added one gone outright; a ghost is no step
 export function removeObject(t, where = {}) {
-  const { gameId, lv, pa, G, pk, key, added, removed } = locate(t, where, { ghost: true });
+  const { gameId, code, space, lv, pa, G, pk, key, added, removed } = locate(t, where, {
+    ghost: true,
+  });
   if (removed) return null;
-  record(gameId, pk, clone(all()[gameId]?.[pk] ?? null));
-  if (added) delete all()[gameId][pk].objects[key];
-  else deltaOf(gameId, pk, key).removed = true;
-  prune(gameId, pk, key);
-  persist();
+  record(space, pk, clone(all(code)[gameId]?.[pk] ?? null));
+  if (added) delete all(code)[gameId][pk].objects[key];
+  else deltaOf(code, gameId, pk, key).removed = true;
+  prune(code, gameId, pk, key);
+  persist(code);
   swapPath(G, lv, pa);
   return null;
 }
@@ -596,12 +641,18 @@ export function duplicateObject(t, where = {}) {
   return insertAdded(place, type, t.name, rect, t.fields ? { ...t.fields } : {});
 }
 
-function insertAdded({ gameId, lv, pa, G, pk, P, standingPath }, type, name, rect, fields) {
+function insertAdded(
+  { gameId, code, space, lv, pa, G, pk, P, standingPath },
+  type,
+  name,
+  rect,
+  fields,
+) {
   if (!validRect(P, G.geometry, rect))
     throw new Error(`${name}: ${rect.join(",")} is not a place on the path's grid`);
-  record(gameId, pk, clone(all()[gameId]?.[pk] ?? null));
-  const pe = ((all()[gameId] ??= {})[pk] ??= { objects: {} });
-  const mark = `${gameId}/${pk}`;
+  record(space, pk, clone(all(code)[gameId]?.[pk] ?? null));
+  const pe = ((all(code)[gameId] ??= {})[pk] ??= { objects: {} });
+  const mark = `${space}/${pk}`;
   const n = Math.max(pe.next ?? 1, minted.get(mark) ?? 1);
   pe.next = n + 1;
   minted.set(mark, n + 1);
@@ -609,7 +660,7 @@ function insertAdded({ gameId, lv, pa, G, pk, P, standingPath }, type, name, rec
   const entry = { name, rect: [...rect] };
   if (type.fields) entry.fields = { ...type.defaults, ...fields };
   pe.objects[key] = entry;
-  persist();
+  persist(code);
   swapPath(G, lv, pa);
   return standingPath().tlvs.find((c) => origin.get(c)?.key === key) ?? null;
 }
@@ -617,13 +668,15 @@ function insertAdded({ gameId, lv, pa, G, pk, P, standingPath }, type, name, rec
 // a removed object back on the path, as its deltas left it. Returns the
 // object now standing for it.
 export function restoreObject(t, where = {}) {
-  const { gameId, lv, pa, G, pristine, pk, key, standingPath } = locate(t, where, { ghost: true });
-  const delta = all()[gameId]?.[pk]?.objects?.[key];
+  const { gameId, code, space, lv, pa, G, pristine, pk, key, standingPath } = locate(t, where, {
+    ghost: true,
+  });
+  const delta = all(code)[gameId]?.[pk]?.objects?.[key];
   if (!delta?.removed) return currentOf(pristine, standingPath());
-  record(gameId, pk, clone(all()[gameId][pk]));
+  record(space, pk, clone(all(code)[gameId][pk]));
   delete delta.removed;
-  prune(gameId, pk, key);
-  persist();
+  prune(code, gameId, pk, key);
+  persist(code);
   swapPath(G, lv, pa);
   return currentOf(pristine, standingPath());
 }
@@ -631,38 +684,40 @@ export function restoreObject(t, where = {}) {
 // one object back as the disc has it, fields and rect alike, in one step.
 // Returns the object now standing for it.
 export function revertObject(t, where = {}) {
-  const { gameId, lv, pa, G, pristine, pk, key, standingPath } = locate(t, where);
-  const path = all()[gameId]?.[pk];
+  const { gameId, code, space, lv, pa, G, pristine, pk, key, standingPath } = locate(t, where);
+  const path = all(code)[gameId]?.[pk];
   if (!path?.objects[key]) return currentOf(pristine, standingPath());
-  record(gameId, pk, clone(path));
+  record(space, pk, clone(path));
   delete path.objects[key];
-  prune(gameId, pk, key);
-  persist();
+  prune(code, gameId, pk, key);
+  persist(code);
   swapPath(G, lv, pa);
   return currentOf(pristine, standingPath());
 }
 
 export function revertPath(gameId, lv, pa) {
-  const game = all()[gameId];
+  const code = codeOf(gameId);
+  const game = all(code)[gameId];
   if (!game?.[pathKey(lv, pa)]) return;
-  record(gameId, pathKey(lv, pa), clone(game[pathKey(lv, pa)]));
+  record(spaceOf(gameId, code), pathKey(lv, pa), clone(game[pathKey(lv, pa)]));
   delete game[pathKey(lv, pa)];
-  if (!Object.keys(game).length) delete edits[gameId];
-  persist();
+  if (!Object.keys(game).length) delete all(code)[gameId];
+  persist(code);
   const G = gameOf(gameId);
   if (G) swapPath(G, lv, pa);
 }
 
+// every store the device holds, and every dataset one stood in back as shipped
 export function forgetAll() {
-  const was = all();
-  edits = {};
+  const was = new Map([...storedCodes()].map((code) => [code, all(code)]));
   histories.clear();
   minted.clear();
-  persist();
-  for (const [gameId, game] of Object.entries(was)) {
-    const G = gameOf(gameId);
-    if (!G) continue;
-    for (const pk of Object.keys(game)) {
+  for (const code of was.keys()) {
+    stores.set(code, {});
+    persist(code);
+  }
+  for (const G of new Set([...held, ...state.games])) {
+    for (const pk of Object.keys(was.get(codeOfData(G))?.[G.id] ?? {})) {
       const [lv, pa] = pk.split("/");
       swapPath(G, lv, +pa);
     }
@@ -672,21 +727,23 @@ export function forgetAll() {
 // a step back or forward puts the entry the trail holds into the store and
 // swaps, the way a revert does; the map follows through the swap alone
 function restore(gameId, lv, pa, snapshot) {
+  const code = codeOf(gameId);
   const pk = pathKey(lv, pa);
-  const game = (all()[gameId] ??= {});
+  const game = (all(code)[gameId] ??= {});
   if (snapshot) game[pk] = clone(snapshot);
   else delete game[pk];
-  if (!Object.keys(game).length) delete edits[gameId];
-  persist();
+  if (!Object.keys(game).length) delete all(code)[gameId];
+  persist(code);
   const G = gameOf(gameId);
   if (G) swapPath(G, lv, pa);
 }
 
 export function undoEdit(gameId, lv, pa) {
+  const code = codeOf(gameId);
   const pk = pathKey(lv, pa),
-    h = trail(gameId, pk);
+    h = trail(spaceOf(gameId, code), pk);
   if (!h.undo.length) return false;
-  h.redo.push({ snap: clone(all()[gameId]?.[pk] ?? null), tag: null });
+  h.redo.push({ snap: clone(all(code)[gameId]?.[pk] ?? null), tag: null });
   restore(gameId, lv, pa, h.undo.pop().snap);
   // the step left on top is a run no later nudge may join
   if (h.undo.length) h.undo[h.undo.length - 1].tag = null;
@@ -694,10 +751,11 @@ export function undoEdit(gameId, lv, pa) {
 }
 
 export function redoEdit(gameId, lv, pa) {
+  const code = codeOf(gameId);
   const pk = pathKey(lv, pa),
-    h = trail(gameId, pk);
+    h = trail(spaceOf(gameId, code), pk);
   if (!h.redo.length) return false;
-  h.undo.push({ snap: clone(all()[gameId]?.[pk] ?? null), tag: null });
+  h.undo.push({ snap: clone(all(code)[gameId]?.[pk] ?? null), tag: null });
   restore(gameId, lv, pa, h.redo.pop().snap);
   return true;
 }
@@ -711,7 +769,9 @@ const reports = new Map();
 export function applyStoredEdits(G) {
   let applied = 0,
     dropped = 0;
-  const game = all()[G.id] ?? {};
+  const code = codeOfData(G);
+  held.add(G);
+  const game = all(code)[G.id] ?? {};
   for (const [pk, pe] of Object.entries(game)) {
     const [lv, pa] = pk.split("/");
     const L = G.levels.find((l) => l.short === lv);
@@ -756,31 +816,31 @@ export function applyStoredEdits(G) {
     if (top && (pe.next ?? 0) <= top) pe.next = top + 1;
     if (!Object.keys(pe.objects).length) delete game[pk];
   }
-  if (!Object.keys(game).length) delete edits[G.id];
-  if (dropped) persist();
+  if (!Object.keys(game).length) delete all(code)[G.id];
+  if (dropped) persist(code);
   if (applied)
     G.levels.forEach((L, j) => {
       if (Object.keys(game).some((pk) => pk.startsWith(`${L.short}/`)))
         G.levels[j] = rebuildLevel(G, j);
     });
-  reports.set(G.id, { applied, dropped, unapplied: 0 });
+  reports.set(spaceOf(G.id, code), { applied, dropped, unapplied: 0 });
   return { applied, dropped };
 }
 
 // a dataset whose level map never arrived: nothing applies, the store stays as
 // it is, and the page is told how much it is not seeing
-export function reportUnapplied(gameId) {
+export function reportUnapplied(gameId, code = "") {
   const parts = (d) =>
     d.name ? 1 : Object.keys(d.fields ?? {}).length + (d.rect ? 1 : 0) + (d.removed ? 1 : 0);
-  const unapplied = Object.values(all()[gameId] ?? {}).reduce(
+  const unapplied = Object.values(all(code)[gameId] ?? {}).reduce(
     (n, pe) => n + Object.values(pe.objects).reduce((m, d) => m + parts(d), 0),
     0,
   );
-  reports.set(gameId, { applied: 0, dropped: 0, unapplied });
+  reports.set(spaceOf(gameId, code), { applied: 0, dropped: 0, unapplied });
 }
 
-export function takeReport(gameId) {
-  const r = reports.get(gameId) ?? null;
-  reports.delete(gameId);
+export function takeReport(gameId, code = "") {
+  const r = reports.get(spaceOf(gameId, code)) ?? null;
+  reports.delete(spaceOf(gameId, code));
   return r;
 }

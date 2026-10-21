@@ -69,6 +69,13 @@ export const store = {
       /* ignore */
     }
   },
+  keys() {
+    try {
+      return Object.keys(localStorage);
+    } catch {
+      return [];
+    }
+  },
 };
 
 // a fresh, validated fieldPrefs (never shares a reference with the default, so

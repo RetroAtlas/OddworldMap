@@ -4,7 +4,7 @@
 
 import { CAM_FILE_BYTES, MASK_FILE_BYTES, SHEET_FILE_BYTES } from "./config.js";
 import { GAME_FILES, GAME_IDS, loadSprites } from "./data.js";
-import { hasStoredEdits } from "./edits.js";
+import { hasAnyStoredEdits } from "./edits.js";
 import { $ } from "./dom.js";
 import { camFiles } from "./model.js";
 import {
@@ -62,7 +62,7 @@ async function warmShell() {
     "index.html",
     ...Object.values(GAME_FILES),
     ...GAME_IDS.map((id) => `sprites_${id.toLowerCase()}.json`),
-    ...GAME_IDS.filter(hasStoredEdits).map((id) => `relive_export_${id.toLowerCase()}.json`),
+    ...GAME_IDS.filter(hasAnyStoredEdits).map((id) => `relive_export_${id.toLowerCase()}.json`),
   ];
   const urls = new Set(named.map((f) => new URL(f, location.href).href));
   for (const e of performance.getEntriesByType("resource")) {

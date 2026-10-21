@@ -62,13 +62,14 @@ export function loadGame(id, low) {
 // fetch of them. A table that did not load validates against nothing, so it
 // refuses like a missing sidecar: nothing applies and the page is told
 async function withStoredEdits(d, low) {
-  if (!d || !hasStoredEdits(d.id)) return d;
+  const code = d?.release?.code ?? "";
+  if (!d || !hasStoredEdits(d.id, code)) return d;
   const [side, fd] = await Promise.all([loadEditorData(d.id, low), loadFieldSidecars(d.id, low)]);
   if (side && fd.fieldTypes && fd.enumLabels) {
     setLevelShort(d.id, side.level_short);
     armFieldData(d.id, fd.fieldTypes, fd.enumLabels);
     applyStoredEdits(d);
-  } else reportUnapplied(d.id);
+  } else reportUnapplied(d.id, code);
   return d;
 }
 
