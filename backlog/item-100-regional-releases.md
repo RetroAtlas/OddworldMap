@@ -1,6 +1,6 @@
 # 100. Every release of both games beside NTSC-U
 
-**Status:** open · slices 1 and 2 shipped 2026-10-20 and 2026-10-21: the mechanism, the four overlays the site carries first and the release in the viewer; the Japanese code pages next · **Effort:** large (one census and build that any release runs through, a viewer layer, the Japanese character tables) · **Where:** `tools/build_map.py` and `tools/oddmap/` for the release build, a hand-curated release table under `tools/data/`, an overlay and its art per game and release under `public/`, the viewer's datasets, permalinks, edit store, marks and clock, and `public/sw.js`
+**Status:** open · slices 1 to 3 shipped 2026-10-20, 2026-10-21 and 2026-10-23: the mechanism, the four overlays the site carries first, the release in the viewer and the Japanese code pages; every further release next · **Effort:** large (one census and build that any release runs through, a viewer layer, the Japanese character tables) · **Where:** `tools/build_map.py` and `tools/oddmap/` for the release build, a hand-curated release table under `tools/data/`, an overlay and its art per game and release under `public/`, the viewer's datasets, permalinks, edit store, marks and clock, and `public/sw.js`
 
 **Filed:** 2026-10-20, from a census of every retail release of both games against the North American ones.
 
@@ -235,6 +235,17 @@ Where the slice drifted from the design:
 - **The European text has none of its own to read yet:** the European editions the site carries read their words as the base does, so IBM 437's high half is in place for the localized ones. A Japanese sign answers one line of no text and a note saying it is in Japanese, which the tooltip, the screen list and a search hit share, and search leaves it out.
 - **Exports follow the release:** every file is named for it, and the level editor's document of a path whose lines the release changes joins the release's own links, carried whole beside its lines.
 - **The cache cap holds every release's art too,** 5000 entries for 4,426 files.
+
+## Shipped (2026-10-23): slice 3
+
+The Japanese code pages. `tools/data/codepage_ao_jp.json` and `codepage_ae_jp.json` name the character of every glyph the two Japanese releases' LCD messages reach, 198 for Abe a GoGo and 255 for Abe '99, and of the 82 letters Abe a GoGo's hint flies spell. Both releases read through a code page of their own (`own` in the release table), their overlays carry the characters (`chars`), and a sign, its tooltip, the screen list and search read their Japanese as text. Every character was read off its font by eye and checked by reading each message against the base's English with the same id, where a misread kana reads as nonsense: three of the 198 needed it (ク and グ in スリッグ and バクダン, and き in ときに), and six Exoddus kanji were settled by their messages and their place in the font, which keeps JIS order but for 穴, appended last.
+
+Where the slice drifted from the design:
+
+- **The hint flies spell with letters of their own.** Abe a GoGo's hint fly table is written in the codes of the hint flies' alphabet, 84 kana and Latin capitals drawn as patterns of flies and indexed by code less 0x41 as the engine indexes them, not in its LCD font's, so a code page names its characters per table: the LCD's by glyph and the hint flies' by letter. One letter serves for both べ and ベ, which the flies cannot tell apart, and is named by its place among the hiragana. Exoddus has no hint flies.
+- **A code page answers to the font it was read from** (`sheet`, the name the font's pixels give it), so a rebuild that changes the font fails until the table is read again, and the build fails a table missing a glyph or letter a message reaches or naming one none reaches. The count is what the messages reach, 255 of Abe '99's 277 distinct glyphs.
+- **A button glyph names the code the base writes it with,** so the viewer names it as it names the base's. Abe '99 draws L1, L2, R1 and R2 two glyphs wide, each half used only in its own pair: the first half names the button and the second reads as nothing.
+- **The line of no text goes.** With every release reading its words, the release table requires a code page, and the note a release without one answered is gone from the sign readers.
 
 ## Ruled out
 
