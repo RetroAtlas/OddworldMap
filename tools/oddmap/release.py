@@ -5,7 +5,8 @@ is the release's overlay, in final values; the census reports it.
 Nothing here names a release. What a release is comes from its discs (the
 path records, message tables, fonts, frame rate and art) and from the curated
 tables: the release table's code page and its verdicts on cameras the gate
-cannot decide, and a code page of the release's own naming its glyphs."""
+cannot decide, and a table of the release's own naming what it draws that no
+standard code page names."""
 import difflib
 import json
 import re
@@ -518,25 +519,22 @@ def compare_font(release, base, messages):
 
 
 HINT_FIRST = 0x41  # the engine spells a hint fly's message with the letter its code less this names
+HINT_LAST = 0x5A  # Z, the base's last letter: past it a standard code page names no letter a fly draws
 
 
-def own_chars(game_key, code, font, tables, per_path, data_dir=HERE / "data"):
-    """{table: the character of each glyph or letter, by its index} of a release
-    whose code page is its own, from the hand-curated table naming the glyphs
-    its LCD messages reach and the letters its hint flies spell; a table naming
-    another font's glyphs, missing one a message reaches or naming one none
-    does fails the build"""
+def own_chars(game_key, code, code_page, font, tables, per_path, data_dir=HERE / "data"):
+    """{table: the character of each glyph or letter, by its index} from the
+    hand-curated table of what a release draws that no standard code page
+    names: the glyphs its LCD messages reach where its code page is its own,
+    and the letters its hint flies spell, which a release reading through a
+    standard one names only where they reach past Z. The build fails wherever
+    the table does not answer to the release's font and messages"""
     where = f"{game_key} {code}"
-    if not font or "codes" not in font:
+    own = code_page == "own"
+    if own and (not font or "codes" not in font):
         raise SystemExit(f"{where}: a code page of its own reads through a font of its own")
     path = data_dir / f"codepage_{game_key.lower()}_{code}.json"
-    if not path.is_file():
-        raise SystemExit(f"{where}: no {path.name} names its glyphs")
-    page = json.loads(path.read_text())
-    sheet = f"{FONT_FAMILY}.{sheet_name(font['w'], font['h'], font['rgba'])}"
-    if page["sheet"] != sheet:
-        raise SystemExit(f"{where}: {path.name} names the glyphs of {page['sheet']}, not of {sheet}")
-    escapes = {int(k): v for k, v in font["escapes"].items()}
+    escapes = {int(k): v for k, v in font["escapes"].items()} if own else {}
 
     def glyphs(msg):
         raw, i = msg.encode("latin1"), 0
@@ -550,19 +548,34 @@ def own_chars(game_key, code, font, tables, per_path, data_dir=HERE / "data"):
 
     def letters(msg):
         for b in msg.encode("latin1"):
-            if b == 0x20:
-                continue
-            if b < HINT_FIRST:
-                raise SystemExit(f"{where}: a hint fly spells {b:#04x}, below its letters")
-            yield b - HINT_FIRST
+            if b != 0x20:
+                yield b - HINT_FIRST
 
-    walks = {"lcd": glyphs, "hintfly": letters}
+    walks = {"lcd": glyphs, "hintfly": letters} if own else {"hintfly": letters}
     reached = {name: set() for name in walks}
     for source in [tables, *per_path.values()]:
         for name, walk in walks.items():
             msgs = source.get(name) or []
             for msg in msgs.values() if isinstance(msgs, dict) else msgs:
                 reached[name].update(g for g in walk(msg) if g is not None)
+    if not path.is_file():
+        if own:
+            raise SystemExit(f"{where}: no {path.name} names its glyphs")
+        past = sorted(i + HINT_FIRST for i in reached["hintfly"] if i + HINT_FIRST > HINT_LAST)
+        if past:
+            raise SystemExit(f"{where}: its hint flies spell {', '.join(f'{c:#04x}' for c in past)}, past Z, "
+                             f"letters {code_page} cannot name; no {path.name} names them")
+        return {}
+    if reached["hintfly"] and min(reached["hintfly"]) < 0:
+        raise SystemExit(f"{where}: a hint fly spells {min(reached['hintfly']) + HINT_FIRST:#04x}, below its letters")
+    page = json.loads(path.read_text())
+    if own:
+        sheet = f"{FONT_FAMILY}.{sheet_name(font['w'], font['h'], font['rgba'])}"
+        if page["sheet"] != sheet:
+            raise SystemExit(f"{where}: {path.name} names the glyphs of {page['sheet']}, not of {sheet}")
+    elif set(page) != {"hintfly"}:
+        raise SystemExit(f"{where}: {path.name} names its hint flies' letters alone, its signs reading "
+                         f"through {code_page}")
     out = {}
     for name in walks:
         named = {int(k): v for k, v in page.get(name, {}).items()}
@@ -671,9 +684,10 @@ def compare(game_key, game, code, entry, images, base=None, workers=None):
             overlay["font"]["lead"] = lead
         sheets[FONT_FAMILY] = (font["w"], font["h"], font["rgba"])
         counts["font"] = 1 if "codes" not in font else "its own glyphs and codes"
-    if entry["code_page"] == "own":
-        overlay["chars"] = own_chars(game_key, code, font, {**base.messages, **messages}, per_path)
-        counts["characters named"] = sum(1 for chars in overlay["chars"].values() for c in chars if c is not None)
+    chars = own_chars(game_key, code, entry["code_page"], font, {**base.messages, **messages}, per_path)
+    if chars:
+        overlay["chars"] = chars
+        counts["characters named"] = sum(1 for named in chars.values() for c in named if c is not None)
     dice = {tuple(read_dice(d)) for d in release.discs}
     if len(dice) != 1:
         raise SystemExit(f"{game_key} {code}: the discs disagree on the random table")

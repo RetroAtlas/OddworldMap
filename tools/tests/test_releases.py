@@ -39,20 +39,25 @@ class Table(unittest.TestCase):
                 if rel["ships"]:
                     self.assertTrue(rel["note"], f"{game} {code}")
 
-    def test_a_code_page_of_a_release_s_own_names_its_font_and_characters(self):
+    def test_each_table_of_a_release_s_own_characters_fits_its_code_page(self):
         import json
         import re
-        for game, entry_ in releases.load_releases().items():
+        table = releases.load_releases()
+        for game, entry_ in table.items():
             for code, rel in entry_["releases"].items():
-                if rel["code_page"] != "own":
-                    continue
-                path = releases.HERE / "data" / f"codepage_{game.lower()}_{code}.json"
-                page = json.loads(path.read_text())
+                if rel["code_page"] == "own":
+                    self.assertTrue((releases.HERE / "data" / f"codepage_{game.lower()}_{code}.json").is_file(), code)
+        for path in sorted((releases.HERE / "data").glob("codepage_*.json")):
+            game, code = re.fullmatch(r"codepage_(ao|ae)_(.+)\.json", path.name).groups()
+            page = json.loads(path.read_text())
+            if table[game.upper()]["releases"][code]["code_page"] == "own":
                 self.assertRegex(page["sheet"], r"^Font\.[0-9a-f]{12}$", path.name)
                 self.assertTrue(set(page) - {"sheet"} and set(page) - {"sheet"} <= {"lcd", "hintfly"}, path.name)
-                for name in set(page) - {"sheet"}:
-                    for k, v in page[name].items():
-                        self.assertTrue(re.fullmatch(r"0|[1-9]\d*", k) and isinstance(v, str), f"{path.name} {k}")
+            else:
+                self.assertEqual(set(page), {"hintfly"}, path.name)
+            for name in set(page) - {"sheet"}:
+                for k, v in page[name].items():
+                    self.assertTrue(re.fullmatch(r"0|[1-9]\d*", k) and isinstance(v, str), f"{path.name} {k}")
 
     def broken(self, edit):
         table = copy.deepcopy(releases.load_releases())

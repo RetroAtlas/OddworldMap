@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { DARK_NOTE, messageText, objectMessages, setMessages } from "../../public/js/messages.js";
 
 const load = (name) =>
@@ -329,6 +329,48 @@ test("objectMessages: a code page of a release's own names the glyphs and letter
   assert.deepEqual(objectMessages(jp, { name: "HintFly", fields: { message_id: 0 } }), [
     { text: "あう あ", note: "" },
   ]);
+});
+
+test("objectMessages: hint flies spelling past Z read through the letters their release names", () => {
+  setMessages(SHIPPED);
+  const hintfly = Array(47).fill(null);
+  [hintfly[5], hintfly[17], hintfly[46]] = ["F", "R", "Ü"];
+  const de = {
+    id: "AO",
+    release: {
+      code: "de",
+      code_page: "cp437",
+      chars: { hintfly },
+      messages: { lcd: ["", "F\x9aR"], hintfly: ["FoR"] },
+    },
+  };
+  assert.deepEqual(objectMessages(de, { name: "HintFly", fields: { message_id: 0 } }), [
+    { text: "FÜR", note: "" },
+  ]);
+  // its signs still read through its code page
+  assert.deepEqual(objectMessages(de, { name: "LCDScreen", fields: { message_1_id: 1 } }), [
+    { text: "FÜR", note: "" },
+  ]);
+});
+
+// no alphabet the discs carry draws a lowercase letter, so one in a fly's words
+// is a code read through the wrong table
+test("objectMessages: every Oddysee release's hint flies read as letters their alphabet draws", () => {
+  setMessages(SHIPPED);
+  const releases = readdirSync(new URL("../../public/", import.meta.url)).filter((f) =>
+    /^release_ao_.+\.json$/.test(f),
+  );
+  for (const G of [{ id: "AO" }, ...releases.map((f) => ({ id: "AO", release: load(f) }))]) {
+    const paths = Object.values(G.release?.paths ?? {}).filter((p) => p.messages?.hintfly);
+    for (const P of [null, ...paths.map((p) => ({ release: p }))]) {
+      const table = P?.release.messages.hintfly ?? G.release?.messages?.hintfly ?? AO.hintfly;
+      for (const [id, raw] of Object.entries(table)) {
+        if (!raw) continue;
+        const [line] = objectMessages(G, { name: "HintFly", fields: { message_id: +id } }, P);
+        assert.ok(!/[a-z�]/.test(line.text), `${G.release?.code ?? "base"} ${id}: ${line.text}`);
+      }
+    }
+  }
 });
 
 test("objectMessages: a release reads its own tables, a path's overlay entries and its code page", () => {

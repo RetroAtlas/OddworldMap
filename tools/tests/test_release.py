@@ -245,7 +245,7 @@ class OwnCodePage(unittest.TestCase):
         (self.dir / "codepage_ao_jp.json").write_text(json.dumps({"sheet": self.sheet, **sections}))
 
     def chars(self, tables, per_path=None):
-        return release.own_chars("AO", "jp", self.font, tables, per_path or {}, self.dir)
+        return release.own_chars("AO", "jp", "own", self.font, tables, per_path or {}, self.dir)
 
     def test_each_glyph_and_hint_fly_letter_reads_as_the_table_names_it(self):
         self.page(lcd={"2": "カ", "3": "ネ", "4": "\u0008", "5": "穴"}, hintfly={"0": "あ", "2": "う"})
@@ -281,7 +281,46 @@ class OwnCodePage(unittest.TestCase):
     def test_a_code_page_of_its_own_needs_a_font_of_its_own(self):
         self.page(lcd={"2": "カ"})
         with self.assertRaises(SystemExit):
-            release.own_chars("AO", "jp", None, {"lcd": ["A"]}, {}, self.dir)
+            release.own_chars("AO", "jp", "own", None, {"lcd": ["A"]}, {}, self.dir)
+
+
+class HintFlyLetters(unittest.TestCase):
+    """a release reading through IBM 437 whose hint flies may spell past Z, the
+    end of the base's alphabet"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self.tmp.name)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def page(self, **sections):
+        import json
+        (self.dir / "codepage_ao_de.json").write_text(json.dumps(sections))
+
+    def chars(self, tables):
+        return release.own_chars("AO", "de", "cp437", None, tables, {}, self.dir)
+
+    def test_flies_spelling_within_the_alphabet_need_no_table(self):
+        self.assertEqual(self.chars({"hintfly": ["ABE WAS HERE", "CAMPANA, LUEGO"]}), {})
+
+    def test_flies_spelling_past_z_need_their_letters_named(self):
+        with self.assertRaises(SystemExit):
+            self.chars({"hintfly": ["FoR ELUM"]})
+
+    def test_a_table_names_every_letter_the_flies_spell(self):
+        self.page(hintfly={"5": "F", "17": "R", "46": "Ü"})
+        self.assertEqual(self.chars({"hintfly": ["FoR"]}),
+                         {"hintfly": [None] * 5 + ["F"] + [None] * 11 + ["R"] + [None] * 28 + ["Ü"]})
+        with self.assertRaises(SystemExit):
+            self.chars({"hintfly": ["FoR RE"]})
+
+    def test_a_table_names_hint_fly_letters_alone(self):
+        self.page(hintfly={"5": "F", "17": "R", "46": "Ü"}, lcd={"2": "A"})
+        with self.assertRaises(SystemExit):
+            self.chars({"hintfly": ["FoR"]})
 
 
 class CommittedOverlays(unittest.TestCase):
@@ -429,17 +468,16 @@ class CommittedOverlays(unittest.TestCase):
             self.assertEqual(release.patch_rects(release.changed_blocks(px, bytes(drawn), w, h, None), w, h),
                              rects, name)
 
-    def test_a_code_page_of_its_own_names_every_glyph_and_letter_its_messages_reach(self):
+    def test_each_carries_the_characters_its_table_names_for_what_its_messages_reach(self):
         import json
         from oddmap.image import read_png
         site, files = self.overlays()
         for f in files:
             o = json.loads(f.read_text())
-            if o["code_page"] != "own":
-                self.assertNotIn("chars", o, f.name)
-                continue
-            rgba = read_png((site / o["sheets"]["Font"]).read_bytes())[2]
+            font = o.get("font")
+            if o["code_page"] == "own":
+                font = {**font, "rgba": read_png((site / o["sheets"]["Font"]).read_bytes())[2]}
             tables = {**json.loads((site / f"messages_{o['game'].lower()}.json").read_text()), **o.get("messages", {})}
             per_path = {k: p["messages"] for k, p in o["paths"].items() if "messages" in p}
-            self.assertEqual(release.own_chars(o["game"], o["code"], {**o["font"], "rgba": rgba}, tables, per_path),
-                             o["chars"], f.name)
+            self.assertEqual(release.own_chars(o["game"], o["code"], o["code_page"], font, tables, per_path),
+                             o.get("chars", {}), f.name)

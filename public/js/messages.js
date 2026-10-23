@@ -80,8 +80,8 @@ export const lcdMessages = (G, P = null) => tablesOf(G, P)?.lcd ?? null;
 // the engine spells a hint fly's message with the letter its code less this names
 const HINT_FIRST = 0x41;
 
-// a message of a release whose code page is its own as the characters it names:
-// an LCD message's for the glyphs its font draws, a hint fly's for its letters
+// a message as the characters its release names for the table: an LCD
+// message's for the glyphs its font draws, a hint fly's for its letters
 function ownText(raw, release, table) {
   const chars = release.chars?.[table] ?? [];
   if (table === "hintfly")
@@ -133,7 +133,7 @@ export function objectMessages(G, t, P = null) {
   }
   const page = G.release ? G.release.code_page : "cp437";
   const read = (raw) =>
-    page === "own"
+    G.release?.chars?.[reader.table]
       ? messageText(ownText(raw, G.release, reader.table), null)
       : messageText(raw, page);
   const out = [];
