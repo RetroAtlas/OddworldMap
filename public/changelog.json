@@ -1,6 +1,12 @@
 {
  "entries": [
   {
+   "date": "2026-10-23",
+   "tag": "improved",
+   "title": "The Japanese signs read as Japanese",
+   "detail": "The boards of Abe a GoGo and Abe '99, the Japanese releases, now say their words in Japanese wherever the map shows what a sign says, in its tooltip and in the screen list. Search finds them by those words: 過労死 turns up the Rupture Farms boards that urge めざせ!過労死. Abe a GoGo's hint flies spell their phrases in kana too, エラムは ここでまて where the North American flies spell ELUM WAIT HERE. Every character the two fonts draw was read off the font by eye and checked against the North American words of each message."
+  },
+  {
    "date": "2026-10-21",
    "tag": "new",
    "flagship": true,
