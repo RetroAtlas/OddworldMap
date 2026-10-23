@@ -186,7 +186,7 @@ function list(cam, focus) {
           ? says
               .map(
                 ({ text, note }) =>
-                  `<div class="said">${note ? `<span class="note">${esc(note)}</span> ` : ""}${text == null ? "" : esc(`“${text}”`)}</div>`,
+                  `<div class="said">${note ? `<span class="note">${esc(note)}</span> ` : ""}${esc(`“${text}”`)}</div>`,
               )
               .join("")
           : `<div class="e">${esc(DARK_NOTE)}</div>`;

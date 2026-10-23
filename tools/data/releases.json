@@ -96,7 +96,7 @@
     "discs": [
      {"redump": 18872, "bytes": 751663920, "sha1": "f3d6545fabea9cd6f984d86814c2d31b414ee4e7"}
     ],
-    "code_page": null,
+    "code_page": "own",
     "ships": true,
     "note": "Japanese text on the signs and screens and the hand prints on the stones redrawn, over the North American release's levels."
    }
@@ -184,7 +184,7 @@
      {"redump": 36825, "bytes": 615146784, "sha1": "e10dd0a4d3a0d8bb5879fa4853913fc2fbf1288d"},
      {"redump": 36826, "bytes": 483084336, "sha1": "ba43ceb1a9bf45bc307e07526b48fac2681c1bee"}
     ],
-    "code_page": null,
+    "code_page": "own",
     "ships": true,
     "note": "Japanese text on the signs and screens, and fixes the North American release lacks: floors added in Necrum Mines, gas countdowns in the Brewery's return, and doors and switches reworked in FeeCo and Bonewerkz."
    }

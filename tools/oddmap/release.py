@@ -782,7 +782,7 @@ def census_lines(overlay, counts, code=None):
     """the census report of one release"""
     out = [f"{overlay['game']} {overlay['code']} ({overlay['name']}, {overlay['executable']}): "
            f"{overlay['hz']} Hz, text through "
-           f"{'its own code page' if overlay['code_page'] == 'own' else overlay['code_page'] or 'no code page yet'}"]
+           f"{'its own code page' if overlay['code_page'] == 'own' else overlay['code_page']}"]
     for k in sorted(counts):
         out.append(f"  {k}: {counts[k]}")
     dropped = sorted(n for p in overlay["paths"].values() for n, c in p.get("cams", {}).items() if c is None)

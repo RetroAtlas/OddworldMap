@@ -269,19 +269,40 @@ test("messages: Rupture Farms Return silences the boards its first visit taught 
   for (const pa of [16, 18]) assert.ok([...at("R2", pa)].every((x) => at("R1", pa).has(x)));
 });
 
-test("objectMessages: a release's code page the map cannot read says which language it is in", () => {
+test("objectMessages: the Japanese releases read every message as the characters their code pages name", () => {
   setMessages(SHIPPED);
-  const overlay = load("release_ao_jp.json");
-  const jp = { id: "AO", release: { ...overlay, paths: undefined } };
-  const boards = [...eachTlv("AO")].filter((r) => r.t.name === "LCDScreen");
-  const speaking = boards.find((r) => objectMessages({ id: "AO" }, r.t).length > 0);
-  // one line of no text, never the release's bytes read as letters
-  assert.deepEqual(objectMessages(jp, speaking.t), [
-    { text: null, note: "In Japanese, which the map cannot read yet." },
-  ]);
-  // a board that can only run dark still says so
-  const dark = boards.find((r) => objectMessages({ id: "AO" }, r.t).length === 0);
-  assert.deepEqual(objectMessages(jp, dark.t), []);
+  const release = (game) => ({
+    id: game,
+    release: { ...load(`release_${game.toLowerCase()}_jp.json`), paths: undefined },
+  });
+  const says = (G, name, field, id) => objectMessages(G, { name, fields: { [field]: id } });
+  for (const game of ["AO", "AE"]) {
+    const G = release(game);
+    for (const [table, name, field] of [
+      ["lcd", "LCDScreen", "message_1_id"],
+      ["hintfly", "HintFly", "message_id"],
+    ])
+      (G.release.messages[table] ?? []).forEach((raw, id) => {
+        if (!raw) return;
+        const [line] = says(G, name, field, id);
+        assert.ok(!line.text.includes("�"), `${game} ${table} ${id}: ${line.text}`);
+      });
+  }
+  // as a player reads them: the LCD's words and buttons, a hint fly's letters,
+  // and a button the Exoddus font draws in two glyphs read once
+  const ao = release("AO"),
+    ae = release("AE");
+  assert.equal(says(ao, "LCDScreen", "message_1_id", 2)[0].text, "色即是空");
+  assert.equal(says(ao, "LCDScreen", "message_1_id", 51)[0].text, "上に登るには、[Up]。");
+  assert.equal(says(ao, "HintFly", "message_id", 28)[0].text, "エラムは ここでまて");
+  assert.equal(
+    says(ae, "LCDScreen", "message_1_id", 1)[0].text,
+    "ソウルストーム社は平等を約束している。",
+  );
+  assert.equal(
+    says(ae, "LCDScreen", "message_1_id", 63)[0].text,
+    "チャントでスリッグをあやつれ!唱えるには、[Speak 1]と[Speak 2]をいっしょに押す。",
+  );
 });
 
 test("objectMessages: a code page of a release's own names the glyphs and letters its bytes reach", () => {

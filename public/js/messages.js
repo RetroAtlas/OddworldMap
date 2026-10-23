@@ -44,9 +44,6 @@ const READERS = {
 export const DARK_NOTE =
   "Runs dark: every message this board names is blank, so it scrolls nothing.";
 
-// a release whose code page the map cannot read yet shows this in place of its words
-export const unreadNote = (language) => `In ${language}, which the map cannot read yet.`;
-
 // the high half of the code pages a release's messages may read through, the
 // low half being ASCII's
 const CODE_PAGES = {
@@ -110,11 +107,10 @@ export function messageText(raw, page = "cp437") {
 }
 
 // every message an object can show, in the order it shows them, as
-// { text, note } where a note qualifies a line the text alone cannot explain,
-// and one line of no text whose note says so where the release's code page is
-// none the map reads. `[]` is the positive claim that the board can only run
-// dark; anything that leaves the question unanswered is null, so a caller never
-// reports darkness it has not established.
+// { text, note } where a note qualifies a line the text alone cannot explain.
+// `[]` is the positive claim that the board can only run dark; anything that
+// leaves the question unanswered is null, so a caller never reports darkness it
+// has not established.
 export function objectMessages(G, t, P = null) {
   const reader = READERS[t.name];
   if (!reader) return null;
@@ -148,7 +144,6 @@ export function objectMessages(G, t, P = null) {
     seen.add(id);
     out.push({ text: read(raw), note });
   }
-  if (!page && out.length) return [{ text: null, note: unreadNote(G.release.language) }];
   // a pool that survives as one line is not a draw between anything
   const pool = out.filter((m) => m.note === "at random");
   if (pool.length === 1) pool[0].note = "";

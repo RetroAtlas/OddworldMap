@@ -39,6 +39,21 @@ class Table(unittest.TestCase):
                 if rel["ships"]:
                     self.assertTrue(rel["note"], f"{game} {code}")
 
+    def test_a_code_page_of_a_release_s_own_names_its_font_and_characters(self):
+        import json
+        import re
+        for game, entry_ in releases.load_releases().items():
+            for code, rel in entry_["releases"].items():
+                if rel["code_page"] != "own":
+                    continue
+                path = releases.HERE / "data" / f"codepage_{game.lower()}_{code}.json"
+                page = json.loads(path.read_text())
+                self.assertRegex(page["sheet"], r"^Font\.[0-9a-f]{12}$", path.name)
+                self.assertTrue(set(page) - {"sheet"} and set(page) - {"sheet"} <= {"lcd", "hintfly"}, path.name)
+                for name in set(page) - {"sheet"}:
+                    for k, v in page[name].items():
+                        self.assertTrue(re.fullmatch(r"0|[1-9]\d*", k) and isinstance(v, str), f"{path.name} {k}")
+
     def broken(self, edit):
         table = copy.deepcopy(releases.load_releases())
         edit(table)
@@ -66,6 +81,9 @@ class Table(unittest.TestCase):
 
     def test_an_unknown_code_page_is_refused(self):
         self.broken(lambda t: t["AO"]["releases"]["fr"].__setitem__("code_page", "latin1"))
+
+    def test_a_release_without_a_code_page_is_refused(self):
+        self.broken(lambda t: t["AO"]["releases"]["fr"].__setitem__("code_page", None))
 
     def test_a_verdict_off_the_list_is_refused(self):
         self.broken(lambda t: t["AE"]["releases"]["jp"].__setitem__("verdicts", {"MIP04C35": "maybe"}))

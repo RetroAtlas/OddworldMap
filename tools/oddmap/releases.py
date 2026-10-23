@@ -53,8 +53,8 @@ def check_table(table):
                 if d["sha1"] in seen:
                     raise ValueError(f"{where}: disc {d['sha1']} is {seen[d['sha1']]}'s too")
                 seen[d["sha1"]] = where
-            if rel.get("code_page") is not None and rel["code_page"] not in CODE_PAGES:
-                raise ValueError(f"{where}: code page {rel['code_page']!r} is none the builder reads")
+            if rel.get("code_page") not in CODE_PAGES:
+                raise ValueError(f"{where}: code page {rel.get('code_page')!r} is none the builder reads")
             if not isinstance(rel.get("ships"), bool):
                 raise ValueError(f"{where}: ships is true or false")
             if rel["ships"] and not (isinstance(rel.get("note"), str) and rel["note"]):

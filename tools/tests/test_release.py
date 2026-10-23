@@ -428,3 +428,18 @@ class CommittedOverlays(unittest.TestCase):
                     drawn[((y + r) * w + x) * 4:((y + r) * w + x + pw) * 4] = patch[r * pw * 4:(r + 1) * pw * 4]
             self.assertEqual(release.patch_rects(release.changed_blocks(px, bytes(drawn), w, h, None), w, h),
                              rects, name)
+
+    def test_a_code_page_of_its_own_names_every_glyph_and_letter_its_messages_reach(self):
+        import json
+        from oddmap.image import read_png
+        site, files = self.overlays()
+        for f in files:
+            o = json.loads(f.read_text())
+            if o["code_page"] != "own":
+                self.assertNotIn("chars", o, f.name)
+                continue
+            rgba = read_png((site / o["sheets"]["Font"]).read_bytes())[2]
+            tables = {**json.loads((site / f"messages_{o['game'].lower()}.json").read_text()), **o.get("messages", {})}
+            per_path = {k: p["messages"] for k, p in o["paths"].items() if "messages" in p}
+            self.assertEqual(release.own_chars(o["game"], o["code"], {**o["font"], "rgba": rgba}, tables, per_path),
+                             o["chars"], f.name)

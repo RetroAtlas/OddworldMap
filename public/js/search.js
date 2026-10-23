@@ -40,7 +40,7 @@ function tlvSearchText(t, G, P, raw) {
   let s = cache.get(t);
   if (s === undefined) {
     const game = G.id;
-    const says = (objectMessages(G, t, P) ?? []).map((m) => m.text ?? "").join(" ");
+    const says = (objectMessages(G, t, P) ?? []).map((m) => m.text).join(" ");
     s = (t.name + " " + extrasText(t, " ", { mode: "all", game, raw }) + " " + says).toLowerCase();
     cache.set(t, s);
   }

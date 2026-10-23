@@ -747,7 +747,7 @@ function updateHover() {
           const says = objectMessages(state.data, t, state.path);
           const said = (says ?? []).map(
             ({ text, note }) =>
-              `<br><span class="said">${note ? `<span class="note">${esc(note)}</span> ` : ""}${text == null ? "" : esc(`“${text}”`)}</span>`,
+              `<br><span class="said">${note ? `<span class="note">${esc(note)}</span> ` : ""}${esc(`“${text}”`)}</span>`,
           );
           const messages =
             says?.length === 0
