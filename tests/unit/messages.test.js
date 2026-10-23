@@ -284,6 +284,32 @@ test("objectMessages: a release's code page the map cannot read says which langu
   assert.deepEqual(objectMessages(jp, dark.t), []);
 });
 
+test("objectMessages: a code page of a release's own names the glyphs and letters its bytes reach", () => {
+  setMessages(SHIPPED);
+  const codes = Array(256).fill(null);
+  [codes[0x41], codes[0x42], codes[0x0a]] = [2, 3, 4];
+  const escape = Array(256).fill(null);
+  escape[0x10] = 5;
+  const jp = {
+    id: "AO",
+    release: {
+      code: "jp",
+      code_page: "own",
+      font: { codes, escapes: { 255: escape }, glyphs: [] },
+      chars: { lcd: [null, null, "カ", "ネ", "\x0a", "穴"], hintfly: ["あ", null, "う"] },
+      messages: { lcd: ["", "AB\x0a\xff\x10 A"], hintfly: ["AC A"] },
+    },
+  };
+  // a button glyph names the code the base writes it with, an escape byte and
+  // its second byte read as one glyph, and a code drawing none is a space
+  assert.deepEqual(objectMessages(jp, { name: "LCDScreen", fields: { message_1_id: 1 } }), [
+    { text: "カネ[Run]穴 カ", note: "" },
+  ]);
+  assert.deepEqual(objectMessages(jp, { name: "HintFly", fields: { message_id: 0 } }), [
+    { text: "あう あ", note: "" },
+  ]);
+});
+
 test("objectMessages: a release reads its own tables, a path's overlay entries and its code page", () => {
   setMessages(SHIPPED);
   const board = { name: "LCDScreen", fields: { message_1_id: 2 } };

@@ -7,7 +7,9 @@
 // each type picks from its table, so no two surfaces can disagree about what a
 // board says.
 //
-// Leaf module: no DOM/state imports, importable in bare Node for tests.
+// No DOM/state imports, importable in bare Node for tests.
+
+import { glyphRun } from "./lcd.js";
 
 // The font's button-command code points, as the messages carry them. A code
 // outside this set fails the build, so the fallback is for a stale cache
@@ -78,6 +80,22 @@ function tablesOf(G, P) {
 
 export const lcdMessages = (G, P = null) => tablesOf(G, P)?.lcd ?? null;
 
+// the engine spells a hint fly's message with the letter its code less this names
+const HINT_FIRST = 0x41;
+
+// a message of a release whose code page is its own as the characters it names:
+// an LCD message's for the glyphs its font draws, a hint fly's for its letters
+function ownText(raw, release, table) {
+  const chars = release.chars?.[table] ?? [];
+  if (table === "hintfly")
+    return [...raw]
+      .map((ch) => (ch === " " ? ch : (chars[ch.charCodeAt(0) - HINT_FIRST] ?? "\ufffd")))
+      .join("");
+  return glyphRun(release.font, raw)
+    .map((g) => (g < 0 ? " " : (chars[g] ?? "\ufffd")))
+    .join("");
+}
+
 // a stored message as words, read through its code page: button codes become
 // the command they name
 export function messageText(raw, page = "cp437") {
@@ -118,13 +136,17 @@ export function objectMessages(G, t, P = null) {
     for (let id = from; id <= to; id++) picks.push([id, note]);
   }
   const page = G.release ? G.release.code_page : "cp437";
+  const read = (raw) =>
+    page === "own"
+      ? messageText(ownText(raw, G.release, reader.table), null)
+      : messageText(raw, page);
   const out = [];
   const seen = new Set();
   for (const [id, note] of picks) {
     const raw = table[id];
     if (!raw || seen.has(id)) continue;
     seen.add(id);
-    out.push({ text: messageText(raw, page), note });
+    out.push({ text: read(raw), note });
   }
   if (!page && out.length) return [{ text: null, note: unreadNote(G.release.language) }];
   // a pool that survives as one line is not a draw between anything

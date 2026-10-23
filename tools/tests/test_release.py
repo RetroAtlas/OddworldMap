@@ -224,6 +224,66 @@ class Messages(unittest.TestCase):
         self.assertEqual(lead, 0x20)
 
 
+class OwnCodePage(unittest.TestCase):
+    """a release reading through its own font: code 0x41 draws glyph 2, 0x42
+    glyph 3, 0x08 glyph 4, and the escape byte 0xff before 0x10 glyph 5"""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self.tmp.name)
+        codes, escape = [None] * 256, [None] * 256
+        codes[0x41], codes[0x42], codes[0x08], escape[0x10] = 2, 3, 4, 5
+        self.font = {"w": 4, "h": 2, "rgba": bytes(32), "codes": codes, "escapes": {"255": escape}}
+        self.sheet = f"Font.{release.sheet_name(4, 2, bytes(32))}"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def page(self, **sections):
+        import json
+        (self.dir / "codepage_ao_jp.json").write_text(json.dumps({"sheet": self.sheet, **sections}))
+
+    def chars(self, tables, per_path=None):
+        return release.own_chars("AO", "jp", self.font, tables, per_path or {}, self.dir)
+
+    def test_each_glyph_and_hint_fly_letter_reads_as_the_table_names_it(self):
+        self.page(lcd={"2": "カ", "3": "ネ", "4": "\u0008", "5": "穴"}, hintfly={"0": "あ", "2": "う"})
+        self.assertEqual(self.chars({"lcd": ["AB\x08\xff\x10 A"], "hintfly": ["AC A"]}),
+                         {"lcd": [None, None, "カ", "ネ", "\u0008", "穴"], "hintfly": ["あ", None, "う"]})
+
+    def test_a_path_s_own_entries_are_read_too(self):
+        self.page(lcd={"2": "カ", "3": "ネ"})
+        self.assertEqual(self.chars({"lcd": ["A"]}, {"R1/1": {"lcd": {"1": "B"}}}),
+                         {"lcd": [None, None, "カ", "ネ"]})
+
+    def test_a_table_naming_another_font_s_glyphs_is_refused(self):
+        self.sheet = "Font.000000000000"
+        self.page(lcd={"2": "カ"})
+        with self.assertRaises(SystemExit):
+            self.chars({"lcd": ["A"]})
+
+    def test_every_glyph_a_message_reaches_needs_its_character(self):
+        self.page(lcd={"2": "カ"})
+        with self.assertRaises(SystemExit):
+            self.chars({"lcd": ["AB"]})
+
+    def test_a_character_no_message_reaches_is_refused(self):
+        self.page(lcd={"2": "カ", "3": "ネ"})
+        with self.assertRaises(SystemExit):
+            self.chars({"lcd": ["A"]})
+
+    def test_a_hint_fly_code_below_the_letters_is_refused(self):
+        self.page(lcd={"2": "カ"}, hintfly={"0": "あ"})
+        with self.assertRaises(SystemExit):
+            self.chars({"lcd": ["A"], "hintfly": ["A!"]})
+
+    def test_a_code_page_of_its_own_needs_a_font_of_its_own(self):
+        self.page(lcd={"2": "カ"})
+        with self.assertRaises(SystemExit):
+            release.own_chars("AO", "jp", None, {"lcd": ["A"]}, {}, self.dir)
+
+
 class CommittedOverlays(unittest.TestCase):
     """every committed overlay still answers to the committed base"""
 

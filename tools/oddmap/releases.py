@@ -14,7 +14,7 @@ from oddmap.paths import HERE
 RELEASES = HERE / "data" / "releases.json"
 
 CODE = re.compile(r"^[a-z]{2}(-r\d+)?$")
-CODE_PAGES = ("cp437",)
+CODE_PAGES = ("cp437", "own")
 VERDICTS = ("edit", "re-encode")
 SHA1 = re.compile(r"^[0-9a-f]{40}$")
 

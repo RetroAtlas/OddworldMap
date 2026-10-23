@@ -3,8 +3,9 @@ release's own discs and compared with the committed base tree. What differs
 is the release's overlay, in final values; the census reports it.
 
 Nothing here names a release. What a release is comes from its discs (the
-path records, message tables, fonts, frame rate and art) and from the release
-table (its code page and the verdicts on cameras the gate cannot decide)."""
+path records, message tables, fonts, frame rate and art) and from the curated
+tables: the release table's code page and its verdicts on cameras the gate
+cannot decide, and a code page of the release's own naming its glyphs."""
 import difflib
 import json
 import re
@@ -516,6 +517,66 @@ def compare_font(release, base, messages):
     return out or None
 
 
+HINT_FIRST = 0x41  # the engine spells a hint fly's message with the letter its code less this names
+
+
+def own_chars(game_key, code, font, tables, per_path, data_dir=HERE / "data"):
+    """{table: the character of each glyph or letter, by its index} of a release
+    whose code page is its own, from the hand-curated table naming the glyphs
+    its LCD messages reach and the letters its hint flies spell; a table naming
+    another font's glyphs, missing one a message reaches or naming one none
+    does fails the build"""
+    where = f"{game_key} {code}"
+    if not font or "codes" not in font:
+        raise SystemExit(f"{where}: a code page of its own reads through a font of its own")
+    path = data_dir / f"codepage_{game_key.lower()}_{code}.json"
+    if not path.is_file():
+        raise SystemExit(f"{where}: no {path.name} names its glyphs")
+    page = json.loads(path.read_text())
+    sheet = f"{FONT_FAMILY}.{sheet_name(font['w'], font['h'], font['rgba'])}"
+    if page["sheet"] != sheet:
+        raise SystemExit(f"{where}: {path.name} names the glyphs of {page['sheet']}, not of {sheet}")
+    escapes = {int(k): v for k, v in font["escapes"].items()}
+
+    def glyphs(msg):
+        raw, i = msg.encode("latin1"), 0
+        while i < len(raw):
+            if raw[i] in escapes and i + 1 < len(raw):
+                yield escapes[raw[i]][raw[i + 1]]
+                i += 2
+            else:
+                yield font["codes"][raw[i]]
+                i += 1
+
+    def letters(msg):
+        for b in msg.encode("latin1"):
+            if b == 0x20:
+                continue
+            if b < HINT_FIRST:
+                raise SystemExit(f"{where}: a hint fly spells {b:#04x}, below its letters")
+            yield b - HINT_FIRST
+
+    walks = {"lcd": glyphs, "hintfly": letters}
+    reached = {name: set() for name in walks}
+    for source in [tables, *per_path.values()]:
+        for name, walk in walks.items():
+            msgs = source.get(name) or []
+            for msg in msgs.values() if isinstance(msgs, dict) else msgs:
+                reached[name].update(g for g in walk(msg) if g is not None)
+    out = {}
+    for name in walks:
+        named = {int(k): v for k, v in page.get(name, {}).items()}
+        if reached[name] - set(named):
+            raise SystemExit(f"{where}: {path.name} names no character for {name} "
+                             f"{sorted(reached[name] - set(named))}")
+        if set(named) - reached[name]:
+            raise SystemExit(f"{where}: {path.name} names {name} {sorted(set(named) - reached[name])}, "
+                             "which no message reaches")
+        if named:
+            out[name] = [named.get(i) for i in range(max(named) + 1)]
+    return out
+
+
 def compare(game_key, game, code, entry, images, base=None, workers=None):
     """the release against the base, layer by layer: (its overlay, without the
     art's file names, the art to write, the census counts)"""
@@ -589,7 +650,7 @@ def compare(game_key, game, code, entry, images, base=None, workers=None):
         raise SystemExit(f"{game_key} {code}: cameras within the gate's margin need a verdict in the "
                          f"release table: {', '.join(margin)}")
     overlay["paths"] = {k: paths[k] for k in sorted(paths)}
-    controls = MESSAGE_BUTTONS if entry["code_page"] else range(1, 0x20)
+    controls = MESSAGE_BUTTONS if entry["code_page"] == "cp437" else range(1, 0x20)
     messages, per_path, lead = release_messages(release, base, controls)
     changed = {name: table for name, table in messages.items() if base.messages.get(name) != table}
     if changed:
@@ -610,6 +671,9 @@ def compare(game_key, game, code, entry, images, base=None, workers=None):
             overlay["font"]["lead"] = lead
         sheets[FONT_FAMILY] = (font["w"], font["h"], font["rgba"])
         counts["font"] = 1 if "codes" not in font else "its own glyphs and codes"
+    if entry["code_page"] == "own":
+        overlay["chars"] = own_chars(game_key, code, font, {**base.messages, **messages}, per_path)
+        counts["characters named"] = sum(1 for chars in overlay["chars"].values() for c in chars if c is not None)
     dice = {tuple(read_dice(d)) for d in release.discs}
     if len(dice) != 1:
         raise SystemExit(f"{game_key} {code}: the discs disagree on the random table")
@@ -717,7 +781,8 @@ def compare_code(base_images, release):
 def census_lines(overlay, counts, code=None):
     """the census report of one release"""
     out = [f"{overlay['game']} {overlay['code']} ({overlay['name']}, {overlay['executable']}): "
-           f"{overlay['hz']} Hz, text through {overlay['code_page'] or 'no code page yet'}"]
+           f"{overlay['hz']} Hz, text through "
+           f"{'its own code page' if overlay['code_page'] == 'own' else overlay['code_page'] or 'no code page yet'}"]
     for k in sorted(counts):
         out.append(f"  {k}: {counts[k]}")
     dropped = sorted(n for p in overlay["paths"].values() for n, c in p.get("cams", {}).items() if c is None)
