@@ -1,0 +1,19 @@
+{
+ "game": "AO",
+ "code": "us-r1",
+ "name": "USA, Rev 1",
+ "title": "Oddworld: Abe's Oddysee",
+ "language": "English",
+ "executable": "SLUS_001.90",
+ "hz": 30,
+ "code_page": "cp437",
+ "note": "Rev 2's levels and screens, without the two Exoddus promo screens on its menu.",
+ "paths": {
+  "S1/1": {
+   "cams": {
+    "S1P01C32": null,
+    "S1P01C33": null
+   }
+  }
+ }
+}

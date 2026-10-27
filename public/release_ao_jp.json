@@ -7,7 +7,7 @@
  "executable": "SLPS_011.18",
  "hz": 30,
  "code_page": "own",
- "note": "Japanese text on the signs and screens and the hand prints on the stones redrawn, over the North American release's levels.",
+ "note": "Japanese text on the signs and screens and the hand prints on the stones redrawn, over Rev 2's levels.",
  "paths": {
   "C1/1": {
    "cams": {

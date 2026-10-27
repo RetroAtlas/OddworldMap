@@ -30,6 +30,13 @@
   },
   "releases": [
    {
+    "code": "us-r1",
+    "name": "USA, Rev 1",
+    "title": "Oddworld: Abe's Oddysee",
+    "language": "English",
+    "note": "Rev 2's levels and screens, without the two Exoddus promo screens on its menu."
+   },
+   {
     "code": "eu",
     "name": "Europe",
     "title": "Oddworld: Abe's Oddysee",
@@ -41,7 +48,7 @@
     "name": "Japan",
     "title": "Abe a GoGo",
     "language": "Japanese",
-    "note": "Japanese text on the signs and screens and the hand prints on the stones redrawn, over the North American release's levels."
+    "note": "Japanese text on the signs and screens and the hand prints on the stones redrawn, over Rev 2's levels."
    }
   ]
  }

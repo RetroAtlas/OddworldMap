@@ -41,7 +41,7 @@ test("a release link opens the release, and the row swaps releases in place", as
   const jp = await probe(page);
   expect(jp.game).toBe("Abe a GoGo");
   expect(jp.gameButton).toBe("Abe a GoGo");
-  expect(jp.row).toEqual(["USA", "Europe", "Japan*"]);
+  expect(jp.row).toEqual(["USA, Rev 2", "USA, Rev 1", "Europe", "Japan*"]);
   expect(jp.tip).toMatch(/^Japan: Abe a GoGo, in Japanese\. Japanese text on the signs/);
   expect(jp.view).toBe(`${VIEW}/jp`);
   expect(jp.regional).toBeGreaterThan(0);
@@ -51,10 +51,10 @@ test("a release link opens the release, and the row swaps releases in place", as
   await expect(page).toHaveURL(new RegExp(`${VIEW}/eu$`));
   const eu = await probe(page);
   expect(eu.cam).toEqual(jp.cam);
-  expect(eu.row).toEqual(["USA", "Europe*", "Japan"]);
+  expect(eu.row).toEqual(["USA, Rev 2", "USA, Rev 1", "Europe*", "Japan"]);
   expect(eu.regional).toBe(0);
 
-  await page.locator("#releaseBtns button", { hasText: "USA" }).click();
+  await page.locator('#releaseBtns button[data-key=""]').click();
   await releaseIs(page, null);
   await expect(page).toHaveURL(new RegExp(`${VIEW}$`));
   const us = await probe(page);
@@ -124,7 +124,7 @@ test("the mark is offered while a release is in hand, and its toggle takes it aw
     "aria-label",
     /Abe's Oddysee, Europe, .*changed in the Europe release/,
   );
-  await page.locator("#releaseBtns button", { hasText: "USA" }).click();
+  await page.locator('#releaseBtns button[data-key=""]').click();
   await releaseIs(page, null);
   await expect(row).toBeHidden();
   await expect(tag).toBeHidden();
@@ -163,7 +163,7 @@ test("an edit in a release keeps a store of its own, and survives a reload", asy
   expect(Object.keys(eu)).toEqual(["owm:edits:eu"]);
   expect(eu["owm:edits:eu"].AO["R1/15"].objects[key].rect[0]).toBe(door.x1 + 1);
 
-  await page.locator("#releaseBtns button", { hasText: "USA" }).click();
+  await page.locator('#releaseBtns button[data-key=""]').click();
   await releaseIs(page, null);
   const shipped = await page.evaluate(async (x1) => {
     const { state } = await import(new URL("js/state.js", location.href).href);

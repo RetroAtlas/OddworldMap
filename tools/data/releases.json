@@ -30,7 +30,8 @@
      {"redump": 67997, "bytes": 702612960, "sha1": "e4c1a4455ea25b36ec371ee78b53d79b023d07dd"}
     ],
     "code_page": "cp437",
-    "ships": false
+    "ships": true,
+    "note": "Rev 2's levels and screens, without the two Exoddus promo screens on its menu."
    },
    "eu": {
     "name": "Europe",
@@ -98,7 +99,7 @@
     ],
     "code_page": "own",
     "ships": true,
-    "note": "Japanese text on the signs and screens and the hand prints on the stones redrawn, over the North American release's levels."
+    "note": "Japanese text on the signs and screens and the hand prints on the stones redrawn, over Rev 2's levels."
    }
   }
  },
