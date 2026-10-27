@@ -41,7 +41,14 @@ test("a release link opens the release, and the row swaps releases in place", as
   const jp = await probe(page);
   expect(jp.game).toBe("Abe a GoGo");
   expect(jp.gameButton).toBe("Abe a GoGo");
-  expect(jp.row).toEqual(["USA, Rev 2", "USA, first pressing", "USA, Rev 1", "Europe", "Japan*"]);
+  expect(jp.row).toEqual([
+    "USA, Rev 2",
+    "USA, first pressing",
+    "USA, Rev 1",
+    "Europe",
+    "France",
+    "Japan*",
+  ]);
   expect(jp.tip).toMatch(/^Japan: Abe a GoGo, in Japanese\. Japanese text on the signs/);
   expect(jp.view).toBe(`${VIEW}/jp`);
   expect(jp.regional).toBeGreaterThan(0);
@@ -51,7 +58,14 @@ test("a release link opens the release, and the row swaps releases in place", as
   await expect(page).toHaveURL(new RegExp(`${VIEW}/eu$`));
   const eu = await probe(page);
   expect(eu.cam).toEqual(jp.cam);
-  expect(eu.row).toEqual(["USA, Rev 2", "USA, first pressing", "USA, Rev 1", "Europe*", "Japan"]);
+  expect(eu.row).toEqual([
+    "USA, Rev 2",
+    "USA, first pressing",
+    "USA, Rev 1",
+    "Europe*",
+    "France",
+    "Japan",
+  ]);
   expect(eu.regional).toBe(0);
 
   await page.locator('#releaseBtns button[data-key=""]').click();
@@ -93,9 +107,9 @@ test("an object link names the base's origin, and opens on the object in any rel
 
 test("a code the map does not carry lands on the base and says so", async ({ page }) => {
   const errors = trackErrors(page);
-  await page.goto(`/${VIEW}/fr`);
+  await page.goto(`/${VIEW}/us-r3`);
   await settle(page, { game: "AO", level: "R1", path: 15 });
-  await expect(page.locator("#toastStack")).toContainText("this map carries no fr release");
+  await expect(page.locator("#toastStack")).toContainText("this map carries no us-r3 release");
   expect((await probe(page)).release).toBeNull();
   expect(errors).toEqual([]);
 });

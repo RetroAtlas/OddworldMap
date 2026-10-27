@@ -51,7 +51,7 @@ test("a release stands over the very base the game loads, one dataset however of
     const index = await loadReleaseIndex();
     assert.deepEqual(
       index.AO.releases.map((r) => r.code),
-      ["us-r0", "us-r1", "eu", "jp"],
+      ["us-r0", "us-r1", "eu", "fr", "jp"],
     );
     const base = await loadGame("AO");
     const R = await loadRelease("AO", "jp");
@@ -62,7 +62,7 @@ test("a release stands over the very base the game loads, one dataset however of
     assert.equal(base.release, undefined);
     // the Japanese Oddysee changes no object, so it never asks for the editor data
     assert.ok(!fetched.some((f) => f.startsWith("relive_export_ao")));
-    assert.equal(await loadRelease("AO", "fr"), null);
+    assert.equal(await loadRelease("AO", "us-r3"), null);
     assert.equal(await loadRelease("AO", "../x"), null);
   } finally {
     globalThis.fetch = was;

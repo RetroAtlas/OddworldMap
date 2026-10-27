@@ -51,6 +51,13 @@
     "note": "Hundreds of collision lines and dozens of objects reworked, a few screens and foregrounds redrawn, and 25 frames a second."
    },
    {
+    "code": "fr",
+    "name": "France",
+    "title": "Oddworld: L'Odyss\u00e9e d'Abe",
+    "language": "French",
+    "note": "French text on the signs and screens, over the levels as first pressed, before Rev 1 revised them, and 25 frames a second."
+   },
+   {
     "code": "jp",
     "name": "Japan",
     "title": "Abe a GoGo",

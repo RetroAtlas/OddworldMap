@@ -55,7 +55,8 @@
      {"redump": 33068, "bytes": 701992032, "sha1": "2acca308d9549475d74f4f16e22d465e30a0b319"}
     ],
     "code_page": "cp437",
-    "ships": false
+    "ships": true,
+    "note": "French text on the signs and screens, over the levels as first pressed, before Rev 1 revised them, and 25 frames a second."
    },
    "de": {
     "name": "Germany",
