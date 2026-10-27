@@ -182,7 +182,8 @@
      {"redump": 1094, "bytes": 483143136, "sha1": "e561e58232813fcb36850d95a5a5b690fc901da3"}
     ],
     "code_page": "cp437",
-    "ships": false
+    "ships": true,
+    "note": "Spanish text on the signs and screens, over the North American release's levels, at 25 frames a second. The gas countdowns still count frames by 30, so one of 7200 frames shows 240 seconds and lasts 288."
    },
    "jp": {
     "name": "Japan",

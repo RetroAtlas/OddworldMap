@@ -35,6 +35,13 @@
     "note": "Italian text on the signs and screens, over the North American release's levels, at 25 frames a second. The gas countdowns still count frames by 30, so one of 7200 frames shows 240 seconds and lasts 288."
    },
    {
+    "code": "es",
+    "name": "Spain",
+    "title": "Oddworld: Abe's Exoddus",
+    "language": "Spanish",
+    "note": "Spanish text on the signs and screens, over the North American release's levels, at 25 frames a second. The gas countdowns still count frames by 30, so one of 7200 frames shows 240 seconds and lasts 288."
+   },
+   {
     "code": "jp",
     "name": "Japan",
     "title": "Abe '99",
