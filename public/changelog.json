@@ -1,6 +1,12 @@
 {
  "entries": [
   {
+   "date": "2026-10-27",
+   "tag": "new",
+   "title": "Every release of both games joins the map",
+   "detail": "Every retail release of both games is now on the map, chosen under the game buttons. Oddysee adds its first two US pressings, and both games add their French, German, Italian and Spanish editions. The localized editions draw their own translated signs, story screens and tally boards, and their boards read in their own language wherever the map shows what a sign says. Search finds them by those words: vögel portalen turns up the German Rupture Farms boards. Oddysee's hint flies spell in their own letters too, FÜR ELUM in German and DEFIE L'ANNEAU in French. Oddysee's first pressing and its localized editions keep the levels as they shipped before Rev 1 revised them, which the violet mark shows against the map's own. Every European edition runs at 25 frames a second."
+  },
+  {
    "date": "2026-10-23",
    "tag": "improved",
    "title": "The Japanese signs read as Japanese",
