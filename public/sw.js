@@ -24,10 +24,10 @@ const SHELL = "shell-v1";
 // unregistration can't stop a controlling worker until reload, and a
 // module flag wouldn't survive an idle-worker restart
 const ENABLED = "cams-on";
-// has to clear the complete artwork (4717 files) of both games and every
+// has to clear the complete artwork (5551 files) of both games and every
 // release, which the page can ask for outright; a cap under that would evict
 // the download's own head
-const MAX_ENTRIES = 5000; // ≈350 MB
+const MAX_ENTRIES = 10000; // ≈400 MB
 const TRIM_SLACK = 50; // hysteresis so trim doesn't scan keys() on every put
 
 self.addEventListener("install", () => self.skipWaiting());

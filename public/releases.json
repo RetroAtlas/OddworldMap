@@ -14,6 +14,13 @@
     "note": "The same levels as the North American release, at 25 frames a second. The gas countdowns still count frames by 30, so one of 7200 frames shows 240 seconds and lasts 288."
    },
    {
+    "code": "fr",
+    "name": "France",
+    "title": "Oddworld: L'Exode d'Abe",
+    "language": "French",
+    "note": "French text on the signs and screens, over the North American release's levels with one wall in Mudomo Vault moved, at 25 frames a second. The gas countdowns still count frames by 30, so one of 7200 frames shows 240 seconds and lasts 288."
+   },
+   {
     "code": "jp",
     "name": "Japan",
     "title": "Abe '99",
