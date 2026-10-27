@@ -154,7 +154,8 @@
      {"redump": 10341, "bytes": 483241920, "sha1": "ee9c3a3037f10d609742246f6ee77e1c9a8cb436"}
     ],
     "code_page": "cp437",
-    "ships": false
+    "ships": true,
+    "note": "German text on the signs and screens, over the North American release's levels with one wall in Mudomo Vault moved, at 25 frames a second. The gas countdowns still count frames by 30, so one of 7200 frames shows 240 seconds and lasts 288."
    },
    "it": {
     "name": "Italy",
