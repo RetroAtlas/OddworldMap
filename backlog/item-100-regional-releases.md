@@ -1,6 +1,6 @@
 # 100. Every release of both games beside NTSC-U
 
-**Status:** open · slices 1 to 3 shipped 2026-10-20, 2026-10-21 and 2026-10-23: the mechanism, the four overlays the site carries first, the release in the viewer and the Japanese code pages; every further release next · **Effort:** large (one census and build that any release runs through, a viewer layer, the Japanese character tables) · **Where:** `tools/build_map.py` and `tools/oddmap/` for the release build, a hand-curated release table under `tools/data/`, an overlay and its art per game and release under `public/`, the viewer's datasets, permalinks, edit store, marks and clock, and `public/sw.js`
+**Status:** shipped 2026-10-27 · four slices, shipped 2026-10-20, 2026-10-21, 2026-10-23 and 2026-10-27: the mechanism and the four overlays the site carried first, the release in the viewer, the Japanese code pages and every further release · **Effort:** large (one census and build that any release runs through, a viewer layer, the Japanese character tables) · **Where:** `tools/build_map.py` and `tools/oddmap/` for the release build, a hand-curated release table under `tools/data/`, an overlay and its art per game and release under `public/`, the viewer's datasets, permalinks, edit store, marks and clock, and `public/sw.js`
 
 **Filed:** 2026-10-20, from a census of every retail release of both games against the North American ones.
 
@@ -246,6 +246,17 @@ Where the slice drifted from the design:
 - **A code page answers to the font it was read from** (`sheet`, the name the font's pixels give it), so a rebuild that changes the font fails until the table is read again, and the build fails a table missing a glyph or letter a message reaches or naming one none reaches. The count is what the messages reach, 255 of Abe '99's 277 distinct glyphs.
 - **A button glyph names the code the base writes it with,** so the viewer names it as it names the base's. Abe '99 draws L1, L2, R1 and R2 two glyphs wide, each half used only in its own pair: the first half names the button and the second reads as nothing.
 - **The line of no text goes.** With every release reading its words, the release table requires a code page, and the note a release without one answered is gone from the sign readers.
+
+## Shipped (2026-10-27): slice 4
+
+Every further release, an addition each: turned on in the release table with its note, built, its overlay and art reviewed and committed. Oddysee gains its first pressing (`us-r0`, 20 images, 0.5 MB), Rev 1 (`us-r1`, its identity and the two menu cameras it lacks) and its French, German, Italian and Spanish editions (233 to 279 images, 12.7 to 15.9 MB each); Exoddus gains its French, German, Italian and Spanish editions (808 to 834 images, 14.5 to 15.1 MB each). All fourteen releases' art comes to 148 MB beside the base's 206, a scratch build of each reproduces it byte for byte, and the cache cap holds all of it, 10,000 entries for 8,761 files. With three US pressings on Oddysee's row its base's button reads its full name, USA, Rev 2, and the notes and the mark's tip that called the base the North American release name it Rev 2 or the release the map is built on.
+
+Where the slice drifted from the design:
+
+- **Oddysee's localized hint flies spell from an alphabet running on past Z.** Its 56 letters are A to Z, six more A's holding places, then Ä À Á Â Ö Ô Ó Ò É È Ê Ï Í Î Ü Û Ú Ù Ñ Ç Æ Œ, an apostrophe and a dash, and the engine draws a code less 0x41 from it, so IBM 437 would read the German FÜR as FoR and the French L'ANNEAU as LwANNEAU. A release reading through a standard code page may carry a table naming its hint flies' letters, as the French, German and Italian editions do, and the build fails one whose flies spell past Z without it. The decomp's PC data holds 51 of the 56 letters cell for cell; the other five were read off their cells. The Spanish edition's flies spell nothing past Z, and its hint fly 21 spells a comma, a code below the alphabet, which reads as the comma it was written as.
+- **The IBM 437 reading was checked glyph by glyph.** The eight localized editions draw their LCD text with one font (`Font.0ec705905d12`), and every code their messages use was drawn enlarged beside the character IBM 437 gives it: the 25 accented codes, acute told from grave, the 66 others and the 12 buttons all agree, `/` drawing nothing where the French Oddysee's menu and Stockyards overlays spell a button out as `/013`.
+- **The localized Exoddus editions repeat the European one's countdown sentence,** on the evidence of their code: the function dividing by 30 five times is the same in all six Exoddus executables, addresses masked, and every other function dividing by 25 or 30 matches the European edition's but for one save-screen function in the German, Italian and Spanish builds.
+- **The ten arrived under one What's New entry** rather than one each, since ten entries would say ten times what one sentence says.
 
 ## Ruled out
 
