@@ -30,6 +30,13 @@
   },
   "releases": [
    {
+    "code": "us-r0",
+    "name": "USA, first pressing",
+    "title": "Oddworld: Abe's Oddysee",
+    "language": "English",
+    "note": "The levels as first pressed, before Rev 1 revised them: a few collision lines and 28 objects set otherwise, the Scrabania map and a Paramonia screen as first drawn, and the background Glukkons and chanting Mudokons as first animated."
+   },
+   {
     "code": "us-r1",
     "name": "USA, Rev 1",
     "title": "Oddworld: Abe's Oddysee",

@@ -41,7 +41,7 @@ test("a release link opens the release, and the row swaps releases in place", as
   const jp = await probe(page);
   expect(jp.game).toBe("Abe a GoGo");
   expect(jp.gameButton).toBe("Abe a GoGo");
-  expect(jp.row).toEqual(["USA, Rev 2", "USA, Rev 1", "Europe", "Japan*"]);
+  expect(jp.row).toEqual(["USA, Rev 2", "USA, first pressing", "USA, Rev 1", "Europe", "Japan*"]);
   expect(jp.tip).toMatch(/^Japan: Abe a GoGo, in Japanese\. Japanese text on the signs/);
   expect(jp.view).toBe(`${VIEW}/jp`);
   expect(jp.regional).toBeGreaterThan(0);
@@ -51,7 +51,7 @@ test("a release link opens the release, and the row swaps releases in place", as
   await expect(page).toHaveURL(new RegExp(`${VIEW}/eu$`));
   const eu = await probe(page);
   expect(eu.cam).toEqual(jp.cam);
-  expect(eu.row).toEqual(["USA, Rev 2", "USA, Rev 1", "Europe*", "Japan"]);
+  expect(eu.row).toEqual(["USA, Rev 2", "USA, first pressing", "USA, Rev 1", "Europe*", "Japan"]);
   expect(eu.regional).toBe(0);
 
   await page.locator('#releaseBtns button[data-key=""]').click();
