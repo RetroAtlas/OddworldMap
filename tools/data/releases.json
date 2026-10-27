@@ -91,7 +91,8 @@
      {"redump": 1096, "bytes": 702173136, "sha1": "abe8d2d1ee64c6712ebd979febdf075f0b81f02f"}
     ],
     "code_page": "cp437",
-    "ships": false
+    "ships": true,
+    "note": "Spanish text on the signs and screens, over the levels as first pressed with some of Rev 1's revisions, and 25 frames a second."
    },
    "jp": {
     "name": "Japan",
