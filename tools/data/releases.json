@@ -168,7 +168,8 @@
      {"redump": 9981, "bytes": 483858144, "sha1": "afbc953d1a2b6eda3e319e47dbc1c6c2c449da4b"}
     ],
     "code_page": "cp437",
-    "ships": false
+    "ships": true,
+    "note": "Italian text on the signs and screens, over the North American release's levels, at 25 frames a second. The gas countdowns still count frames by 30, so one of 7200 frames shows 240 seconds and lasts 288."
    },
    "es": {
     "name": "Spain",

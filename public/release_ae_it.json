@@ -1,0 +1,7628 @@
+{
+ "game": "AE",
+ "code": "it",
+ "name": "Italy",
+ "title": "Oddworld: Abe's Exoddus",
+ "language": "Italian",
+ "executable": "SLES_015.04",
+ "hz": 25,
+ "code_page": "cp437",
+ "note": "Italian text on the signs and screens, over the North American release's levels, at 25 frames a second. The gas countdowns still count frames by 30, so one of 7200 frames shows 240 seconds and lasts 288.",
+ "paths": {
+  "BA/1": {
+   "cams": {
+    "BAP01C05": {
+     "cell": 40,
+     "patches": [
+      [
+       160,
+       112,
+       "cams/ae/it/BA/BAP01C05_160_112.e14e02a75e2e.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP01C05_fg37.03e5ae09e070.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BA/10": {
+   "cams": {
+    "BAP10C01": {
+     "cell": 13,
+     "patches": [
+      [
+       240,
+       64,
+       "cams/ae/it/BA/BAP10C01_240_64.51f99c07f2ad.png"
+      ]
+     ],
+     "masks": [
+      [
+       18,
+       "cams/ae/it/BA/BAP10C01_fg18.d75c566e60ba.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BA/BAP10C01_fg37.5fcb137e44fc.png"
+      ]
+     ]
+    },
+    "BAP10C05": {
+     "cell": 9,
+     "patches": [
+      [
+       0,
+       160,
+       "cams/ae/it/BA/BAP10C05_0_160.cbdc8aca4307.png"
+      ],
+      [
+       160,
+       192,
+       "cams/ae/it/BA/BAP10C05_160_192.30d3d0941024.png"
+      ]
+     ],
+     "masks": [
+      [
+       18,
+       "cams/ae/it/BA/BAP10C05_fg18.eccc8753e186.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BA/BAP10C05_fg37.f0ff00067f34.png"
+      ]
+     ]
+    },
+    "BAP10C06": {
+     "cell": 8,
+     "patches": [
+      [
+       16,
+       32,
+       "cams/ae/it/BA/BAP10C06_16_32.1d56b8234c1f.png"
+      ]
+     ],
+     "masks": [
+      [
+       18,
+       "cams/ae/it/BA/BAP10C06_fg18.49b3be38d364.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BA/BAP10C06_fg37.9848d045a1ac.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BA/11": {
+   "cams": {
+    "BAP11C01": {
+     "cell": 21,
+     "patches": [
+      [
+       160,
+       96,
+       "cams/ae/it/BA/BAP11C01_160_96.eaab2cb69d58.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BA/BAP11C01_fg23.6f98c1dd2d9d.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BA/BAP11C01_fg37.514f4996aaa8.png"
+      ]
+     ]
+    },
+    "BAP11C02": {
+     "cell": 22,
+     "patches": [
+      [
+       112,
+       96,
+       "cams/ae/it/BA/BAP11C02_112_96.5803f2eec63b.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BA/BAP11C02_fg23.3b720b9a94dd.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BA/BAP11C02_fg37.b5cc4c5ff903.png"
+      ]
+     ]
+    },
+    "BAP11C03": {
+     "cell": 23,
+     "patches": [
+      [
+       96,
+       96,
+       "cams/ae/it/BA/BAP11C03_96_96.68c39555eeb0.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BA/BAP11C03_fg23.a4d41e6e2768.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BA/BAP11C03_fg37.203d7e3b1e44.png"
+      ]
+     ]
+    },
+    "BAP11C04": {
+     "cell": 11,
+     "patches": [
+      [
+       112,
+       112,
+       "cams/ae/it/BA/BAP11C04_112_112.3e363fe7c28e.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BA/BAP11C04_fg23.36d01cfb78b0.png"
+      ]
+     ]
+    },
+    "BAP11C08": {
+     "cell": 31,
+     "patches": [
+      [
+       128,
+       48,
+       "cams/ae/it/BA/BAP11C08_128_48.01c44abd9f72.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BA/BAP11C08_fg23.a609916f8250.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BA/BAP11C08_fg37.68f28f6e06ca.png"
+      ]
+     ]
+    },
+    "BAP11C09": {
+     "cell": 38,
+     "patches": [
+      [
+       64,
+       16,
+       "cams/ae/it/BA/BAP11C09_64_16.d8c5a0b0ade3.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BA/13": {
+   "cams": {
+    "BAP13C14": {
+     "cell": 0,
+     "patches": [
+      [
+       96,
+       16,
+       "cams/ae/it/BA/BAP13C14_96_16.c12e527ba935.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP13C14_fg37.07856f326e5d.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BA/14": {
+   "cams": {
+    "BAP14C01": {
+     "cell": 28,
+     "patches": [
+      [
+       64,
+       48,
+       "cams/ae/it/BA/BAP14C01_64_48.a17ea7880d45.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BA/BAP14C01_fg23.c54b3b079d54.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BA/BAP14C01_fg37.4585af5a9ada.png"
+      ]
+     ]
+    },
+    "BAP14C03": {
+     "cell": 31,
+     "patches": [
+      [
+       192,
+       0,
+       "cams/ae/it/BA/BAP14C03_192_0.850c77235607.png"
+      ],
+      [
+       112,
+       96,
+       "cams/ae/it/BA/BAP14C03_112_96.bbc831a3d347.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BA/BAP14C03_fg23.4a187f64e3d6.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BA/BAP14C03_fg37.2f499488a49e.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BA/16": {
+   "cams": {
+    "BAP16C02": {
+     "cell": 1,
+     "patches": [
+      [
+       0,
+       16,
+       "cams/ae/it/BA/BAP16C02_0_16.add363940619.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP16C02_fg37.1f77ade10dfc.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BA/2": {
+   "cams": {
+    "BAP02C01": {
+     "cell": 4,
+     "patches": [
+      [
+       96,
+       112,
+       "cams/ae/it/BA/BAP02C01_96_112.2d7591179744.png"
+      ]
+     ],
+     "masks": [
+      [
+       4,
+       "cams/ae/it/BA/BAP02C01_fg4.56eab5558ff0.png"
+      ],
+      [
+       18,
+       "cams/ae/it/BA/BAP02C01_fg18.94b2addfcb2c.png"
+      ],
+      [
+       23,
+       "cams/ae/it/BA/BAP02C01_fg23.c2ffe1d329a4.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BA/BAP02C01_fg37.ba8ecbf43c67.png"
+      ]
+     ]
+    },
+    "BAP02C02": {
+     "cell": 10,
+     "patches": [
+      [
+       112,
+       16,
+       "cams/ae/it/BA/BAP02C02_112_16.ffdac826c70e.png"
+      ],
+      [
+       16,
+       32,
+       "cams/ae/it/BA/BAP02C02_16_32.a10a3379b638.png"
+      ],
+      [
+       64,
+       80,
+       "cams/ae/it/BA/BAP02C02_64_80.a57b1864fe4b.png"
+      ],
+      [
+       304,
+       192,
+       "cams/ae/it/BA/BAP02C02_304_192.1a548a07bbd1.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BA/3": {
+   "cams": {
+    "BAP03C09": {
+     "cell": 14,
+     "patches": [
+      [
+       32,
+       48,
+       "cams/ae/it/BA/BAP03C09_32_48.e868b12e124c.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP03C09_fg37.1cad28b1fd66.png"
+      ]
+     ]
+    },
+    "BAP03C13": {
+     "cell": 2,
+     "patches": [
+      [
+       144,
+       112,
+       "cams/ae/it/BA/BAP03C13_144_112.1db47f729be3.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP03C13_fg37.c8ca7046edb4.png"
+      ]
+     ]
+    },
+    "BAP03C15": {
+     "cell": 0,
+     "patches": [
+      [
+       224,
+       128,
+       "cams/ae/it/BA/BAP03C15_224_128.28c3edfad8da.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP03C15_fg37.ee022f81dce2.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BA/4": {
+   "cams": {
+    "BAP04C04": {
+     "cell": 1,
+     "patches": [
+      [
+       16,
+       0,
+       "cams/ae/it/BA/BAP04C04_16_0.86112a19ec5b.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BA/BAP04C04_fg23.e9816901aeec.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BA/BAP04C04_fg37.f7468767e6c1.png"
+      ]
+     ]
+    },
+    "BAP04C05": {
+     "cell": 4,
+     "patches": [
+      [
+       160,
+       112,
+       "cams/ae/it/BA/BAP04C05_160_112.b862be5f625e.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BA/BAP04C05_fg23.10808725da82.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BA/BAP04C05_fg37.869f4c0ddc63.png"
+      ]
+     ]
+    },
+    "BAP04C06": {
+     "cell": 6,
+     "patches": [
+      [
+       240,
+       112,
+       "cams/ae/it/BA/BAP04C06_240_112.c2512ac57a74.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP04C06_fg37.b224c3771297.png"
+      ]
+     ]
+    },
+    "BAP04C07": {
+     "cell": 7,
+     "patches": [
+      [
+       288,
+       96,
+       "cams/ae/it/BA/BAP04C07_288_96.d43aac75abcc.png"
+      ],
+      [
+       48,
+       112,
+       "cams/ae/it/BA/BAP04C07_48_112.7e379a82de2d.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BA/BAP04C07_fg23.402045f9393d.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BA/BAP04C07_fg37.79fb380194c9.png"
+      ]
+     ]
+    },
+    "BAP04C08": {
+     "cell": 8,
+     "patches": [
+      [
+       144,
+       0,
+       "cams/ae/it/BA/BAP04C08_144_0.982d3ae06eb8.png"
+      ],
+      [
+       16,
+       112,
+       "cams/ae/it/BA/BAP04C08_16_112.8711eb6b8ac3.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP04C08_fg37.e4000faf4a06.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BA/5": {
+   "cams": {
+    "BAP05C01": {
+     "cell": 24,
+     "patches": [
+      [
+       192,
+       96,
+       "cams/ae/it/BA/BAP05C01_192_96.2599c7c4b3f4.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP05C01_fg37.95ee3fabd9a8.png"
+      ]
+     ]
+    },
+    "BAP05C03": {
+     "cell": 36,
+     "patches": [
+      [
+       176,
+       32,
+       "cams/ae/it/BA/BAP05C03_176_32.cd7e31f317d3.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP05C03_fg37.0f439e9d7ac7.png"
+      ]
+     ]
+    },
+    "BAP05C07": {
+     "cell": 75,
+     "patches": [
+      [
+       48,
+       32,
+       "cams/ae/it/BA/BAP05C07_48_32.e77557c79b62.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP05C07_fg37.ca21d5d2648e.png"
+      ]
+     ]
+    },
+    "BAP05C09": {
+     "cell": 68,
+     "patches": [
+      [
+       32,
+       48,
+       "cams/ae/it/BA/BAP05C09_32_48.e868b12e124c.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP05C09_fg37.1cad28b1fd66.png"
+      ]
+     ]
+    },
+    "BAP05C13": {
+     "cell": 29,
+     "patches": [
+      [
+       144,
+       112,
+       "cams/ae/it/BA/BAP05C13_144_112.1db47f729be3.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP05C13_fg37.c8ca7046edb4.png"
+      ]
+     ]
+    },
+    "BAP05C15": {
+     "cell": 27,
+     "patches": [
+      [
+       224,
+       128,
+       "cams/ae/it/BA/BAP05C15_224_128.28c3edfad8da.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP05C15_fg37.ee022f81dce2.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BA/7": {
+   "cams": {
+    "BAP07C02": {
+     "cell": 2,
+     "patches": [
+      [
+       240,
+       16,
+       "cams/ae/it/BA/BAP07C02_240_16.9c329d9ed498.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP07C02_fg37.ea62b202d702.png"
+      ]
+     ]
+    },
+    "BAP07C03": {
+     "cell": 3,
+     "patches": [
+      [
+       0,
+       96,
+       "cams/ae/it/BA/BAP07C03_0_96.7d2827e32be1.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP07C03_fg37.3b3ea103e5d7.png"
+      ]
+     ]
+    },
+    "BAP07C04": {
+     "cell": 8,
+     "patches": [
+      [
+       16,
+       0,
+       "cams/ae/it/BA/BAP07C04_16_0.86112a19ec5b.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BA/BAP07C04_fg23.e9816901aeec.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BA/BAP07C04_fg37.f7468767e6c1.png"
+      ]
+     ]
+    },
+    "BAP07C05": {
+     "cell": 14,
+     "patches": [
+      [
+       160,
+       112,
+       "cams/ae/it/BA/BAP07C05_160_112.b862be5f625e.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BA/BAP07C05_fg23.10808725da82.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BA/BAP07C05_fg37.869f4c0ddc63.png"
+      ]
+     ]
+    },
+    "BAP07C06": {
+     "cell": 19,
+     "patches": [
+      [
+       240,
+       112,
+       "cams/ae/it/BA/BAP07C06_240_112.c2512ac57a74.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP07C06_fg37.b224c3771297.png"
+      ]
+     ]
+    },
+    "BAP07C07": {
+     "cell": 20,
+     "patches": [
+      [
+       288,
+       96,
+       "cams/ae/it/BA/BAP07C07_288_96.d43aac75abcc.png"
+      ],
+      [
+       48,
+       112,
+       "cams/ae/it/BA/BAP07C07_48_112.7e379a82de2d.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BA/BAP07C07_fg23.402045f9393d.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BA/BAP07C07_fg37.79fb380194c9.png"
+      ]
+     ]
+    },
+    "BAP07C08": {
+     "cell": 21,
+     "patches": [
+      [
+       144,
+       0,
+       "cams/ae/it/BA/BAP07C08_144_0.982d3ae06eb8.png"
+      ],
+      [
+       16,
+       112,
+       "cams/ae/it/BA/BAP07C08_16_112.8711eb6b8ac3.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP07C08_fg37.e4000faf4a06.png"
+      ]
+     ]
+    },
+    "BAP07C10": {
+     "cell": 23,
+     "patches": [
+      [
+       80,
+       0,
+       "cams/ae/it/BA/BAP07C10_80_0.1ecca83f4918.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BA/9": {
+   "cams": {
+    "BAP09C03": {
+     "cell": 8,
+     "patches": [
+      [
+       176,
+       96,
+       "cams/ae/it/BA/BAP09C03_176_96.c4a9b9d5be5b.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP09C03_fg37.6fd0b107ca12.png"
+      ]
+     ]
+    },
+    "BAP09C04": {
+     "cell": 9,
+     "patches": [
+      [
+       112,
+       16,
+       "cams/ae/it/BA/BAP09C04_112_16.13c54e58ca2a.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BA/BAP09C04_fg37.4d2938f7addb.png"
+      ]
+     ]
+    },
+    "BAP09C05": {
+     "cell": 11,
+     "patches": [
+      [
+       80,
+       32,
+       "cams/ae/it/BA/BAP09C05_80_32.ca765d2f9354.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BM/1": {
+   "cams": {
+    "BMP01C02": {
+     "cell": 24,
+     "patches": [
+      [
+       128,
+       96,
+       "cams/ae/it/BM/BMP01C02_128_96.c481c2398f87.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BM/BMP01C02_fg37.3310424c92cf.png"
+      ]
+     ]
+    },
+    "BMP01C10": {
+     "cell": 22,
+     "patches": [
+      [
+       32,
+       16,
+       "cams/ae/it/BM/BMP01C10_32_16.9535f65b7a55.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BM/BMP01C10_fg37.5187fc6e959e.png"
+      ]
+     ]
+    },
+    "BMP01C11": {
+     "cell": 57,
+     "patches": [
+      [
+       80,
+       32,
+       "cams/ae/it/BM/BMP01C11_80_32.4450bcfaee98.png"
+      ]
+     ]
+    },
+    "BMP01C13": {
+     "cell": 36,
+     "patches": [
+      [
+       32,
+       112,
+       "cams/ae/it/BM/BMP01C13_32_112.7b6205b180af.png"
+      ]
+     ]
+    },
+    "BMP01C14": {
+     "cell": 8,
+     "patches": [
+      [
+       80,
+       32,
+       "cams/ae/it/BM/BMP01C14_80_32.6a0a4d32b8a6.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BM/BMP01C14_fg37.2fc54abbbd38.png"
+      ]
+     ]
+    },
+    "BMP01C15": {
+     "cell": 65,
+     "patches": [
+      [
+       16,
+       16,
+       "cams/ae/it/BM/BMP01C15_16_16.ee903e0263eb.png"
+      ]
+     ]
+    },
+    "BMP01C16": {
+     "cell": 59,
+     "patches": [
+      [
+       16,
+       32,
+       "cams/ae/it/BM/BMP01C16_16_32.9490a4a6a6c6.png"
+      ]
+     ]
+    },
+    "BMP01C17": {
+     "cell": 67,
+     "patches": [
+      [
+       16,
+       96,
+       "cams/ae/it/BM/BMP01C17_16_96.9d8b6d80a116.png"
+      ]
+     ]
+    },
+    "BMP01C18": {
+     "cell": 61,
+     "patches": [
+      [
+       0,
+       0,
+       "cams/ae/it/BM/BMP01C18_0_0.8986f29b8ddc.png"
+      ],
+      [
+       320,
+       0,
+       "cams/ae/it/BM/BMP01C18_320_0.92b334429d0a.png"
+      ],
+      [
+       352,
+       208,
+       "cams/ae/it/BM/BMP01C18_352_208.986cab7cc57c.png"
+      ]
+     ]
+    },
+    "BMP01C19": {
+     "cell": 10,
+     "patches": [
+      [
+       256,
+       16,
+       "cams/ae/it/BM/BMP01C19_256_16.5d7dbee6bfeb.png"
+      ],
+      [
+       96,
+       160,
+       "cams/ae/it/BM/BMP01C19_96_160.2cf68dbd57e9.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BM/BMP01C19_fg37.4b7665ef1bd6.png"
+      ]
+     ]
+    },
+    "BMP01C20": {
+     "cell": 69,
+     "patches": [
+      [
+       64,
+       16,
+       "cams/ae/it/BM/BMP01C20_64_16.aac80e1a1f53.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/1": {
+   "cams": {
+    "BRP01C01": {
+     "cell": 9,
+     "patches": [
+      [
+       64,
+       16,
+       "cams/ae/it/BR/BRP01C01_64_16.e54efe8ea110.png"
+      ],
+      [
+       224,
+       160,
+       "cams/ae/it/BR/BRP01C01_224_160.3c335cc9ba1c.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP01C01_fg37.c46c8c732e11.png"
+      ]
+     ]
+    },
+    "BRP01C04": {
+     "cell": 12,
+     "patches": [
+      [
+       144,
+       112,
+       "cams/ae/it/BR/BRP01C04_144_112.34c3d04f0758.png"
+      ],
+      [
+       32,
+       128,
+       "cams/ae/it/BR/BRP01C04_32_128.578c3140307d.png"
+      ],
+      [
+       0,
+       208,
+       "cams/ae/it/BR/BRP01C04_0_208.3612c7e8cc93.png"
+      ],
+      [
+       80,
+       208,
+       "cams/ae/it/BR/BRP01C04_80_208.b20608db9c63.png"
+      ],
+      [
+       240,
+       208,
+       "cams/ae/it/BR/BRP01C04_240_208.419b750695be.png"
+      ],
+      [
+       336,
+       208,
+       "cams/ae/it/BR/BRP01C04_336_208.143facb88fa0.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP01C04_fg37.0ad8c43ab18f.png"
+      ]
+     ]
+    },
+    "BRP01C06": {
+     "cell": 14,
+     "patches": [
+      [
+       16,
+       0,
+       "cams/ae/it/BR/BRP01C06_16_0.278e538aa928.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP01C06_fg37.b07cf86ac419.png"
+      ]
+     ]
+    },
+    "BRP01C08": {
+     "cell": 26,
+     "patches": [
+      [
+       128,
+       48,
+       "cams/ae/it/BR/BRP01C08_128_48.ecfa291cb843.png"
+      ]
+     ]
+    },
+    "BRP01C11": {
+     "cell": 30,
+     "patches": [
+      [
+       64,
+       0,
+       "cams/ae/it/BR/BRP01C11_64_0.9c62a9fea5e0.png"
+      ],
+      [
+       16,
+       192,
+       "cams/ae/it/BR/BRP01C11_16_192.c90fd8f5edac.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/10": {
+   "cams": {
+    "BRP10C06": {
+     "cell": 15,
+     "patches": [
+      [
+       32,
+       96,
+       "cams/ae/it/BR/BRP10C06_32_96.a904caaf1ecf.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP10C06_fg37.ecc731360cda.png"
+      ]
+     ]
+    },
+    "BRP10C10": {
+     "cell": 48,
+     "patches": [
+      [
+       96,
+       0,
+       "cams/ae/it/BR/BRP10C10_96_0.9f9b59d9d68c.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP10C10_fg37.ce9c0563e479.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/11": {
+   "cams": {
+    "BRP11C01": {
+     "cell": 13,
+     "patches": [
+      [
+       32,
+       16,
+       "cams/ae/it/BR/BRP11C01_32_16.c9c2dd141a54.png"
+      ],
+      [
+       96,
+       16,
+       "cams/ae/it/BR/BRP11C01_96_16.8493812a3042.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP11C01_fg37.071a9d6cf9f2.png"
+      ]
+     ]
+    },
+    "BRP11C06": {
+     "cell": 28,
+     "patches": [
+      [
+       192,
+       16,
+       "cams/ae/it/BR/BRP11C06_192_16.7f17bf4f528f.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BR/BRP11C06_fg23.e082ba1cec9f.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BR/BRP11C06_fg37.6c50559f3b20.png"
+      ]
+     ]
+    },
+    "BRP11C09": {
+     "cell": 31,
+     "patches": [
+      [
+       48,
+       96,
+       "cams/ae/it/BR/BRP11C09_48_96.191a5fccb5c2.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP11C09_fg37.67fcd0cbfe20.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/12": {
+   "cams": {
+    "BRP12C02": {
+     "cell": 9,
+     "patches": [
+      [
+       208,
+       16,
+       "cams/ae/it/BR/BRP12C02_208_16.0322cfbbbdc7.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP12C02_fg37.9a72510a7dc4.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/13": {
+   "cams": {
+    "BRP13C03": {
+     "cell": 2,
+     "patches": [
+      [
+       80,
+       0,
+       "cams/ae/it/BR/BRP13C03_80_0.cf1999852034.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP13C03_fg37.2b1eb5c3700b.png"
+      ]
+     ]
+    },
+    "BRP13C10": {
+     "cell": 6,
+     "patches": [
+      [
+       128,
+       0,
+       "cams/ae/it/BR/BRP13C10_128_0.f440b823a8ee.png"
+      ],
+      [
+       80,
+       48,
+       "cams/ae/it/BR/BRP13C10_80_48.6915442e9578.png"
+      ],
+      [
+       176,
+       96,
+       "cams/ae/it/BR/BRP13C10_176_96.5999ae6e38ee.png"
+      ],
+      [
+       240,
+       192,
+       "cams/ae/it/BR/BRP13C10_240_192.77efad6ad366.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP13C10_fg37.61ef6344ea1e.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/14": {
+   "cams": {
+    "BRP14C05": {
+     "cell": 12,
+     "patches": [
+      [
+       80,
+       0,
+       "cams/ae/it/BR/BRP14C05_80_0.ca130f4179bf.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP14C05_fg37.512eb11622a8.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/15": {
+   "cams": {
+    "BRP15C02": {
+     "cell": 9,
+     "patches": [
+      [
+       64,
+       112,
+       "cams/ae/it/BR/BRP15C02_64_112.61b6a3e53b4b.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP15C02_fg37.73b0a0256ad7.png"
+      ]
+     ]
+    },
+    "BRP15C05": {
+     "cell": 12,
+     "patches": [
+      [
+       16,
+       128,
+       "cams/ae/it/BR/BRP15C05_16_128.4b0ce7789750.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP15C05_fg37.6b633b8d3d3e.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/16": {
+   "cams": {
+    "BRP16C04": {
+     "cell": 10,
+     "patches": [
+      [
+       32,
+       160,
+       "cams/ae/it/BR/BRP16C04_32_160.e2cc2154b2e9.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BR/BRP16C04_fg23.d9df04eae459.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BR/BRP16C04_fg37.938054041ec0.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/17": {
+   "cams": {
+    "BRP17C01": {
+     "cell": 7,
+     "patches": [
+      [
+       16,
+       0,
+       "cams/ae/it/BR/BRP17C01_16_0.ebc5cbfcad46.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP17C01_fg37.6f9811672c8a.png"
+      ]
+     ]
+    },
+    "BRP17C03": {
+     "cell": 19,
+     "patches": [
+      [
+       128,
+       0,
+       "cams/ae/it/BR/BRP17C03_128_0.54f3e10f6738.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP17C03_fg37.d9d5043192d8.png"
+      ]
+     ]
+    },
+    "BRP17C07": {
+     "cell": 43,
+     "patches": [
+      [
+       192,
+       16,
+       "cams/ae/it/BR/BRP17C07_192_16.023513e04cc7.png"
+      ],
+      [
+       240,
+       112,
+       "cams/ae/it/BR/BRP17C07_240_112.06f1cdd486af.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BR/BRP17C07_fg23.ffe0430026fd.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BR/BRP17C07_fg37.affdc8696a57.png"
+      ]
+     ]
+    },
+    "BRP17C09": {
+     "cell": 22,
+     "patches": [
+      [
+       144,
+       128,
+       "cams/ae/it/BR/BRP17C09_144_128.86f4a0316095.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP17C09_fg37.f1137eb2f323.png"
+      ]
+     ]
+    },
+    "BRP17C11": {
+     "cell": 33,
+     "patches": [
+      [
+       96,
+       16,
+       "cams/ae/it/BR/BRP17C11_96_16.208f12a9b539.png"
+      ],
+      [
+       176,
+       32,
+       "cams/ae/it/BR/BRP17C11_176_32.85af1fc1594a.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP17C11_fg37.e5b07fe7bcfd.png"
+      ]
+     ]
+    },
+    "BRP17C12": {
+     "cell": 10,
+     "patches": [
+      [
+       144,
+       0,
+       "cams/ae/it/BR/BRP17C12_144_0.61dd38260cf0.png"
+      ],
+      [
+       336,
+       0,
+       "cams/ae/it/BR/BRP17C12_336_0.b048f9dbb710.png"
+      ],
+      [
+       0,
+       96,
+       "cams/ae/it/BR/BRP17C12_0_96.d509070c9b92.png"
+      ],
+      [
+       0,
+       192,
+       "cams/ae/it/BR/BRP17C12_0_192.409020adaac1.png"
+      ],
+      [
+       192,
+       192,
+       "cams/ae/it/BR/BRP17C12_192_192.af806a9aa5e8.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP17C12_fg37.ae0bb9ee3fcf.png"
+      ]
+     ]
+    },
+    "BRP17C15": {
+     "cell": 56,
+     "patches": [
+      [
+       96,
+       48,
+       "cams/ae/it/BR/BRP17C15_96_48.64db409a8108.png"
+      ]
+     ]
+    },
+    "BRP17C16": {
+     "cell": 57,
+     "patches": [
+      [
+       96,
+       32,
+       "cams/ae/it/BR/BRP17C16_96_32.533bfd38ae9d.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/18": {
+   "cams": {
+    "BRP18C01": {
+     "cell": 8,
+     "patches": [
+      [
+       96,
+       0,
+       "cams/ae/it/BR/BRP18C01_96_0.368009a54872.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP18C01_fg37.5571f944c911.png"
+      ]
+     ]
+    },
+    "BRP18C02": {
+     "cell": 2,
+     "patches": [
+      [
+       208,
+       0,
+       "cams/ae/it/BR/BRP18C02_208_0.1ad2a19063f1.png"
+      ],
+      [
+       48,
+       16,
+       "cams/ae/it/BR/BRP18C02_48_16.d723d688adc6.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP18C02_fg37.48975819c79f.png"
+      ]
+     ]
+    },
+    "BRP18C03": {
+     "cell": 9,
+     "patches": [
+      [
+       176,
+       112,
+       "cams/ae/it/BR/BRP18C03_176_112.557f6c291eea.png"
+      ]
+     ]
+    },
+    "BRP18C04": {
+     "cell": 10,
+     "patches": [
+      [
+       144,
+       0,
+       "cams/ae/it/BR/BRP18C04_144_0.c93b55de58ab.png"
+      ],
+      [
+       160,
+       160,
+       "cams/ae/it/BR/BRP18C04_160_160.d1c1c5e1acf0.png"
+      ],
+      [
+       272,
+       192,
+       "cams/ae/it/BR/BRP18C04_272_192.7307e92aa95b.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP18C04_fg37.5ea710ffaa66.png"
+      ]
+     ]
+    },
+    "BRP18C05": {
+     "cell": 17,
+     "patches": [
+      [
+       128,
+       16,
+       "cams/ae/it/BR/BRP18C05_128_16.980c909dba38.png"
+      ]
+     ]
+    },
+    "BRP18C06": {
+     "cell": 23,
+     "patches": [
+      [
+       96,
+       32,
+       "cams/ae/it/BR/BRP18C06_96_32.9f7647cc92f3.png"
+      ]
+     ]
+    },
+    "BRP18C07": {
+     "cell": 18,
+     "patches": [
+      [
+       64,
+       16,
+       "cams/ae/it/BR/BRP18C07_64_16.057bcab7be75.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP18C07_fg37.0feca53a7e14.png"
+      ]
+     ]
+    },
+    "BRP18C08": {
+     "cell": 19,
+     "patches": [
+      [
+       48,
+       16,
+       "cams/ae/it/BR/BRP18C08_48_16.dccd69af9047.png"
+      ],
+      [
+       240,
+       128,
+       "cams/ae/it/BR/BRP18C08_240_128.d287dcf6aebe.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP18C08_fg37.2d875a3cfbc4.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/19": {
+   "cams": {
+    "BRP19C01": {
+     "cell": 13,
+     "patches": [
+      [
+       16,
+       16,
+       "cams/ae/it/BR/BRP19C01_16_16.90880d6d3d83.png"
+      ]
+     ],
+     "masks": [
+      [
+       4,
+       "cams/ae/it/BR/BRP19C01_fg4.c597dcd98162.png"
+      ],
+      [
+       18,
+       "cams/ae/it/BR/BRP19C01_fg18.2a5bf909a299.png"
+      ],
+      [
+       23,
+       "cams/ae/it/BR/BRP19C01_fg23.9fc180ec338f.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BR/BRP19C01_fg37.ad1114a550c6.png"
+      ]
+     ]
+    },
+    "BRP19C02": {
+     "cell": 14,
+     "patches": [
+      [
+       64,
+       16,
+       "cams/ae/it/BR/BRP19C02_64_16.34808b7a8e7d.png"
+      ]
+     ],
+     "masks": [
+      [
+       18,
+       "cams/ae/it/BR/BRP19C02_fg18.614ea90d90ea.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BR/BRP19C02_fg37.d5476a16fbf6.png"
+      ]
+     ]
+    },
+    "BRP19C03": {
+     "cell": 8,
+     "patches": [
+      [
+       176,
+       144,
+       "cams/ae/it/BR/BRP19C03_176_144.34f569503cb0.png"
+      ]
+     ],
+     "masks": [
+      [
+       18,
+       "cams/ae/it/BR/BRP19C03_fg18.733059af5b01.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BR/BRP19C03_fg37.1ce3ee56a2dc.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/2": {
+   "cams": {
+    "BRP02C13": {
+     "cell": 18,
+     "patches": [
+      [
+       144,
+       32,
+       "cams/ae/it/BR/BRP02C13_144_32.337ebeb726bc.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP02C13_fg37.21401e4c15fd.png"
+      ]
+     ]
+    },
+    "BRP02C14": {
+     "cell": 58,
+     "patches": [
+      [
+       16,
+       0,
+       "cams/ae/it/BR/BRP02C14_16_0.d78ad1c6f8ac.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP02C14_fg37.ffc8e6044678.png"
+      ]
+     ]
+    },
+    "BRP02C16": {
+     "cell": 25,
+     "patches": [
+      [
+       256,
+       16,
+       "cams/ae/it/BR/BRP02C16_256_16.7dbebd59d6ab.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/20": {
+   "cams": {
+    "BRP20C01": {
+     "cell": 25,
+     "patches": [
+      [
+       16,
+       16,
+       "cams/ae/it/BR/BRP20C01_16_16.c38080286310.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP20C01_fg37.88f207e2a400.png"
+      ]
+     ]
+    },
+    "BRP20C02": {
+     "cell": 33,
+     "patches": [
+      [
+       176,
+       96,
+       "cams/ae/it/BR/BRP20C02_176_96.c98e9ab683b0.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BR/BRP20C02_fg23.353edf9e57c4.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BR/BRP20C02_fg37.93e4e6ce9847.png"
+      ]
+     ]
+    },
+    "BRP20C09": {
+     "cell": 31,
+     "patches": [
+      [
+       16,
+       16,
+       "cams/ae/it/BR/BRP20C09_16_16.233721dea645.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP20C09_fg37.df64583e0d54.png"
+      ]
+     ]
+    },
+    "BRP20C12": {
+     "cell": 10,
+     "patches": [
+      [
+       96,
+       32,
+       "cams/ae/it/BR/BRP20C12_96_32.44604e59b4d4.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP20C12_fg37.16c2b0ce3d3e.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/21": {
+   "cams": {
+    "BRP21C01": {
+     "cell": 5,
+     "patches": [
+      [
+       160,
+       0,
+       "cams/ae/it/BR/BRP21C01_160_0.c84a992d7cb3.png"
+      ],
+      [
+       240,
+       96,
+       "cams/ae/it/BR/BRP21C01_240_96.ebf693ccf4fe.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP21C01_fg37.2557392e2eed.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/23": {
+   "cams": {
+    "BRP23C01": {
+     "cell": 4,
+     "patches": [
+      [
+       128,
+       128,
+       "cams/ae/it/BR/BRP23C01_128_128.14c7aed9bf8e.png"
+      ]
+     ],
+     "masks": [
+      [
+       4,
+       "cams/ae/it/BR/BRP23C01_fg4.08c18b66f69f.png"
+      ],
+      [
+       18,
+       "cams/ae/it/BR/BRP23C01_fg18.37867e1094bb.png"
+      ]
+     ]
+    },
+    "BRP23C02": {
+     "cell": 10,
+     "patches": [
+      [
+       16,
+       32,
+       "cams/ae/it/BR/BRP23C02_16_32.2f2dc5d07ffd.png"
+      ],
+      [
+       160,
+       144,
+       "cams/ae/it/BR/BRP23C02_160_144.b979e7b8a7fd.png"
+      ],
+      [
+       16,
+       176,
+       "cams/ae/it/BR/BRP23C02_16_176.d9ba3e62fecd.png"
+      ],
+      [
+       304,
+       192,
+       "cams/ae/it/BR/BRP23C02_304_192.28b7f8ebb9b7.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/24": {
+   "cams": {
+    "BRP24C01": {
+     "cell": 4,
+     "patches": [
+      [
+       208,
+       128,
+       "cams/ae/it/BR/BRP24C01_208_128.785ba710b3b0.png"
+      ]
+     ],
+     "masks": [
+      [
+       4,
+       "cams/ae/it/BR/BRP24C01_fg4.4ab73ca4f2f9.png"
+      ],
+      [
+       18,
+       "cams/ae/it/BR/BRP24C01_fg18.d6973a80cbcc.png"
+      ],
+      [
+       23,
+       "cams/ae/it/BR/BRP24C01_fg23.69e199816ec6.png"
+      ]
+     ]
+    },
+    "BRP24C02": {
+     "cell": 10,
+     "patches": [
+      [
+       16,
+       32,
+       "cams/ae/it/BR/BRP24C02_16_32.6da21666661e.png"
+      ],
+      [
+       176,
+       128,
+       "cams/ae/it/BR/BRP24C02_176_128.b9d89d33d72d.png"
+      ],
+      [
+       16,
+       144,
+       "cams/ae/it/BR/BRP24C02_16_144.2b5b8250356b.png"
+      ],
+      [
+       304,
+       192,
+       "cams/ae/it/BR/BRP24C02_304_192.3859b57adfca.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/25": {
+   "cams": {
+    "BRP25C02": {
+     "cell": 10,
+     "patches": [
+      [
+       16,
+       32,
+       "cams/ae/it/BR/BRP25C02_16_32.a932cf3706a1.png"
+      ],
+      [
+       160,
+       128,
+       "cams/ae/it/BR/BRP25C02_160_128.f926dc8171e3.png"
+      ],
+      [
+       16,
+       144,
+       "cams/ae/it/BR/BRP25C02_16_144.62d7b87e0efb.png"
+      ],
+      [
+       304,
+       192,
+       "cams/ae/it/BR/BRP25C02_304_192.16a022ee1995.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/26": {
+   "cams": {
+    "BRP26C06": {
+     "cell": 8,
+     "patches": [
+      [
+       32,
+       96,
+       "cams/ae/it/BR/BRP26C06_32_96.a904caaf1ecf.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP26C06_fg37.ecc731360cda.png"
+      ]
+     ]
+    },
+    "BRP26C10": {
+     "cell": 20,
+     "patches": [
+      [
+       96,
+       0,
+       "cams/ae/it/BR/BRP26C10_96_0.9f9b59d9d68c.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP26C10_fg37.ce9c0563e479.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/27": {
+   "cams": {
+    "BRP27C06": {
+     "cell": 0,
+     "patches": [
+      [
+       192,
+       16,
+       "cams/ae/it/BR/BRP27C06_192_16.7f17bf4f528f.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BR/BRP27C06_fg23.e082ba1cec9f.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BR/BRP27C06_fg37.6c50559f3b20.png"
+      ]
+     ]
+    },
+    "BRP27C09": {
+     "cell": 3,
+     "patches": [
+      [
+       48,
+       96,
+       "cams/ae/it/BR/BRP27C09_48_96.191a5fccb5c2.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP27C09_fg37.67fcd0cbfe20.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/28": {
+   "cams": {
+    "BRP28C01": {
+     "cell": 4,
+     "patches": [
+      [
+       96,
+       0,
+       "cams/ae/it/BR/BRP28C01_96_0.368009a54872.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP28C01_fg37.5571f944c911.png"
+      ]
+     ]
+    },
+    "BRP28C02": {
+     "cell": 1,
+     "patches": [
+      [
+       208,
+       0,
+       "cams/ae/it/BR/BRP28C02_208_0.1ad2a19063f1.png"
+      ],
+      [
+       48,
+       16,
+       "cams/ae/it/BR/BRP28C02_48_16.d723d688adc6.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP28C02_fg37.48975819c79f.png"
+      ]
+     ]
+    },
+    "BRP28C03": {
+     "cell": 5,
+     "patches": [
+      [
+       176,
+       112,
+       "cams/ae/it/BR/BRP28C03_176_112.557f6c291eea.png"
+      ]
+     ]
+    },
+    "BRP28C04": {
+     "cell": 6,
+     "patches": [
+      [
+       144,
+       0,
+       "cams/ae/it/BR/BRP28C04_144_0.c93b55de58ab.png"
+      ],
+      [
+       160,
+       160,
+       "cams/ae/it/BR/BRP28C04_160_160.d1c1c5e1acf0.png"
+      ],
+      [
+       272,
+       192,
+       "cams/ae/it/BR/BRP28C04_272_192.7307e92aa95b.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP28C04_fg37.5ea710ffaa66.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/29": {
+   "cams": {
+    "BRP29C01": {
+     "cell": 1,
+     "patches": [
+      [
+       16,
+       16,
+       "cams/ae/it/BR/BRP29C01_16_16.c38080286310.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP29C01_fg37.88f207e2a400.png"
+      ]
+     ]
+    },
+    "BRP29C02": {
+     "cell": 9,
+     "patches": [
+      [
+       176,
+       96,
+       "cams/ae/it/BR/BRP29C02_176_96.c98e9ab683b0.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BR/BRP29C02_fg23.353edf9e57c4.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BR/BRP29C02_fg37.93e4e6ce9847.png"
+      ]
+     ]
+    },
+    "BRP29C09": {
+     "cell": 7,
+     "patches": [
+      [
+       16,
+       16,
+       "cams/ae/it/BR/BRP29C09_16_16.233721dea645.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP29C09_fg37.df64583e0d54.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/3": {
+   "cams": {
+    "BRP03C01": {
+     "cell": 19,
+     "patches": [
+      [
+       208,
+       16,
+       "cams/ae/it/BR/BRP03C01_208_16.f53ebdad97fc.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP03C01_fg37.ba6ca4659585.png"
+      ]
+     ]
+    },
+    "BRP03C05": {
+     "cell": 23,
+     "patches": [
+      [
+       208,
+       112,
+       "cams/ae/it/BR/BRP03C05_208_112.b9952e618f93.png"
+      ],
+      [
+       352,
+       112,
+       "cams/ae/it/BR/BRP03C05_352_112.e1c85738cdc1.png"
+      ],
+      [
+       144,
+       128,
+       "cams/ae/it/BR/BRP03C05_144_128.cebee8860475.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP03C05_fg37.a8d989b8baa1.png"
+      ]
+     ]
+    },
+    "BRP03C11": {
+     "cell": 25,
+     "patches": [
+      [
+       32,
+       0,
+       "cams/ae/it/BR/BRP03C11_32_0.210cdd5aeaff.png"
+      ],
+      [
+       256,
+       64,
+       "cams/ae/it/BR/BRP03C11_256_64.5e6636a770ec.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP03C11_fg37.7d64c95fe6c8.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/4": {
+   "cams": {
+    "BRP04C05": {
+     "cell": 18,
+     "patches": [
+      [
+       64,
+       96,
+       "cams/ae/it/BR/BRP04C05_64_96.b18ba175c7b2.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP04C05_fg37.6fe698d1baa6.png"
+      ]
+     ]
+    },
+    "BRP04C08": {
+     "cell": 34,
+     "patches": [
+      [
+       144,
+       128,
+       "cams/ae/it/BR/BRP04C08_144_128.b029f7134bee.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP04C08_fg37.a2688520c4c8.png"
+      ]
+     ]
+    },
+    "BRP04C13": {
+     "cell": 51,
+     "patches": [
+      [
+       0,
+       0,
+       "cams/ae/it/BR/BRP04C13_0_0.498bbf4983b4.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP04C13_fg37.672b2cbcee7d.png"
+      ]
+     ]
+    },
+    "BRP04C16": {
+     "cell": 54,
+     "patches": [
+      [
+       16,
+       32,
+       "cams/ae/it/BR/BRP04C16_16_32.e1b0a9f77cd0.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/5": {
+   "cams": {
+    "BRP05C03": {
+     "cell": 30,
+     "patches": [
+      [
+       80,
+       0,
+       "cams/ae/it/BR/BRP05C03_80_0.cf1999852034.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP05C03_fg37.2b1eb5c3700b.png"
+      ]
+     ]
+    },
+    "BRP05C04": {
+     "cell": 11,
+     "patches": [
+      [
+       208,
+       0,
+       "cams/ae/it/BR/BRP05C04_208_0.1f491d865119.png"
+      ],
+      [
+       128,
+       48,
+       "cams/ae/it/BR/BRP05C04_128_48.075ba8eabfae.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP05C04_fg37.a4099e7bc91b.png"
+      ]
+     ]
+    },
+    "BRP05C08": {
+     "cell": 21,
+     "patches": [
+      [
+       128,
+       128,
+       "cams/ae/it/BR/BRP05C08_128_128.0eee2be75e69.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BR/BRP05C08_fg23.4691e3d6f18d.png"
+      ]
+     ]
+    },
+    "BRP05C10": {
+     "cell": 34,
+     "patches": [
+      [
+       128,
+       0,
+       "cams/ae/it/BR/BRP05C10_128_0.f440b823a8ee.png"
+      ],
+      [
+       80,
+       48,
+       "cams/ae/it/BR/BRP05C10_80_48.6915442e9578.png"
+      ],
+      [
+       176,
+       96,
+       "cams/ae/it/BR/BRP05C10_176_96.5999ae6e38ee.png"
+      ],
+      [
+       240,
+       192,
+       "cams/ae/it/BR/BRP05C10_240_192.77efad6ad366.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP05C10_fg37.61ef6344ea1e.png"
+      ]
+     ]
+    },
+    "BRP05C12": {
+     "cell": 5,
+     "patches": [
+      [
+       96,
+       80,
+       "cams/ae/it/BR/BRP05C12_96_80.aa278f208275.png"
+      ]
+     ]
+    },
+    "BRP05C13": {
+     "cell": 6,
+     "patches": [
+      [
+       128,
+       80,
+       "cams/ae/it/BR/BRP05C13_128_80.29b8f34ccc50.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/6": {
+   "cams": {
+    "BRP06C01": {
+     "cell": 1,
+     "patches": [
+      [
+       16,
+       112,
+       "cams/ae/it/BR/BRP06C01_16_112.8c87ad974873.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP06C01_fg37.9714168bdb6f.png"
+      ]
+     ]
+    },
+    "BRP06C10": {
+     "cell": 40,
+     "patches": [
+      [
+       48,
+       128,
+       "cams/ae/it/BR/BRP06C10_48_128.bd03fd6f9286.png"
+      ],
+      [
+       208,
+       128,
+       "cams/ae/it/BR/BRP06C10_208_128.12d8b58eb839.png"
+      ]
+     ]
+    },
+    "BRP06C13": {
+     "cell": 47,
+     "patches": [
+      [
+       80,
+       16,
+       "cams/ae/it/BR/BRP06C13_80_16.397127941e4b.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP06C13_fg37.4768f2db5789.png"
+      ]
+     ]
+    },
+    "BRP06C17": {
+     "cell": 13,
+     "patches": [
+      [
+       176,
+       32,
+       "cams/ae/it/BR/BRP06C17_176_32.a59f8c15b017.png"
+      ],
+      [
+       96,
+       128,
+       "cams/ae/it/BR/BRP06C17_96_128.6b03d3a3a525.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/7": {
+   "cams": {
+    "BRP07C01": {
+     "cell": 6,
+     "patches": [
+      [
+       64,
+       16,
+       "cams/ae/it/BR/BRP07C01_64_16.e54efe8ea110.png"
+      ],
+      [
+       224,
+       160,
+       "cams/ae/it/BR/BRP07C01_224_160.3c335cc9ba1c.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP07C01_fg37.c46c8c732e11.png"
+      ]
+     ]
+    },
+    "BRP07C04": {
+     "cell": 9,
+     "patches": [
+      [
+       144,
+       112,
+       "cams/ae/it/BR/BRP07C04_144_112.34c3d04f0758.png"
+      ],
+      [
+       32,
+       128,
+       "cams/ae/it/BR/BRP07C04_32_128.578c3140307d.png"
+      ],
+      [
+       0,
+       208,
+       "cams/ae/it/BR/BRP07C04_0_208.3612c7e8cc93.png"
+      ],
+      [
+       80,
+       208,
+       "cams/ae/it/BR/BRP07C04_80_208.b20608db9c63.png"
+      ],
+      [
+       240,
+       208,
+       "cams/ae/it/BR/BRP07C04_240_208.419b750695be.png"
+      ],
+      [
+       336,
+       208,
+       "cams/ae/it/BR/BRP07C04_336_208.143facb88fa0.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP07C04_fg37.0ad8c43ab18f.png"
+      ]
+     ]
+    },
+    "BRP07C06": {
+     "cell": 11,
+     "patches": [
+      [
+       16,
+       0,
+       "cams/ae/it/BR/BRP07C06_16_0.278e538aa928.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP07C06_fg37.b07cf86ac419.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BR/9": {
+   "cams": {
+    "BRP09C01": {
+     "cell": 10,
+     "patches": [
+      [
+       80,
+       96,
+       "cams/ae/it/BR/BRP09C01_80_96.03968c32e49a.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP09C01_fg37.c2f46ba8ae01.png"
+      ]
+     ]
+    },
+    "BRP09C10": {
+     "cell": 38,
+     "patches": [
+      [
+       16,
+       16,
+       "cams/ae/it/BR/BRP09C10_16_16.9460874f8aec.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BR/BRP09C10_fg37.fe36e5f0040d.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BW/1": {
+   "cams": {
+    "BWP01C02": {
+     "cell": 22,
+     "patches": [
+      [
+       176,
+       48,
+       "cams/ae/it/BW/BWP01C02_176_48.455a9a623d40.png"
+      ],
+      [
+       176,
+       176,
+       "cams/ae/it/BW/BWP01C02_176_176.8223593b838d.png"
+      ]
+     ]
+    },
+    "BWP01C03": {
+     "cell": 32,
+     "patches": [
+      [
+       16,
+       32,
+       "cams/ae/it/BW/BWP01C03_16_32.fab290fa0e37.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BW/BWP01C03_fg37.e17ad4bb3e27.png"
+      ]
+     ]
+    },
+    "BWP01C09": {
+     "cell": 18,
+     "patches": [
+      [
+       224,
+       64,
+       "cams/ae/it/BW/BWP01C09_224_64.0e19495a39d8.png"
+      ]
+     ]
+    },
+    "BWP01C10": {
+     "cell": 19,
+     "patches": [
+      [
+       112,
+       64,
+       "cams/ae/it/BW/BWP01C10_112_64.acc7c38749c8.png"
+      ]
+     ],
+     "masks": [
+      [
+       18,
+       "cams/ae/it/BW/BWP01C10_fg18.05e426025941.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BW/BWP01C10_fg37.8be125d63462.png"
+      ]
+     ]
+    },
+    "BWP01C11": {
+     "cell": 43,
+     "patches": [
+      [
+       112,
+       16,
+       "cams/ae/it/BW/BWP01C11_112_16.a3d176ef2596.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BW/BWP01C11_fg37.b0570c7806ea.png"
+      ]
+     ]
+    },
+    "BWP01C14": {
+     "cell": 38,
+     "patches": [
+      [
+       48,
+       16,
+       "cams/ae/it/BW/BWP01C14_48_16.7113dee7f820.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BW/BWP01C14_fg37.c6e89cd91e9b.png"
+      ]
+     ]
+    },
+    "BWP01C22": {
+     "cell": 15,
+     "patches": [
+      [
+       80,
+       16,
+       "cams/ae/it/BW/BWP01C22_80_16.0159dbe53c44.png"
+      ],
+      [
+       96,
+       16,
+       "cams/ae/it/BW/BWP01C22_96_16.a4ef26f13902.png"
+      ],
+      [
+       0,
+       32,
+       "cams/ae/it/BW/BWP01C22_0_32.e0d23bebb686.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BW/12": {
+   "cams": {
+    "BWP12C01": {
+     "cell": 6,
+     "patches": [
+      [
+       0,
+       16,
+       "cams/ae/it/BW/BWP12C01_0_16.8c06841e3e60.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BW/BWP12C01_fg37.688b3acbdc36.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BW/13": {
+   "cams": {
+    "BWP13C09": {
+     "cell": 0,
+     "patches": [
+      [
+       96,
+       144,
+       "cams/ae/it/BW/BWP13C09_96_144.539858f515e8.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BW/BWP13C09_fg23.7891245176b8.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BW/BWP13C09_fg37.89a96cf37d1d.png"
+      ]
+     ]
+    },
+    "BWP13C14": {
+     "cell": 3,
+     "patches": [
+      [
+       80,
+       16,
+       "cams/ae/it/BW/BWP13C14_80_16.068194679d7b.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BW/BWP13C14_fg37.a2279cfc1730.png"
+      ]
+     ]
+    },
+    "BWP13C17": {
+     "cell": 1,
+     "patches": [
+      [
+       160,
+       16,
+       "cams/ae/it/BW/BWP13C17_160_16.a0613e8e4ab4.png"
+      ],
+      [
+       16,
+       144,
+       "cams/ae/it/BW/BWP13C17_16_144.bd1cc807ddae.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BW/BWP13C17_fg37.63608a572bac.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BW/14": {
+   "cams": {
+    "BWP14C10": {
+     "cell": 0,
+     "patches": [
+      [
+       96,
+       32,
+       "cams/ae/it/BW/BWP14C10_96_32.d6710f0ad6da.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BW/BWP14C10_fg23.340a5949a1b3.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BW/BWP14C10_fg37.d95d0029a8f7.png"
+      ]
+     ]
+    },
+    "BWP14C11": {
+     "cell": 16,
+     "patches": [
+      [
+       80,
+       16,
+       "cams/ae/it/BW/BWP14C11_80_16.8fd8363508e3.png"
+      ],
+      [
+       160,
+       16,
+       "cams/ae/it/BW/BWP14C11_160_16.c0342583dec5.png"
+      ],
+      [
+       112,
+       176,
+       "cams/ae/it/BW/BWP14C11_112_176.8f67805cb6fb.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BW/2": {
+   "cams": {
+    "BWP02C01": {
+     "cell": 72,
+     "patches": [
+      [
+       16,
+       32,
+       "cams/ae/it/BW/BWP02C01_16_32.f725405dba0a.png"
+      ]
+     ]
+    },
+    "BWP02C04": {
+     "cell": 42,
+     "patches": [
+      [
+       192,
+       0,
+       "cams/ae/it/BW/BWP02C04_192_0.09afc72360a8.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BW/BWP02C04_fg37.ec98c830332a.png"
+      ]
+     ]
+    },
+    "BWP02C07": {
+     "cell": 47,
+     "patches": [
+      [
+       240,
+       96,
+       "cams/ae/it/BW/BWP02C07_240_96.9de89da75fb0.png"
+      ]
+     ]
+    },
+    "BWP02C09": {
+     "cell": 25,
+     "patches": [
+      [
+       144,
+       128,
+       "cams/ae/it/BW/BWP02C09_144_128.f0bac1daab00.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BW/BWP02C09_fg37.911e1594f4ad.png"
+      ]
+     ]
+    },
+    "BWP02C10": {
+     "cell": 24,
+     "patches": [
+      [
+       96,
+       64,
+       "cams/ae/it/BW/BWP02C10_96_64.0d1dfc9608a7.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BW/BWP02C10_fg23.9eae8cf17176.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BW/BWP02C10_fg37.8fdce4ce74ff.png"
+      ]
+     ]
+    },
+    "BWP02C14": {
+     "cell": 17,
+     "patches": [
+      [
+       240,
+       32,
+       "cams/ae/it/BW/BWP02C14_240_32.1de223e99278.png"
+      ]
+     ]
+    },
+    "BWP02C18": {
+     "cell": 54,
+     "patches": [
+      [
+       48,
+       112,
+       "cams/ae/it/BW/BWP02C18_48_112.6d9cd17aa4d5.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BW/BWP02C18_fg37.ea131dd249b9.png"
+      ]
+     ]
+    },
+    "BWP02C19": {
+     "cell": 49,
+     "patches": [
+      [
+       256,
+       16,
+       "cams/ae/it/BW/BWP02C19_256_16.17f8beea6bab.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BW/3": {
+   "cams": {
+    "BWP03C13": {
+     "cell": 6,
+     "patches": [
+      [
+       144,
+       64,
+       "cams/ae/it/BW/BWP03C13_144_64.0b46858bfe07.png"
+      ]
+     ],
+     "masks": [
+      [
+       18,
+       "cams/ae/it/BW/BWP03C13_fg18.ef3c2cc6a4b5.png"
+      ]
+     ]
+    },
+    "BWP03C15": {
+     "cell": 3,
+     "patches": [
+      [
+       128,
+       32,
+       "cams/ae/it/BW/BWP03C15_128_32.42c4b4f05dba.png"
+      ],
+      [
+       96,
+       176,
+       "cams/ae/it/BW/BWP03C15_96_176.9a920e6f21ad.png"
+      ],
+      [
+       288,
+       192,
+       "cams/ae/it/BW/BWP03C15_288_192.2c115fad7d05.png"
+      ]
+     ],
+     "masks": [
+      [
+       4,
+       "cams/ae/it/BW/BWP03C15_fg4.a719f7f23e1e.png"
+      ],
+      [
+       18,
+       "cams/ae/it/BW/BWP03C15_fg18.e1444e43cb2b.png"
+      ]
+     ]
+    },
+    "BWP03C19": {
+     "cell": 1,
+     "patches": [
+      [
+       0,
+       16,
+       "cams/ae/it/BW/BWP03C19_0_16.00387f94b668.png"
+      ],
+      [
+       80,
+       16,
+       "cams/ae/it/BW/BWP03C19_80_16.ec28f401c8f4.png"
+      ],
+      [
+       160,
+       16,
+       "cams/ae/it/BW/BWP03C19_160_16.dbc178f3d5c5.png"
+      ],
+      [
+       80,
+       64,
+       "cams/ae/it/BW/BWP03C19_80_64.49a9eb01eb17.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BW/4": {
+   "cams": {
+    "BWP04C01": {
+     "cell": 19,
+     "patches": [
+      [
+       96,
+       16,
+       "cams/ae/it/BW/BWP04C01_96_16.9d956101dce0.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BW/BWP04C01_fg37.e98493770e52.png"
+      ]
+     ]
+    },
+    "BWP04C20": {
+     "cell": 25,
+     "patches": [
+      [
+       64,
+       96,
+       "cams/ae/it/BW/BWP04C20_64_96.287108b22a5a.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BW/BWP04C20_fg37.1bf8e5e030f2.png"
+      ]
+     ]
+    },
+    "BWP04C21": {
+     "cell": 42,
+     "patches": [
+      [
+       160,
+       64,
+       "cams/ae/it/BW/BWP04C21_160_64.a0dfc5f07f31.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BW/BWP04C21_fg23.8a778c4fe34d.png"
+      ]
+     ]
+    },
+    "BWP04C27": {
+     "cell": 55,
+     "patches": [
+      [
+       0,
+       16,
+       "cams/ae/it/BW/BWP04C27_0_16.3ec69646c69e.png"
+      ],
+      [
+       80,
+       16,
+       "cams/ae/it/BW/BWP04C27_80_16.bdcf0e5aed4a.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BW/7": {
+   "cams": {
+    "BWP07C05": {
+     "cell": 39,
+     "patches": [
+      [
+       112,
+       48,
+       "cams/ae/it/BW/BWP07C05_112_48.449eb7c1a5ca.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BW/BWP07C05_fg37.c6436a8ef519.png"
+      ]
+     ]
+    },
+    "BWP07C12": {
+     "cell": 31,
+     "patches": [
+      [
+       32,
+       160,
+       "cams/ae/it/BW/BWP07C12_32_160.c965d7b81840.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BW/BWP07C12_fg37.f848ffee7f2d.png"
+      ]
+     ]
+    },
+    "BWP07C15": {
+     "cell": 43,
+     "patches": [
+      [
+       192,
+       112,
+       "cams/ae/it/BW/BWP07C15_192_112.4067960df968.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BW/BWP07C15_fg37.0a20522c59b5.png"
+      ]
+     ]
+    }
+   }
+  },
+  "BW/9": {
+   "cams": {
+    "BWP09C07": {
+     "cell": 17,
+     "patches": [
+      [
+       112,
+       0,
+       "cams/ae/it/BW/BWP09C07_112_0.7d1848f96303.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BW/BWP09C07_fg37.b4eadcfc7d16.png"
+      ]
+     ]
+    },
+    "BWP09C08": {
+     "cell": 24,
+     "patches": [
+      [
+       96,
+       64,
+       "cams/ae/it/BW/BWP09C08_96_64.fe8e3fd490b0.png"
+      ]
+     ]
+    },
+    "BWP09C09": {
+     "cell": 7,
+     "patches": [
+      [
+       96,
+       144,
+       "cams/ae/it/BW/BWP09C09_96_144.539858f515e8.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BW/BWP09C09_fg23.7891245176b8.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BW/BWP09C09_fg37.89a96cf37d1d.png"
+      ]
+     ]
+    },
+    "BWP09C13": {
+     "cell": 27,
+     "patches": [
+      [
+       96,
+       0,
+       "cams/ae/it/BW/BWP09C13_96_0.19b6c091b29c.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/BW/BWP09C13_fg23.f245fc1b66f0.png"
+      ],
+      [
+       37,
+       "cams/ae/it/BW/BWP09C13_fg37.adbb5978c467.png"
+      ]
+     ]
+    },
+    "BWP09C14": {
+     "cell": 10,
+     "patches": [
+      [
+       80,
+       16,
+       "cams/ae/it/BW/BWP09C14_80_16.068194679d7b.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BW/BWP09C14_fg37.a2279cfc1730.png"
+      ]
+     ]
+    },
+    "BWP09C15": {
+     "cell": 25,
+     "patches": [
+      [
+       176,
+       16,
+       "cams/ae/it/BW/BWP09C15_176_16.139e2eb8c977.png"
+      ],
+      [
+       176,
+       80,
+       "cams/ae/it/BW/BWP09C15_176_80.bb5d1077b4e5.png"
+      ]
+     ]
+    },
+    "BWP09C16": {
+     "cell": 22,
+     "patches": [
+      [
+       64,
+       0,
+       "cams/ae/it/BW/BWP09C16_64_0.430c7c7ed01a.png"
+      ],
+      [
+       0,
+       16,
+       "cams/ae/it/BW/BWP09C16_0_16.fb25bd3b43af.png"
+      ]
+     ]
+    },
+    "BWP09C17": {
+     "cell": 8,
+     "patches": [
+      [
+       160,
+       16,
+       "cams/ae/it/BW/BWP09C17_160_16.a0613e8e4ab4.png"
+      ],
+      [
+       16,
+       144,
+       "cams/ae/it/BW/BWP09C17_16_144.bd1cc807ddae.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/BW/BWP09C17_fg37.63608a572bac.png"
+      ]
+     ]
+    }
+   }
+  },
+  "CR/1": {
+   "cams": {
+    "CRP01C20": {
+     "cell": 29,
+     "patches": [
+      [
+       64,
+       16,
+       "cams/ae/it/CR/CRP01C20_64_16.b99f82f35f19.png"
+      ]
+     ]
+    },
+    "CRP01C31": {
+     "cell": 60,
+     "patches": [
+      [
+       16,
+       48,
+       "cams/ae/it/CR/CRP01C31_16_48.f4f61c0b3259.png"
+      ]
+     ]
+    }
+   }
+  },
+  "FD/1": {
+   "cams": {
+    "FDP01C05": {
+     "cell": 45,
+     "patches": [
+      [
+       256,
+       48,
+       "cams/ae/it/FD/FDP01C05_256_48.640bcd4348c5.png"
+      ],
+      [
+       64,
+       64,
+       "cams/ae/it/FD/FDP01C05_64_64.ff6734f40094.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP01C05_fg37.17613fd7aabc.png"
+      ]
+     ]
+    },
+    "FDP01C06": {
+     "cell": 9,
+     "patches": [
+      [
+       96,
+       48,
+       "cams/ae/it/FD/FDP01C06_96_48.a1d4163bdd2c.png"
+      ],
+      [
+       288,
+       208,
+       "cams/ae/it/FD/FDP01C06_288_208.4360e107ec46.png"
+      ]
+     ]
+    },
+    "FDP01C07": {
+     "cell": 24,
+     "patches": [
+      [
+       80,
+       32,
+       "cams/ae/it/FD/FDP01C07_80_32.069f334d21e6.png"
+      ],
+      [
+       272,
+       176,
+       "cams/ae/it/FD/FDP01C07_272_176.12c3298cda27.png"
+      ],
+      [
+       80,
+       224,
+       "cams/ae/it/FD/FDP01C07_80_224.927ac22ab670.png"
+      ]
+     ]
+    },
+    "FDP01C11": {
+     "cell": 15,
+     "patches": [
+      [
+       80,
+       48,
+       "cams/ae/it/FD/FDP01C11_80_48.2d9d28699a97.png"
+      ],
+      [
+       272,
+       192,
+       "cams/ae/it/FD/FDP01C11_272_192.79bd86899322.png"
+      ]
+     ]
+    }
+   }
+  },
+  "FD/11": {
+   "cams": {
+    "FDP11C04": {
+     "cell": 11,
+     "patches": [
+      [
+       160,
+       32,
+       "cams/ae/it/FD/FDP11C04_160_32.6b6aaf539b2d.png"
+      ]
+     ],
+     "masks": [
+      [
+       4,
+       "cams/ae/it/FD/FDP11C04_fg4.b225febdf95a.png"
+      ],
+      [
+       18,
+       "cams/ae/it/FD/FDP11C04_fg18.f3f2d5cabebc.png"
+      ]
+     ]
+    },
+    "FDP11C07": {
+     "cell": 41,
+     "patches": [
+      [
+       96,
+       176,
+       "cams/ae/it/FD/FDP11C07_96_176.948bbe58b45e.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP11C07_fg37.ecb07871e545.png"
+      ]
+     ]
+    },
+    "FDP11C08": {
+     "cell": 36,
+     "patches": [
+      [
+       144,
+       80,
+       "cams/ae/it/FD/FDP11C08_144_80.0bfc616de16f.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/FD/FDP11C08_fg23.b109ecb572b2.png"
+      ]
+     ]
+    },
+    "FDP11C09": {
+     "cell": 25,
+     "patches": [
+      [
+       96,
+       64,
+       "cams/ae/it/FD/FDP11C09_96_64.535639a4e914.png"
+      ]
+     ]
+    }
+   }
+  },
+  "FD/12": {
+   "cams": {
+    "FDP12C01": {
+     "cell": 1,
+     "patches": [
+      [
+       32,
+       144,
+       "cams/ae/it/FD/FDP12C01_32_144.dd20ee0a59cb.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP12C01_fg37.50fc2163550e.png"
+      ]
+     ]
+    },
+    "FDP12C07": {
+     "cell": 3,
+     "patches": [
+      [
+       256,
+       16,
+       "cams/ae/it/FD/FDP12C07_256_16.87c1b4a43ac8.png"
+      ],
+      [
+       96,
+       96,
+       "cams/ae/it/FD/FDP12C07_96_96.8266d05e2993.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP12C07_fg37.32330d3dfcd1.png"
+      ]
+     ]
+    }
+   }
+  },
+  "FD/13": {
+   "cams": {
+    "FDP13C04": {
+     "cell": 3,
+     "patches": [
+      [
+       160,
+       32,
+       "cams/ae/it/FD/FDP13C04_160_32.6b6aaf539b2d.png"
+      ]
+     ],
+     "masks": [
+      [
+       4,
+       "cams/ae/it/FD/FDP13C04_fg4.b225febdf95a.png"
+      ],
+      [
+       18,
+       "cams/ae/it/FD/FDP13C04_fg18.f3f2d5cabebc.png"
+      ]
+     ]
+    }
+   }
+  },
+  "FD/14": {
+   "cams": {
+    "FDP14C01": {
+     "cell": 5,
+     "patches": [
+      [
+       160,
+       32,
+       "cams/ae/it/FD/FDP14C01_160_32.dd6be207193c.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP14C01_fg37.023836959f64.png"
+      ]
+     ]
+    }
+   }
+  },
+  "FD/2": {
+   "cams": {
+    "FDP02C03": {
+     "cell": 28,
+     "patches": [
+      [
+       208,
+       0,
+       "cams/ae/it/FD/FDP02C03_208_0.1198bedae00f.png"
+      ],
+      [
+       112,
+       96,
+       "cams/ae/it/FD/FDP02C03_112_96.abcae05669cc.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP02C03_fg37.c77e5ee25652.png"
+      ]
+     ]
+    },
+    "FDP02C04": {
+     "cell": 29,
+     "patches": [
+      [
+       256,
+       112,
+       "cams/ae/it/FD/FDP02C04_256_112.22370c8fdd1e.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP02C04_fg37.fa1b5cf7dfa2.png"
+      ]
+     ]
+    },
+    "FDP02C05": {
+     "cell": 36,
+     "patches": [
+      [
+       0,
+       48,
+       "cams/ae/it/FD/FDP02C05_0_48.ad751cbf7e6f.png"
+      ],
+      [
+       240,
+       176,
+       "cams/ae/it/FD/FDP02C05_240_176.34dbd4f8f268.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/FD/FDP02C05_fg23.efa4e0fb21b0.png"
+      ],
+      [
+       37,
+       "cams/ae/it/FD/FDP02C05_fg37.8419dc8ad6fe.png"
+      ]
+     ]
+    },
+    "FDP02C06": {
+     "cell": 35,
+     "patches": [
+      [
+       96,
+       32,
+       "cams/ae/it/FD/FDP02C06_96_32.cca40a98c7ff.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP02C06_fg37.e95a23fade87.png"
+      ]
+     ]
+    },
+    "FDP02C08": {
+     "cell": 43,
+     "patches": [
+      [
+       112,
+       80,
+       "cams/ae/it/FD/FDP02C08_112_80.b5ccd3384022.png"
+      ],
+      [
+       160,
+       160,
+       "cams/ae/it/FD/FDP02C08_160_160.7df5988f1eb0.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP02C08_fg37.d5f063c83ba0.png"
+      ]
+     ]
+    },
+    "FDP02C09": {
+     "cell": 51,
+     "patches": [
+      [
+       64,
+       112,
+       "cams/ae/it/FD/FDP02C09_64_112.e696d79a8f46.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP02C09_fg37.e9e9529e4f73.png"
+      ]
+     ]
+    },
+    "FDP02C10": {
+     "cell": 52,
+     "patches": [
+      [
+       288,
+       48,
+       "cams/ae/it/FD/FDP02C10_288_48.f57d9b5aac9c.png"
+      ],
+      [
+       96,
+       160,
+       "cams/ae/it/FD/FDP02C10_96_160.a49d2d58c794.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP02C10_fg37.8cf82204dcff.png"
+      ]
+     ]
+    },
+    "FDP02C13": {
+     "cell": 25,
+     "patches": [
+      [
+       112,
+       16,
+       "cams/ae/it/FD/FDP02C13_112_16.b1b0f16cf650.png"
+      ],
+      [
+       16,
+       32,
+       "cams/ae/it/FD/FDP02C13_16_32.333a9911046e.png"
+      ],
+      [
+       144,
+       96,
+       "cams/ae/it/FD/FDP02C13_144_96.8edfed7fdb9d.png"
+      ],
+      [
+       224,
+       112,
+       "cams/ae/it/FD/FDP02C13_224_112.b59e08831082.png"
+      ],
+      [
+       48,
+       176,
+       "cams/ae/it/FD/FDP02C13_48_176.f372c19cd5dd.png"
+      ],
+      [
+       96,
+       176,
+       "cams/ae/it/FD/FDP02C13_96_176.ef91a3635084.png"
+      ],
+      [
+       240,
+       176,
+       "cams/ae/it/FD/FDP02C13_240_176.3547840da501.png"
+      ]
+     ]
+    },
+    "FDP02C14": {
+     "cell": 32,
+     "patches": [
+      [
+       80,
+       48,
+       "cams/ae/it/FD/FDP02C14_80_48.0efcfa547d6e.png"
+      ]
+     ]
+    },
+    "FDP02C15": {
+     "cell": 41,
+     "patches": [
+      [
+       80,
+       32,
+       "cams/ae/it/FD/FDP02C15_80_32.22e34800f6c9.png"
+      ]
+     ]
+    },
+    "FDP02C16": {
+     "cell": 16,
+     "patches": [
+      [
+       80,
+       32,
+       "cams/ae/it/FD/FDP02C16_80_32.7126ea228e4a.png"
+      ]
+     ]
+    },
+    "FDP02C24": {
+     "cell": 53,
+     "patches": [
+      [
+       224,
+       48,
+       "cams/ae/it/FD/FDP02C24_224_48.08a3c6a316ca.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP02C24_fg37.9c24a6e9d321.png"
+      ]
+     ]
+    },
+    "FDP02C25": {
+     "cell": 9,
+     "patches": [
+      [
+       80,
+       48,
+       "cams/ae/it/FD/FDP02C25_80_48.40e644a704db.png"
+      ]
+     ]
+    },
+    "FDP02C26": {
+     "cell": 0,
+     "patches": [
+      [
+       16,
+       128,
+       "cams/ae/it/FD/FDP02C26_16_128.e28df24ed09a.png"
+      ]
+     ]
+    },
+    "FDP02C27": {
+     "cell": 31,
+     "patches": [
+      [
+       80,
+       32,
+       "cams/ae/it/FD/FDP02C27_80_32.7100efcb27c0.png"
+      ],
+      [
+       272,
+       192,
+       "cams/ae/it/FD/FDP02C27_272_192.3708caa4e4bd.png"
+      ]
+     ]
+    },
+    "FDP02C28": {
+     "cell": 47,
+     "patches": [
+      [
+       48,
+       16,
+       "cams/ae/it/FD/FDP02C28_48_16.e436e31e71e0.png"
+      ]
+     ]
+    },
+    "FDP02C29": {
+     "cell": 55,
+     "patches": [
+      [
+       48,
+       32,
+       "cams/ae/it/FD/FDP02C29_48_32.be8cb8dec3dc.png"
+      ],
+      [
+       304,
+       176,
+       "cams/ae/it/FD/FDP02C29_304_176.9a8200daa348.png"
+      ]
+     ]
+    }
+   }
+  },
+  "FD/3": {
+   "cams": {
+    "FDP03C02": {
+     "cell": 50,
+     "patches": [
+      [
+       0,
+       16,
+       "cams/ae/it/FD/FDP03C02_0_16.73d613981cc8.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP03C02_fg37.4c23529e8ae4.png"
+      ]
+     ]
+    },
+    "FDP03C12": {
+     "cell": 40,
+     "patches": [
+      [
+       176,
+       96,
+       "cams/ae/it/FD/FDP03C12_176_96.b73aa5a3a267.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP03C12_fg37.dab83b820649.png"
+      ]
+     ]
+    },
+    "FDP03C15": {
+     "cell": 53,
+     "patches": [
+      [
+       80,
+       48,
+       "cams/ae/it/FD/FDP03C15_80_48.657e05fcde72.png"
+      ],
+      [
+       256,
+       192,
+       "cams/ae/it/FD/FDP03C15_256_192.4189d08d9a22.png"
+      ]
+     ]
+    }
+   }
+  },
+  "FD/4": {
+   "cams": {
+    "FDP04C01": {
+     "cell": 11,
+     "patches": [
+      [
+       32,
+       48,
+       "cams/ae/it/FD/FDP04C01_32_48.0c4b51e613dd.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP04C01_fg37.475bb86c818f.png"
+      ]
+     ]
+    },
+    "FDP04C08": {
+     "cell": 44,
+     "patches": [
+      [
+       240,
+       16,
+       "cams/ae/it/FD/FDP04C08_240_16.28b8922a0753.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP04C08_fg37.1cf9ecd5a12c.png"
+      ]
+     ]
+    },
+    "FDP04C12": {
+     "cell": 31,
+     "patches": [
+      [
+       176,
+       48,
+       "cams/ae/it/FD/FDP04C12_176_48.2369eff91d09.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP04C12_fg37.857cac4804e2.png"
+      ]
+     ]
+    },
+    "FDP04C13": {
+     "cell": 21,
+     "patches": [
+      [
+       224,
+       16,
+       "cams/ae/it/FD/FDP04C13_224_16.23836da60ead.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP04C13_fg37.f33edb541453.png"
+      ]
+     ]
+    },
+    "FDP04C17": {
+     "cell": 46,
+     "patches": [
+      [
+       96,
+       48,
+       "cams/ae/it/FD/FDP04C17_96_48.54bf6d9ac93f.png"
+      ]
+     ]
+    },
+    "FDP04C21": {
+     "cell": 56,
+     "patches": [
+      [
+       160,
+       48,
+       "cams/ae/it/FD/FDP04C21_160_48.4c3368006276.png"
+      ],
+      [
+       80,
+       112,
+       "cams/ae/it/FD/FDP04C21_80_112.74bbc224ed4d.png"
+      ]
+     ]
+    }
+   }
+  },
+  "FD/5": {
+   "cams": {
+    "FDP05C01": {
+     "cell": 22,
+     "patches": [
+      [
+       32,
+       112,
+       "cams/ae/it/FD/FDP05C01_32_112.4f1ec7b0edcd.png"
+      ]
+     ],
+     "masks": [
+      [
+       18,
+       "cams/ae/it/FD/FDP05C01_fg18.6f116872a789.png"
+      ],
+      [
+       37,
+       "cams/ae/it/FD/FDP05C01_fg37.4243b0197987.png"
+      ]
+     ]
+    },
+    "FDP05C02": {
+     "cell": 21,
+     "patches": [
+      [
+       16,
+       128,
+       "cams/ae/it/FD/FDP05C02_16_128.e15a2ad00cc4.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP05C02_fg37.62c80bfa9989.png"
+      ]
+     ]
+    },
+    "FDP05C03": {
+     "cell": 29,
+     "patches": [
+      [
+       192,
+       112,
+       "cams/ae/it/FD/FDP05C03_192_112.bee4f694348f.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP05C03_fg37.45564bf14a7a.png"
+      ]
+     ]
+    },
+    "FDP05C07": {
+     "cell": 34,
+     "patches": [
+      [
+       80,
+       0,
+       "cams/ae/it/FD/FDP05C07_80_0.dfe4277548c2.png"
+      ],
+      [
+       96,
+       112,
+       "cams/ae/it/FD/FDP05C07_96_112.de79dd6de2d1.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP05C07_fg37.ddc793eb4b43.png"
+      ]
+     ]
+    },
+    "FDP05C15": {
+     "cell": 16,
+     "patches": [
+      [
+       96,
+       32,
+       "cams/ae/it/FD/FDP05C15_96_32.a1aa7077b84e.png"
+      ],
+      [
+       112,
+       160,
+       "cams/ae/it/FD/FDP05C15_112_160.405725fbeed2.png"
+      ]
+     ]
+    }
+   }
+  },
+  "FD/6": {
+   "cams": {
+    "FDP06C05": {
+     "cell": 6,
+     "patches": [
+      [
+       256,
+       48,
+       "cams/ae/it/FD/FDP06C05_256_48.640bcd4348c5.png"
+      ],
+      [
+       64,
+       64,
+       "cams/ae/it/FD/FDP06C05_64_64.ff6734f40094.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP06C05_fg37.17613fd7aabc.png"
+      ]
+     ]
+    }
+   }
+  },
+  "FD/7": {
+   "cams": {
+    "FDP07C01": {
+     "cell": 6,
+     "patches": [
+      [
+       32,
+       144,
+       "cams/ae/it/FD/FDP07C01_32_144.dd20ee0a59cb.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP07C01_fg37.50fc2163550e.png"
+      ]
+     ]
+    },
+    "FDP07C07": {
+     "cell": 8,
+     "patches": [
+      [
+       256,
+       16,
+       "cams/ae/it/FD/FDP07C07_256_16.87c1b4a43ac8.png"
+      ],
+      [
+       96,
+       96,
+       "cams/ae/it/FD/FDP07C07_96_96.8266d05e2993.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP07C07_fg37.32330d3dfcd1.png"
+      ]
+     ]
+    }
+   }
+  },
+  "FD/8": {
+   "cams": {
+    "FDP08C01": {
+     "cell": 0,
+     "patches": [
+      [
+       32,
+       48,
+       "cams/ae/it/FD/FDP08C01_32_48.0c4b51e613dd.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP08C01_fg37.475bb86c818f.png"
+      ]
+     ]
+    },
+    "FDP08C08": {
+     "cell": 18,
+     "patches": [
+      [
+       240,
+       16,
+       "cams/ae/it/FD/FDP08C08_240_16.28b8922a0753.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP08C08_fg37.1cf9ecd5a12c.png"
+      ]
+     ]
+    }
+   }
+  },
+  "FD/9": {
+   "cams": {
+    "FDP09C03": {
+     "cell": 18,
+     "patches": [
+      [
+       80,
+       32,
+       "cams/ae/it/FD/FDP09C03_80_32.7100efcb27c0.png"
+      ],
+      [
+       272,
+       192,
+       "cams/ae/it/FD/FDP09C03_272_192.3708caa4e4bd.png"
+      ]
+     ]
+    },
+    "FDP09C12": {
+     "cell": 28,
+     "patches": [
+      [
+       224,
+       80,
+       "cams/ae/it/FD/FDP09C12_224_80.1757bcc9428f.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/FD/FDP09C12_fg37.b4ad95174c0c.png"
+      ]
+     ]
+    }
+   }
+  },
+  "MI/1": {
+   "cams": {
+    "MIP01C05": {
+     "cell": 78,
+     "patches": [
+      [
+       16,
+       64,
+       "cams/ae/it/MI/MIP01C05_16_64.ec3730ba8c91.png"
+      ]
+     ],
+     "masks": [
+      [
+       18,
+       "cams/ae/it/MI/MIP01C05_fg18.fb7b322bfe54.png"
+      ]
+     ]
+    },
+    "MIP01C06": {
+     "cell": 79,
+     "patches": [
+      [
+       16,
+       128,
+       "cams/ae/it/MI/MIP01C06_16_128.690201186f92.png"
+      ]
+     ],
+     "masks": [
+      [
+       18,
+       "cams/ae/it/MI/MIP01C06_fg18.7f02396c9c66.png"
+      ],
+      [
+       37,
+       "cams/ae/it/MI/MIP01C06_fg37.1de8bee1506e.png"
+      ]
+     ]
+    },
+    "MIP01C07": {
+     "cell": 80,
+     "patches": [
+      [
+       64,
+       208,
+       "cams/ae/it/MI/MIP01C07_64_208.4f57c3f9718a.png"
+      ]
+     ],
+     "masks": [
+      [
+       18,
+       "cams/ae/it/MI/MIP01C07_fg18.3c1908f6fcde.png"
+      ],
+      [
+       37,
+       "cams/ae/it/MI/MIP01C07_fg37.eadeb9ccd261.png"
+      ]
+     ]
+    },
+    "MIP01C09": {
+     "cell": 33,
+     "patches": [
+      [
+       32,
+       16,
+       "cams/ae/it/MI/MIP01C09_32_16.2e55f964e91b.png"
+      ]
+     ]
+    },
+    "MIP01C10": {
+     "cell": 63,
+     "patches": [
+      [
+       240,
+       112,
+       "cams/ae/it/MI/MIP01C10_240_112.86790dea7d1f.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/MI/MIP01C10_fg23.cc03b1f61d4e.png"
+      ],
+      [
+       37,
+       "cams/ae/it/MI/MIP01C10_fg37.4b3ce82701fb.png"
+      ]
+     ]
+    },
+    "MIP01C17": {
+     "cell": 54,
+     "patches": [
+      [
+       32,
+       32,
+       "cams/ae/it/MI/MIP01C17_32_32.8c58f244eaf0.png"
+      ]
+     ]
+    },
+    "MIP01C18": {
+     "cell": 55,
+     "patches": [
+      [
+       0,
+       208,
+       "cams/ae/it/MI/MIP01C18_0_208.561a49376825.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP01C18_fg37.d27f1e398ecb.png"
+      ]
+     ]
+    },
+    "MIP01C21": {
+     "cell": 58,
+     "patches": [
+      [
+       208,
+       32,
+       "cams/ae/it/MI/MIP01C21_208_32.49e6eba3f77f.png"
+      ],
+      [
+       16,
+       208,
+       "cams/ae/it/MI/MIP01C21_16_208.99028e1700f0.png"
+      ],
+      [
+       160,
+       208,
+       "cams/ae/it/MI/MIP01C21_160_208.dd70c7c18903.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP01C21_fg37.b02449239f46.png"
+      ]
+     ]
+    },
+    "MIP01C23": {
+     "cell": 69,
+     "patches": [
+      [
+       128,
+       208,
+       "cams/ae/it/MI/MIP01C23_128_208.c00d1dda300a.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP01C23_fg37.15b4adcba3a7.png"
+      ]
+     ]
+    },
+    "MIP01C24": {
+     "cell": 70,
+     "patches": [
+      [
+       48,
+       32,
+       "cams/ae/it/MI/MIP01C24_48_32.805072c93b13.png"
+      ]
+     ]
+    },
+    "MIP01C26": {
+     "cell": 94,
+     "patches": [
+      [
+       16,
+       32,
+       "cams/ae/it/MI/MIP01C26_16_32.a416761d8ff7.png"
+      ],
+      [
+       304,
+       48,
+       "cams/ae/it/MI/MIP01C26_304_48.98affb84a400.png"
+      ],
+      [
+       240,
+       192,
+       "cams/ae/it/MI/MIP01C26_240_192.40dd165ba6cc.png"
+      ],
+      [
+       16,
+       208,
+       "cams/ae/it/MI/MIP01C26_16_208.92806ff3dab8.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP01C26_fg37.62d1ee71c665.png"
+      ]
+     ]
+    },
+    "MIP01C32": {
+     "cell": 82,
+     "patches": [
+      [
+       128,
+       16,
+       "cams/ae/it/MI/MIP01C32_128_16.093b9ec84503.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP01C32_fg37.61278647e986.png"
+      ]
+     ]
+    },
+    "MIP01C35": {
+     "cell": 34,
+     "patches": [
+      [
+       16,
+       16,
+       "cams/ae/it/MI/MIP01C35_16_16.748f281e49b5.png"
+      ]
+     ]
+    },
+    "MIP01C50": {
+     "cell": 111,
+     "patches": [
+      [
+       64,
+       32,
+       "cams/ae/it/MI/MIP01C50_64_32.978146190bc3.png"
+      ],
+      [
+       32,
+       144,
+       "cams/ae/it/MI/MIP01C50_32_144.a0dd18bfe002.png"
+      ]
+     ]
+    },
+    "MIP01C51": {
+     "cell": 112,
+     "patches": [
+      [
+       48,
+       16,
+       "cams/ae/it/MI/MIP01C51_48_16.e436e31e71e0.png"
+      ]
+     ]
+    },
+    "MIP01C52": {
+     "cell": 113,
+     "patches": [
+      [
+       48,
+       32,
+       "cams/ae/it/MI/MIP01C52_48_32.be8cb8dec3dc.png"
+      ],
+      [
+       304,
+       176,
+       "cams/ae/it/MI/MIP01C52_304_176.9a8200daa348.png"
+      ]
+     ]
+    },
+    "MIP01C53": {
+     "cell": 126,
+     "patches": [
+      [
+       80,
+       48,
+       "cams/ae/it/MI/MIP01C53_80_48.5a5c3333c640.png"
+      ]
+     ]
+    }
+   }
+  },
+  "MI/10": {
+   "cams": {
+    "MIP10C18": {
+     "cell": 19,
+     "patches": [
+      [
+       176,
+       0,
+       "cams/ae/it/MI/MIP10C18_176_0.50b9ca23a9c6.png"
+      ],
+      [
+       0,
+       16,
+       "cams/ae/it/MI/MIP10C18_0_16.696a0c8d27d9.png"
+      ]
+     ],
+     "masks": [
+      [
+       4,
+       "cams/ae/it/MI/MIP10C18_fg4.80de714cb191.png"
+      ],
+      [
+       37,
+       "cams/ae/it/MI/MIP10C18_fg37.b832daa2b475.png"
+      ]
+     ]
+    }
+   }
+  },
+  "MI/11": {
+   "cams": {
+    "MIP11C22": {
+     "cell": 1,
+     "patches": [
+      [
+       80,
+       112,
+       "cams/ae/it/MI/MIP11C22_80_112.05cf145ff181.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/MI/MIP11C22_fg23.d16c12beac88.png"
+      ],
+      [
+       37,
+       "cams/ae/it/MI/MIP11C22_fg37.f3fe85f4d9c2.png"
+      ]
+     ]
+    },
+    "MIP11C27": {
+     "cell": 8,
+     "patches": [
+      [
+       160,
+       112,
+       "cams/ae/it/MI/MIP11C27_160_112.9bbdc9ca9c13.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP11C27_fg37.d3f24ed77e40.png"
+      ]
+     ]
+    },
+    "MIP11C28": {
+     "cell": 9,
+     "patches": [
+      [
+       16,
+       16,
+       "cams/ae/it/MI/MIP11C28_16_16.38a3ad592e2f.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP11C28_fg37.ddc1e148b5fd.png"
+      ]
+     ]
+    },
+    "MIP11C30": {
+     "cell": 13,
+     "patches": [
+      [
+       176,
+       16,
+       "cams/ae/it/MI/MIP11C30_176_16.290264e961b1.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP11C30_fg37.99efb78d86a9.png"
+      ]
+     ]
+    }
+   }
+  },
+  "MI/12": {
+   "cams": {
+    "MIP12C02": {
+     "cell": 20,
+     "patches": [
+      [
+       64,
+       96,
+       "cams/ae/it/MI/MIP12C02_64_96.838d6de87ca3.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP12C02_fg37.02036943d970.png"
+      ]
+     ]
+    },
+    "MIP12C11": {
+     "cell": 27,
+     "patches": [
+      [
+       16,
+       32,
+       "cams/ae/it/MI/MIP12C11_16_32.714a28a596f5.png"
+      ],
+      [
+       176,
+       96,
+       "cams/ae/it/MI/MIP12C11_176_96.44ee9710f97a.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP12C11_fg37.392aba666097.png"
+      ]
+     ]
+    },
+    "MIP12C13": {
+     "cell": 17,
+     "patches": [
+      [
+       144,
+       16,
+       "cams/ae/it/MI/MIP12C13_144_16.feb74a4fc568.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP12C13_fg37.16d894c13386.png"
+      ]
+     ]
+    },
+    "MIP12C17": {
+     "cell": 9,
+     "patches": [
+      [
+       80,
+       16,
+       "cams/ae/it/MI/MIP12C17_80_16.af2a5922590d.png"
+      ],
+      [
+       16,
+       112,
+       "cams/ae/it/MI/MIP12C17_16_112.e358b595941a.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP12C17_fg37.12790393af81.png"
+      ]
+     ]
+    }
+   }
+  },
+  "MI/2": {
+   "cams": {
+    "MIP02C06": {
+     "cell": 12,
+     "patches": [
+      [
+       16,
+       0,
+       "cams/ae/it/MI/MIP02C06_16_0.3ea269057bb8.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/MI/MIP02C06_fg23.1cb7dacfd227.png"
+      ]
+     ]
+    },
+    "MIP02C12": {
+     "cell": 34,
+     "patches": [
+      [
+       32,
+       48,
+       "cams/ae/it/MI/MIP02C12_32_48.58b4d7b98645.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP02C12_fg37.564936836c46.png"
+      ]
+     ]
+    },
+    "MIP02C15": {
+     "cell": 37,
+     "patches": [
+      [
+       64,
+       48,
+       "cams/ae/it/MI/MIP02C15_64_48.f4015561448c.png"
+      ]
+     ]
+    },
+    "MIP02C17": {
+     "cell": 47,
+     "patches": [
+      [
+       112,
+       16,
+       "cams/ae/it/MI/MIP02C17_112_16.207acb745e79.png"
+      ],
+      [
+       16,
+       112,
+       "cams/ae/it/MI/MIP02C17_16_112.19fa35827a5d.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP02C17_fg37.bd8e33b95fa8.png"
+      ]
+     ]
+    },
+    "MIP02C23": {
+     "cell": 22,
+     "patches": [
+      [
+       272,
+       96,
+       "cams/ae/it/MI/MIP02C23_272_96.9e8db5ba01c4.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/MI/MIP02C23_fg23.14153f6b43e8.png"
+      ]
+     ]
+    },
+    "MIP02C32": {
+     "cell": 15,
+     "patches": [
+      [
+       64,
+       48,
+       "cams/ae/it/MI/MIP02C32_64_48.fdd2b9503edf.png"
+      ]
+     ]
+    }
+   }
+  },
+  "MI/3": {
+   "cams": {
+    "MIP03C01": {
+     "cell": 13,
+     "patches": [
+      [
+       160,
+       0,
+       "cams/ae/it/MI/MIP03C01_160_0.ced3a43cd8bb.png"
+      ],
+      [
+       64,
+       16,
+       "cams/ae/it/MI/MIP03C01_64_16.87082faba4bf.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/MI/MIP03C01_fg23.73df0917193e.png"
+      ],
+      [
+       37,
+       "cams/ae/it/MI/MIP03C01_fg37.438e05a1d8d2.png"
+      ]
+     ]
+    },
+    "MIP03C02": {
+     "cell": 14,
+     "patches": [
+      [
+       192,
+       224,
+       "cams/ae/it/MI/MIP03C02_192_224.5e355aba7da5.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP03C02_fg37.39698df22278.png"
+      ]
+     ]
+    },
+    "MIP03C03": {
+     "cell": 26,
+     "patches": [
+      [
+       192,
+       0,
+       "cams/ae/it/MI/MIP03C03_192_0.293afaee83a0.png"
+      ]
+     ]
+    },
+    "MIP03C04": {
+     "cell": 27,
+     "patches": [
+      [
+       208,
+       224,
+       "cams/ae/it/MI/MIP03C04_208_224.02173a1468f4.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP03C04_fg37.a0ade6cd42d5.png"
+      ]
+     ]
+    },
+    "MIP03C05": {
+     "cell": 39,
+     "patches": [
+      [
+       192,
+       0,
+       "cams/ae/it/MI/MIP03C05_192_0.83e93d6f071a.png"
+      ]
+     ]
+    },
+    "MIP03C09": {
+     "cell": 53,
+     "patches": [
+      [
+       96,
+       32,
+       "cams/ae/it/MI/MIP03C09_96_32.efbca5aaebc8.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP03C09_fg37.e26d400d939a.png"
+      ]
+     ]
+    },
+    "MIP03C13": {
+     "cell": 67,
+     "patches": [
+      [
+       176,
+       0,
+       "cams/ae/it/MI/MIP03C13_176_0.071699bd4422.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP03C13_fg37.3141b2171a12.png"
+      ]
+     ]
+    }
+   }
+  },
+  "MI/4": {
+   "cams": {
+    "MIP04C01": {
+     "cell": 14,
+     "patches": [
+      [
+       128,
+       80,
+       "cams/ae/it/MI/MIP04C01_128_80.559e9297b280.png"
+      ],
+      [
+       192,
+       208,
+       "cams/ae/it/MI/MIP04C01_192_208.561902bf95a8.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP04C01_fg37.fd41a799e7f4.png"
+      ]
+     ]
+    },
+    "MIP04C02": {
+     "cell": 15,
+     "patches": [
+      [
+       240,
+       96,
+       "cams/ae/it/MI/MIP04C02_240_96.4675063f36e6.png"
+      ],
+      [
+       96,
+       208,
+       "cams/ae/it/MI/MIP04C02_96_208.2d0e4728ec51.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP04C02_fg37.dbdad2cf063e.png"
+      ]
+     ]
+    },
+    "MIP04C03": {
+     "cell": 16,
+     "patches": [
+      [
+       160,
+       112,
+       "cams/ae/it/MI/MIP04C03_160_112.535969af77a5.png"
+      ],
+      [
+       48,
+       208,
+       "cams/ae/it/MI/MIP04C03_48_208.92348ae576cf.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP04C03_fg37.e23c247eba4f.png"
+      ]
+     ]
+    },
+    "MIP04C06": {
+     "cell": 54,
+     "patches": [
+      [
+       192,
+       112,
+       "cams/ae/it/MI/MIP04C06_192_112.190e8976581c.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP04C06_fg37.04eefc95621c.png"
+      ]
+     ]
+    },
+    "MIP04C07": {
+     "cell": 64,
+     "patches": [
+      [
+       0,
+       0,
+       "cams/ae/it/MI/MIP04C07_0_0.ed69945ef5ca.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP04C07_fg37.24b06c57b666.png"
+      ]
+     ]
+    },
+    "MIP04C12": {
+     "cell": 62,
+     "patches": [
+      [
+       16,
+       32,
+       "cams/ae/it/MI/MIP04C12_16_32.478a00d98f94.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/MI/MIP04C12_fg23.7cf94217ff40.png"
+      ],
+      [
+       37,
+       "cams/ae/it/MI/MIP04C12_fg37.346d93d4942d.png"
+      ]
+     ]
+    },
+    "MIP04C15": {
+     "cell": 86,
+     "patches": [
+      [
+       128,
+       16,
+       "cams/ae/it/MI/MIP04C15_128_16.e93ef24ee788.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP04C15_fg37.220e8a285cb9.png"
+      ]
+     ]
+    },
+    "MIP04C19": {
+     "cell": 45,
+     "patches": [
+      [
+       128,
+       0,
+       "cams/ae/it/MI/MIP04C19_128_0.3ac04197a7a2.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/MI/MIP04C19_fg23.bf351e16e038.png"
+      ],
+      [
+       37,
+       "cams/ae/it/MI/MIP04C19_fg37.0273480dc4b5.png"
+      ]
+     ]
+    },
+    "MIP04C20": {
+     "cell": 32,
+     "patches": [
+      [
+       176,
+       16,
+       "cams/ae/it/MI/MIP04C20_176_16.f60cda901d6a.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP04C20_fg37.8680abcaea3d.png"
+      ]
+     ]
+    },
+    "MIP04C22": {
+     "cell": 18,
+     "patches": [
+      [
+       80,
+       112,
+       "cams/ae/it/MI/MIP04C22_80_112.05cf145ff181.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/MI/MIP04C22_fg23.d16c12beac88.png"
+      ],
+      [
+       37,
+       "cams/ae/it/MI/MIP04C22_fg37.f3fe85f4d9c2.png"
+      ]
+     ]
+    },
+    "MIP04C23": {
+     "cell": 122,
+     "patches": [
+      [
+       208,
+       112,
+       "cams/ae/it/MI/MIP04C23_208_112.7d8cc6cddb64.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP04C23_fg37.e859eaa9d24c.png"
+      ]
+     ]
+    },
+    "MIP04C26": {
+     "cell": 125,
+     "patches": [
+      [
+       192,
+       16,
+       "cams/ae/it/MI/MIP04C26_192_16.1e69b550d906.png"
+      ],
+      [
+       16,
+       48,
+       "cams/ae/it/MI/MIP04C26_16_48.f866720e0ad4.png"
+      ]
+     ]
+    },
+    "MIP04C27": {
+     "cell": 139,
+     "patches": [
+      [
+       160,
+       112,
+       "cams/ae/it/MI/MIP04C27_160_112.9bbdc9ca9c13.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP04C27_fg37.d3f24ed77e40.png"
+      ]
+     ]
+    },
+    "MIP04C28": {
+     "cell": 140,
+     "patches": [
+      [
+       16,
+       16,
+       "cams/ae/it/MI/MIP04C28_16_16.38a3ad592e2f.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP04C28_fg37.ddc1e148b5fd.png"
+      ]
+     ]
+    },
+    "MIP04C30": {
+     "cell": 152,
+     "patches": [
+      [
+       176,
+       16,
+       "cams/ae/it/MI/MIP04C30_176_16.290264e961b1.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP04C30_fg37.99efb78d86a9.png"
+      ]
+     ]
+    }
+   }
+  },
+  "MI/5": {
+   "cams": {
+    "MIP05C02": {
+     "cell": 25,
+     "patches": [
+      [
+       64,
+       96,
+       "cams/ae/it/MI/MIP05C02_64_96.838d6de87ca3.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP05C02_fg37.02036943d970.png"
+      ]
+     ]
+    },
+    "MIP05C11": {
+     "cell": 32,
+     "patches": [
+      [
+       16,
+       32,
+       "cams/ae/it/MI/MIP05C11_16_32.714a28a596f5.png"
+      ],
+      [
+       176,
+       96,
+       "cams/ae/it/MI/MIP05C11_176_96.44ee9710f97a.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP05C11_fg37.392aba666097.png"
+      ]
+     ]
+    },
+    "MIP05C13": {
+     "cell": 20,
+     "patches": [
+      [
+       144,
+       16,
+       "cams/ae/it/MI/MIP05C13_144_16.feb74a4fc568.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP05C13_fg37.16d894c13386.png"
+      ]
+     ]
+    },
+    "MIP05C17": {
+     "cell": 10,
+     "patches": [
+      [
+       80,
+       16,
+       "cams/ae/it/MI/MIP05C17_80_16.af2a5922590d.png"
+      ],
+      [
+       16,
+       112,
+       "cams/ae/it/MI/MIP05C17_16_112.e358b595941a.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP05C17_fg37.12790393af81.png"
+      ]
+     ]
+    }
+   }
+  },
+  "MI/6": {
+   "cams": {
+    "MIP06C01": {
+     "cell": 14,
+     "patches": [
+      [
+       160,
+       0,
+       "cams/ae/it/MI/MIP06C01_160_0.ced3a43cd8bb.png"
+      ],
+      [
+       64,
+       16,
+       "cams/ae/it/MI/MIP06C01_64_16.87082faba4bf.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/MI/MIP06C01_fg23.73df0917193e.png"
+      ],
+      [
+       37,
+       "cams/ae/it/MI/MIP06C01_fg37.438e05a1d8d2.png"
+      ]
+     ]
+    },
+    "MIP06C02": {
+     "cell": 15,
+     "patches": [
+      [
+       192,
+       224,
+       "cams/ae/it/MI/MIP06C02_192_224.5e355aba7da5.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP06C02_fg37.39698df22278.png"
+      ]
+     ]
+    },
+    "MIP06C03": {
+     "cell": 28,
+     "patches": [
+      [
+       192,
+       0,
+       "cams/ae/it/MI/MIP06C03_192_0.293afaee83a0.png"
+      ]
+     ]
+    },
+    "MIP06C04": {
+     "cell": 29,
+     "patches": [
+      [
+       208,
+       224,
+       "cams/ae/it/MI/MIP06C04_208_224.02173a1468f4.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP06C04_fg37.a0ade6cd42d5.png"
+      ]
+     ]
+    },
+    "MIP06C05": {
+     "cell": 42,
+     "patches": [
+      [
+       192,
+       0,
+       "cams/ae/it/MI/MIP06C05_192_0.83e93d6f071a.png"
+      ]
+     ]
+    },
+    "MIP06C09": {
+     "cell": 57,
+     "patches": [
+      [
+       96,
+       32,
+       "cams/ae/it/MI/MIP06C09_96_32.efbca5aaebc8.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP06C09_fg37.e26d400d939a.png"
+      ]
+     ]
+    },
+    "MIP06C13": {
+     "cell": 72,
+     "patches": [
+      [
+       176,
+       0,
+       "cams/ae/it/MI/MIP06C13_176_0.071699bd4422.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP06C13_fg37.3141b2171a12.png"
+      ]
+     ]
+    }
+   }
+  },
+  "MI/7": {
+   "cams": {
+    "MIP07C14": {
+     "cell": 21,
+     "patches": [
+      [
+       160,
+       112,
+       "cams/ae/it/MI/MIP07C14_160_112.3a5bdba3f918.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/MI/MIP07C14_fg23.f655fa389480.png"
+      ],
+      [
+       37,
+       "cams/ae/it/MI/MIP07C14_fg37.4a5ce4c8cc4b.png"
+      ]
+     ]
+    },
+    "MIP07C15": {
+     "cell": 19,
+     "patches": [
+      [
+       16,
+       128,
+       "cams/ae/it/MI/MIP07C15_16_128.c12cd9486b80.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP07C15_fg37.f4cebbe85199.png"
+      ]
+     ]
+    }
+   }
+  },
+  "MI/8": {
+   "cams": {
+    "MIP08C05": {
+     "cell": 27,
+     "patches": [
+      [
+       16,
+       64,
+       "cams/ae/it/MI/MIP08C05_16_64.ec3730ba8c91.png"
+      ]
+     ],
+     "masks": [
+      [
+       18,
+       "cams/ae/it/MI/MIP08C05_fg18.fb7b322bfe54.png"
+      ]
+     ]
+    },
+    "MIP08C06": {
+     "cell": 28,
+     "patches": [
+      [
+       16,
+       128,
+       "cams/ae/it/MI/MIP08C06_16_128.690201186f92.png"
+      ]
+     ],
+     "masks": [
+      [
+       18,
+       "cams/ae/it/MI/MIP08C06_fg18.7f02396c9c66.png"
+      ],
+      [
+       37,
+       "cams/ae/it/MI/MIP08C06_fg37.1de8bee1506e.png"
+      ]
+     ]
+    },
+    "MIP08C07": {
+     "cell": 29,
+     "patches": [
+      [
+       64,
+       208,
+       "cams/ae/it/MI/MIP08C07_64_208.4f57c3f9718a.png"
+      ]
+     ],
+     "masks": [
+      [
+       18,
+       "cams/ae/it/MI/MIP08C07_fg18.3c1908f6fcde.png"
+      ],
+      [
+       37,
+       "cams/ae/it/MI/MIP08C07_fg37.eadeb9ccd261.png"
+      ]
+     ]
+    },
+    "MIP08C17": {
+     "cell": 12,
+     "patches": [
+      [
+       32,
+       32,
+       "cams/ae/it/MI/MIP08C17_32_32.8c58f244eaf0.png"
+      ]
+     ]
+    },
+    "MIP08C18": {
+     "cell": 13,
+     "patches": [
+      [
+       0,
+       208,
+       "cams/ae/it/MI/MIP08C18_0_208.561a49376825.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP08C18_fg37.d27f1e398ecb.png"
+      ]
+     ]
+    },
+    "MIP08C21": {
+     "cell": 16,
+     "patches": [
+      [
+       208,
+       32,
+       "cams/ae/it/MI/MIP08C21_208_32.49e6eba3f77f.png"
+      ],
+      [
+       16,
+       208,
+       "cams/ae/it/MI/MIP08C21_16_208.99028e1700f0.png"
+      ],
+      [
+       160,
+       208,
+       "cams/ae/it/MI/MIP08C21_160_208.dd70c7c18903.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP08C21_fg37.b02449239f46.png"
+      ]
+     ]
+    },
+    "MIP08C32": {
+     "cell": 31,
+     "patches": [
+      [
+       128,
+       16,
+       "cams/ae/it/MI/MIP08C32_128_16.093b9ec84503.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/MI/MIP08C32_fg37.61278647e986.png"
+      ]
+     ]
+    }
+   }
+  },
+  "NE/1": {
+   "cams": {
+    "NEP01C06": {
+     "cell": 4,
+     "png": "cams/ae/it/NE/NEP01C06.449c84954d3f.png"
+    },
+    "NEP01C07": {
+     "cell": 9,
+     "patches": [
+      [
+       48,
+       32,
+       "cams/ae/it/NE/NEP01C07_48_32.87672ed587aa.png"
+      ]
+     ]
+    }
+   }
+  },
+  "NE/2": {
+   "cams": {
+    "NEP02C10": {
+     "cell": 41,
+     "patches": [
+      [
+       0,
+       96,
+       "cams/ae/it/NE/NEP02C10_0_96.a6999aaab16f.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/NE/NEP02C10_fg23.c593d924c304.png"
+      ],
+      [
+       37,
+       "cams/ae/it/NE/NEP02C10_fg37.1cf3de04e58c.png"
+      ]
+     ]
+    },
+    "NEP02C12": {
+     "cell": 16,
+     "png": "cams/ae/it/NE/NEP02C12.e5a1981cc729.png"
+    }
+   }
+  },
+  "NE/3": {
+   "cams": {
+    "NEP03C12": {
+     "cell": 79,
+     "png": "cams/ae/it/NE/NEP03C12.98842c2c61f2.png"
+    },
+    "NEP03C13": {
+     "cell": 91,
+     "png": "cams/ae/it/NE/NEP03C13.5551c6aa8792.png"
+    },
+    "NEP03C14": {
+     "cell": 103,
+     "png": "cams/ae/it/NE/NEP03C14.6c7c70abb8b9.png"
+    },
+    "NEP03C15": {
+     "cell": 115,
+     "png": "cams/ae/it/NE/NEP03C15.01c9f4b9be2a.png"
+    },
+    "NEP03C16": {
+     "cell": 67,
+     "png": "cams/ae/it/NE/NEP03C16.563e34b1bd61.png"
+    },
+    "NEP03C18": {
+     "cell": 57,
+     "patches": [
+      [
+       256,
+       80,
+       "cams/ae/it/NE/NEP03C18_256_80.b4f97ab1577a.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/NE/NEP03C18_fg23.164833c6a131.png"
+      ]
+     ]
+    },
+    "NEP03C20": {
+     "cell": 80,
+     "patches": [
+      [
+       80,
+       48,
+       "cams/ae/it/NE/NEP03C20_80_48.e80483521226.png"
+      ]
+     ]
+    }
+   }
+  },
+  "NE/4": {
+   "cams": {
+    "NEP04C06": {
+     "cell": 11,
+     "png": "cams/ae/it/NE/NEP04C06.589b0c426c3b.png"
+    }
+   }
+  },
+  "NE/5": {
+   "cams": {
+    "NEP05C12": {
+     "cell": 15,
+     "patches": [
+      [
+       176,
+       0,
+       "cams/ae/it/NE/NEP05C12_176_0.7dad6368e6ec.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/NE/NEP05C12_fg23.296306584ee3.png"
+      ],
+      [
+       37,
+       "cams/ae/it/NE/NEP05C12_fg37.9ef67bb5830a.png"
+      ]
+     ]
+    },
+    "NEP05C17": {
+     "cell": 33,
+     "png": "cams/ae/it/NE/NEP05C17.f07bdfbc7a52.png"
+    },
+    "NEP05C18": {
+     "cell": 34,
+     "png": "cams/ae/it/NE/NEP05C18.9fe05422946f.png"
+    }
+   }
+  },
+  "PV/1": {
+   "cams": {
+    "PVP01C20": {
+     "cell": 44,
+     "png": "cams/ae/it/PV/PVP01C20.b0f12a7af4b0.png"
+    },
+    "PVP01C21": {
+     "cell": 46,
+     "png": "cams/ae/it/PV/PVP01C21.7dd00e87eda4.png"
+    },
+    "PVP01C22": {
+     "cell": 48,
+     "patches": [
+      [
+       0,
+       0,
+       "cams/ae/it/PV/PVP01C22_0_0.8b8701db9ede.png"
+      ],
+      [
+       336,
+       112,
+       "cams/ae/it/PV/PVP01C22_336_112.4b28f2925787.png"
+      ]
+     ]
+    },
+    "PVP01C23": {
+     "cell": 74,
+     "png": "cams/ae/it/PV/PVP01C23.97cc2d7c5b87.png"
+    }
+   }
+  },
+  "PV/10": {
+   "cams": {
+    "PVP10C08": {
+     "cell": 14,
+     "png": "cams/ae/it/PV/PVP10C08.33cda78c25b7.png"
+    },
+    "PVP10C09": {
+     "cell": 40,
+     "png": "cams/ae/it/PV/PVP10C09.2b093a59ceea.png"
+    },
+    "PVP10C10": {
+     "cell": 39,
+     "png": "cams/ae/it/PV/PVP10C10.3405292dd2ba.png"
+    }
+   }
+  },
+  "PV/15": {
+   "cams": {
+    "PVP15C07": {
+     "cell": 11,
+     "patches": [
+      [
+       208,
+       0,
+       "cams/ae/it/PV/PVP15C07_208_0.797a74f97fc6.png"
+      ],
+      [
+       144,
+       224,
+       "cams/ae/it/PV/PVP15C07_144_224.8cb9ef70c24f.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/PV/PVP15C07_fg37.6c41645e1478.png"
+      ]
+     ]
+    }
+   }
+  },
+  "PV/7": {
+   "cams": {
+    "PVP07C04": {
+     "cell": 4,
+     "png": "cams/ae/it/PV/PVP07C04.2cbaffff195e.png"
+    }
+   }
+  },
+  "PV/8": {
+   "cams": {
+    "PVP08C03": {
+     "cell": 7,
+     "patches": [
+      [
+       64,
+       192,
+       "cams/ae/it/PV/PVP08C03_64_192.c7e89251ab69.png"
+      ],
+      [
+       0,
+       208,
+       "cams/ae/it/PV/PVP08C03_0_208.3b3aa9f6ac6e.png"
+      ]
+     ]
+    }
+   }
+  },
+  "ST/1": {
+   "cams": {
+    "STP01C01": {
+     "cell": 21,
+     "patches": [
+      [
+       32,
+       16,
+       "cams/ae/it/ST/STP01C01_32_16.b4d0ed08b60b.png"
+      ],
+      [
+       256,
+       176,
+       "cams/ae/it/ST/STP01C01_256_176.a7447bb401a6.png"
+      ],
+      [
+       48,
+       192,
+       "cams/ae/it/ST/STP01C01_48_192.01de2269106b.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/ST/STP01C01_fg37.72a6ebaf8f47.png"
+      ]
+     ]
+    },
+    "STP01C02": {
+     "cell": 35,
+     "patches": [
+      [
+       128,
+       48,
+       "cams/ae/it/ST/STP01C02_128_48.d2a0c31c7281.png"
+      ],
+      [
+       208,
+       160,
+       "cams/ae/it/ST/STP01C02_208_160.fbed69b2918c.png"
+      ],
+      [
+       48,
+       192,
+       "cams/ae/it/ST/STP01C02_48_192.9beb8c0cf7d5.png"
+      ],
+      [
+       288,
+       192,
+       "cams/ae/it/ST/STP01C02_288_192.c277f81d984c.png"
+      ]
+     ]
+    },
+    "STP01C03": {
+     "cell": 29,
+     "patches": [
+      [
+       48,
+       16,
+       "cams/ae/it/ST/STP01C03_48_16.4ded97b5bb0c.png"
+      ],
+      [
+       272,
+       16,
+       "cams/ae/it/ST/STP01C03_272_16.25f785854418.png"
+      ],
+      [
+       48,
+       192,
+       "cams/ae/it/ST/STP01C03_48_192.d4b4cc158cab.png"
+      ],
+      [
+       288,
+       192,
+       "cams/ae/it/ST/STP01C03_288_192.3b8c594caa72.png"
+      ]
+     ]
+    },
+    "STP01C04": {
+     "cell": 37,
+     "patches": [
+      [
+       32,
+       16,
+       "cams/ae/it/ST/STP01C04_32_16.55435dcfcd20.png"
+      ],
+      [
+       256,
+       16,
+       "cams/ae/it/ST/STP01C04_256_16.55b89836f2d2.png"
+      ],
+      [
+       48,
+       160,
+       "cams/ae/it/ST/STP01C04_48_160.aa4ac8fbccfc.png"
+      ],
+      [
+       272,
+       160,
+       "cams/ae/it/ST/STP01C04_272_160.45e78d45e39d.png"
+      ]
+     ]
+    },
+    "STP01C05": {
+     "cell": 43,
+     "patches": [
+      [
+       208,
+       0,
+       "cams/ae/it/ST/STP01C05_208_0.6fa6d8071a15.png"
+      ],
+      [
+       32,
+       16,
+       "cams/ae/it/ST/STP01C05_32_16.f2ba12e03bf7.png"
+      ],
+      [
+       48,
+       192,
+       "cams/ae/it/ST/STP01C05_48_192.e0e49bdc7d19.png"
+      ],
+      [
+       288,
+       192,
+       "cams/ae/it/ST/STP01C05_288_192.6645881870f7.png"
+      ]
+     ]
+    },
+    "STP01C06": {
+     "cell": 51,
+     "patches": [
+      [
+       32,
+       16,
+       "cams/ae/it/ST/STP01C06_32_16.387c0724a21b.png"
+      ],
+      [
+       288,
+       192,
+       "cams/ae/it/ST/STP01C06_288_192.c0250d6a6051.png"
+      ],
+      [
+       176,
+       208,
+       "cams/ae/it/ST/STP01C06_176_208.e7cfef2d0daa.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/ST/STP01C06_fg37.b63a2d787f59.png"
+      ]
+     ]
+    },
+    "STP01C07": {
+     "cell": 45,
+     "patches": [
+      [
+       48,
+       160,
+       "cams/ae/it/ST/STP01C07_48_160.58614c22dee0.png"
+      ],
+      [
+       176,
+       160,
+       "cams/ae/it/ST/STP01C07_176_160.b8b518b5ad27.png"
+      ]
+     ]
+    },
+    "STP01C08": {
+     "cell": 15,
+     "patches": [
+      [
+       48,
+       192,
+       "cams/ae/it/ST/STP01C08_48_192.be029e9f0b18.png"
+      ],
+      [
+       272,
+       192,
+       "cams/ae/it/ST/STP01C08_272_192.d095b9e2a914.png"
+      ]
+     ]
+    },
+    "STP01C09": {
+     "cell": 31,
+     "patches": [
+      [
+       32,
+       16,
+       "cams/ae/it/ST/STP01C09_32_16.ec099341fd79.png"
+      ]
+     ]
+    },
+    "STP01C11": {
+     "cell": 17,
+     "patches": [
+      [
+       48,
+       16,
+       "cams/ae/it/ST/STP01C11_48_16.24c5df4ee4e9.png"
+      ],
+      [
+       288,
+       192,
+       "cams/ae/it/ST/STP01C11_288_192.9c3975d5b809.png"
+      ]
+     ]
+    },
+    "STP01C12": {
+     "cell": 25,
+     "patches": [
+      [
+       128,
+       16,
+       "cams/ae/it/ST/STP01C12_128_16.3321eefb2fa0.png"
+      ],
+      [
+       32,
+       144,
+       "cams/ae/it/ST/STP01C12_32_144.f5c947e0e0f1.png"
+      ],
+      [
+       160,
+       144,
+       "cams/ae/it/ST/STP01C12_160_144.23292778c24b.png"
+      ]
+     ]
+    },
+    "STP01C13": {
+     "cell": 9,
+     "patches": [
+      [
+       16,
+       112,
+       "cams/ae/it/ST/STP01C13_16_112.e286ba699a9d.png"
+      ]
+     ]
+    },
+    "STP01C14": {
+     "cell": 6,
+     "patches": [
+      [
+       32,
+       16,
+       "cams/ae/it/ST/STP01C14_32_16.509af79e5373.png"
+      ],
+      [
+       224,
+       16,
+       "cams/ae/it/ST/STP01C14_224_16.1aecc9bb5659.png"
+      ],
+      [
+       160,
+       32,
+       "cams/ae/it/ST/STP01C14_160_32.686271aa0446.png"
+      ],
+      [
+       176,
+       192,
+       "cams/ae/it/ST/STP01C14_176_192.ff0eb830219b.png"
+      ]
+     ]
+    },
+    "STP01C15": {
+     "cell": 20,
+     "patches": [
+      [
+       32,
+       16,
+       "cams/ae/it/ST/STP01C15_32_16.938e48771a00.png"
+      ],
+      [
+       224,
+       16,
+       "cams/ae/it/ST/STP01C15_224_16.53454533f548.png"
+      ],
+      [
+       176,
+       192,
+       "cams/ae/it/ST/STP01C15_176_192.f96c3e8a46ef.png"
+      ]
+     ]
+    },
+    "STP01C16": {
+     "cell": 34,
+     "patches": [
+      [
+       32,
+       16,
+       "cams/ae/it/ST/STP01C16_32_16.5e1cc9f03ab1.png"
+      ],
+      [
+       224,
+       16,
+       "cams/ae/it/ST/STP01C16_224_16.b05a37fe9914.png"
+      ],
+      [
+       176,
+       192,
+       "cams/ae/it/ST/STP01C16_176_192.8cd671a2f778.png"
+      ]
+     ]
+    },
+    "STP01C17": {
+     "cell": 48,
+     "patches": [
+      [
+       32,
+       16,
+       "cams/ae/it/ST/STP01C17_32_16.a06395b42d02.png"
+      ],
+      [
+       64,
+       160,
+       "cams/ae/it/ST/STP01C17_64_160.473f150154b7.png"
+      ],
+      [
+       144,
+       192,
+       "cams/ae/it/ST/STP01C17_144_192.a61e395ad30d.png"
+      ]
+     ]
+    },
+    "STP01C18": {
+     "cell": 62,
+     "patches": [
+      [
+       32,
+       16,
+       "cams/ae/it/ST/STP01C18_32_16.cadf6ff44887.png"
+      ],
+      [
+       224,
+       16,
+       "cams/ae/it/ST/STP01C18_224_16.7f538ac1478d.png"
+      ],
+      [
+       256,
+       128,
+       "cams/ae/it/ST/STP01C18_256_128.e75ec4e29282.png"
+      ],
+      [
+       144,
+       192,
+       "cams/ae/it/ST/STP01C18_144_192.53ca7bec5abd.png"
+      ]
+     ]
+    },
+    "STP01C22": {
+     "cell": 12,
+     "patches": [
+      [
+       144,
+       16,
+       "cams/ae/it/ST/STP01C22_144_16.57fe1d10d238.png"
+      ],
+      [
+       192,
+       16,
+       "cams/ae/it/ST/STP01C22_192_16.63e0b060ce84.png"
+      ],
+      [
+       320,
+       32,
+       "cams/ae/it/ST/STP01C22_320_32.c59011e1039f.png"
+      ],
+      [
+       48,
+       96,
+       "cams/ae/it/ST/STP01C22_48_96.dd9b7ea8f7ce.png"
+      ]
+     ]
+    },
+    "STP01C30": {
+     "cell": 7,
+     "patches": [
+      [
+       32,
+       16,
+       "cams/ae/it/ST/STP01C30_32_16.387c0724a21b.png"
+      ],
+      [
+       288,
+       192,
+       "cams/ae/it/ST/STP01C30_288_192.c0250d6a6051.png"
+      ],
+      [
+       176,
+       208,
+       "cams/ae/it/ST/STP01C30_176_208.e7cfef2d0daa.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/ST/STP01C30_fg37.b63a2d787f59.png"
+      ]
+     ]
+    },
+    "STP01C31": {
+     "cell": 1,
+     "patches": [
+      [
+       32,
+       16,
+       "cams/ae/it/ST/STP01C31_32_16.387c0724a21b.png"
+      ],
+      [
+       288,
+       192,
+       "cams/ae/it/ST/STP01C31_288_192.c0250d6a6051.png"
+      ],
+      [
+       176,
+       208,
+       "cams/ae/it/ST/STP01C31_176_208.e7cfef2d0daa.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/ST/STP01C31_fg37.b63a2d787f59.png"
+      ]
+     ]
+    }
+   }
+  },
+  "SV/11": {
+   "cams": {
+    "SVP11C02": {
+     "cell": 1,
+     "patches": [
+      [
+       64,
+       16,
+       "cams/ae/it/SV/SVP11C02_64_16.0a34add8cef8.png"
+      ]
+     ]
+    }
+   }
+  },
+  "SV/2": {
+   "cams": {
+    "SVP02C07": {
+     "cell": 16,
+     "patches": [
+      [
+       80,
+       16,
+       "cams/ae/it/SV/SVP02C07_80_16.47a47cf3ecaf.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/SV/SVP02C07_fg23.193e71174fec.png"
+      ],
+      [
+       37,
+       "cams/ae/it/SV/SVP02C07_fg37.6545d821fb3f.png"
+      ]
+     ]
+    }
+   }
+  },
+  "SV/6": {
+   "cams": {
+    "SVP06C27": {
+     "cell": 5,
+     "png": "cams/ae/it/SV/SVP06C27.a0cace1fa6f8.png"
+    },
+    "SVP06C28": {
+     "cell": 6,
+     "png": "cams/ae/it/SV/SVP06C28.e3397ee1b8be.png"
+    },
+    "SVP06C29": {
+     "cell": 7,
+     "patches": [
+      [
+       80,
+       48,
+       "cams/ae/it/SV/SVP06C29_80_48.da33b1e794e3.png"
+      ],
+      [
+       320,
+       192,
+       "cams/ae/it/SV/SVP06C29_320_192.531bd79e3aa5.png"
+      ]
+     ]
+    },
+    "SVP06C30": {
+     "cell": 78,
+     "png": "cams/ae/it/SV/SVP06C30.c9e5f3acd7cb.png"
+    },
+    "SVP06C31": {
+     "cell": 9,
+     "png": "cams/ae/it/SV/SVP06C31.899e48e4bea5.png"
+    }
+   }
+  },
+  "SV/7": {
+   "cams": {
+    "SVP07C05": {
+     "cell": 23,
+     "patches": [
+      [
+       48,
+       16,
+       "cams/ae/it/SV/SVP07C05_48_16.69c026a80d9c.png"
+      ]
+     ]
+    },
+    "SVP07C06": {
+     "cell": 29,
+     "patches": [
+      [
+       64,
+       192,
+       "cams/ae/it/SV/SVP07C06_64_192.1cc02c9df0e6.png"
+      ]
+     ]
+    },
+    "SVP07C09": {
+     "cell": 26,
+     "patches": [
+      [
+       48,
+       16,
+       "cams/ae/it/SV/SVP07C09_48_16.f5e4fc9b4ec6.png"
+      ]
+     ],
+     "masks": [
+      [
+       37,
+       "cams/ae/it/SV/SVP07C09_fg37.b9a09d0ad17f.png"
+      ]
+     ]
+    }
+   }
+  },
+  "SV/8": {
+   "cams": {
+    "SVP08C08": {
+     "cell": 19,
+     "patches": [
+      [
+       16,
+       128,
+       "cams/ae/it/SV/SVP08C08_16_128.07b5070f01b9.png"
+      ]
+     ],
+     "masks": [
+      [
+       23,
+       "cams/ae/it/SV/SVP08C08_fg23.97c9b3c0fd42.png"
+      ],
+      [
+       37,
+       "cams/ae/it/SV/SVP08C08_fg37.5316ce123638.png"
+      ]
+     ]
+    }
+   }
+  }
+ },
+ "messages": {
+  "lcd": [
+   "",
+   "La compagnia mineraria Tempesta d'Anime \u008a un'equa opportunit\u0085 per il solo principale.",
+   "Lavora! Fallo e basta!",
+   "Chi rompe, paga.",
+   "Colore chiaro, gusto pulito, deprimiti con la bibita Tempesta d'Anime.",
+   "Depresso? Lavora di pi\u0097!",
+   "Bisogno di una vacanza (permanente)? Consulta un supervisore Slig.",
+   "Nascondere ossa nei pantaloni vale una richiesta di terminazione immediata!",
+   "Rinfresca alito di Molluck - Da togliere il fiato!",
+   "Estrattori di cibo FeeCo... Mangi in due... Paghi per uno... Non ti ferma nessuno!",
+   "Bibita Tempesta d'Anime... Il nostro vomito \u008a la vostra sete!",
+   "Torte di Scrab  MMMM MMMM  Ti costano un braccio e anche una gamba!",
+   "Nuova bibita Tempesta d'Anime... Doppio il gusto... Doppie le ossa... Il doppio ti costa!",
+   "Se sei blu, di bibita bevine di pi\u0097!",
+   "Bibita Tempesta d'Anime: bevila che ti passa!",
+   "Deposito Frigor: dove ti manderemo quest'oggi?",
+   "Cercasi: acchiappa proiettili e tester di bombe.Rivolgersi al Generale Dripik in persona. Solo cavie qualificate.",
+   "AzGasCo: ti spunta un peto in bocca.",
+   "Trova il premio segreto all'interno di ogni confezione speciale della misteriosa carne dei Mattatoi Ernia!",
+   "Nuovi dai Mattatoi Ernia: Cicciolini! La salsiccia non \u008a mai stata cos\u008d da sballo!",
+   "Cercasi: Mudokon per stanare Fleech. Nessuna esperienza necessaria.",
+   "Laboratori Vixinex. Creiamo un futuro al posto vostro.",
+   "Pasticcio d'ossa di Phleg... gustoso fino all'ultimo morso.",
+   "Piazza affari di Moolah...TempAnimBibit SU...FeeCo SU OssaCal SU...MattErn GIU! GIU! GIU!",
+   "Segaossa Tritan. Polvere perfetta - sempre.",
+   "Garantisci l'oscurit\u0085 ai tuoi impiegati la nuovissima - Cuciocchi 2000. La macchina della cecit\u0085 definitiva",
+   "BruciaLardo FeeCo. Quando hai troppa cicca, la soluzione giusta \u008a farne salsiccia.",
+   "I laboratori Vixinex assicurano che la bibita Tempesta d'Anime \u008a totalmente sicura! Inutile resistere, bevete!",
+   "Gambe Iz Uz : se puoi trovare una gamba migliore,comprala!",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "Per varcare una porta, posizionati davanti a essa e premi \u0010.",
+   "Per scendere in un pozzo, posizionati davanti a esso e premi \u0010.",
+   "Per issarti, mettiti sotto i detriti che cadono e premi \u0010 (freccia su).",
+   "Per saltare, premi \u000c.",
+   "Per sgattaiolare vicino allo Slig che dorme, tieni premuto \u000b mentre ti stai muovendo.",
+   "Per tirare la leva, posizionati vicino a essa e premi \u000d.",
+   "Per usare l'anello, posizionati sotto di esso e premi \u0010, come per issarti.",
+   "Per usare la piattaforma, posizionati al suo centro e premi \u0010 (su).",
+   "Per scendere nel pozzo, mettiti di fronte a esso e premi \u0010.",
+   "Per disattivare una bomba, abbassati vicino a essa premendo \u0011. Quindi premi \u000d quando la bomba lampeggia di verde.  Premi nuovamente \u000d per riattivarla.",
+   "Avvicinati furtivo nell'ombra tenendo premuto \u000b mentre ti muovi. Continua a stare nell'ombra fintanto che lo Slig \u008a rivolto dalla tua parte, o verrai visto. Segui furtivamente lo Slig quando si allontana da te.",
+   "Per prendere una roccia dal sacco delle pietre, mettiti sotto di esso e premi \u0010. Per raccogliere la roccia, abbassati vicino a essa e premi \u000d. Per lanciare la roccia, tieni schiacciato \u000e e premi un tasto direzionale qualsiasi. Tasti diversi ti permetteranno di lanciare con differenti angolazioni.",
+   "Fai pratica di lancio qui. Puoi sostare sulla freccia e colpire cos\u008d ogni mina. E inoltre possibile lanciare anche da accucciati.",
+   "Per avvertire un Mudokon, digli ciao tenendo schiacciato \u0008 e premendo \u000c. Quindi parla ai Mudokon tenendo premuto \u0008 o \u0009 e schiacciando i tasti \u000c, \u000d, \u000e o \u000f. Prova!",
+   "Possiedi gli Slig grazie alla melodia del tuo canto. Per farlo, tieni premuti \u0008 e \u0009 contemporaneamente.",
+   "Per aiutare i Mudokon a fuggire dalla schiavit\u0097 intona il tuo canto quando vedi un cerchio di volatili. Per cantare, tieni premuti \u0008  e \u0009 contemporaneamente.",
+   "Per rotolare, prima abbassati premendo \u0011. Quindi spostati verso sinistra o verso destra premendo \u0012 o \u0013.",
+   "Per camminare, premi \u0012 (sinistra) o \u0013 (destra). Per correre, tieni premuto \u000a mentre ti muovi.",
+   "Per evitare l'allarme, stai fermo quando i rilevatori di movimento stanno per toccarti.",
+   "Usa lo Slig per aprirti la strada attraverso la porta di sicurezza.",
+   "Gli Slig possono parlare agli Slog.",
+   "Usa la leva per attivare il sega-ossa.",
+   "Conduci i Mudokon al portale degli uccelli, poi canta per liberarli. Fallo tenendo premuti \u0008 e \u0009.",
+   "Per girare la ruota, posizionati di fronte a essa e premi \u0010.",
+   "Dopo che hai salutato il Mudokon, digli che ti dispiace standogli accanto e schiacciando \u000e mentre tieni premuto \u0009.",
+   "Esegui una capriola in corsa premendo \u000f mentre stai correndo.",
+   "Mettiti in cima alla freccia e premi \u0011 (freccia gi\u0097)",
+   "Slig pi\u0097 avanti... fai attenzione.",
+   "Il gas esilarante rende i Mudokon tremendamente felici.",
+   "L'unico modo per calmare un Mudokon \u008a schiaffeggiarlo. Per farlo, mettiti di fianco a uno di loro e tieni schiacciato \u0009 mentre premi \u000f.",
+   "Segui furtivamente lo Slig non appena si allontana da te.",
+   "Avrai bisogno di aiuto per girare tutte le ruote contemporaneamente. Posiziona un Mudokon di fronte a una ruota, e poi digli di darsi da fare premendo \u000e mentre tieni schiacciato \u0008. Potresti aver bisogno di schiaffeggiare il Mudokon per calmarlo.",
+   "Se cammini furtivamente, anche i Mudokon che ti seguono faranno altrettanto.",
+   "Saluta tutti i Mudokon contemporaneamente schiacciando \u000c mentre tieni premuto \u0009. Poi di' loro di seguirti schiacciando \u000d mentre tieni premuto \u0008.",
+   "Prova a tirare le rocce contro il muro.",
+   "I Mudokon ciechi continueranno a camminare finch\u0082 non dirai loro di aspettare. Per farlo schiaccia \u000f mentre tieni premuto \u0008.",
+   "Solo un folle o un assassino tirerebbe questa leva.",
+   "Puoi far scagliare a uno Slig da te posseduto qualcosa in primo piano schiacciando \u000e mentre tieni premuto \u0011.",
+   "Premi \u000c per saltare.",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "Per correre, tieni premuto \u000a mentre ti muovi.",
+   "Se fai silenzio e rimani nell'ombra, non puoi esser visto.",
+   "",
+   "",
+   "",
+   ""
+  ]
+ },
+ "sprites": {
+  "anims": {
+   "AE_Rope": {
+    "family": "Rope",
+    "fps": 1,
+    "loop": true,
+    "loop_start": 0,
+    "frames": [
+     [
+      "Rope",
+      0,
+      0,
+      5,
+      16,
+      -2,
+      -15,
+      -2,
+      -15,
+      2,
+      0
+     ]
+    ]
+   },
+   "AE_Rope@NECROPE": {
+    "family": "Rope",
+    "fps": 1,
+    "loop": true,
+    "loop_start": 0,
+    "frames": [
+     [
+      "Rope",
+      5,
+      0,
+      3,
+      16,
+      -3,
+      -15,
+      -8,
+      -15,
+      7,
+      0
+     ]
+    ]
+   }
+  }
+ },
+ "font": {
+  "w": 112,
+  "h": 109,
+  "glyphs": [
+   [
+    0,
+    0,
+    3,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    20,
+    50,
+    1,
+    15
+   ],
+   [
+    53,
+    50,
+    5,
+    15
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    56,
+    50,
+    2,
+    15
+   ],
+   [
+    22,
+    50,
+    3,
+    15
+   ],
+   [
+    27,
+    50,
+    3,
+    15
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    7,
+    50,
+    5,
+    15
+   ],
+   [
+    35,
+    50,
+    2,
+    15
+   ],
+   [
+    1,
+    50,
+    5,
+    15
+   ],
+   [
+    31,
+    50,
+    3,
+    15
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    1,
+    33,
+    6,
+    15
+   ],
+   [
+    8,
+    33,
+    6,
+    15
+   ],
+   [
+    15,
+    33,
+    6,
+    15
+   ],
+   [
+    22,
+    33,
+    6,
+    15
+   ],
+   [
+    29,
+    33,
+    6,
+    15
+   ],
+   [
+    36,
+    33,
+    6,
+    15
+   ],
+   [
+    43,
+    33,
+    6,
+    15
+   ],
+   [
+    50,
+    33,
+    6,
+    15
+   ],
+   [
+    57,
+    33,
+    6,
+    15
+   ],
+   [
+    64,
+    33,
+    6,
+    15
+   ],
+   [
+    38,
+    50,
+    3,
+    15
+   ],
+   [
+    42,
+    50,
+    2,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    13,
+    50,
+    5,
+    15
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    46,
+    50,
+    6,
+    15
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    1,
+    1,
+    6,
+    15
+   ],
+   [
+    8,
+    1,
+    6,
+    15
+   ],
+   [
+    15,
+    1,
+    6,
+    15
+   ],
+   [
+    22,
+    1,
+    6,
+    15
+   ],
+   [
+    29,
+    1,
+    6,
+    15
+   ],
+   [
+    36,
+    1,
+    6,
+    15
+   ],
+   [
+    43,
+    1,
+    6,
+    15
+   ],
+   [
+    50,
+    1,
+    6,
+    15
+   ],
+   [
+    58,
+    1,
+    1,
+    15
+   ],
+   [
+    61,
+    1,
+    6,
+    15
+   ],
+   [
+    68,
+    1,
+    6,
+    15
+   ],
+   [
+    75,
+    1,
+    6,
+    15
+   ],
+   [
+    82,
+    1,
+    7,
+    15
+   ],
+   [
+    90,
+    1,
+    6,
+    15
+   ],
+   [
+    97,
+    1,
+    6,
+    15
+   ],
+   [
+    104,
+    1,
+    6,
+    15
+   ],
+   [
+    1,
+    17,
+    7,
+    15
+   ],
+   [
+    9,
+    17,
+    6,
+    15
+   ],
+   [
+    16,
+    17,
+    6,
+    15
+   ],
+   [
+    23,
+    17,
+    6,
+    15
+   ],
+   [
+    31,
+    17,
+    6,
+    15
+   ],
+   [
+    38,
+    17,
+    6,
+    15
+   ],
+   [
+    45,
+    17,
+    9,
+    15
+   ],
+   [
+    55,
+    17,
+    6,
+    15
+   ],
+   [
+    62,
+    17,
+    6,
+    15
+   ],
+   [
+    69,
+    17,
+    6,
+    15
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    53,
+    50,
+    2,
+    4
+   ],
+   [
+    1,
+    1,
+    6,
+    15
+   ],
+   [
+    8,
+    1,
+    6,
+    15
+   ],
+   [
+    15,
+    1,
+    6,
+    15
+   ],
+   [
+    22,
+    1,
+    6,
+    15
+   ],
+   [
+    29,
+    1,
+    6,
+    15
+   ],
+   [
+    36,
+    1,
+    6,
+    15
+   ],
+   [
+    43,
+    1,
+    6,
+    15
+   ],
+   [
+    50,
+    1,
+    6,
+    15
+   ],
+   [
+    58,
+    1,
+    1,
+    15
+   ],
+   [
+    61,
+    1,
+    6,
+    15
+   ],
+   [
+    68,
+    1,
+    6,
+    15
+   ],
+   [
+    75,
+    1,
+    6,
+    15
+   ],
+   [
+    82,
+    1,
+    7,
+    15
+   ],
+   [
+    90,
+    1,
+    6,
+    15
+   ],
+   [
+    97,
+    1,
+    6,
+    15
+   ],
+   [
+    104,
+    1,
+    6,
+    15
+   ],
+   [
+    1,
+    17,
+    7,
+    15
+   ],
+   [
+    9,
+    17,
+    6,
+    15
+   ],
+   [
+    16,
+    17,
+    6,
+    15
+   ],
+   [
+    23,
+    17,
+    6,
+    15
+   ],
+   [
+    31,
+    17,
+    6,
+    15
+   ],
+   [
+    38,
+    17,
+    6,
+    15
+   ],
+   [
+    45,
+    17,
+    9,
+    15
+   ],
+   [
+    55,
+    17,
+    6,
+    15
+   ],
+   [
+    62,
+    17,
+    6,
+    15
+   ],
+   [
+    69,
+    17,
+    6,
+    15
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    77,
+    64,
+    6,
+    15
+   ],
+   [
+    98,
+    64,
+    6,
+    15
+   ],
+   [
+    71,
+    33,
+    6,
+    15
+   ],
+   [
+    97,
+    17,
+    6,
+    15
+   ],
+   [
+    90,
+    17,
+    6,
+    15
+   ],
+   [
+    76,
+    17,
+    6,
+    15
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    77,
+    64,
+    6,
+    15
+   ],
+   [
+    85,
+    33,
+    6,
+    15
+   ],
+   [
+    78,
+    33,
+    6,
+    15
+   ],
+   [
+    104,
+    17,
+    6,
+    15
+   ],
+   [
+    100,
+    33,
+    3,
+    15
+   ],
+   [
+    104,
+    33,
+    3,
+    15
+   ],
+   [
+    92,
+    33,
+    3,
+    15
+   ],
+   [
+    90,
+    17,
+    6,
+    15
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    71,
+    33,
+    6,
+    15
+   ],
+   [
+    68,
+    64,
+    7,
+    15
+   ],
+   [
+    68,
+    64,
+    7,
+    15
+   ],
+   [
+    105,
+    49,
+    6,
+    15
+   ],
+   [
+    98,
+    49,
+    6,
+    15
+   ],
+   [
+    84,
+    49,
+    6,
+    15
+   ],
+   [
+    105,
+    64,
+    6,
+    15
+   ],
+   [
+    84,
+    64,
+    6,
+    15
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    98,
+    49,
+    6,
+    15
+   ],
+   [
+    98,
+    64,
+    6,
+    15
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    83,
+    17,
+    6,
+    15
+   ],
+   [
+    96,
+    33,
+    3,
+    15
+   ],
+   [
+    91,
+    49,
+    6,
+    15
+   ],
+   [
+    91,
+    64,
+    6,
+    15
+   ],
+   [
+    60,
+    64,
+    6,
+    15
+   ],
+   [
+    60,
+    64,
+    6,
+    15
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    61,
+    50,
+    6,
+    15
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    59,
+    50,
+    1,
+    15
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    0,
+    0,
+    9,
+    0
+   ],
+   [
+    1,
+    78,
+    17,
+    15
+   ],
+   [
+    19,
+    78,
+    17,
+    15
+   ],
+   [
+    37,
+    78,
+    17,
+    15
+   ],
+   [
+    55,
+    78,
+    17,
+    15
+   ],
+   [
+    1,
+    93,
+    13,
+    15
+   ],
+   [
+    15,
+    93,
+    13,
+    15
+   ],
+   [
+    29,
+    93,
+    13,
+    15
+   ],
+   [
+    43,
+    93,
+    13,
+    15
+   ],
+   [
+    57,
+    94,
+    9,
+    15
+   ],
+   [
+    67,
+    94,
+    9,
+    15
+   ],
+   [
+    77,
+    94,
+    9,
+    15
+   ],
+   [
+    87,
+    94,
+    9,
+    15
+   ]
+  ],
+  "codes": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   144,
+   145,
+   146,
+   147,
+   148,
+   149,
+   150,
+   151,
+   152,
+   153,
+   154,
+   155,
+   156,
+   157,
+   158,
+   159,
+   160,
+   161,
+   162,
+   163,
+   164,
+   165,
+   166,
+   167,
+   168,
+   null,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26,
+   27,
+   28,
+   29,
+   30,
+   31,
+   32,
+   33,
+   34,
+   35,
+   36,
+   37,
+   38,
+   39,
+   40,
+   41,
+   42,
+   43,
+   44,
+   45,
+   46,
+   47,
+   48,
+   49,
+   50,
+   51,
+   52,
+   53,
+   54,
+   55,
+   56,
+   57,
+   58,
+   59,
+   60,
+   61,
+   62,
+   63,
+   64,
+   65,
+   66,
+   67,
+   68,
+   69,
+   70,
+   71,
+   72,
+   73,
+   74,
+   75,
+   76,
+   77,
+   78,
+   79,
+   80,
+   81,
+   82,
+   83,
+   84,
+   85,
+   86,
+   87,
+   88,
+   89,
+   90,
+   91,
+   92,
+   93,
+   94,
+   95,
+   96,
+   97,
+   98,
+   99,
+   100,
+   101,
+   102,
+   103,
+   104,
+   105,
+   106,
+   107,
+   108,
+   109,
+   110,
+   111,
+   112,
+   113,
+   114,
+   115,
+   116,
+   117,
+   118,
+   119,
+   120,
+   121,
+   122,
+   123,
+   124,
+   125,
+   126,
+   127,
+   128,
+   129,
+   130,
+   131,
+   132,
+   133,
+   134,
+   135,
+   136,
+   137,
+   138,
+   139,
+   140,
+   141,
+   142,
+   143,
+   144,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "escapes": {},
+  "lead": 32
+ },
+ "sheets": {
+  "Font": "cams/ae/it/sprites/Font.0ec705905d12.png",
+  "Rope": "cams/ae/it/sprites/Rope.c5ad1223f8b8.png"
+ }
+}
