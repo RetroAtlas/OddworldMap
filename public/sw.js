@@ -24,7 +24,7 @@ const SHELL = "shell-v1";
 // unregistration can't stop a controlling worker until reload, and a
 // module flag wouldn't survive an idle-worker restart
 const ENABLED = "cams-on";
-// has to clear the complete artwork (5551 files) of both games and every
+// has to clear the complete artwork (5784 files) of both games and every
 // release, which the page can ask for outright; a cap under that would evict
 // the download's own head
 const MAX_ENTRIES = 10000; // ≈400 MB

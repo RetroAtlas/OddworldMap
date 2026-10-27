@@ -67,7 +67,8 @@
      {"redump": 15209, "bytes": 702173136, "sha1": "1db7f2b08119e39fee5689d5770031e6e4c8b161"}
     ],
     "code_page": "cp437",
-    "ships": false
+    "ships": true,
+    "note": "German text on the signs and screens, over the levels as first pressed, before Rev 1 revised them, with one security claw in Rupture Farms Return moved, and 25 frames a second."
    },
    "it": {
     "name": "Italy",
