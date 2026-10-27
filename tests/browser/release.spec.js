@@ -48,6 +48,7 @@ test("a release link opens the release, and the row swaps releases in place", as
     "Europe",
     "France",
     "Germany",
+    "Italy",
     "Japan*",
   ]);
   expect(jp.tip).toMatch(/^Japan: Abe a GoGo, in Japanese\. Japanese text on the signs/);
@@ -66,6 +67,7 @@ test("a release link opens the release, and the row swaps releases in place", as
     "Europe*",
     "France",
     "Germany",
+    "Italy",
     "Japan",
   ]);
   expect(eu.regional).toBe(0);

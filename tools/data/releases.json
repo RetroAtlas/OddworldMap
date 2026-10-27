@@ -79,7 +79,8 @@
      {"redump": 9977, "bytes": 702196656, "sha1": "8be89ab071828b408bafa3debdbe77aff0413546"}
     ],
     "code_page": "cp437",
-    "ships": false
+    "ships": true,
+    "note": "Italian text on the signs and screens, over the levels as first pressed with some of Rev 1's revisions, and 25 frames a second."
    },
    "es": {
     "name": "Spain",

@@ -51,7 +51,7 @@ test("a release stands over the very base the game loads, one dataset however of
     const index = await loadReleaseIndex();
     assert.deepEqual(
       index.AO.releases.map((r) => r.code),
-      ["us-r0", "us-r1", "eu", "fr", "de", "jp"],
+      ["us-r0", "us-r1", "eu", "fr", "de", "it", "jp"],
     );
     const base = await loadGame("AO");
     const R = await loadRelease("AO", "jp");
