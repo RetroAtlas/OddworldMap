@@ -201,6 +201,11 @@ body.fullnames .btnrow button {
 body.fullnames #releaseBtns {
   flex-direction: row;
 }
+/* a release is a choice within its game, so the game keeps the solid mark */
+#releaseBtns button.on {
+  background: var(--panel2);
+  color: var(--accent);
+}
 .filters {
   padding: 4px 12px 12px;
 }
