@@ -267,6 +267,25 @@ body.fullnames #releaseBtns {
   text-transform: inherit;
   letter-spacing: inherit;
 }
+/* a disclosure drawing its own marker, turned as it opens */
+.fold > summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+.fold > summary::-webkit-details-marker {
+  display: none;
+}
+.fold > summary::before {
+  content: "\25B8";
+  display: inline-block;
+  color: var(--dim);
+  font-size: 9px;
+  transition: transform 0.12s;
+}
+.fold[open] > summary::before {
+  transform: rotate(90deg);
+}
 /* Fields picker: per-type collapsible checklists, one type expanded at a time */
 #fieldPanel .fp-body {
   padding: 0 12px 4px;
@@ -279,23 +298,8 @@ body.fullnames #releaseBtns {
   align-items: center;
   gap: 6px;
   padding: 5px 2px;
-  cursor: pointer;
   font-size: 12px;
   color: var(--text);
-  user-select: none;
-  list-style: none;
-}
-.fp-type > summary::-webkit-details-marker {
-  display: none;
-}
-.fp-type > summary::before {
-  content: "\25B8";
-  color: var(--dim);
-  font-size: 9px;
-  transition: transform 0.12s;
-}
-.fp-type[open] > summary::before {
-  transform: rotate(90deg);
 }
 .fp-count {
   margin-left: auto;
@@ -371,23 +375,10 @@ body.fullnames #releaseBtns {
 /* the exports fold under one control: a disclosure, so a tap or a key opens it
    as readily as a click, and a button stays in view while its export runs */
 #exportMenu > summary {
-  list-style: none;
   text-align: center;
-  user-select: none;
-}
-#exportMenu > summary::-webkit-details-marker {
-  display: none;
 }
 #exportMenu > summary::before {
-  content: "\25B8";
-  display: inline-block;
   margin-right: 6px;
-  color: var(--dim);
-  font-size: 9px;
-  transition: transform 0.12s;
-}
-#exportMenu[open] > summary::before {
-  transform: rotate(90deg);
 }
 #exportMenu > button {
   margin: 2px 12px 2px 24px;

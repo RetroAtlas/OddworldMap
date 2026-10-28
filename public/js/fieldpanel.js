@@ -45,7 +45,7 @@ function shownFor(name, fields) {
 function renderType({ name, fields }) {
   const shown = shownFor(name, fields);
   const det = document.createElement("details");
-  det.className = "fp-type";
+  det.className = "fold fp-type";
   det.dataset.type = name;
 
   const sum = document.createElement("summary");
