@@ -47,14 +47,14 @@ test("a release link opens the release, and the row swaps releases in place", as
   expect(jp.gameButton).toBe("Abe a GoGo");
   expect(jp.row).toEqual([
     "USA, Rev 2",
-    "USA, first pressing",
     "USA, Rev 1",
+    "USA, first pressing",
     "Europe",
+    "Japan*",
     "France",
     "Germany",
     "Italy",
     "Spain",
-    "Japan*",
   ]);
   expect(jp.tip).toMatch(/^Japan: Abe a GoGo, in Japanese\. Japanese text on the signs/);
   expect(jp.fold).toEqual([false, "Japan"]);
@@ -69,14 +69,14 @@ test("a release link opens the release, and the row swaps releases in place", as
   expect(eu.cam).toEqual(jp.cam);
   expect(eu.row).toEqual([
     "USA, Rev 2",
-    "USA, first pressing",
     "USA, Rev 1",
+    "USA, first pressing",
     "Europe*",
+    "Japan",
     "France",
     "Germany",
     "Italy",
     "Spain",
-    "Japan",
   ]);
   expect(eu.fold).toEqual([true, "Europe"]);
   expect(eu.regional).toBe(0);

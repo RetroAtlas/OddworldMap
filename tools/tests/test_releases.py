@@ -39,6 +39,18 @@ class Table(unittest.TestCase):
                 if rel["ships"]:
                     self.assertTrue(rel["note"], f"{game} {code}")
 
+    def test_each_game_lists_its_releases_in_one_order_of_regions(self):
+        """any other US pressings newest first, then Europe and Japan, then the
+        European editions by name"""
+        def place(item):
+            code, rel = item
+            if code.startswith("us-r"):
+                return 0, -int(code[4:]), ""
+            return (1, ["eu", "jp"].index(code), "") if code in ("eu", "jp") else (2, 0, rel["name"])
+        for game, entry_ in releases.load_releases().items():
+            listed = list(entry_["releases"].items())
+            self.assertEqual([c for c, _ in listed], [c for c, _ in sorted(listed, key=place)], game)
+
     def test_each_table_of_a_release_s_own_characters_fits_its_code_page(self):
         import json
         import re

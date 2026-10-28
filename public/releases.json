@@ -14,6 +14,13 @@
     "note": "The same levels as the North American release, at 25 frames a second. The gas countdowns still count frames by 30, so one of 7200 frames shows 240 seconds and lasts 288."
    },
    {
+    "code": "jp",
+    "name": "Japan",
+    "title": "Abe '99",
+    "language": "Japanese",
+    "note": "Japanese text on the signs and screens, and fixes the North American release lacks: floors added in Necrum Mines, gas countdowns in the Brewery's return, and doors and switches reworked in FeeCo and Bonewerkz."
+   },
+   {
     "code": "fr",
     "name": "France",
     "title": "Oddworld: L'Exode d'Abe",
@@ -40,13 +47,6 @@
     "title": "Oddworld: Abe's Exoddus",
     "language": "Spanish",
     "note": "Spanish text on the signs and screens, over the North American release's levels, at 25 frames a second. The gas countdowns still count frames by 30, so one of 7200 frames shows 240 seconds and lasts 288."
-   },
-   {
-    "code": "jp",
-    "name": "Japan",
-    "title": "Abe '99",
-    "language": "Japanese",
-    "note": "Japanese text on the signs and screens, and fixes the North American release lacks: floors added in Necrum Mines, gas countdowns in the Brewery's return, and doors and switches reworked in FeeCo and Bonewerkz."
    }
   ]
  },
@@ -58,13 +58,6 @@
   },
   "releases": [
    {
-    "code": "us-r0",
-    "name": "USA, first pressing",
-    "title": "Oddworld: Abe's Oddysee",
-    "language": "English",
-    "note": "The levels as first pressed, before Rev 1 revised them: a few collision lines and 28 objects set otherwise, the Scrabania map and a Paramonia screen as first drawn, and the background Glukkons and chanting Mudokons as first animated."
-   },
-   {
     "code": "us-r1",
     "name": "USA, Rev 1",
     "title": "Oddworld: Abe's Oddysee",
@@ -72,11 +65,25 @@
     "note": "Rev 2's levels and screens, without the two Exoddus promo screens on its menu."
    },
    {
+    "code": "us-r0",
+    "name": "USA, first pressing",
+    "title": "Oddworld: Abe's Oddysee",
+    "language": "English",
+    "note": "The levels as first pressed, before Rev 1 revised them: a few collision lines and 28 objects set otherwise, the Scrabania map and a Paramonia screen as first drawn, and the background Glukkons and chanting Mudokons as first animated."
+   },
+   {
     "code": "eu",
     "name": "Europe",
     "title": "Oddworld: Abe's Oddysee",
     "language": "English",
     "note": "Hundreds of collision lines and dozens of objects reworked, a few screens and foregrounds redrawn, and 25 frames a second."
+   },
+   {
+    "code": "jp",
+    "name": "Japan",
+    "title": "Abe a GoGo",
+    "language": "Japanese",
+    "note": "Japanese text on the signs and screens and the hand prints on the stones redrawn, over Rev 2's levels."
    },
    {
     "code": "fr",
@@ -105,13 +112,6 @@
     "title": "Oddworld: Abe's Oddysee",
     "language": "Spanish",
     "note": "Spanish text on the signs and screens, over the levels as first pressed with some of Rev 1's revisions, and 25 frames a second."
-   },
-   {
-    "code": "jp",
-    "name": "Japan",
-    "title": "Abe a GoGo",
-    "language": "Japanese",
-    "note": "Japanese text on the signs and screens and the hand prints on the stones redrawn, over Rev 2's levels."
    }
   ]
  }

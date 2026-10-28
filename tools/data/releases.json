@@ -10,18 +10,6 @@
    ]
   },
   "releases": {
-   "us-r0": {
-    "name": "USA, first pressing",
-    "language": "English",
-    "title": "Oddworld: Abe's Oddysee",
-    "executable": "SLUS_001.90",
-    "discs": [
-     {"redump": 1858, "bytes": 702027312, "sha1": "1548537c91722628414dc5ed49e7ee28c379bced"}
-    ],
-    "code_page": "cp437",
-    "ships": true,
-    "note": "The levels as first pressed, before Rev 1 revised them: a few collision lines and 28 objects set otherwise, the Scrabania map and a Paramonia screen as first drawn, and the background Glukkons and chanting Mudokons as first animated."
-   },
    "us-r1": {
     "name": "USA, Rev 1",
     "language": "English",
@@ -34,6 +22,18 @@
     "ships": true,
     "note": "Rev 2's levels and screens, without the two Exoddus promo screens on its menu."
    },
+   "us-r0": {
+    "name": "USA, first pressing",
+    "language": "English",
+    "title": "Oddworld: Abe's Oddysee",
+    "executable": "SLUS_001.90",
+    "discs": [
+     {"redump": 1858, "bytes": 702027312, "sha1": "1548537c91722628414dc5ed49e7ee28c379bced"}
+    ],
+    "code_page": "cp437",
+    "ships": true,
+    "note": "The levels as first pressed, before Rev 1 revised them: a few collision lines and 28 objects set otherwise, the Scrabania map and a Paramonia screen as first drawn, and the background Glukkons and chanting Mudokons as first animated."
+   },
    "eu": {
     "name": "Europe",
     "language": "English",
@@ -45,6 +45,18 @@
     "code_page": "cp437",
     "ships": true,
     "note": "Hundreds of collision lines and dozens of objects reworked, a few screens and foregrounds redrawn, and 25 frames a second."
+   },
+   "jp": {
+    "name": "Japan",
+    "language": "Japanese",
+    "title": "Abe a GoGo",
+    "executable": "SLPS_011.18",
+    "discs": [
+     {"redump": 18872, "bytes": 751663920, "sha1": "f3d6545fabea9cd6f984d86814c2d31b414ee4e7"}
+    ],
+    "code_page": "own",
+    "ships": true,
+    "note": "Japanese text on the signs and screens and the hand prints on the stones redrawn, over Rev 2's levels."
    },
    "fr": {
     "name": "France",
@@ -93,18 +105,6 @@
     "code_page": "cp437",
     "ships": true,
     "note": "Spanish text on the signs and screens, over the levels as first pressed with some of Rev 1's revisions, and 25 frames a second."
-   },
-   "jp": {
-    "name": "Japan",
-    "language": "Japanese",
-    "title": "Abe a GoGo",
-    "executable": "SLPS_011.18",
-    "discs": [
-     {"redump": 18872, "bytes": 751663920, "sha1": "f3d6545fabea9cd6f984d86814c2d31b414ee4e7"}
-    ],
-    "code_page": "own",
-    "ships": true,
-    "note": "Japanese text on the signs and screens and the hand prints on the stones redrawn, over Rev 2's levels."
    }
   }
  },
@@ -132,6 +132,19 @@
     "code_page": "cp437",
     "ships": true,
     "note": "The same levels as the North American release, at 25 frames a second. The gas countdowns still count frames by 30, so one of 7200 frames shows 240 seconds and lasts 288."
+   },
+   "jp": {
+    "name": "Japan",
+    "language": "Japanese",
+    "title": "Abe '99",
+    "executable": "SLPS_020.95",
+    "discs": [
+     {"redump": 36825, "bytes": 615146784, "sha1": "e10dd0a4d3a0d8bb5879fa4853913fc2fbf1288d"},
+     {"redump": 36826, "bytes": 483084336, "sha1": "ba43ceb1a9bf45bc307e07526b48fac2681c1bee"}
+    ],
+    "code_page": "own",
+    "ships": true,
+    "note": "Japanese text on the signs and screens, and fixes the North American release lacks: floors added in Necrum Mines, gas countdowns in the Brewery's return, and doors and switches reworked in FeeCo and Bonewerkz."
    },
    "fr": {
     "name": "France",
@@ -184,19 +197,6 @@
     "code_page": "cp437",
     "ships": true,
     "note": "Spanish text on the signs and screens, over the North American release's levels, at 25 frames a second. The gas countdowns still count frames by 30, so one of 7200 frames shows 240 seconds and lasts 288."
-   },
-   "jp": {
-    "name": "Japan",
-    "language": "Japanese",
-    "title": "Abe '99",
-    "executable": "SLPS_020.95",
-    "discs": [
-     {"redump": 36825, "bytes": 615146784, "sha1": "e10dd0a4d3a0d8bb5879fa4853913fc2fbf1288d"},
-     {"redump": 36826, "bytes": 483084336, "sha1": "ba43ceb1a9bf45bc307e07526b48fac2681c1bee"}
-    ],
-    "code_page": "own",
-    "ships": true,
-    "note": "Japanese text on the signs and screens, and fixes the North American release lacks: floors added in Necrum Mines, gas countdowns in the Brewery's return, and doors and switches reworked in FeeCo and Bonewerkz."
    }
   }
  }
