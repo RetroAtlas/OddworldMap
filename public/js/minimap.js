@@ -4,7 +4,7 @@
 import { $, cv } from "./dom.js";
 import { state } from "./state.js";
 import { centerCam } from "./model.js";
-import { draw, minimapScale } from "./render.js";
+import { draw, minimapScale, settleView } from "./render.js";
 import { scheduleHash } from "./navigate.js";
 
 const mm = $("minimap");
@@ -16,6 +16,7 @@ function scrubTo(e) {
   if (mm.hidden || !r.width) return;
   const s = minimapScale(state.path);
   const v = { x: (e.clientX - r.left) / s, y: (e.clientY - r.top) / s, z: state.cam.z };
+  settleView();
   Object.assign(state.cam, centerCam(v, cv.clientWidth, cv.clientHeight));
   draw();
   scheduleHash(false);

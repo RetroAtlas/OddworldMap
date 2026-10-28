@@ -43,6 +43,7 @@ import {
   setCarried,
   setPatrol,
   setWireFocus,
+  settleView,
 } from "./render.js";
 import {
   camCenter,
@@ -591,6 +592,7 @@ window.addEventListener("keydown", (e) => {
     state.cam.y += (pan[1] * KEY_PAN_PX) / state.cam.z;
   } else if (e.key === "+" || e.key === "=" || e.key === "-" || e.key === "_") {
     const f = e.key === "-" || e.key === "_" ? 1 / KEY_ZOOM_STEP : KEY_ZOOM_STEP;
+    settleView();
     Object.assign(state.cam, zoomAt(state.cam, f, cv.clientWidth / 2, cv.clientHeight / 2));
   } else return;
   e.preventDefault();

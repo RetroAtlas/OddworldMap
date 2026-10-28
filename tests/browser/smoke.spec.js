@@ -47,6 +47,53 @@ test("a view permalink lands where it points and reproduces itself", async ({ pa
   expect(errors).toEqual([]);
 });
 
+// the map's box takes a new size a frame before its observer reports it, as it
+// does while the sidebar slides: whatever moves the view in between keeps it on
+// its spot
+test("a view placed while the map's box resizes holds its spot", async ({ page }) => {
+  const errors = trackErrors(page);
+  await page.goto(`/${TRIP_HASH}`);
+  await settle(page, { game: "AO", level: "R1", path: 15 });
+  const view = await page.evaluate(async () => {
+    const u = (m) => new URL("js/" + m, location.href).href;
+    const nav = await import(u("navigate.js"));
+    const main = document.getElementById("main");
+    const frame = () => new Promise(requestAnimationFrame);
+    main.style.flex = `0 0 ${main.clientWidth - 40}px`;
+    await nav.applyHash();
+    await frame();
+    await frame();
+    return nav.viewHash();
+  });
+  expect(view).toBe(TRIP_HASH);
+  expect(errors).toEqual([]);
+});
+
+test("Gaps between screens flipped while the map's box resizes keeps the view's middle", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await page.goto(`/${TRIP_HASH}`);
+  await settle(page, { game: "AO", level: "R1", path: 15 });
+  const view = await page.evaluate(async () => {
+    const u = (m) => new URL("js/" + m, location.href).href;
+    const st = await import(u("state.js"));
+    const nav = await import(u("navigate.js"));
+    const main = document.getElementById("main");
+    const frame = () => new Promise(requestAnimationFrame);
+    main.style.flex = `0 0 ${main.clientWidth - 40}px`;
+    nav.setPitch(!st.isSpaced());
+    await frame();
+    await frame();
+    nav.setPitch(!st.isSpaced());
+    await frame();
+    await frame();
+    return nav.viewHash();
+  });
+  expect(view).toBe(TRIP_HASH);
+  expect(errors).toEqual([]);
+});
+
 test("a link into a level's later path fetches none of the level's first path's screens", async ({
   page,
 }) => {

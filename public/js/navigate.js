@@ -20,7 +20,7 @@ import {
   wX,
   wY,
 } from "./state.js";
-import { draw, flashAt } from "./render.js";
+import { draw, flashAt, settleView } from "./render.js";
 import {
   camCell,
   camCenter,
@@ -326,6 +326,7 @@ function fitView() {
       requestAnimationFrame(attempt);
       return;
     }
+    settleView();
     const [ox, oy] = cellOrigin();
     const w = state.path.w * CELL_W,
       h = state.path.h * CELL_H;
@@ -351,6 +352,7 @@ function centerOn(fx, fy, z) {
       requestAnimationFrame(attempt);
       return;
     }
+    settleView();
     Object.assign(
       state.cam,
       centerCam({ x: fx, y: fy, z: z ?? focusZoom(cw, ch, LAYOUT) }, cw, ch),
@@ -470,6 +472,7 @@ let applyingHash = false,
 // halves, which is why they are read out and put back here rather than inside
 // setSpacing.
 export function setPitch(on) {
+  settleView();
   const cw = cv.clientWidth,
     ch = cv.clientHeight;
   const world = (p) => ({ x: wX(p.x), y: wY(p.y) });

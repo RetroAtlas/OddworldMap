@@ -1,6 +1,13 @@
 {
  "entries": [
   {
+   "date": "2026-10-28",
+   "tag": "fixed",
+   "tiny": true,
+   "title": "A link lands on its spot as the sidebar slides in",
+   "detail": "A link opened just as the sidebar slid into view could land a little beside the spot it names. The map then wrote that drifted spot back into the address bar, so sharing the link again passed the drift on. It now takes its new size before placing the view, so a link lands exactly where it points."
+  },
+  {
    "date": "2026-10-27",
    "tag": "new",
    "title": "Every release of both games joins the map",

@@ -643,21 +643,27 @@ export function scheduleDraw() {
 }
 
 // the camera holds a corner, so a viewport that changes size would slide the view;
-// the middle is held instead, the spot a permalink names
+// the middle is held instead, the spot a permalink names. The observer reports a
+// size only after the frame's layout, so whatever reads or places the camera by
+// the canvas's size settles it at that size first, or the late report would move
+// it again
 let viewW = 0,
   viewH = 0;
 
-export function resize() {
+export function settleView() {
   const w = cv.clientWidth,
     h = cv.clientHeight;
-  if (w && h) {
-    if (viewW && (w !== viewW || h !== viewH))
-      Object.assign(state.cam, centerCam(camCenter(state.cam, viewW, viewH), w, h));
-    viewW = w;
-    viewH = h;
-  }
-  cv.width = w * devicePixelRatio;
-  cv.height = h * devicePixelRatio;
+  if (!w || !h) return;
+  if (viewW && (w !== viewW || h !== viewH))
+    Object.assign(state.cam, centerCam(camCenter(state.cam, viewW, viewH), w, h));
+  viewW = w;
+  viewH = h;
+}
+
+export function resize() {
+  settleView();
+  cv.width = cv.clientWidth * devicePixelRatio;
+  cv.height = cv.clientHeight * devicePixelRatio;
   draw();
 }
 window.addEventListener("resize", resize); // catches devicePixelRatio changes, which leave the map box untouched
