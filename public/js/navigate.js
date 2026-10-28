@@ -117,17 +117,18 @@ const carried = (id, code) => !!releaseIndex?.[id]?.releases.some((r) => r.code 
 
 // the releases the site carries for the game in hand, the base first, each
 // named for where it was sold, or by its full name where two were sold in one
-// place; shown only where there is a choice
+// place; shown only where there is a choice, folded under the one in hand
 function buildReleaseButtons() {
   const G = state.data;
   const entry = G && releaseIndex?.[G.id];
   const choices = entry ? [{ code: "", ...entry.base }, ...entry.releases] : [];
   const where = (r) => r.name.split(",")[0];
+  const label = (r) => (choices.some((o) => o !== r && where(o) === where(r)) ? r.name : where(r));
   releaseBtns.innerHTML = "";
-  releaseBtns.hidden = choices.length < 2;
+  $("releaseMenu").hidden = choices.length < 2;
   for (const r of choices) {
     const b = document.createElement("button");
-    b.textContent = choices.some((o) => o !== r && where(o) === where(r)) ? r.name : where(r);
+    b.textContent = label(r);
     b.dataset.key = r.code;
     b.title = [`${r.name}: ${r.title.replace(/^Oddworld:\s*/, "")}, in ${r.language}.`, r.note]
       .filter(Boolean)
@@ -136,6 +137,8 @@ function buildReleaseButtons() {
     releaseBtns.appendChild(b);
   }
   markOn(releaseBtns, releaseCode(G));
+  const chosen = choices.find((r) => r.code === releaseCode(G));
+  $("releaseName").textContent = chosen ? label(chosen) : "";
   $("releaseRow").hidden = !G?.release;
 }
 

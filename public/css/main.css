@@ -201,6 +201,20 @@ body.fullnames .btnrow button {
 body.fullnames #releaseBtns {
   flex-direction: row;
 }
+/* the fold's face names the release in hand, so the row can stay folded */
+#releaseMenu > summary {
+  padding: 2px 14px 4px;
+  font-size: 11px;
+  color: var(--dim);
+}
+#releaseMenu > summary::before {
+  margin-right: 6px;
+}
+#releaseName {
+  margin-left: 2px;
+  font-size: 12px;
+  color: var(--text);
+}
 /* a release is a choice within its game, so the game keeps the solid mark */
 #releaseBtns button.on {
   background: var(--panel2);
@@ -1934,6 +1948,7 @@ kbd {
     font-size: 10px;
   }
   .btnrow button,
+  #releaseMenu > summary,
   #toggles .checkrow,
   .filters .checkrow {
     padding-top: 6px;

@@ -19,6 +19,10 @@ const probe = (page) =>
         (b) => b.textContent + (b.classList.contains("on") ? "*" : ""),
       ),
       tip: document.querySelector("#releaseBtns button.on").title,
+      fold: [
+        document.querySelector("#releaseMenu").open,
+        document.querySelector("#releaseName").textContent,
+      ],
       cam: { ...state.cam },
       view: nav.viewHash(),
       regional: state.path.cams.filter((c) =>
@@ -53,9 +57,11 @@ test("a release link opens the release, and the row swaps releases in place", as
     "Japan*",
   ]);
   expect(jp.tip).toMatch(/^Japan: Abe a GoGo, in Japanese\. Japanese text on the signs/);
+  expect(jp.fold).toEqual([false, "Japan"]);
   expect(jp.view).toBe(`${VIEW}/jp`);
   expect(jp.regional).toBeGreaterThan(0);
 
+  await page.locator("#releaseMenu > summary").click();
   await page.locator("#releaseBtns button", { hasText: "Europe" }).click();
   await releaseIs(page, "eu");
   await expect(page).toHaveURL(new RegExp(`${VIEW}/eu$`));
@@ -72,6 +78,7 @@ test("a release link opens the release, and the row swaps releases in place", as
     "Spain",
     "Japan",
   ]);
+  expect(eu.fold).toEqual([true, "Europe"]);
   expect(eu.regional).toBe(0);
 
   await page.locator('#releaseBtns button[data-key=""]').click();
@@ -80,6 +87,7 @@ test("a release link opens the release, and the row swaps releases in place", as
   const us = await probe(page);
   expect(us.cam).toEqual(jp.cam);
   expect(us.tip).toBe("USA, Rev 2: Abe's Oddysee, in English.");
+  expect(us.fold).toEqual([true, "USA, Rev 2"]);
   expect(us.game).toBe("Oddworld: Abe's Oddysee");
 
   await page.goBack();
@@ -144,6 +152,7 @@ test("the mark is offered while a release is in hand, and its toggle takes it aw
     "aria-label",
     /Abe's Oddysee, Europe, .*changed in the Europe release/,
   );
+  await page.locator("#releaseMenu > summary").click();
   await page.locator('#releaseBtns button[data-key=""]').click();
   await releaseIs(page, null);
   await expect(row).toBeHidden();
@@ -183,6 +192,7 @@ test("an edit in a release keeps a store of its own, and survives a reload", asy
   expect(Object.keys(eu)).toEqual(["owm:edits:eu"]);
   expect(eu["owm:edits:eu"].AO["R1/15"].objects[key].rect[0]).toBe(door.x1 + 1);
 
+  await page.locator("#releaseMenu > summary").click();
   await page.locator('#releaseBtns button[data-key=""]').click();
   await releaseIs(page, null);
   const shipped = await page.evaluate(async (x1) => {

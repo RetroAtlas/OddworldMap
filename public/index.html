@@ -85,7 +85,10 @@
       <div id="searchResults"></div>
       <h2>Game</h2>
       <div class="btnrow" id="gameBtns"></div>
-      <div class="btnrow" id="releaseBtns" role="group" aria-label="Release" hidden></div>
+      <details id="releaseMenu" class="fold" hidden>
+        <summary>Release <span id="releaseName"></span></summary>
+        <div class="btnrow" id="releaseBtns" role="group" aria-label="Release"></div>
+      </details>
       <h2>Level</h2>
       <div class="btnrow" id="levelBtns"></div>
       <h2>Path</h2>
