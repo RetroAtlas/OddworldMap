@@ -468,6 +468,19 @@ class CommittedOverlays(unittest.TestCase):
             self.assertEqual(release.patch_rects(release.changed_blocks(px, bytes(drawn), w, h, None), w, h),
                              rects, name)
 
+    def test_a_family_on_a_sheet_of_its_own_carries_every_animation_the_base_draws_from_it(self):
+        """the viewer cuts an animation from whichever sheet holds its family, so
+        one the base gains in a family a release carries needs the release built
+        again"""
+        import json
+        site, files = self.overlays()
+        for f in files:
+            o = json.loads(f.read_text())
+            base = json.loads((site / f"sprites_{o['game'].lower()}.json").read_text())
+            own, sheets = set(o.get("sprites", {}).get("anims", {})), set(o.get("sheets", {}))
+            missing = [n for n, a in base["anims"].items() if a["frames"][0][0] in sheets and n not in own]
+            self.assertEqual(missing, [], f"{f.name} needs building again")
+
     def test_each_carries_the_characters_its_table_names_for_what_its_messages_reach(self):
         import json
         from oddmap.image import read_png
