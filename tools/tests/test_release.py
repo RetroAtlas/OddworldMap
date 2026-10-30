@@ -419,6 +419,29 @@ class CommittedOverlays(unittest.TestCase):
         for rel, name in zip(images, self.pooled(pixel_name, [site / rel for rel in images])):
             self.assertEqual(rel.rsplit(".", 2)[1], name, rel)
 
+    def test_every_image_is_named_for_the_entry_that_places_it(self):
+        """a patch moved by whole blocks still changes every block it covers, and a
+        file listed under another camera, layer, family or release is still named
+        for its pixels, so only its folder and name can show an entry out of step
+        with it"""
+        import json
+        from oddmap.games import GAMES
+        from oddmap.sprites import SHEETS_DIR
+        _site, files = self.overlays()
+        for f in files:
+            o = json.loads(f.read_text())
+            root = f"{GAMES[o['game']]['cams_dir']}/{o['code']}"
+            named = [(f"{root}/{SHEETS_DIR}/{family}", rel) for family, rel in o.get("sheets", {}).items()]
+            for key, p in o["paths"].items():
+                level = f"{root}/{key.split('/')[0]}"
+                for name, cam in p.get("cams", {}).items():
+                    cam = cam or {}
+                    named += [(f"{level}/{name}", cam["png"])] if "png" in cam else []
+                    named += [(f"{level}/{name}_{x}_{y}", rel) for x, y, rel in cam.get("patches", [])]
+                    named += [(f"{level}/{name}_fg{layer}", rel) for layer, rel in cam.get("masks", [])]
+            for where, rel in named:
+                self.assertEqual(rel.rsplit(".", 2)[0], where, rel)
+
     def cameras(self):
         """(game, camera name, its overlay entry, the base's camera) of every
         camera an overlay draws over one the base holds"""
