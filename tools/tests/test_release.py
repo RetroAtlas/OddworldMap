@@ -323,12 +323,50 @@ class HintFlyLetters(unittest.TestCase):
             self.chars({"hintfly": ["FoR"]})
 
 
+# the pixel checks' work, at module level so the pool's workers can import it
+def pixel_name(path):
+    """the name an image's pixels give it"""
+    from oddmap.image import read_png
+    from oddmap.sprites import sheet_name
+    return sheet_name(*read_png(path.read_bytes()))
+
+
+def cover(job):
+    """the rectangles a camera's own screen would take as patches over the base's,
+    and the one rectangle of the whole screen"""
+    from oddmap.image import read_png
+    floor, under, own = job
+    w, h, px = read_png(under.read_bytes())
+    return release.patch_cover(px, read_png(own.read_bytes())[2], w, h, floor), [(0, 0, w, h)]
+
+
+def patched(job):
+    """the rectangles of the blocks a camera's patches change, drawn over the
+    base's screen, and the patches' own"""
+    from oddmap.image import read_png
+    under, patches = job
+    w, h, px = read_png(under.read_bytes())
+    drawn, rects = bytearray(px), []
+    for x, y, path in patches:
+        pw, ph, patch = read_png(path.read_bytes())
+        rects.append((x, y, pw, ph))
+        for r in range(ph):
+            drawn[((y + r) * w + x) * 4:((y + r) * w + x + pw) * 4] = patch[r * pw * 4:(r + 1) * pw * 4]
+    return release.patch_rects(release.changed_blocks(px, bytes(drawn), w, h, None), w, h), rects
+
+
 class CommittedOverlays(unittest.TestCase):
     """every committed overlay still answers to the committed base"""
 
     def overlays(self):
         from oddmap.paths import SITE
         return SITE, sorted(SITE.glob("release_*.json"))
+
+    def pooled(self, work, jobs):
+        """work done over every job by a process pool of one worker a core, in order"""
+        from concurrent.futures import ProcessPoolExecutor
+        with ProcessPoolExecutor() as pool:
+            return list(pool.map(work, jobs, chunksize=4))
 
     def test_each_names_a_release_the_table_carries(self):
         import json
@@ -369,19 +407,17 @@ class CommittedOverlays(unittest.TestCase):
 
     def test_every_image_is_there_and_named_for_its_pixels(self):
         import json
-        from oddmap.image import read_png
-        from oddmap.sprites import sheet_name
         site, files = self.overlays()
+        images = []
         for f in files:
             o = json.loads(f.read_text())
             cams = [c for p in o["paths"].values() for c in p.get("cams", {}).values() if c]
-            images = [c["png"] for c in cams if "png" in c]
+            images += [c["png"] for c in cams if "png" in c]
             images += [m for c in cams for _x, _y, m in c.get("patches", [])]
             images += [m for c in cams for _layer, m in c.get("masks", [])]
             images += list(o.get("sheets", {}).values())
-            for rel in images:
-                w, h, rgba = read_png((site / rel).read_bytes())
-                self.assertEqual(rel.rsplit(".", 2)[1], sheet_name(w, h, rgba), rel)
+        for rel, name in zip(images, self.pooled(pixel_name, [site / rel for rel in images])):
+            self.assertEqual(rel.rsplit(".", 2)[1], name, rel)
 
     def cameras(self):
         """(game, camera name, its overlay entry, the base's camera) of every
@@ -443,30 +479,25 @@ class CommittedOverlays(unittest.TestCase):
                                      and r[1] + r[3] <= o[1] + o[3] for o in rects), f"{name} {r}")
 
     def test_a_camera_the_base_holds_ships_whole_only_where_its_patches_would_cover_it(self):
-        from oddmap.image import read_png
         site, _files = self.overlays()
+        names, jobs = [], []
         for game, name, cam, under in self.cameras():
             if "png" in cam:
-                w, h, px = read_png((site / under["png"]).read_bytes())
-                own = read_png((site / cam["png"]).read_bytes())[2]
-                self.assertEqual(release.patch_cover(px, own, w, h, self.floor(game)), [(0, 0, w, h)], name)
+                names.append(name)
+                jobs.append((self.floor(game), site / under["png"], site / cam["png"]))
+        for name, (rects, screen) in zip(names, self.pooled(cover, jobs)):
+            self.assertEqual(rects, screen, name)
 
     def test_without_a_gate_the_patches_are_the_rectangles_of_the_blocks_they_change(self):
         """drawn over the base's screen, none sits off its change or reaches past it"""
-        from oddmap.image import read_png
         site, _files = self.overlays()
+        names, jobs = [], []
         for game, name, cam, under in self.cameras():
-            if self.floor(game) is not None or not cam.get("patches"):
-                continue
-            w, h, px = read_png((site / under["png"]).read_bytes())
-            drawn, rects = bytearray(px), []
-            for x, y, rel in cam["patches"]:
-                pw, ph, patch = read_png((site / rel).read_bytes())
-                rects.append((x, y, pw, ph))
-                for r in range(ph):
-                    drawn[((y + r) * w + x) * 4:((y + r) * w + x + pw) * 4] = patch[r * pw * 4:(r + 1) * pw * 4]
-            self.assertEqual(release.patch_rects(release.changed_blocks(px, bytes(drawn), w, h, None), w, h),
-                             rects, name)
+            if self.floor(game) is None and cam.get("patches"):
+                names.append(name)
+                jobs.append((site / under["png"], [(x, y, site / rel) for x, y, rel in cam["patches"]]))
+        for name, (changed, rects) in zip(names, self.pooled(patched, jobs)):
+            self.assertEqual(changed, rects, name)
 
     def test_a_family_on_a_sheet_of_its_own_carries_every_animation_the_base_draws_from_it(self):
         """the viewer cuts an animation from whichever sheet holds its family, so
