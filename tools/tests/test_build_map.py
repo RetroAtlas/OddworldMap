@@ -13,6 +13,7 @@ import io
 import json
 import math
 import os
+import random
 import re
 import shutil
 import struct
@@ -303,13 +304,23 @@ class ReadPng(unittest.TestCase):
     """every shape oxipng reduces write_png's RGBA8 to reads back as that RGBA8"""
 
     def test_each_colour_type_and_depth_decodes(self):
+        """each colour type at each depth it takes, a transparency key clearing
+        exactly the samples or pixels equal to it"""
         R, G, B, W, T = b"\xff\0\0\xff", b"\0\xff\0\xff", b"\0\0\xff\xff", b"\xff\xff\xff\xff", bytes(4)
+
+        def grey(v, alpha=255):
+            return bytes((v, v, v, alpha))
         cases = [
             (png(2, 1, 8, 3, [b"\0\0\1"], plte=b"\xff\0\0\0\0\0", trns=b"\xff\0"), R + T),
             (png(3, 1, 2, 3, [b"\0" + bytes([0b00011000])], plte=b"\xff\0\0\0\xff\0\0\0\xff"), R + G + B),
             (png(9, 1, 1, 0, [b"\0\xaa\x80"], trns=b"\0\0"), (W + T) * 4 + W),
+            (png(5, 1, 2, 0, [b"\0" + bytes([0b00011011, 0b10000000])]), grey(0) + grey(85) + grey(170) + W + grey(170)),
+            (png(3, 1, 4, 0, [b"\0\x17\xf0"]), grey(17) + grey(119) + W),
+            (png(4, 1, 4, 0, [b"\0\x67\x87"], trns=b"\0\x07"), grey(102) + grey(119, 0) + grey(136) + grey(119, 0)),
             (png(2, 1, 8, 0, [b"\0\0\xff"]), b"\0\0\0\xff" + W),
             (png(2, 1, 8, 2, [b"\0\xff\0\0\0\0\xff"], trns=b"\0\xff\0\0\0\0"), b"\xff\0\0\0" + B),
+            (png(3, 1, 8, 2, [bytes([0, 1, 2, 3, 4, 5, 6, 2, 3, 4])], trns=bytes([0, 2, 0, 3, 0, 4])),
+             bytes([1, 2, 3, 255, 4, 5, 6, 255, 2, 3, 4, 0])),
             (png(1, 1, 8, 4, [b"\0\x80\x40"]), b"\x80\x80\x80\x40"),
             (png(1, 1, 8, 6, [b"\0" + G]), G),
         ]
@@ -318,22 +329,38 @@ class ReadPng(unittest.TestCase):
             self.assertEqual((w * h * 4, got), (len(rgba), rgba), data[16:29].hex())
 
     def test_each_filter_is_undone(self):
-        rows = [bytes((y * 37 + i * 53) & 255 for i in range(8)) for y in range(5)]  # two RGBA pixels a row
-
+        """one filter type a row, applied as the spec defines it, at each pixel size
+        a filter steps over, a packed depth among them, on rows wide enough that
+        many a byte's sum wraps"""
         def paeth(a, b, c):
             p = a + b - c
             pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
             return a if pa <= pb and pa <= pc else b if pb <= pc else c
 
-        def predicted(f, raw, prior, i):
-            a, b, c = (raw[i - 4] if i >= 4 else 0), prior[i], (prior[i - 4] if i >= 4 else 0)
+        def predicted(f, raw, prior, i, step):
+            a, b, c = (raw[i - step] if i >= step else 0), prior[i], (prior[i - step] if i >= step else 0)
             return (0, a, b, (a + b) // 2, paeth(a, b, c))[f]
 
-        prior, lines = bytes(8), []
-        for f, raw in enumerate(rows):  # one filter type a row, applied as the spec defines it
-            lines.append(bytes([f]) + bytes((raw[i] - predicted(f, raw, prior, i)) & 255 for i in range(8)))
-            prior = raw
-        self.assertEqual(image.read_png(png(2, 5, 8, 6, lines)), (2, 5, b"".join(rows)))
+        w, rng = 37, random.Random(0)
+        filters = (4, 3, 2, 1, 0, 1, 2, 3, 4)  # Paeth first, over the zero row above the image
+        colours = [bytes((i * 16, 255 - i * 16, i * 7, i * 30 if i < 8 else 255)) for i in range(16)]
+        plte, trns = b"".join(c[:3] for c in colours), bytes(c[3] for c in colours[:8])
+        shapes = [  # colour type, depth, the bytes a filter steps by, a row's bytes, the RGBA they read as
+            (0, 8, 1, w, lambda raw: b"".join(bytes((g, g, g, 255)) for g in raw)),
+            (4, 8, 2, 2 * w, lambda raw: b"".join(bytes((g, g, g, a)) for g, a in zip(raw[::2], raw[1::2]))),
+            (2, 8, 3, 3 * w, lambda raw: b"".join(raw[i:i + 3] + b"\xff" for i in range(0, len(raw), 3))),
+            (6, 8, 4, 4 * w, lambda raw: raw),
+            (3, 4, 1, (w + 1) // 2, lambda raw: b"".join(colours[i] for v in raw for i in (v >> 4, v & 15))[:4 * w]),
+        ]
+        for ctype, depth, step, stride, rgba in shapes:
+            rows = [bytes(rng.randrange(256) for _ in range(stride)) for _ in filters]
+            prior, lines = bytes(stride), []
+            for f, raw in zip(filters, rows):
+                lines.append(bytes([f]) + bytes((raw[i] - predicted(f, raw, prior, i, step)) & 255 for i in range(stride)))
+                prior = raw
+            palette = (plte, trns) if ctype == 3 else (None, None)
+            self.assertEqual(image.read_png(png(w, len(rows), depth, ctype, lines, *palette)),
+                             (w, len(rows), b"".join(map(rgba, rows))), f"colour type {ctype}")
 
     def test_a_shape_write_png_never_emits_is_refused(self):
         with self.assertRaisesRegex(ValueError, "depth 16"):

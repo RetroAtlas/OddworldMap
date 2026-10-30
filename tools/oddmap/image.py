@@ -60,6 +60,43 @@ def write_png(path, w, h, rgba, keep_alpha=False):
     # lossless recompression (~30% smaller), forced so a file it cannot shrink is still its own bytes
     subprocess.run([OXIPNG, "-o", "2", "--strip", "safe", "--force", "-q", str(path)], check=True)
 
+def _unfilter(f, line, prev, bpp, low, high):
+    """a scanline with its filter undone, `prev` the row above it undone. Sub and
+    Up add whole rows held as integers, each byte's low seven bits summed and its
+    top bit XORed in, so no carry crosses a byte; Average and Paeth predict a
+    byte from the one just undone, so they walk a lane at a time"""
+    if f == 0:
+        return line
+    n = len(line)
+
+    def add(x, y):
+        return ((x & low) + (y & low)) ^ ((x ^ y) & high)
+    if f == 1:
+        x, k = int.from_bytes(line, "little"), bpp
+        while k < n:  # each lane's running sum, over a span that doubles
+            x, k = add(x, x << 8 * k), k * 2
+        return x.to_bytes(n, "little")
+    if f == 2:
+        return add(int.from_bytes(line, "little"), int.from_bytes(prev, "little")).to_bytes(n, "little")
+    if f not in (3, 4):
+        raise ValueError(f"filter {f}")
+    out = bytearray(n)
+    for k in range(bpp):
+        lane = []
+        push, a, c = lane.append, 0, 0
+        if f == 3:
+            for x, b in zip(line[k::bpp], prev[k::bpp]):
+                a = (x + ((a + b) >> 1)) & 255
+                push(a)
+        else:
+            for x, b in zip(line[k::bpp], prev[k::bpp]):
+                pa, pb, pc = abs(b - c), abs(a - c), abs(a + b - c - c)
+                a = (x + (a if pa <= pb and pa <= pc else b if pb <= pc else c)) & 255
+                push(a)
+                c = b
+        out[k::bpp] = bytes(lane)
+    return bytes(out)
+
 def read_png(data):
     """(w, h, RGBA8) of a PNG write_png emitted: any colour type oxipng reduces
     RGBA8 to, at 8 bits a sample or fewer, never interlaced"""
@@ -85,52 +122,49 @@ def read_png(data):
     stride = (w * channels * depth + 7) // 8
     bpp = max(1, channels * depth // 8)
     raw = zlib.decompress(b"".join(idat))
-    out, prev, top = bytearray(), bytearray(stride), (1 << depth) - 1
+    low, high = int.from_bytes(b"\x7f" * stride, "little"), int.from_bytes(b"\x80" * stride, "little")
+    rows, prev, top = [], bytes(stride), (1 << depth) - 1
     for y in range(h):
         at = y * (stride + 1)
-        f, line = raw[at], bytearray(raw[at+1:at+1+stride])
-        if f == 1:
-            for i in range(bpp, stride):
-                line[i] = (line[i] + line[i-bpp]) & 255
-        elif f == 2:
-            for i in range(stride):
-                line[i] = (line[i] + prev[i]) & 255
-        elif f == 3:
-            for i in range(stride):
-                line[i] = (line[i] + ((line[i-bpp] if i >= bpp else 0) + prev[i]) // 2) & 255
-        elif f == 4:
-            for i in range(stride):
-                a, b, c = line[i-bpp] if i >= bpp else 0, prev[i], prev[i-bpp] if i >= bpp else 0
-                pa, pb, pc = abs(b - c), abs(a - c), abs(a + b - c - c)
-                line[i] = (line[i] + (a if pa <= pb and pa <= pc else b if pb <= pc else c)) & 255
-        elif f:
-            raise ValueError(f"filter {f}")
-        prev = line
-        if depth < 8:
-            samples = [(byte >> (8 - depth * (k + 1))) & top for byte in line for k in range(8 // depth)]
-            samples = samples[:w * channels]
-        else:
-            samples = line
-        if ctype == 3:
-            for i in samples:
-                out += plte[i*3:i*3+3]
-                out.append(trns[i] if trns and i < len(trns) else 255)
-        elif ctype == 0:
-            key = struct.unpack(">H", trns)[0] if trns else None
-            for g in samples:
-                v = g * 255 // top
-                out += bytes((v, v, v, 0 if g == key else 255))
-        elif ctype == 2:
-            key = struct.unpack(">HHH", trns) if trns else None
-            for i in range(0, len(samples), 3):
-                px = tuple(samples[i:i+3])
-                out += bytes(px) + (b"\0" if px == key else b"\xff")
-        elif ctype == 4:
-            for i in range(0, len(samples), 2):
-                g, a = samples[i:i+2]
-                out += bytes((g, g, g, a))
-        else:
-            out += samples
+        prev = _unfilter(raw[at], raw[at+1:at+1+stride], prev, bpp, low, high)
+        rows.append(prev)
+    if depth < 8:
+        per = 8 // depth
+        cuts = [bytes((v >> (8 - depth * (k + 1))) & top for v in range(256)) for k in range(per)]
+        for y, line in enumerate(rows):
+            unpacked = bytearray(stride * per)
+            for k, cut in enumerate(cuts):
+                unpacked[k::per] = line.translate(cut)
+            rows[y] = unpacked[:w * channels]
+    samples, n = b"".join(rows), w * h
+    if ctype == 6:
+        return w, h, samples
+    out = bytearray(n * 4)
+    if ctype == 3:
+        pal = plte[:768].ljust(768, b"\0")
+        for k in range(3):
+            out[k::4] = samples.translate(pal[k::3])
+        out[3::4] = samples.translate(bytes(trns[i] if trns and i < len(trns) else 255 for i in range(256)))
+    elif ctype == 0:
+        key = struct.unpack(">H", trns)[0] if trns else None
+        grey = bytes(g * 255 // top for g in range(top + 1)).ljust(256, b"\0")
+        out[0::4] = out[1::4] = out[2::4] = samples.translate(grey)
+        out[3::4] = samples.translate(bytes(0 if g == key else 255 for g in range(256)))
+    elif ctype == 2:
+        for k in range(3):
+            out[k::4] = samples[k::3]
+        out[3::4] = b"\xff" * n
+        key = struct.unpack(">HHH", trns) if trns else ()
+        if key and max(key) < 256:
+            key = bytes(key)
+            at = samples.find(key)
+            while at >= 0:
+                if at % 3 == 0:
+                    out[at // 3 * 4 + 3] = 0
+                at = samples.find(key, at + 1)
+    else:
+        out[0::4] = out[1::4] = out[2::4] = samples[0::2]
+        out[3::4] = samples[1::2]
     return w, h, bytes(out)
 
 def reencode_png(src, dst):
