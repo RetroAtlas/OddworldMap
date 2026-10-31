@@ -224,7 +224,8 @@ class Profile(unittest.TestCase):
         profile = Path("/p")
         for system in ("Darwin", "Linux"):
             env = visit.profile_env(system, profile)
-            self.assertEqual(visit.data_root(system, env, profile).parents[-2], profile)
+            root = visit.data_root(system, env, profile)
+            self.assertEqual(root.parents[len(root.parents) - 2], profile)
         self.assertIsNone(visit.profile_env("Windows", profile))
         self.assertEqual(visit.program_path(Path("/A/DuckStation.app")), Path("/A/DuckStation.app/Contents/MacOS/DuckStation"))
         self.assertEqual(visit.program_path(Path("/b/duckstation-qt")), Path("/b/duckstation-qt"))
