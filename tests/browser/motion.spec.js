@@ -1185,26 +1185,34 @@ test.describe("Objects as themselves", () => {
       await page.goto(`/?embed=1${FAR}`);
       await screensIn(page);
       expect(asked).toEqual({ sheets: 0, masks: 0 });
-      // the export's own paint, before a live one can make the place shown
+      // no live paint till the read, as in a hidden tab: an image is complete before its load event
       const exported = await page.evaluate(async (s) => {
         const u = (m) => new URL("js/" + m, location.href).href;
         const st = await import(u("state.js"));
         const render = await import(u("render.js"));
         const motion = await import(u("motion.js"));
-        await render.preloadPath(st.state.path);
-        const ready = render.artworkReady(st.state.path);
-        const oc = document.createElement("canvas");
-        oc.width = 640;
-        oc.height = 480;
-        render.paint(oc.getContext("2d"), { ...st.state.cam }, 640, 480, 1, false);
-        const t = st.state.path.tlvs.find(
-          (o) => o.name === "Slig" && o.x1 === s.x1 && o.y1 === s.y1,
-        );
-        return {
-          ready,
-          painted: render.hitBoxes(t, st.LAYOUT).length > 1,
-          running: motion.motionRunning(),
-        };
+        const frame = window.requestAnimationFrame;
+        const held = [];
+        window.requestAnimationFrame = (cb) => held.push(cb);
+        try {
+          await render.preloadPath(st.state.path);
+          const ready = render.artworkReady(st.state.path);
+          const oc = document.createElement("canvas");
+          oc.width = 640;
+          oc.height = 480;
+          render.paint(oc.getContext("2d"), { ...st.state.cam }, 640, 480, 1, false);
+          const t = st.state.path.tlvs.find(
+            (o) => o.name === "Slig" && o.x1 === s.x1 && o.y1 === s.y1,
+          );
+          return {
+            ready,
+            painted: render.hitBoxes(t, st.LAYOUT).length > 1,
+            running: motion.motionRunning(),
+          };
+        } finally {
+          window.requestAnimationFrame = frame;
+          for (const cb of held) frame(cb);
+        }
       }, SLIG);
       expect(exported).toEqual({ ready: true, painted: true, running: false });
       expect(asked.sheets).toBeGreaterThan(0);
