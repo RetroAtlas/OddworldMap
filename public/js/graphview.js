@@ -25,7 +25,7 @@ const view = $("graphView"),
 let fitted = false, // scaled to the window rather than drawn at its own size
   drawn = null, // the dataset the diagram on screen was built from
   laid = null, // its geometry, kept for the fit
-  opener = null; // where the keyboard came from
+  openedBy = null; // where the keyboard came from
 
 export function toggleGraph(on) {
   const want = on ?? !state.graph;
@@ -201,18 +201,18 @@ window.addEventListener("graph-changed", () => {
   // hiding a subtree holding the focus drops it to <body>, and the next Tab
   // restarts at the top of the page
   const held = view.contains(document.activeElement);
-  const back = [opener, openBtn, menuBtn].find(reachable);
+  const back = [openedBy, openBtn, menuBtn].find(reachable);
   view.hidden = !state.graph;
   cv.setAttribute("aria-hidden", String(state.graph));
   document.body.classList.toggle("graph", state.graph);
   openBtn.setAttribute("aria-expanded", String(state.graph));
   openBtn.classList.toggle("on", state.graph);
   if (state.graph) {
-    opener = document.activeElement;
+    openedBy = document.activeElement;
     refresh(true);
     return;
   }
-  opener = null;
+  openedBy = null;
   hideAnchorTip(); // a tap on a node shows one and then takes the node away
   if (held) back?.focus();
 });

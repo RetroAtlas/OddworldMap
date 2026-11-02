@@ -54,7 +54,7 @@ const btn = $("editBtn"),
 
 let armedFor = null; // the game whose level map the mode holds
 let arming = false;
-let opener = null; // where focus returns when a panel holding it closes
+let openedBy = null; // where focus returns when a panel holding it closes
 let selectedAt = null; // the place the selection is on
 let view = "form"; // the form over the selection, or the picker of types to add
 
@@ -108,8 +108,8 @@ function close() {
   selectedAt = null;
   view = "form";
   scheduleDraw();
-  if (held && opener?.isConnected && opener.offsetParent) opener.focus();
-  opener = null;
+  if (held && openedBy?.isConnected && openedBy.offsetParent) openedBy.focus();
+  openedBy = null;
 }
 
 // the object to edit, or null to put the panel away; a keyboard open moves the
@@ -126,9 +126,9 @@ export function selectObject(t, { focus = false } = {}) {
   panel.hidden = false;
   window.dispatchEvent(new CustomEvent("float-opened", { detail: { id: "editPanel" } }));
   if (focus) {
-    if (!panel.contains(document.activeElement)) opener = document.activeElement;
+    if (!panel.contains(document.activeElement)) openedBy = document.activeElement;
     panel.focus();
-  } else opener = null;
+  } else openedBy = null;
   scheduleDraw();
 }
 
@@ -499,7 +499,7 @@ export function openAddPicker() {
   if (!state.edit || !state.path) return;
   view = "picker";
   selectedAt = here();
-  if (!panel.contains(document.activeElement)) opener = document.activeElement;
+  if (!panel.contains(document.activeElement)) openedBy = document.activeElement;
   renderPicker("");
   panel.hidden = false;
   window.dispatchEvent(new CustomEvent("float-opened", { detail: { id: "editPanel" } }));

@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
+import { Linter } from "eslint";
 
 // what may stand between `import` and `from`: anything but a semicolon or a
 // quote, and a comment whole, whatever it holds
@@ -126,4 +127,23 @@ test("model.js never reaches state.js", () => {
   const trail = [];
   for (let f = from.has("state.js") ? "state.js" : null; f; f = from.get(f)) trail.unshift(f);
   assert.deepEqual(trail, [], `model.js reaches state.js: ${trail.join(" -> ")}`);
+});
+
+// the Wayback Machine declares these above the first line of every module it serves
+const WAYBACK = ["window", "self", "document", "location", "top", "parent", "frames", "opener"];
+
+test("every module parses as the Wayback Machine serves it", () => {
+  const dir = new URL("../../public/js/", import.meta.url);
+  const above = WAYBACK.map((name) => `var ${name};`).join(" ");
+  const linter = new Linter();
+  const errors = readdirSync(dir)
+    .filter((f) => f.endsWith(".js"))
+    .flatMap((f) =>
+      linter
+        .verify(above + readFileSync(new URL(f, dir), "utf8"), {
+          languageOptions: { ecmaVersion: "latest", sourceType: "module" },
+        })
+        .map((e) => `${f}:${e.line}: ${e.message}`),
+    );
+  assert.deepEqual(errors, []);
 });

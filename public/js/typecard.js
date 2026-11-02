@@ -22,7 +22,7 @@ const overlay = $("typeCardOverlay"),
 
 const GAME_SHORT = { AO: "Oddysee", AE: "Exoddus" };
 
-let opener = null, // where focus returns on close
+let openedBy = null, // where focus returns on close
   shown = null; // the type on the card, for a re-render
 
 // a game's union of field names for a type, from the data itself
@@ -132,7 +132,7 @@ function render(name) {
 
 function open(name) {
   if (!state.data) return;
-  opener = document.activeElement;
+  openedBy = document.activeElement;
   shown = name;
   render(name);
   openDialog(overlay, close);
@@ -144,8 +144,8 @@ function close() {
   shown = null;
   closeDialog(overlay);
   // the opener may be gone or hidden by now (its surface re-rendered or closed)
-  if (opener?.isConnected && opener.offsetParent) opener.focus();
-  opener = null;
+  if (openedBy?.isConnected && openedBy.offsetParent) openedBy.focus();
+  openedBy = null;
 }
 
 window.addEventListener("typecard-open", (e) => open(e.detail.type));

@@ -24,7 +24,7 @@ const panel = $("camPanel"),
 let listedAt = null; // the place the open panel was built from
 const here = () => state.path && `${state.data.id}/${state.lvl.short}/${state.path.id}`;
 let lastOpen = null; // args of the current open, so a settings change can rebuild it
-let opener = null; // where focus returns when a panel holding it closes
+let openedBy = null; // where focus returns when a panel holding it closes
 
 function closeCamPanel() {
   // read before the hide: hiding a subtree holding the focus drops it to <body>
@@ -34,14 +34,14 @@ function closeCamPanel() {
   lastOpen = null;
   setHighlight(null);
   // the opener may be gone or hidden by now (its surface re-rendered or closed)
-  if (held && opener?.isConnected && opener.offsetParent) opener.focus();
-  opener = null;
+  if (held && openedBy?.isConnected && openedBy.offsetParent) openedBy.focus();
+  openedBy = null;
 }
 
 // the panel is named by its own title, so focus landing on it says which screen
 // and how much is on it before the rows do
 export function focusCamPanel() {
-  if (!panel.contains(document.activeElement)) opener = document.activeElement;
+  if (!panel.contains(document.activeElement)) openedBy = document.activeElement;
   panel.focus();
 }
 
@@ -59,7 +59,7 @@ export function openCamPanel(x, y, focus = null) {
     closeCamPanel();
     return;
   }
-  opener = null; // a pointer brought no focus with it
+  openedBy = null; // a pointer brought no focus with it
   list(cam, focus);
 }
 
