@@ -164,11 +164,6 @@ export function toggleShow(key) {
   draw();
 }
 
-// the key badge on a toggle's row lights while its shortcut is held
-export function markKeyHeld(key, held) {
-  showUI.get(key)?.closest("label").querySelector("kbd")?.classList.toggle("held", held);
-}
-
 $("tReset").onclick = () => {
   for (const [key, cb] of showUI) {
     cb.checked = cb.defaultChecked; // the HTML checked attribute is the source of the defaults

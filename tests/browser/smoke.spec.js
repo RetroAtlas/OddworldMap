@@ -250,6 +250,38 @@ test("a switch clicked leaves the keys to the map, and a text field keeps its ow
   expect(errors).toEqual([]);
 });
 
+test("a toggle's key lights its cap until the key is let go, though Shift, Cmd or a lost focus came between", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await page.goto(`/${TRIP_HASH}`);
+  await settle(page, { game: "AO", level: "R1", path: 15 });
+  const cap = page.locator("label:has(#tGrid) kbd");
+  const lit = () => cap.evaluate((k) => k.classList.contains("held"));
+  const hold = async () => {
+    await page.keyboard.down("KeyG");
+    expect(await lit()).toBe(true);
+  };
+  await hold();
+  await page.keyboard.up("KeyG");
+  expect(await lit()).toBe(false);
+  await hold();
+  await page.keyboard.down("Shift");
+  await page.keyboard.up("KeyG");
+  await page.keyboard.up("Shift");
+  expect(await lit()).toBe(false);
+  await hold();
+  await page.keyboard.down("Meta");
+  await page.keyboard.up("Meta");
+  expect(await lit()).toBe(false);
+  await page.keyboard.up("KeyG");
+  await hold();
+  await page.evaluate(() => dispatchEvent(new Event("blur")));
+  expect(await lit()).toBe(false);
+  await page.keyboard.up("KeyG");
+  expect(errors).toEqual([]);
+});
+
 test("a settings toggle survives a reload", async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto("/");

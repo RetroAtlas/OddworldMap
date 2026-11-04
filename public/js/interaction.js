@@ -73,7 +73,8 @@ import {
 } from "./navigate.js";
 import { typeSummary } from "./typeinfo.js";
 import { DARK_NOTE, objectMessages } from "./messages.js";
-import { markKeyHeld, toggleShow } from "./sidebar.js";
+import { toggleShow } from "./sidebar.js";
+import { lightCap } from "./keycap.js";
 import { getSettings, fieldPrefsFor } from "./settings.js";
 import { focusCamPanel, openCamPanel, openCamPanelNear } from "./campanel.js";
 import { togglePlace } from "./place.js";
@@ -511,14 +512,6 @@ const SHOW_KEY = {
   m: "ruler",
   r: "route",
 };
-window.addEventListener("keyup", (e) => {
-  const show = SHOW_KEY[e.key];
-  if (show) markKeyHeld(show, false);
-});
-// a key released outside the window never sends its keyup
-window.addEventListener("blur", () => {
-  for (const key of Object.values(SHOW_KEY)) markKeyHeld(key, false);
-});
 window.addEventListener("keydown", (e) => {
   if (e.ctrlKey || e.metaKey || typingIn(e.target)) return;
   // brackets before the Alt guard: several layouts type them via Option/AltGr
@@ -534,7 +527,7 @@ window.addEventListener("keydown", (e) => {
   if (e.altKey && !(pan && e.shiftKey && state.edit && state.sel)) return;
   const show = SHOW_KEY[e.key];
   if (show) {
-    markKeyHeld(show, true);
+    lightCap($("toggles"), e);
     if (!e.repeat) toggleShow(show); // a held key autorepeats; the toggle must not
     return;
   }

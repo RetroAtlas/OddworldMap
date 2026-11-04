@@ -1,6 +1,13 @@
 {
  "entries": [
   {
+   "date": "2026-11-04",
+   "tag": "fixed",
+   "tiny": true,
+   "title": "A toggle's key goes dark once you let it go",
+   "detail": "The key at the edge of a Display toggle's row lights while you hold it, and could stay lit after you let go if you had pressed Shift (or ⌘ on a Mac) in the meantime. It now goes dark once you let go."
+  },
+  {
    "date": "2026-10-28",
    "tag": "fixed",
    "tiny": true,
