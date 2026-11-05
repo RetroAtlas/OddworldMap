@@ -18,7 +18,7 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { browserName: "chromium" } }],
   webServer: {
-    command: `python3 -m http.server ${PORT} -d public`,
+    command: `python3 tests/browser/serve.py ${PORT} public`,
     cwd: ROOT,
     url: `http://127.0.0.1:${PORT}/`,
     reuseExistingServer: false, // a stray server from another tree must not serve this suite
