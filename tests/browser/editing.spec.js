@@ -322,8 +322,8 @@ test("a stored edit whose label a rebuild removed is dropped at boot, with a toa
     AE: { "MI/1": { objects: { [`Door@${door.x1},${door.y1}`]: { fields: { [field]: value } } } } },
   });
   await page.goto("/#AE");
-  await settleAny(page);
   await expect(page.locator(".toast", { hasText: "no longer match the map data" })).toBeVisible();
+  await settleAny(page);
   await attach(page);
   const now = await page.evaluate(
     (d) => {
@@ -356,10 +356,10 @@ test("a stored edit boots unapplied, and says so, when a field table does not lo
   );
   await page.addInitScript((s) => localStorage.setItem("owm:edits", JSON.stringify(s)), seed);
   await page.goto("/#AE");
-  await settleAny(page);
   await expect(
     page.locator(".toast", { hasText: "1 saved edit not applied: the editor data did not load" }),
   ).toBeVisible();
+  await settleAny(page);
   await attach(page);
   const now = await page.evaluate(
     (d) => {
@@ -592,9 +592,9 @@ test("the selection drags where the pointer carries it, nudges on the arrows and
   expect(link).toContain(`/Door@${door.x1},${door.y1}`);
   await page.goto("/" + link);
   await page.reload();
+  await expect(page.locator(".toast", { hasText: "marker on Door" })).toBeVisible();
   await settleAny(page);
   await attach(page);
-  await expect(page.locator(".toast", { hasText: "marker on Door" })).toBeVisible();
   const landed = await page.evaluate((d) => {
     const st = window.__st;
     const t = st.path.tlvs.find((o) => o.name === "Door" && o.x1 === d.x1 + 100 && o.y1 === d.y1);
@@ -773,9 +773,9 @@ test("a removed object stands as a ghost to restore, and Backspace leaves a rout
   expect(link).toContain(`/Door@${door.x1},${door.y1}`);
   await page.goto("/" + link);
   await page.reload();
+  await expect(page.locator(".toast", { hasText: "Door removed on this device" })).toBeVisible();
   await settleAny(page);
   await attach(page);
-  await expect(page.locator(".toast", { hasText: "Door removed on this device" })).toBeVisible();
   expect(await page.evaluate(() => window.__edits.removedObjects(window.__st.path).length)).toBe(1);
 
   // the screen list's restore puts the door back, and the path is the disc's again

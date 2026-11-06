@@ -101,9 +101,9 @@ test("an object link names the base's origin, and opens on the object in any rel
   const errors = trackErrors(page);
   // the European release moves this StartController from (3700,304) to (3707,305)
   await page.goto("/#AO/D1/3/3700/300/1.00/StartController@3700,304/eu");
+  await expect(page.locator("#toastStack")).toContainText("marker on StartController");
   await settle(page, { game: "AO", level: "D1", path: 3 });
   await releaseIs(page, "eu");
-  await expect(page.locator("#toastStack")).toContainText("marker on StartController");
   const link = await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const { state } = await import(u("state.js"));
@@ -114,16 +114,16 @@ test("an object link names the base's origin, and opens on the object in any rel
   expect(link).toMatch(/\/StartController@3700,304\/eu$/);
   // one the release drops leaves the view on its path and names the release
   await page.goto("/#AO/F1/5/7140/2370/1.00/DeathDrop@7128,2366/eu");
-  await settle(page, { game: "AO", level: "F1", path: 5 });
   await expect(page.locator("#toastStack")).toContainText("is not in the Europe release");
+  await settle(page, { game: "AO", level: "F1", path: 5 });
   expect(errors).toEqual([]);
 });
 
 test("a code the map does not carry lands on the base and says so", async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto(`/${VIEW}/us-r3`);
-  await settle(page, { game: "AO", level: "R1", path: 15 });
   await expect(page.locator("#toastStack")).toContainText("this map carries no us-r3 release");
+  await settle(page, { game: "AO", level: "R1", path: 15 });
   expect((await probe(page)).release).toBeNull();
   expect(errors).toEqual([]);
 });
