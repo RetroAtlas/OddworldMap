@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { test, expect } from "@playwright/test";
-import { DEFAULT_CATS, pixels, seedView, settleAny, trackErrors } from "./helpers.js";
+import { DEFAULT_CATS, digest, seedView, settleAny, trackErrors } from "./helpers.js";
 import { canonical } from "../../public/js/reliveexport.js";
 
 const DIGESTS = JSON.parse(
@@ -638,7 +638,7 @@ test("a carried object stands where the pointer holds it, as its release will st
     await page.evaluate(
       () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
     );
-    return pixels(page, around);
+    return digest(page, around);
   };
   const carry = async (dx, dy) => {
     const at = await aimAtDoorNow(page);

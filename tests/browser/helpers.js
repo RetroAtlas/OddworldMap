@@ -46,21 +46,38 @@ export function trackErrors(page) {
   return errors;
 }
 
-// the canvas pixels under a world rectangle, as [r, g, b, a] rows
-export async function pixels(page, rect) {
-  return page.evaluate(async (r) => {
-    const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
-    const cv = document.getElementById("cv");
-    const ctx = cv.getContext("2d");
-    const z = st.state.cam.z;
-    const x = (st.dX(r.x1) - st.state.cam.x) * z,
-      y = (st.dY(r.y1) - st.state.cam.y) * z;
-    const w = (st.dX(r.x2) - st.dX(r.x1)) * z,
-      h = (st.dY(r.y2) - st.dY(r.y1)) * z;
-    return [...ctx.getImageData(Math.round(x), Math.round(y), Math.round(w), Math.round(h)).data];
-  }, rect);
+// one read of the canvas under a world rectangle in the page: every pixel's [r, g, b, a], or
+// the same bytes as the first eight of their SHA-256 in hex
+function imageData(page, rect, hashed) {
+  return page.evaluate(
+    async ([r, hashed]) => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const cv = document.getElementById("cv");
+      const z = st.state.cam.z;
+      const x = (st.dX(r.x1) - st.state.cam.x) * z,
+        y = (st.dY(r.y1) - st.state.cam.y) * z;
+      const w = (st.dX(r.x2) - st.dX(r.x1)) * z,
+        h = (st.dY(r.y2) - st.dY(r.y1)) * z;
+      const px = cv
+        .getContext("2d")
+        .getImageData(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+      if (!hashed) return [...px.data];
+      const hash = await crypto.subtle.digest("SHA-256", px.data);
+      return [...new Uint8Array(hash)]
+        .slice(0, 8)
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+    },
+    [rect, hashed],
+  );
 }
+
+// the canvas pixels under a world rectangle, as [r, g, b, a] rows
+export const pixels = (page, rect) => imageData(page, rect, false);
+
+// the same pixels as one SHA-256 digest, hashed in the page so only eight bytes cross
+export const digest = (page, rect) => imageData(page, rect, true);
 
 // seed the display/filter snapshot before any module runs, the way a remembered
 // visit would; rememberView defaults on, so the sidebar applies it at boot
