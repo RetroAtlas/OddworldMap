@@ -6,7 +6,7 @@ const PORT = 8917;
 
 export default defineConfig({
   testDir: ".",
-  workers: 1, // one shared static server; determinism over speed
+  fullyParallel: true, // every test opens its own page, so a file's tests need no order
   retries: 0, // a flake must surface as red, not be retried away
   timeout: 60_000,
   forbidOnly: !!process.env.CI,
