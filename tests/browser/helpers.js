@@ -2,6 +2,7 @@
 // page.evaluate against the page's own live module singletons and come back as
 // plain data, so every assertion happens in Node where a failure prints both sides.
 
+import { test } from "@playwright/test";
 import { CATS } from "../../public/js/config.js";
 
 // every key explicit, so a future default flip cannot move a test
@@ -89,42 +90,47 @@ export async function seedView(page, { show = {}, cats = {} } = {}) {
 }
 
 // imports resolve through location.href so they hit the same module instances
-// the page booted
+// the page booted; the settle gives up inside the test's own timeout, so a page
+// that never settles names where it stands instead of dying as a bare timeout
 async function settleAt(page, sel) {
-  await page.evaluate(async (sel) => {
-    const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
-    const render = await import(u("render.js"));
-    const cv = document.getElementById("cv");
-    const deadline = Date.now() + 30000;
-    const frame = () => {
-      if (Date.now() > deadline)
-        throw new Error(`settle timeout at ${location.hash || "the boot view"}`);
-      return new Promise(requestAnimationFrame);
-    };
-    const there = sel
-      ? () =>
-          st.state.data?.id === sel.game &&
-          st.state.lvl?.short === sel.level &&
-          st.state.path?.id === sel.path
-      : () => !!st.state.path;
-    while (!(there() && cv.clientWidth > 0)) await frame();
-    // the sidebar's boot slide shrinks the canvas for a while and the view recentres
-    // with it, so a read waits for the width to come to rest
-    let width = cv.clientWidth,
-      still = 0;
-    while (still < 3) {
-      await frame();
-      if (cv.clientWidth === width) still++;
-      else {
-        width = cv.clientWidth;
+  const ms = test.info().timeout ? test.info().timeout * 0.8 : 30_000;
+  await page.evaluate(
+    async ({ sel, ms }) => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("state.js"));
+      const render = await import(u("render.js"));
+      const cv = document.getElementById("cv");
+      const deadline = Date.now() + ms;
+      const frame = () => {
+        if (Date.now() > deadline)
+          throw new Error(`settle timeout at ${location.hash || "the boot view"}`);
+        return new Promise(requestAnimationFrame);
+      };
+      const there = sel
+        ? () =>
+            st.state.data?.id === sel.game &&
+            st.state.lvl?.short === sel.level &&
+            st.state.path?.id === sel.path
+        : () => !!st.state.path;
+      while (!(there() && cv.clientWidth > 0)) await frame();
+      // the sidebar's boot slide shrinks the canvas for a while and the view recentres
+      // with it, so a read waits for the width to come to rest
+      let width = cv.clientWidth,
         still = 0;
+      while (still < 3) {
+        await frame();
+        if (cv.clientWidth === width) still++;
+        else {
+          width = cv.clientWidth;
+          still = 0;
+        }
       }
-    }
-    await render.preloadPath(st.state.path);
-    if (!render.artworkReady(st.state.path)) throw new Error("artwork did not load");
-    render.draw();
-  }, sel);
+      await render.preloadPath(st.state.path);
+      if (!render.artworkReady(st.state.path)) throw new Error("artwork did not load");
+      render.draw();
+    },
+    { sel, ms },
+  );
 }
 
 export async function settle(page, { game, level, path }) {

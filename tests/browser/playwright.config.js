@@ -8,7 +8,7 @@ export default defineConfig({
   testDir: ".",
   fullyParallel: true, // every test opens its own page, so a file's tests need no order
   retries: 0, // a flake must surface as red, not be retried away
-  timeout: 60_000,
+  timeout: process.env.CI ? 20_000 : 10_000, // a test waits on the engine's clock for a few seconds at most; past this it has hung
   forbidOnly: !!process.env.CI,
   reporter: "list",
   use: {
