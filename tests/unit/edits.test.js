@@ -25,6 +25,7 @@ import {
   objectKeys,
   pathEdited,
   pristineOf,
+  reportUnapplied,
   restoreEdits,
   revertPath,
   sanitizeEdits,
@@ -307,9 +308,52 @@ test("stored deltas apply where they still answer to an object and are dropped w
   assert.notEqual(G.levels[0].paths[0], P1);
   assert.equal(G.levels[0].paths[0].tlvs[0].fields.camera, 20);
   assert.equal(P1.tlvs[0].fields.camera, 17);
+  assert.equal(G.levels[0].paths[0].tlvs[0].extra.to_cam, 20);
+  assert.ok(pathEdited(G.levels[0].paths[0]));
   assert.deepEqual(gameEdits("AE"), { objects: 1, paths: 1 });
+  // every delta dead: the pristine path stands and the game leaves the store
+  restoreEdits({
+    AE: {
+      "MI/1": {
+        objects: {
+          "Door@400,10": { fields: { camera: 17 } },
+          "Door@999,999": { fields: { camera: 1 } },
+        },
+      },
+    },
+  });
+  const G2 = world();
+  const P2 = G2.levels[0].paths[0];
+  assert.deepEqual(applyStoredEdits(G2), { applied: 0, dropped: 2 });
+  assert.equal(G2.levels[0].paths[0], P2);
+  assert.equal(pathEdited(P2), false);
+  assert.deepEqual(editStore(), {});
+  assert.equal(hasStoredEdits("AE"), false);
+  assert.deepEqual(takeReport("AE"), { applied: 0, dropped: 2, unapplied: 0 });
   restoreEdits({});
   assert.equal(hasStoredEdits("AE"), false);
+});
+
+test("reportUnapplied counts the saved edits a boot could not apply, one a field, a rect, a removal or an added object", () => {
+  restoreEdits({
+    AE: {
+      "MI/1": {
+        next: 2,
+        objects: {
+          "Door@10,10": { fields: { camera: 20, door_type: 9 } },
+          "Door@400,10": { rect: [400, 10, 424, 34], fields: { camera: 3 } },
+          "Hoist@50,50": { removed: true },
+          "+1": { name: "Door", rect: [500, 10, 524, 34] },
+        },
+      },
+    },
+  });
+  reportUnapplied("AE");
+  assert.deepEqual(takeReport("AE"), { applied: 0, dropped: 0, unapplied: 6 });
+  assert.equal(takeReport("AE"), null);
+  reportUnapplied("AE", "jp");
+  assert.deepEqual(takeReport("AE", "jp"), { applied: 0, dropped: 0, unapplied: 0 });
+  restoreEdits({});
 });
 
 test("the stored shape is read by shape alone, and anything else in it is dropped", () => {
