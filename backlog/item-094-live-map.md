@@ -104,7 +104,7 @@ What the first slice leaves out is stated in [docs/viewer-geometry.md](../docs/v
 
 ## Shipped (2026-10-06)
 
-**The kept set.** With the markers off, what the game shows stays on the map unseen, by one rule (`kept` in spriteart.js): the ways out and the stones, the types in `KEPT_UNSEEN` (the LCD boards and screens, Exoddus's wells, the gas countdowns and the meters), and, while the arrows or the wiring are drawn, both ends of every edge they draw, so no overlay leaves from or lands on nothing.
+**The kept set.** With the markers off, what the game shows stays on the map unseen, by one rule (`kept` in kept.js): the ways out and the stones, the types in `KEPT_UNSEEN` (the LCD boards and screens, Exoddus's wells, the gas countdowns and the meters), and, while the arrows or the wiring are drawn, both ends of every edge they draw, so no overlay leaves from or lands on nothing.
 
 **A marker again.** A type the rules know whose state draws nothing, an open door, a lift stop, an electric wall that is off, takes its marker back while Markers for the rest is on, so that toggle is the whole reference view: every object a sprite or a marker.
 

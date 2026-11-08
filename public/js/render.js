@@ -15,6 +15,7 @@ import { $, COLOR, cv, cvCtx } from "./dom.js";
 import { isEdited, removedObjects } from "./edits.js";
 import { onBackgroundPlane } from "./fields.js";
 import { drawX, drawY } from "./geometry.js";
+import { drawnAs } from "./kept.js";
 import { camCenter, centerCam, drawBox, lineRuns, offScreen, screenRuns } from "./model.js";
 import { motionRunning, patrolTick, sceneTick } from "./motion.js";
 import {
@@ -35,7 +36,7 @@ import {
 import { pathRelease, releaseNotes } from "./release.js";
 import { screenOf, tintedMasks } from "./screens.js";
 import {
-  drawnAs,
+  artOf,
   setOf,
   setPainted,
   spriteRecords,
@@ -293,7 +294,8 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   if (show.coll) paintLines(f);
   if (f.released) paintReleaseGhosts(f, pathRelease(path)?.removed ?? []);
   if (transients && patrol) paintPatrol(f, patrol);
-  paintMarkers(f, sprites);
+  const art = artOf();
+  paintMarkers(f, sprites, art);
   if (show.wires) paintWires(f, transients ? wireFocus : null);
   if (show.conn) paintConnections(f, transients ? connFocus : null);
   if (transients && state.edit) paintGhosts(f, removedObjects(path));
@@ -407,12 +409,12 @@ function paintPatrol({ ctx }, zone) {
   ctx.fillRect(zone.x1, zone.y1 - 8, zone.x2 - zone.x1, zone.y2 - zone.y1 + 16);
 }
 
-function paintMarkers(f, sprites) {
+function paintMarkers(f, sprites, art) {
   const { ctx, cam, data, path, layout } = f;
   ctx.font = `${11 / cam.z}px sans-serif`;
   for (const o of path.tlvs) {
     const t = at(o);
-    const as = drawnAs(t, sprites);
+    const as = drawnAs(t, sprites, art);
     if (!as) continue;
     const showLabels = f.showLabels && labelled(t);
     const edited = isEdited(o);

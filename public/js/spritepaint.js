@@ -4,10 +4,11 @@
 
 import { markerShown } from "./config.js";
 import { drawX, drawY } from "./geometry.js";
+import { drawnAs } from "./kept.js";
 import { drawBox } from "./model.js";
 import { resolveEffects, resolveRecord } from "./motion.js";
 import { dimmedImg, img } from "./screens.js";
-import { drawnAs, paintedSprites, processedFrame } from "./spriteart.js";
+import { artOf, paintedSprites, processedFrame } from "./spriteart.js";
 
 // how far each object on patrol has walked from its mark this frame, so its
 // label and edited mark can follow it
@@ -411,7 +412,7 @@ export function standingBox(t, layout) {
 export function hitBoxes(t, layout) {
   const boxes = [];
   const b = standingBox(t, layout);
-  if (b) boxes.push({ ...b, drawn: drawnAs(t, paintedSprites) === "marker" });
+  if (b) boxes.push({ ...b, drawn: drawnAs(t, paintedSprites, artOf()) === "marker" });
   const s = spriteBoxes.get(t);
   if (s) boxes.push({ ...s, drawn: true });
   return boxes;

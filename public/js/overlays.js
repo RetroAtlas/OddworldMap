@@ -13,10 +13,11 @@ import {
 } from "./config.js";
 import { COLOR } from "./dom.js";
 import { drawX } from "./geometry.js";
+import { connections } from "./kept.js";
 import { cellCentre, computeWiring, drawBox, markerCentre } from "./model.js";
 import { isRegional } from "./release.js";
 import { getSettings } from "./settings.js";
-import { connections, objectShown } from "./spriteart.js";
+import { objectShown } from "./spriteart.js";
 import { standingBox } from "./spritepaint.js";
 import { worldLen } from "./state.js";
 import { formatDist } from "./util.js";

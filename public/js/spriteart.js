@@ -1,25 +1,16 @@
 // The sprite art a path draws from: the game's sidecar and its sheets, what a place has
-// asked for and whether it has arrived, what each object is drawn as, and the clock's
+// asked for and whether it has arrived, whether an object is there at all, and the clock's
 // switch
 
 import { scheduleDraw } from "./redraw.js";
-import {
-  CACHE_MAX_IMAGES,
-  CATS,
-  KEPT_UNSEEN,
-  PENS,
-  SPRITE_ZOOM,
-  barrierDir,
-  catOf,
-  markerShown,
-} from "./config.js";
+import { CACHE_MAX_IMAGES, SPRITE_ZOOM } from "./config.js";
 import { loadSprites } from "./data.js";
-import { computeConnections, computeWiring, destOf, destTrusted } from "./model.js";
+import { drawnAs, resetKept } from "./kept.js";
 import { resetScene, setMotionRunning, setPatrolsRunning } from "./motion.js";
 import { releaseSprites } from "./release.js";
 import { compose, composed, dimCache, images, img, tintCache } from "./screens.js";
 import { getSettings } from "./settings.js";
-import { ownSheet, recordSheets, spriteDraws, spriteTypes } from "./sprites.js";
+import { ownSheet, recordSheets, spriteDraws } from "./sprites.js";
 import { state } from "./state.js";
 
 // game id -> sidecar, null while it is coming, false once a fetch failed. A
@@ -176,71 +167,19 @@ export function setPainted(standing, drawn) {
   paintedSprites = standing;
   spritesDrawn = drawn;
 }
-const ruled = {};
-const hasRule = (game, name) => (ruled[game] ??= new Set(spriteTypes(game))).has(name);
-// connection edges, computed lazily and keyed by path object identity —
-// selection-changed alone won't do: it re-fires for the same path on every
-// pushed hash write
-let connCache = { path: null, edges: null };
-export const connections = (data, lvl, path) => {
-  if (connCache.path !== path) connCache = { path, edges: computeConnections(data, lvl, path) };
-  return connCache.edges;
-};
-let keptCache = { path: null, conn: null, wires: null, filters: null, set: null };
-function kept(t) {
-  const { data, lvl, path } = state;
-  const conn = !!state.show.conn,
-    wires = !!state.show.wires;
-  const filters = CATS.map((c) => (c.on ? 1 : 0)).join("") + (PENS.on ? "p" : "");
-  if (
-    keptCache.path !== path ||
-    keptCache.conn !== conn ||
-    keptCache.wires !== wires ||
-    keptCache.filters !== filters
-  ) {
-    const follows = (o) => {
-      const d = destOf(o, data, lvl, path);
-      return d && destTrusted(d, data, lvl);
-    };
-    const set = new Set(path.tlvs.filter((o) => KEPT_UNSEEN.includes(o.name) || follows(o)));
-    if (conn)
-      for (const e of connections(data, lvl, path)) if (e.dst && catOf(e.src).on) set.add(e.dst);
-    if (wires)
-      for (const e of computeWiring(path, data.id).edges)
-        if (markerShown(e.src) && markerShown(e.dst)) {
-          set.add(e.src);
-          set.add(e.dst);
-        }
-    keptCache = { path, conn, wires, filters, set };
-  }
-  return keptCache.set.has(t);
-}
 // a record whose own sheet failed to load leaves its object a marker
 function lostSheet(r) {
   const set = setOf(state.data);
   const k = set && ownSheet(set, r);
   return !!k && failed(set.sheets[k]);
 }
-// what an object is drawn as: its sprite, its marker, unseen (there to point
-// at, nothing to paint) or nothing. A type the rules know stays present when
-// its own state draws nothing, an open door included
-export function drawnAs(t, sprites) {
-  if (!markerShown(t)) return null;
-  if (PENS.on && barrierDir(t) !== null) return "marker";
-  if (!state.show.objects) return "marker";
-  // the editor's click needs a box for everything it may edit
-  const markers = state.show.markers || state.edit;
-  if (hasRule(state.data.id, t.name)) {
-    if (!sprites) return spritesFailed(state.data.id) ? "marker" : null;
-    if (!sprites.has(t)) return markers ? "marker" : "unseen";
-    // a sprite still on its way leaves its object there to point at, boxed for the editor
-    if (!spritesDrawn) return state.edit ? "marker" : "unseen";
-    return sprites.get(t).some(lostSheet) ? "marker" : "sprite";
-  }
-  if (markers) return "marker";
-  return kept(t) ? "unseen" : null;
-}
-export const objectShown = (t) => drawnAs(t, paintedSprites) !== null;
+// the sprite art an object's drawing is judged by
+export const artOf = () => ({
+  failed: spritesFailed(state.data.id),
+  drawn: spritesDrawn,
+  lost: lostSheet,
+});
+export const objectShown = (t) => drawnAs(t, paintedSprites, artOf()) !== null;
 
 // draw() skips an image that has not arrived and repaints when it does; a
 // one-shot paint has no second chance. The masks are waited for whatever the
@@ -327,10 +266,7 @@ window.addEventListener("selection-changed", () => {
 });
 
 // an edit stands the path as new objects, which the kept set no longer answers for
-window.addEventListener("data-changed", () => {
-  keptCache = { path: null, conn: null, wires: null, filters: null, set: null };
-  connCache = { path: null, edges: null };
-});
+window.addEventListener("data-changed", resetKept);
 
 // a visitor who asks for reduced motion still sees the sprites, on their first frame
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
