@@ -32,3 +32,14 @@ export const searchInput = $("searchInput"),
   searchResults = $("searchResults"),
   scopeBar = $("scopeBar");
 export const toastStack = $("toastStack");
+
+// canvas colors shared with the stylesheet, read once from the tokens
+export const COLOR = {
+  bg: cssVar("--bg"),
+  mapBg: cssVar("--map-bg"),
+  mapBgRgb: cssVar("--map-bg-rgb"),
+  cellEmpty: cssVar("--cell-empty"),
+  accentRgb: cssVar("--accent-rgb"),
+  editRgb: cssVar("--edit-rgb"),
+  releaseRgb: cssVar("--release-rgb"),
+};

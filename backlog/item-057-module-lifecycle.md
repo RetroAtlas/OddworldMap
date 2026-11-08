@@ -35,7 +35,7 @@ One module per commit, each mechanical: wrap each self-wiring module's top-level
 
 Boot is two phases, and a flat call list hides that the second waits on a fetch. Synchronously: the `init` calls. Once the sidecars land: `setAnnotations` / `setFieldTypes` / `setEnumLabels` / `setGlossary` / `setTypeInfo` / `setMessages`, then `addGame(...)`, `resize()` and `applyHash()`.
 
-Only two orderings inside the first phase are real, and both are worth a comment rather than a convention. `initSettings()` precedes `initSidebar()`, which reads the view snapshot through it. And everything seeding draw state precedes the first `draw()`, which the second phase triggers: `initSidebar()` populates `state.show` and `PENS.on`, `initRender()` reads the colour tokens, `initInteraction()` sets `menu-open` before the first paint. Every other surface can init in any order after those.
+Only two orderings inside the first phase are real, and both are worth a comment rather than a convention. `initSettings()` precedes `initSidebar()`, which reads the view snapshot through it. And everything seeding draw state precedes the first `draw()`, which the second phase triggers: `initSidebar()` populates `state.show` and `PENS.on`, `initInteraction()` sets `menu-open` before the first paint. Every other surface can init in any order after those.
 
 ## Watch out
 
@@ -45,7 +45,7 @@ Only two orderings inside the first phase are real, and both are worth a comment
 
 **`sidebar.js` does the most work at import** of any module here: it reads the view snapshot, mutates `CATS[].on`, builds the filter checkboxes, seeds `state.show` from the HTML `checked` attributes, and sets `PENS.on` from it. All of that must move wholesale into `initSidebar()`, ahead of the first `draw()`.
 
-**`render.js`'s `COLOR` block** reads CSS custom properties at import. That is a `getComputedStyle` call, not a DOM mutation; it can stay at import or move into `initRender()`. Moving it is slightly more honest; either is defensible. Pick one and be consistent with the `dom.js` decision.
+**`dom.js`'s `COLOR` block** reads CSS custom properties at import, a `getComputedStyle` call rather than a DOM mutation, and sits under the one sanctioned exception above beside the element lookups, so it stays where it is.
 
 **`whatsnew.js` calls `init()` at import already**, and it is `async`. Export it instead of self-calling; `main.js` should not await it, since the panel appearing late is fine and already how it behaves.
 
