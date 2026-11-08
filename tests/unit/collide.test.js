@@ -2,6 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   boundingRect,
+  camVoidX,
+  camVoidY,
   moveOnLine,
   nextLine,
   onEndOfLine,
@@ -203,4 +205,31 @@ test("rectsMeet: rects that share only an edge meet", () => {
   assert.ok(rectsMeet([0, 0, 10, 10], [10, 10, 20, 20]));
   assert.ok(!rectsMeet([0, 0, 10, 10], [11, 0, 20, 10]));
   assert.ok(!rectsMeet([0, 0, 10, 10], [0, 11, 10, 20]));
+});
+
+test("snapX: 25-unit squares and 13 at half, each game from its own origin", () => {
+  // Oddysee counts from 15 (full) and 11 (half); a remainder of 13 or 7 rounds up
+  assert.equal(snapX("AO", 15, false), 15);
+  assert.equal(snapX("AO", 27, false), 15);
+  assert.equal(snapX("AO", 28, false), 40);
+  assert.equal(snapX("AO", 11, true), 11);
+  assert.equal(snapX("AO", 18, true), 24);
+  // Exoddus counts from 12 at full scale and, at half, from 6 inside its 375-unit cell
+  assert.equal(snapX("AE", 12, false), 12);
+  assert.equal(snapX("AE", 25, false), 37);
+  assert.equal(snapX("AE", 24, false), 12);
+  assert.equal(snapX("AE", 381, true), 381);
+  assert.equal(snapX("AE", 388, true), 394);
+});
+
+test("void: Oddysee's skippers carry a point in the gap between screens to the next one's edge", () => {
+  // the first screen spans 256..624; twelve units of margin count as on it
+  assert.equal(camVoidX(503, 1, 12), null);
+  assert.equal(camVoidX(636, 3, 12), null);
+  assert.equal(camVoidX(640, 3, 12), 1268, "walking right lands twelve inside the next screen");
+  assert.equal(camVoidX(1260, -3, 12), 636, "walking left lands twelve past the first's edge");
+  assert.equal(camVoidX(1270, -3, 12), null);
+  assert.equal(camVoidY(300, 1, 12), null);
+  assert.equal(camVoidY(400, 2, 12), 588, "falling lands twelve above the next screen's top");
+  assert.equal(camVoidY(400, -2, 12), 372, "rising lands twelve under the first's bottom");
 });
