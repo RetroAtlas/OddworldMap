@@ -10,7 +10,7 @@ export default defineConfig({
   retries: 0, // a flake must surface as red, not be retried away
   timeout: process.env.CI ? 20_000 : 10_000, // a test waits on the engine's clock for a few seconds at most; past this it has hung
   forbidOnly: !!process.env.CI,
-  reporter: "list",
+  reporter: [["list"], ["./budget.js"]], // the budget reporter fails a run on a passed test over the budget
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
     viewport: { width: 1280, height: 720 },
