@@ -9,7 +9,7 @@ The classic map-viewer affordance this viewer lacks: at one-screen zoom on a big
 ## Sketch
 
 - A small inset in a map corner: the path's cell grid drawn flat (filled cell = has a camera, empty = margin), with a viewport rectangle that tracks `state.cam`. Click or drag inside it to move the view; the rectangle is the handle.
-- Flat cells first. Thumbnailing the actual artwork means decoding every cam of the path at once — the eviction cap in [js/render.js](../public/js/render.js) exists because that pressure is real. If art thumbnails ever come, they come as a second pass with their own budget.
+- Flat cells first. Thumbnailing the actual artwork means decoding every cam of the path at once — the eviction cap in [js/spriteart.js](../public/js/spriteart.js) exists because that pressure is real. If art thumbnails ever come, they come as a second pass with their own budget.
 - Redraw piggybacks on `draw()` — the inset is a second, tiny projection of the same state, so it can be painted at the end of the same frame rather than on its own loop.
 - Hide it when the whole path already fits the window (it would duplicate what the eye sees), and on narrow screens, where its corner does not exist.
 
