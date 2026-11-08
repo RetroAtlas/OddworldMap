@@ -1,6 +1,6 @@
 // Canvas rendering: cameras, overlays, markers, and the image caches.
 
-import { formatDist } from "./util.js";
+import { scheduleDraw } from "./redraw.js";
 import {
   CACHE_MAX_IMAGES,
   CATS,
@@ -8,6 +8,7 @@ import {
   ENEMY_CAT,
   FLASH_HOLD_MAX_MS,
   FLASH_MS,
+  KEPT_UNSEEN,
   LINE_COLORS,
   PENS,
   SPRITE_ZOOM,
@@ -15,29 +16,26 @@ import {
   barrierDir,
   catOf,
   markerShown,
-  KEPT_UNSEEN,
 } from "./config.js";
-import { $, cv, cvCtx, cssVar } from "./dom.js";
+import { loadSprites } from "./data.js";
+import { $, cssVar, cv, cvCtx } from "./dom.js";
 import { isEdited, removedObjects } from "./edits.js";
+import { onBackgroundPlane } from "./fields.js";
 import { drawX, drawY } from "./geometry.js";
-import { state, GEO, LAYOUT, CELL_W, CELL_H, cellOrigin, worldLen } from "./state.js";
 import {
   camCenter,
   cellCentre,
   centerCam,
   computeConnections,
   computeWiring,
-  drawBox,
-  lineRuns,
   destOf,
   destTrusted,
+  drawBox,
+  lineRuns,
   markerCentre,
   offScreen,
   screenRuns,
 } from "./model.js";
-import { onBackgroundPlane } from "./fields.js";
-import { loadSprites } from "./data.js";
-import { getSettings } from "./settings.js";
 import {
   motionRunning,
   patrolTick,
@@ -48,8 +46,13 @@ import {
   setMotionRunning,
   setPatrolsRunning,
 } from "./motion.js";
-import { ownSheet, recordSheets, spriteDraws, spriteTypes } from "./sprites.js";
 import { isRegional, pathRelease, releaseNotes, releaseSprites } from "./release.js";
+import { getSettings } from "./settings.js";
+import { ownSheet, recordSheets, spriteDraws, spriteTypes } from "./sprites.js";
+import { CELL_H, CELL_W, GEO, LAYOUT, cellOrigin, state, worldLen } from "./state.js";
+import { formatDist } from "./util.js";
+
+export { scheduleDraw } from "./redraw.js";
 
 // canvas colors shared with the stylesheet, read once from the tokens
 const COLOR = {
@@ -631,17 +634,6 @@ window.addEventListener("online", () => {
   syncMotion();
 });
 
-// coalesce bursty redraw sources (pointer moves, image loads) into one paint per frame
-let drawPending = false;
-export function scheduleDraw() {
-  if (drawPending) return;
-  drawPending = true;
-  requestAnimationFrame(() => {
-    drawPending = false;
-    draw();
-  });
-}
-
 // the camera holds a corner, so a viewport that changes size would slide the view;
 // the middle is held instead, the spot a permalink names. The observer reports a
 // size only after the frame's layout, so whatever reads or places the camera by
@@ -720,6 +712,7 @@ export function draw() {
   paint(cvCtx, state.cam, cv.clientWidth, cv.clientHeight, devicePixelRatio);
   paintMinimap(state.cam, state.path);
 }
+window.addEventListener("frame-due", draw);
 
 // one frame of the map into any canvas: the live one at the view's zoom, or an
 // offscreen one sized to a whole path. The hover, navigation and selection

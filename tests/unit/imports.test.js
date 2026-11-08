@@ -58,6 +58,7 @@ test("pure modules import in bare Node", async () => {
     "edits",
     "objecttypes",
     "collide",
+    "redraw",
     "sprites",
     "spritekit",
     "patrolkit",
