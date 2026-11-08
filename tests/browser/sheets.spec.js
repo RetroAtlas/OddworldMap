@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ALL_CATS, SLIG, TALLY, seedView, settle, trackErrors } from "./helpers.js";
+import { ALL_CATS, POLL, SLIG, TALLY, seedView, settle, trackErrors } from "./helpers.js";
 
 // MI P1's families, every one of which lands but the held one before a probe reads
 const MI_P1_FAMILIES = [
@@ -108,7 +108,7 @@ for (const [held, route, families] of [
     await page.waitForTimeout(500);
     expect(await sligNow(page)).toMatchObject({ present: true, painted: false, running: false });
     release();
-    await expect.poll(async () => (await sligNow(page)).painted, { timeout: 20000 }).toBe(true);
+    await expect.poll(async () => (await sligNow(page)).painted, POLL).toBe(true);
     const after = await sligNow(page);
     expect(after.running).toBe(true);
     expect(after.tick).toBeLessThan(90);
@@ -160,7 +160,7 @@ test("an edit that brings a family in leaves the path's sprites drawn while its 
     ]);
     edits.addObject("Slog", rect);
   }, SLIG);
-  await expect.poll(() => slogs.length).toBeGreaterThan(0);
+  await expect.poll(() => slogs.length, POLL).toBeGreaterThan(0);
   expect(await paintedAsSprite()).toBe(true);
   release();
   expect(errors).toEqual([]);
@@ -194,14 +194,14 @@ test("a sheet that fails leaves its objects as markers, and the map asking again
       return render.hitBoxes(t, st.LAYOUT).map((b) => b.drawn);
     }, SLIG);
   release();
-  await expect.poll(drawn, { timeout: 20000 }).toEqual([true]);
+  await expect.poll(drawn, POLL).toEqual([true]);
   refuse = false;
   const back = page.waitForResponse(
     (r) => /\/cams\/ae\/sprites\/Slig\./.test(r.url()) && r.status() === 200,
   );
   await page.evaluate(() => window.dispatchEvent(new Event("online")));
   await back;
-  await expect.poll(drawn, { timeout: 20000 }).toEqual([false, true]);
+  await expect.poll(drawn, POLL).toEqual([false, true]);
   expect(errors.filter((e) => !/404|Failed to load/.test(e))).toEqual([]);
 });
 
@@ -223,7 +223,7 @@ test("a font that fails leaves the tally boards it writes as markers", async ({ 
       );
       return t ? render.hitBoxes(t, st.LAYOUT).map((x) => x.drawn) : null;
     }, TALLY);
-  await expect.poll(drawn, { timeout: 20000 }).toEqual([true]);
+  await expect.poll(drawn, POLL).toEqual([true]);
   expect(errors.filter((e) => !/404|Failed to load/.test(e))).toEqual([]);
 });
 
@@ -291,7 +291,7 @@ test.describe("below the zoom a creature reads at", () => {
     expect(asked).toEqual({ sheets: 0, masks: 0 });
     expect(await slig(page)).toEqual({ present: true, painted: false, running: false });
     await zoomTo(page, 0.2);
-    await expect.poll(async () => (await slig(page)).painted, { timeout: 20000 }).toBe(true);
+    await expect.poll(async () => (await slig(page)).painted, POLL).toBe(true);
     expect(asked.sheets).toBeGreaterThan(0);
     expect(asked.masks).toBeGreaterThan(0);
     await zoomTo(page, 0.08);
@@ -363,7 +363,7 @@ test.describe("below the zoom a creature reads at", () => {
       const sidebar = await import(new URL("js/sidebar.js", location.href).href);
       sidebar.toggleShow("objects");
     });
-    await expect.poll(async () => (await slig(page)).painted, { timeout: 20000 }).toBe(true);
+    await expect.poll(async () => (await slig(page)).painted, POLL).toBe(true);
     expect(asked.sheets).toBeGreaterThan(0);
     expect(errors).toEqual([]);
   });
@@ -380,7 +380,7 @@ test.describe("below the zoom a creature reads at", () => {
     expect(asked.sheets).toBe(0);
     await page.keyboard.press("e");
     await page.waitForFunction(() => window.__state.edit === true);
-    await expect.poll(async () => (await slig(page)).painted, { timeout: 20000 }).toBe(true);
+    await expect.poll(async () => (await slig(page)).painted, POLL).toBe(true);
     expect(asked.sheets).toBeGreaterThan(0);
     expect(errors).toEqual([]);
   });

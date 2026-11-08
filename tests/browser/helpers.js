@@ -35,6 +35,15 @@ export const NO_CATS = {
   meta: false,
 };
 
+// four fifths of the test's own timeout, which the settle and every poll give up inside, so one
+// that runs out names its own timeout and not the test's
+const inside = () => (test.info().timeout ? test.info().timeout * 0.8 : 30_000);
+export const POLL = {
+  get timeout() {
+    return inside();
+  },
+};
+
 // the categories as config.js ships them
 export const DEFAULT_CATS = Object.fromEntries(CATS.map((c) => [c.key, c.on]));
 
@@ -93,7 +102,7 @@ export async function seedView(page, { show = {}, cats = {} } = {}) {
 // the page booted; the settle gives up inside the test's own timeout, so a page
 // that never settles names where it stands instead of dying as a bare timeout
 async function settleAt(page, sel) {
-  const ms = test.info().timeout ? test.info().timeout * 0.8 : 30_000;
+  const ms = inside();
   await page.evaluate(
     async ({ sel, ms }) => {
       const u = (m) => new URL("js/" + m, location.href).href;

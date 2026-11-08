@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { test, expect } from "@playwright/test";
-import { DEFAULT_CATS, seedView, settle, trackErrors } from "./helpers.js";
+import { DEFAULT_CATS, POLL, seedView, settle, trackErrors } from "./helpers.js";
 
 const pub = (name) => readFileSync(new URL(`../../public/${name}`, import.meta.url), "utf8");
 const CACHE_NAME = /^const CACHE_NAME = "([^"]+)";$/m.exec(pub("sw.js"))[1];
@@ -77,7 +77,7 @@ test("storing a family's sprite sheet retires that family's other sheets and wha
       { name: CACHE_NAME, camera: CAMERA },
     );
   const kept = [CAMERA, OLD_AE, OLD_GONE, ...(families.has("Scrab") ? [] : [OLD_SCRAB])];
-  await expect.poll(stored, { timeout: 20000 }).toEqual([...kept, ...requested].sort());
+  await expect.poll(stored, POLL).toEqual([...kept, ...requested].sort());
   expect(errors).toEqual([]);
 });
 
@@ -119,6 +119,6 @@ test("storing a release's file retires that file's earlier copies, and nothing e
       },
       { name: CACHE_NAME, files: [own, OLD, PLACE, OTHER, BASE] },
     );
-  await expect.poll(stored, { timeout: 20000 }).toEqual([BASE, OTHER, PLACE, own].sort());
+  await expect.poll(stored, POLL).toEqual([BASE, OTHER, PLACE, own].sort());
   expect(errors).toEqual([]);
 });
