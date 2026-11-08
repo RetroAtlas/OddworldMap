@@ -113,6 +113,12 @@ test("a removed object leaves the standing path as a ghost carrying its deltas, 
   undoEdit("AE", "MI", 1); // the move
   assert.equal(state.path, P1);
   assert.equal(state.sel, d);
+  // a ghost whose only delta is the removal comes back as the pristine path, its entry gone from the store
+  removeObject(P1.tlvs[2]);
+  assert.deepEqual(editStore().AE["MI/1"].objects["Hoist@50,50"], { removed: true });
+  assert.equal(restoreObject(removedObjects(state.path)[0]), P1.tlvs[2]);
+  assert.equal(state.path, P1);
+  assert.equal(editStore().AE["MI/1"], undefined);
   // a field-less object removed and the path reverted
   removeObject(P1.tlvs[2]);
   const [h] = removedObjects(state.path);
