@@ -280,7 +280,8 @@ export const SLIG = { game: "AE", level: "MI", path: 1, x1: 1400, y1: 700, x2: 1
 // the slig's left bound, a marker with no sprite
 export const BOUND = { game: "AE", level: "MI", path: 1, x1: 1175, y1: 700, x2: 1199, y2: 724 };
 
-// the tally board under the zulag sign beside it, and the four rows of digits it writes
+// the tally board under the zulag sign beside the Mines LCD, and the four rows of digits
+// the board writes
 export const TALLY = { x1: 1283, y1: 539, x2: 1316, y2: 601 };
 
 export const ALL_CATS = {

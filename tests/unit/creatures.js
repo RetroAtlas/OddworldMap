@@ -7,6 +7,7 @@ export const anim = (n, fps, loop, loopStart = 0) => ({
   frames: Array.from({ length: n }, (_, i) => [0, i, 0, 1, 1, 0, 0]),
 });
 
+// the working Mudokons' animations at the sidecar's lengths and hold counts
 export const WORK_ANIMS = {
   Mudokon_StandScrubLoop: anim(10, 1, true),
   Mudokon_StandScrubLoopToPause: anim(3, 2, true),
@@ -76,7 +77,6 @@ export const creature = (animName, name, p = null, seed = 0) => ({
   cycle: { kind: "brain", brain: name, seed, emo: false, p },
 });
 
-// a flat world: one floor line, the objects given, no links
 export const PATROL_ANIMS = {
   ...IDLE_ANIMS,
   Slig_Idle: anim(6, 4, true),
@@ -103,6 +103,8 @@ export const PATROL_ANIMS = {
   Fleech_StopMidCrawlCycle: anim(4, 2, false),
   MovingBomb: anim(15, 2, true),
 };
+
+// a flat world: one floor line, the objects given, no links
 export const world = (game, lines, tlvs, spawn, half = false) => ({
   game,
   half,

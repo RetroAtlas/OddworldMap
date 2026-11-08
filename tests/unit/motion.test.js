@@ -50,7 +50,6 @@ test("frameAt: a start frame shifts the sequence and a single frame never moves"
   assert.equal(frameAt(anim(1, 1, true), 999), 0);
 });
 
-// the working Mudokons' animations at the sidecar's lengths and hold counts
 test("clock: a frame advances the ticks its lateness holds and keeps the remainder", () => {
   const queue = new Map();
   let id = 0;

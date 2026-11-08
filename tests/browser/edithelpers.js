@@ -13,8 +13,7 @@ export async function download(page, selector) {
   return dl;
 }
 
-// the page's module singletons, stashed once so every poll below stays a
-// synchronous read
+// the page's module singletons, stashed once so every later poll is a synchronous read
 export async function attach(page) {
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
