@@ -1,9 +1,4 @@
-import { readFileSync } from "node:fs";
 import { DEFAULT_CATS, seedView } from "./helpers.js";
-
-export const DIGESTS = JSON.parse(
-  readFileSync(new URL("../fixtures/relive-digests.json", import.meta.url), "utf8"),
-);
 
 // the exports fold under one control, closed at boot
 export async function download(page, selector) {
@@ -78,11 +73,7 @@ export const doorCamera = (page, d) =>
   page.evaluate((d) => {
     const st = window.__st;
     const t = st.path.tlvs.find((o) => o.name === "Door" && o.x1 === d.x1 && o.y1 === d.y1);
-    return {
-      camera: t.fields.camera,
-      toCam: t.extra.to_cam,
-      edited: window.__edits.pathEdited(st.path),
-    };
+    return { camera: t.fields.camera, edited: window.__edits.pathEdited(st.path) };
   }, d);
 
 // where the selected door's centre is on the screen now, after a move

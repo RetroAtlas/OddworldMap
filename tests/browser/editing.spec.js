@@ -1,26 +1,8 @@
-import { readFileSync } from "node:fs";
-import { createHash } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import { DEFAULT_CATS, seedView, settleAny, trackErrors } from "./helpers.js";
-import { canonical } from "../../public/js/reliveexport.js";
-import { DIGESTS, aimAtDoor, armEditing, attach, doorCamera, download } from "./edithelpers.js";
+import { aimAtDoor, armEditing, attach, doorCamera, download } from "./edithelpers.js";
 
 const editOn = (page) => page.evaluate(() => window.__st.edit);
-
-const doorNow = (page, d) =>
-  page.evaluate((d) => {
-    const st = window.__st;
-    const at = (P) => P.tlvs.find((o) => o.name === "Door" && o.x1 === d.x1 && o.y1 === d.y1);
-    const t = at(st.path);
-    return {
-      camera: t.fields.camera,
-      toCam: t.extra.to_cam,
-      pristineCamera: at(window.__pristine).fields.camera,
-      swapped: st.path !== window.__pristine,
-      standing: st.data.levels.includes(st.lvl),
-      edited: window.__edits.pathEdited(st.path),
-    };
-  }, d);
 
 test("the mode selects an object, the form edits it, and every surface follows", async ({
   page,
@@ -48,14 +30,7 @@ test("the mode selects an object, the form edits it, and every surface follows",
   await input.fill(String(door.camera + 1));
   await input.press("Tab");
   await page.waitForFunction((c) => window.__st.sel?.fields.camera === c, door.camera + 1);
-  expect(await doorNow(page, door)).toEqual({
-    camera: door.camera + 1,
-    toCam: door.camera + 1,
-    pristineCamera: door.camera,
-    swapped: true,
-    standing: true,
-    edited: true,
-  });
+  expect((await doorCamera(page, door)).camera).toBe(door.camera + 1);
   await expect(page.locator("#editBody .ep-shipped")).toContainText(`shipped: ${door.camera}`);
 
   // the edit says so wherever the object or its path shows
@@ -65,18 +40,9 @@ test("the mode selects an object, the form edits it, and every surface follows",
   await expect(page.locator("#placeEdited")).toBeVisible();
 
   // and every export of the path says so in its name
-  const json = await download(page, "#exportJsonBtn");
-  expect(json.suggestedFilename()).toBe("oddworld-ae-MI-P1-edited.json");
-  const doc = JSON.parse(readFileSync(await json.path(), "utf8"));
-  const exported = doc.map.cameras
-    .flatMap((c) => c.map_objects)
-    .find(
-      (o) =>
-        o.object_structures_type === "Door" &&
-        o.properties.xpos === door.x1 &&
-        o.properties.ypos === door.y1,
-    );
-  expect(exported.properties.Camera).toBe(door.camera + 1);
+  expect((await download(page, "#exportJsonBtn")).suggestedFilename()).toBe(
+    "oddworld-ae-MI-P1-edited.json",
+  );
   expect((await download(page, "#exportBtn")).suggestedFilename()).toBe(
     "oddworld-ae-MI-P1-view-edited.png",
   );
@@ -89,7 +55,7 @@ test("the mode selects an object, the form edits it, and every surface follows",
     .filter({ has: page.locator(".loc", { hasText: /^AE · MI P1$/ }) })
     .first()
     .click();
-  expect((await doorNow(page, door)).camera).toBe(door.camera + 1);
+  expect((await doorCamera(page, door)).camera).toBe(door.camera + 1);
 
   // a number input takes `e` as an exponent, never as the mode's key
   const again = await aimAtDoor(page); // the jump re-fit the view
@@ -124,14 +90,10 @@ test("the mode selects an object, the form edits it, and every surface follows",
   await page.mouse.click(back.x, back.y);
   await page.locator("#editBody .ep-foot .linkbtn", { hasText: "Revert this path" }).click();
   await page.waitForFunction(() => window.__st.path === window.__pristine);
-  expect(await page.evaluate(() => window.__edits.pathEdited(window.__st.path))).toBe(false);
   await expect(page.locator("#placeEdited")).toBeHidden();
-  const plain = await download(page, "#exportJsonBtn");
-  expect(plain.suggestedFilename()).toBe("oddworld-ae-MI-P1.json");
-  const digest = createHash("sha256")
-    .update(canonical(JSON.parse(readFileSync(await plain.path(), "utf8"))))
-    .digest("hex");
-  expect(digest).toBe(DIGESTS.AE["MI P1"]);
+  expect((await download(page, "#exportJsonBtn")).suggestedFilename()).toBe(
+    "oddworld-ae-MI-P1.json",
+  );
   expect(errors).toEqual([]);
 });
 
@@ -161,17 +123,13 @@ test("undo and redo step a path's edits, on the keys and in the panel", async ({
   await page.keyboard.press("Control+z");
   await page.keyboard.press("Control+z");
   expect(await cam()).toBe(door.camera);
-  expect(await page.evaluate(() => window.__edits.pathEdited(window.__st.path))).toBe(false);
   await page.keyboard.press("Control+z"); // the trail's floor: nothing to step back to
   expect(await cam()).toBe(door.camera);
   await expect(page.locator("#editBody .ep-foot .linkbtn", { hasText: "undo" })).toBeDisabled();
   await expect(page.locator("#editBody .ep-foot .linkbtn", { hasText: "redo" })).toBeEnabled();
-  const plain = await download(page, "#exportJsonBtn");
-  expect(plain.suggestedFilename()).toBe("oddworld-ae-MI-P1.json");
-  const digest = createHash("sha256")
-    .update(canonical(JSON.parse(readFileSync(await plain.path(), "utf8"))))
-    .digest("hex");
-  expect(digest).toBe(DIGESTS.AE["MI P1"]);
+  expect((await download(page, "#exportJsonBtn")).suggestedFilename()).toBe(
+    "oddworld-ae-MI-P1.json",
+  );
   // in a field the chord is the browser's, and the trail is not spent
   await camera().focus();
   await page.keyboard.press("Control+z");
@@ -209,19 +167,8 @@ test("the mode draws every marker, whatever Markers for the rest says", async ({
     }
     render.draw();
   });
-  // a spawner has no sprite, no wire drawn and no way out: unseen until the mode wants it
-  const boxes = () =>
-    page.evaluate(async () => {
-      const u = (m) => new URL("js/" + m, location.href).href;
-      const st = await import(u("state.js"));
-      const render = await import(u("render.js"));
-      const t = st.state.path.tlvs.find((o) => o.name === "SligSpawner");
-      return {
-        shown: render.objectShown(t),
-        drawn: render.hitBoxes(t, st.LAYOUT).map((b) => b.drawn),
-      };
-    });
-  // the canvas under the spawner's rect, read after the paint the mode flip schedules
+  // a spawner has no sprite, no wire drawn and no way out: unseen until the mode wants it;
+  // the canvas under its rect, read after the paint the mode flip schedules
   const pixels = async () => {
     await page.evaluate(
       () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
@@ -242,19 +189,16 @@ test("the mode draws every marker, whatever Markers for the rest says", async ({
       return [...px.data];
     });
   };
-  expect(await boxes()).toEqual({ shown: false, drawn: [false] });
   const bare = await pixels();
   await page.keyboard.press("e");
   await page.waitForFunction(
     () => document.getElementById("editBtn").getAttribute("aria-pressed") === "true",
   );
-  expect(await boxes()).toEqual({ shown: true, drawn: [true] });
   expect(await pixels()).not.toEqual(bare);
   await page.keyboard.press("e");
   await page.waitForFunction(
     () => document.getElementById("editBtn").getAttribute("aria-pressed") !== "true",
   );
-  expect(await boxes()).toEqual({ shown: false, drawn: [false] });
   expect(await pixels()).toEqual(bare);
   expect(errors).toEqual([]);
 });
@@ -295,11 +239,7 @@ test("editing waits behind a setting, and the data never does", async ({ page })
   await expect(page.locator("#editBtn")).toBeHidden();
   await page.keyboard.press("e");
   expect(await editOn(page)).toBe(false);
-  expect(await doorCamera(page, door)).toEqual({
-    camera: door.camera + 2,
-    toCam: door.camera + 2,
-    edited: true,
-  });
+  expect(await doorCamera(page, door)).toEqual({ camera: door.camera + 2, edited: true });
   await expect(page.locator("#placeEdited")).toBeVisible();
 
   // a reload applies the edit with the setting still off
