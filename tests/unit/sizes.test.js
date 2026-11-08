@@ -31,7 +31,6 @@ const OVER = {
   "public/js/render.js": 1800,
   "public/js/sprites.js": 1600,
   "tests/browser/editing.spec.js": 1200,
-  "tests/browser/motion.spec.js": 1400,
   "tests/unit/edits.test.js": 1300,
   "tests/unit/model.test.js": 1500,
   "tests/unit/motion.test.js": 2000,
