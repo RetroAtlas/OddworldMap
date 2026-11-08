@@ -1,7 +1,7 @@
 // Route planner: waypoint editing, the distance readout bar and the route's
 // lifecycle. A route is a list of per-path segments {lv, pa, pts}; a follow
 // taken while the planner is armed seams two segments together, so a route can
-// walk through doors and wells. The polylines render in render.js whenever
+// walk through doors and wells. The polylines render whenever
 // state.route has segments; state.show.route only gates editing, so a shared
 // route link opens visible with click-to-follow still live.
 
