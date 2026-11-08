@@ -93,3 +93,6 @@ export const tlv = (name, extra = null) => ({
 export const path = (id, tlvs, cams = [], w = 1, h = 1) => ({ id, w, h, cams, tlvs, lines: [] });
 export const level = (short, ...paths) => ({ short, name: short, paths });
 export const dataset = (levels, geometry = SYNTH_GEOMETRY) => ({ id: "XX", levels, geometry });
+
+// a TLV moved to world position (x, y); SYNTH_GEOMETRY cells are 400x200 units
+export const at = (t, x, y) => ({ ...t, x1: x, y1: y, x2: x + 10, y2: y + 10 });
