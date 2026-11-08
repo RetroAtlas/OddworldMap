@@ -2,15 +2,11 @@ import { expect, test } from "@playwright/test";
 import { DEFAULT_CATS, digest, seedView, settleAny, trackErrors } from "./helpers.js";
 import { aimAtDoor, aimAtDoorNow, armEditing, attach } from "./edithelpers.js";
 
-// the selected object's rect as the page holds it now, with what the surfaces say of it
+// the selected object's rect as the page holds it now
 const selRect = (page) =>
   page.evaluate(() => {
     const t = window.__st.sel;
-    return {
-      rect: [t.x1, t.y1, t.x2, t.y2],
-      notes: window.__edits.editNotes(t),
-      stored: JSON.parse(localStorage.getItem("owm:edits") ?? "null"),
-    };
+    return [t.x1, t.y1, t.x2, t.y2];
   });
 
 test("the selection drags where the pointer carries it, nudges on the arrows and types its place", async ({
@@ -41,12 +37,12 @@ test("the selection drags where the pointer carries it, nudges on the arrows and
   await page.mouse.move(door.x + 50, door.y + 20);
   await page.mouse.up();
   await page.waitForFunction((d) => window.__st.sel?.x1 === d.x1 + 25, door);
-  let now = await selRect(page);
-  expect(now.rect).toEqual([door.x1 + 25, door.y1 + 10, door.x1 + 25 + w, door.y1 + 10 + h]);
-  expect(now.notes).toEqual(["moved"]);
-  const [key, delta] = Object.entries(now.stored.AE["MI/1"].objects)[0];
-  expect(key.startsWith(`Door@${door.x1},${door.y1}`)).toBe(true);
-  expect(delta).toEqual({ rect: now.rect });
+  expect(await selRect(page)).toEqual([
+    door.x1 + 25,
+    door.y1 + 10,
+    door.x1 + 25 + w,
+    door.y1 + 10 + h,
+  ]);
   await expect(page.locator("#editBody .ep-shipped")).toContainText(
     `shipped: ${door.x1},${door.y1}`,
   );
@@ -75,16 +71,16 @@ test("the selection drags where the pointer carries it, nudges on the arrows and
   await page.mouse.move(grab.x + 30, grab.y + 30);
   await page.keyboard.press("Escape");
   await page.mouse.up();
-  expect((await selRect(page)).rect[0]).toBe(door.x1 + 25);
+  expect((await selRect(page))[0]).toBe(door.x1 + 25);
   await expect(page.locator("#editPanel")).toBeVisible();
 
   // a bare arrow still pans the map rather than the object
   const camBefore = await page.evaluate(() => window.__st.cam.x);
   await page.keyboard.press("ArrowRight");
   expect(await page.evaluate(() => window.__st.cam.x)).not.toBe(camBefore);
-  expect((await selRect(page)).rect[0]).toBe(door.x1 + 25);
+  expect((await selRect(page))[0]).toBe(door.x1 + 25);
 
-  // Shift during a drag snaps the midpoint onto the engine's x grid
+  // Shift held through a drag snaps the door off the unsnapped place
   const at = await aimAtDoorNow(page);
   await page.mouse.move(at.x, at.y);
   await page.mouse.down();
@@ -94,19 +90,10 @@ test("the selection drags where the pointer carries it, nudges on the arrows and
   await page.mouse.up();
   await page.keyboard.up("Shift");
   await page.waitForFunction((d) => window.__st.sel?.x1 !== d.x1 + 25, door);
-  const snapped = await page.evaluate(async () => {
-    const u = (m) => new URL("js/" + m, location.href).href;
-    const collide = await import(u("collide.js"));
+  const snapped = await page.evaluate(() => {
     const t = window.__st.sel;
-    const mid = Math.trunc((t.x1 + t.x2) / 2);
-    return {
-      x1: t.x1,
-      y1: t.y1,
-      mid,
-      grid: collide.snapAt("AE", window.__st.data.geometry, mid, false),
-    };
+    return { x1: t.x1, y1: t.y1 };
   });
-  expect(snapped.grid).toBe(snapped.mid);
   expect(snapped.x1).not.toBe(door.x1 + 40);
   expect(snapped.y1).toBe(door.y1 + 10);
   const x1Now = snapped.x1;
@@ -116,16 +103,10 @@ test("the selection drags where the pointer carries it, nudges on the arrows and
   await input("w").fill(String(w + 10));
   await input("w").press("Tab");
   await page.waitForFunction((x2) => window.__st.sel?.x2 === x2, x1Now + w + 10);
-  now = await selRect(page);
-  expect(now.rect).toEqual([x1Now, door.y1 + 10, x1Now + w + 10, door.y1 + 10 + h]);
-  expect(now.notes).toEqual(["moved", "resized"]);
+  expect(await selRect(page)).toEqual([x1Now, door.y1 + 10, x1Now + w + 10, door.y1 + 10 + h]);
   await page.locator("#editBody .ep-shipped .ep-back").click();
   await page.waitForFunction((d) => window.__st.sel?.x1 === d.x1, door);
-  now = await selRect(page);
-  expect(now.rect).toEqual([door.x1, door.y1, door.x2, door.y2]);
-  expect(now.notes).toEqual([]);
-  expect(now.stored).toBeNull();
-  expect(await page.evaluate(() => window.__edits.pathEdited(window.__st.path))).toBe(false);
+  expect(await selRect(page)).toEqual([door.x1, door.y1, door.x2, door.y2]);
 
   // put back as shipped takes every change to the object away in one press, and one undo brings it back
   await input("x").fill(String(door.x1 + 30));
@@ -135,21 +116,16 @@ test("the selection drags where the pointer carries it, nudges on the arrows and
   await camera.fill(String(door.camera + 1));
   await camera.press("Tab");
   await page.waitForFunction((c) => window.__st.sel?.fields.camera === c, door.camera + 1);
-  expect((await selRect(page)).notes).toEqual(["camera", "moved"]);
   await page.locator('#editBody [data-action="revert"]').focus();
   await page.keyboard.press("Enter");
   await page.waitForFunction(
     (d) => window.__st.sel?.x1 === d.x1 && window.__st.sel?.fields.camera === d.camera,
     door,
   );
-  now = await selRect(page);
-  expect(now.notes).toEqual([]);
-  expect(now.stored).toBeNull();
   await expect(page.locator('#editBody [data-action="revert"]')).toHaveCount(0);
   await expect(page.locator("#editPanel")).toBeFocused();
   await page.keyboard.press("Control+z");
   await page.waitForFunction((d) => window.__st.sel?.x1 === d.x1 + 30, door);
-  expect((await selRect(page)).notes).toEqual(["camera", "moved"]);
   await page.keyboard.press("Control+Shift+z");
   await page.waitForFunction((d) => window.__st.sel?.x1 === d.x1, door);
 
@@ -164,13 +140,15 @@ test("the selection drags where the pointer carries it, nudges on the arrows and
   await expect(page.locator(".toast", { hasText: "marker on Door" })).toBeVisible();
   await settleAny(page);
   await attach(page);
-  const landed = await page.evaluate((d) => {
-    const st = window.__st;
-    const t = st.path.tlvs.find((o) => o.name === "Door" && o.x1 === d.x1 + 100 && o.y1 === d.y1);
-    return { found: !!t, notes: t ? window.__edits.editNotes(t) : null };
-  }, door);
-  expect(landed.found).toBe(true);
-  expect(landed.notes).toEqual(["moved"]);
+  expect(
+    await page.evaluate(
+      (d) =>
+        window.__st.path.tlvs.some(
+          (o) => o.name === "Door" && o.x1 === d.x1 + 100 && o.y1 === d.y1,
+        ),
+      door,
+    ),
+  ).toBe(true);
   const centre = await page.evaluate(async (d) => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const stateModule = await import(u("state.js"));

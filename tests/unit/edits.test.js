@@ -193,6 +193,8 @@ test("a rect delta moves or resizes the object and keeps the rest of the path by
   assert.deepEqual(editStore().AE["MI/1"].objects["Door@10,10"], { fields: { camera: 18 } });
   assert.equal(applyFieldEdit(back, "camera", 17), d);
   assert.equal(state.path, P1);
+  assert.deepEqual(editStore(), {});
+  assert.equal(hasStoredEdits("AE"), false);
   // the rect already standing is no step and no swap
   const again = applyRectEdit(d, [20, 15, 44, 39]);
   const before = state.path;
