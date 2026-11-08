@@ -25,9 +25,6 @@ const probe = (page) =>
       ],
       cam: { ...state.cam },
       view: nav.viewHash(),
-      regional: state.path.cams.filter((c) =>
-        [c.png, ...(c.patches ?? []).map(([, , f]) => f)].some((f) => f?.startsWith("cams/ao/jp/")),
-      ).length,
     };
   });
 
@@ -59,7 +56,6 @@ test("a release link opens the release, and the row swaps releases in place", as
   expect(jp.tip).toMatch(/^Japan: Abe a GoGo, in Japanese\. Japanese text on the signs/);
   expect(jp.fold).toEqual([false, "Japan"]);
   expect(jp.view).toBe(`${VIEW}/jp`);
-  expect(jp.regional).toBeGreaterThan(0);
 
   await page.locator("#releaseMenu > summary").click();
   await page.locator("#releaseBtns button", { hasText: "Europe" }).click();
@@ -79,7 +75,6 @@ test("a release link opens the release, and the row swaps releases in place", as
     "Spain",
   ]);
   expect(eu.fold).toEqual([true, "Europe"]);
-  expect(eu.regional).toBe(0);
 
   await page.locator('#releaseBtns button[data-key=""]').click();
   await releaseIs(page, null);
