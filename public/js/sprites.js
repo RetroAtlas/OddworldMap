@@ -6,94 +6,36 @@
 // No DOM, so it stays importable in bare Node.
 
 import { onBackgroundPlane } from "./fields.js";
-import { raycastDiag, raycastDown, snapAt as snapWorldX, snapX } from "./collide.js";
+import { raycastDiag, raycastDown, snapX } from "./collide.js";
 import { filedAt, filedCell, sligBounds, tlvCell } from "./model.js";
 import { lcdMessages } from "./messages.js";
 import { AE_MUDOKONS_IN_LEVEL, AO_MUDOKONS, TALLY_EDGE, lcdIds } from "./lcd.js";
-
-// collision-line types a constructor raycasts against; the background plane's
-// copies sit four above the foreground's
-const FLOOR = [0];
-const FLOOR_WALLS = [0, 1, 2];
-const FLOOR_WALLS_CEIL = [0, 1, 2, 3];
-const TRACK = [8];
-const bgOf = (types) => types.map((t) => t + 4);
-const planeTypes = (half, types) => (half ? bgOf(types) : types);
-
-const snapAt = (c, x) => snapWorldX(c.game, c.geo, x, c.half);
-
-const trunc = Math.trunc;
-const mid = (t) => trunc((t.x1 + t.x2) / 2);
-const midY = (t) => trunc((t.y1 + t.y2) / 2);
-const cellOf = (geo, at) => `${Math.floor(at.x / geo.worldW)},${Math.floor(at.y / geo.worldH)}`;
-const ALL_LINES = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-// the levels whose themed art and tints differ
-const AE_VAULTS = new Set(["NE", "PV", "SV"]);
-const AO_STOCKYARDS = new Set(["E1", "E2"]);
-const AO_YARDS_TINT = (c, yards, other) => (AO_STOCKYARDS.has(c.lvl.short) ? yards : other);
-const NE_TINT = (c) => (c.lvl.short === "NE" ? [137, 137, 137] : [127, 127, 127]);
-
-// a brain rolls the game's dice from a seed; the game's is wherever its
-// counter stood, the record's is its place in the path
-const brain = (c, name, emo = false, p = null) => ({
-  kind: "brain",
-  brain: name,
-  game: c.game,
-  seed: c.index & 255,
-  emo,
-  p,
-});
-// a brain on patrol walks the path: its lines and their links, its objects,
-// and the spawn the constructor's own raycast stands it on
-const patrol = (c, name, p, spawn) => ({
-  ...brain(c, name, false, p),
-  patrol: true,
-  world: {
-    game: c.game,
-    half: c.half,
-    lines: c.lines,
-    links: c.links,
-    tlvs: c.path.tlvs,
-    spawn,
-  },
-});
-
-// the record a rule returns, with the engine's defaults: full scale on layer
-// 27 and half on layer 8, the game's base colour, a semi-transparent polygon
-function draw(c, anim, x, y, o = {}) {
-  const scale = o.scale ?? (c.half ? 0.5 : 1);
-  return {
-    anim,
-    x,
-    y: y + (o.yOff ?? c.yOff),
-    scale,
-    flip: !!o.flip,
-    flipY: !!o.flipY,
-    layer: o.layer ?? (scale === 1 ? 27 : 8),
-    rgb: o.rgb ?? (c.game === "AO" ? [105, 105, 105] : [127, 127, 127]),
-    semi: o.semi ?? true,
-    blend: o.blend ?? 0,
-    frame: o.frame ?? 0,
-    frozen: !!o.frozen,
-    swap: !!o.swap,
-    cycle: o.cycle ?? null,
-    tile: o.tile ?? null,
-    camAt: o.camAt ?? null,
-  };
-}
-
-// the bounding rectangle of an animation's first frame, from the sidecar
-const bound = (c, anim) => c.anims?.[anim]?.frames[0].slice(7, 11) ?? [0, 0, 0, 0];
-
-// one entry per level row of a tint table, the rest the fallback
-const tint = (table, lv, fallback) => table[lv] ?? fallback;
-
-const rules = { AO: {}, AE: {} };
-const rule = (game, type, fn) => (rules[game][type] = fn);
-const both = (type, fn) => {
-  rule("AO", type, fn);
-  rule("AE", type, fn);
-};
+import {
+  FLOOR,
+  FLOOR_WALLS,
+  FLOOR_WALLS_CEIL,
+  TRACK,
+  planeTypes,
+  snapAt,
+  trunc,
+  mid,
+  midY,
+  cellOf,
+  ALL_LINES,
+  AE_VAULTS,
+  AO_STOCKYARDS,
+  AO_YARDS_TINT,
+  NE_TINT,
+  brain,
+  patrol,
+  draw,
+  bound,
+  tint,
+  rules,
+  rule,
+  both,
+  stackOffset,
+} from "./spritekit.js";
 
 // ---- doors and furniture ------------------------------------------------
 
@@ -994,21 +936,6 @@ both("BackgroundAnimation", (c) => {
 
 // ---- creatures --------------------------------------------------------------
 
-// the render offset the engine stacks same-type objects by: the n-th of a kind
-// in a camera takes the n-th entry, scaled in Exoddus (StackOnObjectsOfType)
-const STACK = [0, 3, -3, 6, -6, 2];
-function stackOffset(c) {
-  const { t, path, geo } = c;
-  const cell = (o) => filedCell(o, path, geo, c.game);
-  const here = cell(t);
-  let n = 0;
-  for (const o of path.tlvs) {
-    if (o === t) break;
-    if (o.name === t.name && cell(o) === here) n++;
-  }
-  const s = c.game === "AE" ? (c.half ? 0.5 : 1) : 1;
-  return trunc(STACK[n % 6] * s);
-}
 const camOf = (c, t) => c.path.cams.find((cm) => cm.cell === filedCell(t, c.path, c.geo, c.game));
 
 both("Slig", (c) => {
