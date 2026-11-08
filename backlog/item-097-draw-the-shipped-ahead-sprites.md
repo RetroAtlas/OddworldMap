@@ -1,6 +1,6 @@
 # 97. Draw what the sheets carry ahead of their brains
 
-**Status:** open — the falling items on the always-on switch shipped 2026-10-13 · **Effort:** medium in all, a small rule or brain each (the shadows also need a subtractive blend in the painter) · **Where:** viewer, `furniturerules.js` for the lever, the slap lock, the wheel and the wells, `sprites.js` for the rest of the rules, and the brain modules; no disc
+**Status:** open — the falling items on the always-on switch shipped 2026-10-13 · **Effort:** medium in all, a small rule or brain each (the shadows also need a subtractive blend in the painter) · **Where:** viewer, `furniturerules.js` for the lever, the slap lock, the wheel and the wells, `hazardrules.js` for the detectors and the claw, `sprites.js` for the rest of the rules, and the brain modules; no disc
 
 **Filed:** 2026-10-09, from an audit of every animation the map could draw at a fresh start without a player that the sheets did not ship, made so that one rebuild could carry them all (*Ship the next brains' sprites in one rebuild, ahead of the brains*).
 
