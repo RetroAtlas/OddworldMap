@@ -58,7 +58,8 @@ Beside the builder, [tools/visit.py](tools/visit.py) writes a PlayStation memory
 - [docs/relive.md](docs/relive.md): the level editor's JSON export, the caches it draws on, and the oracle it answers to.
 - [docs/visit.md](docs/visit.md): what an Oddysee save holds and how loading one starts a path, where a permalink puts Abe, and the emulator profile the visit tool launches.
 - [docs/curated-data.md](docs/curated-data.md): how the path names, the field glossary and the type encyclopedia are curated, which source each name follows, and the tests that hold each file to its shape.
-- [CLAUDE.md](CLAUDE.md): the rules for changing any of it and the checks a commit passes, with the index of every topic doc, the viewer's area docs, testing and the stylesheet among them.
+- [docs/testing.md](docs/testing.md): the four suites, what each spec pins, where a check lives and how a test is added, the size caps and the browser budget.
+- [CLAUDE.md](CLAUDE.md): the rules for changing any of it and the checks a commit passes, with the index of every topic doc, the viewer's area docs and the stylesheet among them.
 - [backlog/](backlog/): the plans, what reviews found and what came of both, one file per item.
 
 ## Credits & licensing
