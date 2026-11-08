@@ -9,6 +9,7 @@ import {
   loadGame,
   loadRelease,
   loadReleaseIndex,
+  loadSprites,
 } from "../../public/js/data.js";
 
 test("knownGame: the games the map ships, and nothing borrowed from Object", () => {
@@ -64,6 +65,32 @@ test("a release stands over the very base the game loads, one dataset however of
     assert.ok(!fetched.some((f) => f.startsWith("relive_export_ao")));
     assert.equal(await loadRelease("AO", "us-r3"), null);
     assert.equal(await loadRelease("AO", "../x"), null);
+  } finally {
+    globalThis.fetch = was;
+  }
+});
+
+test("loadSprites refuses a sidecar of another shape, and the next ask fetches again", async () => {
+  const bodies = [
+    { sheets: ["cams/ae/sprites/0.png"], anims: {}, font: { sheet: 0 } },
+    { sheets: {}, shared: [] },
+    { anims: {}, shared: [] },
+    { anims: {}, sheets: [], shared: [] },
+    { anims: {}, sheets: {}, shared: {} },
+    { anims: {}, sheets: {}, shared: [] },
+  ];
+  const fetched = [];
+  const was = globalThis.fetch;
+  globalThis.fetch = async (file) => {
+    fetched.push(file);
+    return { ok: true, json: async () => bodies[fetched.length - 1] };
+  };
+  try {
+    for (let i = 0; i < 5; i++) assert.equal(await loadSprites("AE"), null);
+    const d = await loadSprites("AE");
+    assert.deepEqual(d, bodies[5]);
+    assert.equal(await loadSprites("AE"), d);
+    assert.deepEqual(fetched, Array(6).fill("sprites_ae.json"));
   } finally {
     globalThis.fetch = was;
   }

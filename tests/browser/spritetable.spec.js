@@ -36,7 +36,7 @@ test("the toggle swaps a marker for the game's sprite, fetching the sidecar once
     }
     render.draw();
   });
-  await page.waitForTimeout(400);
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
   await page.evaluate(async () => {
     const render = await import(new URL("js/render.js", location.href).href);
     render.draw();
@@ -123,15 +123,6 @@ test("a sidecar that fails to load is asked for once, the objects fall back to m
   expect(asks.length).toBe(1);
   // with the sidecar failed the slig stays on the map, as its marker: the same
   // pixels the objects off would paint
-  expect(
-    await page.evaluate(async () => {
-      const u = (m) => new URL("js/" + m, location.href).href;
-      const st = await import(u("state.js"));
-      const render = await import(u("render.js"));
-      const t = st.state.path.tlvs.find((o) => o.name === "Slig");
-      return render.objectShown(t);
-    }),
-  ).toBe(true);
   const fallen = await pixels(page, SLIG);
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
@@ -170,14 +161,21 @@ test("a sidecar of another shape is refused, and the objects stand as markers", 
   await page.goto(`/?embed=1#AE/MI/1/${SLIG.x1 + 12}/${SLIG.y1 - 10}/1.00`);
   await settle(page, SLIG);
   await landed;
-  const drawn = await page.evaluate(async (s) => {
+  // refused, the sidecar leaves the slig as its marker: the same pixels the objects off would paint
+  await page.evaluate(async () => {
+    const render = await import(new URL("js/render.js", location.href).href);
+    for (let i = 0; i < 3; i++) {
+      render.draw();
+      await new Promise(requestAnimationFrame);
+    }
+  });
+  const asMarker = await pixels(page, SLIG);
+  await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
-    const render = await import(u("render.js"));
-    const t = st.state.path.tlvs.find((o) => o.name === "Slig" && o.x1 === s.x1 && o.y1 === s.y1);
-    return render.hitBoxes(t, st.LAYOUT).map((b) => b.drawn);
-  }, SLIG);
-  expect(drawn).toEqual([true]);
+    const sidebar = await import(u("sidebar.js"));
+    sidebar.toggleShow("objects");
+  });
+  expect(await pixels(page, SLIG)).toEqual(asMarker);
   expect(errors).toEqual([]);
 });
 
