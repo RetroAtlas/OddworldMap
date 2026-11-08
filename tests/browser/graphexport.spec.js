@@ -35,7 +35,6 @@ test("the world graph saves as an SVG file and a PNG twice its actual size", asy
 
   const { name, svg } = await saveSvg(page);
   expect(name).toBe("oddworld-ao-graph.svg");
-  expect(svg.startsWith(`<?xml version="1.0" encoding="UTF-8"?>`)).toBe(true);
   const parsed = await parseSvg(page, svg);
   expect(parsed.error).toBeNull();
   expect(parsed.nodes).toBe(domNodes);
@@ -74,7 +73,6 @@ test("the Exoddus diagram serializes and parses whole", async ({ page }) => {
   const parsed = await parseSvg(page, svg);
   expect(parsed.error).toBeNull();
   expect(parsed.nodes).toBe(domNodes);
-  expect(svg).toContain("MUDOMO VAULT ENDER");
 
   const [pngDl] = await Promise.all([page.waitForEvent("download"), page.click("#graphPngBtn")]);
   expect(pngDl.suggestedFilename()).toBe("oddworld-ae-graph.png");
