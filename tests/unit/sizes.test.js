@@ -29,7 +29,7 @@ const OVER = {
   "public/js/interaction.js": 900,
   "public/js/model.js": 900,
   "public/js/render.js": 1800,
-  "public/js/sprites.js": 1500,
+  "public/js/sprites.js": 1000,
 };
 
 const lines = (path) =>
