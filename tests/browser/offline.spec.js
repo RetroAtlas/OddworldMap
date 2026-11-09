@@ -79,28 +79,28 @@ test("storing a release's file retires that file's earlier copies, and nothing e
 }) => {
   const errors = trackErrors(page);
   const [[x, y, own]] = JSON.parse(pub("release_ao_jp.json")).paths["R1/15"].cams.R1P15C02.patches;
-  // a stale copy of the same patch, a patch of the same screen at another
-  // place, one of a file of another name the page never asks for, and the
-  // base's own picture of the screen
-  const OLD = `cams/ao/jp/R1/R1P15C02_${x}_${y}.000000000000.png`;
+  // the same patch at another place, a file never asked for, the base's screen, and a stale copy
   const PLACE = `cams/ao/jp/R1/R1P15C02_${x + 16}_${y}.000000000000.png`;
   const OTHER = "cams/ao/jp/R2/R2P01C01_fg37.000000000000.png";
   const BASE = "cams/ao/R1/R1P15C02.png";
+  const OLD = `cams/ao/jp/R1/R1P15C02_${x}_${y}.000000000000.png`;
   await page.goto("/#AO/R1/15/2470/180/3.00/jp");
   await settle(page, VIEW);
+  // seeded before the setting goes on, which fetches the patch again, and the stale copy last
+  await page.evaluate(
+    async ({ name, seeded }) => {
+      const cache = await caches.open(name);
+      for (const f of seeded) await cache.put(new URL(f, location.href).href, new Response(f));
+    },
+    { name: CACHE_NAME, seeded: [PLACE, OTHER, BASE, OLD] },
+  );
   await page.click("#settingsBtn");
   await page.check("#sCacheMap");
   await page.click("#settingsClose");
   await page.waitForFunction(() => !!navigator.serviceWorker.controller);
-  await page.evaluate(
-    async ({ name, own, seeded }) => {
-      const cache = await caches.open(name);
-      await cache.delete(new URL(own, location.href).href);
-      for (const f of seeded) await cache.put(new URL(f, location.href).href, new Response(f));
-      await (await fetch(own)).blob();
-    },
-    { name: CACHE_NAME, own, seeded: [OLD, PLACE, OTHER, BASE] },
-  );
+  await page.evaluate(async (own) => {
+    await (await fetch(own)).blob();
+  }, own);
   const stored = () =>
     page.evaluate(
       async ({ name, files }) => {
