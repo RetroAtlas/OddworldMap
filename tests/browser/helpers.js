@@ -151,6 +151,26 @@ export async function settleAny(page) {
   await settleAt(page, null);
 }
 
+// the standing path's artwork asked for again until it lands, inside the test's own timeout, then
+// one paint: the sheets are asked for only once the sidecar is in, so one asking is not enough
+export async function settleArtwork(page) {
+  const ms = inside();
+  await page.evaluate(async (ms) => {
+    const u = (m) => new URL("js/" + m, location.href).href;
+    const st = await import(u("state.js"));
+    const render = await import(u("render.js"));
+    const deadline = Date.now() + ms;
+    for (;;) {
+      await render.preloadPath(st.state.path);
+      if (render.artworkReady(st.state.path)) break;
+      if (Date.now() > deadline)
+        throw new Error(`artwork timeout at ${location.hash || "the boot view"}`);
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    render.draw();
+  }, ms);
+}
+
 export async function probeAnchor(page, anchor) {
   return await page.evaluate(async (a) => {
     const u = (m) => new URL("js/" + m, location.href).href;

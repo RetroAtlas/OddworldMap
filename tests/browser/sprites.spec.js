@@ -1,5 +1,13 @@
 import { expect, test } from "@playwright/test";
-import { ALL_CATS, BOUND, pixels, seedView, settle, trackErrors } from "./helpers.js";
+import {
+  ALL_CATS,
+  BOUND,
+  pixels,
+  seedView,
+  settle,
+  settleArtwork,
+  trackErrors,
+} from "./helpers.js";
 
 // a Paramonian rolling ball, drawn far larger than the rectangle that places it
 const BALL = { game: "AO", level: "F2", path: 4, x1: 284, y1: 696, x2: 308, y2: 720 };
@@ -24,18 +32,7 @@ test("the patrol pens draw their posts with the markers off", async ({ page }) =
   await seedView(page, { show: { objects: true, markers: false, pens: true }, cats: ALL_CATS });
   await page.goto(`/?embed=1#AE/MI/1/${BOUND.x1 + 12}/${BOUND.y1 - 10}/1.00`);
   await settle(page, BOUND);
-  await page.evaluate(async () => {
-    const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
-    const render = await import(u("render.js"));
-    const deadline = Date.now() + 20000;
-    while (Date.now() < deadline) {
-      await render.preloadPath(st.state.path);
-      if (render.artworkReady(st.state.path)) break;
-      await new Promise((r) => setTimeout(r, 100));
-    }
-    render.draw();
-  });
+  await settleArtwork(page);
   // a post is drawn in the enemies' purple, which the mine's artwork does not carry
   const purple = (px) => {
     let n = 0;
@@ -61,18 +58,7 @@ test("a lift's top wheel is drawn at its pulley, screens above the lift's own re
   await seedView(page, { show: { objects: true }, cats: ALL_CATS });
   await page.goto(`/?embed=1#AE/MI/1/${PULLEY.x1 + 12}/${PULLEY.y1 + 12}/1.00`);
   await settle(page, PULLEY);
-  await page.evaluate(async () => {
-    const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
-    const render = await import(u("render.js"));
-    const deadline = Date.now() + 20000;
-    while (Date.now() < deadline) {
-      await render.preloadPath(st.state.path);
-      if (render.artworkReady(st.state.path)) break;
-      await new Promise((r) => setTimeout(r, 100));
-    }
-    render.draw();
-  });
+  await settleArtwork(page);
   const withWheel = await pixels(page, WHEEL);
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
@@ -94,18 +80,7 @@ test("a falling item is drawn on the screen of the camera that builds it, not th
   await seedView(page, { show: { objects: true }, cats: ALL_CATS });
   await page.goto(`/?embed=1#AE/BW/4/${CRATE.x1 + 12}/${CRATE.y1 - 20}/1.00`);
   await settle(page, CRATE);
-  await page.evaluate(async () => {
-    const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
-    const render = await import(u("render.js"));
-    const deadline = Date.now() + 20000;
-    while (Date.now() < deadline) {
-      await render.preloadPath(st.state.path);
-      if (render.artworkReady(st.state.path)) break;
-      await new Promise((r) => setTimeout(r, 100));
-    }
-    render.draw();
-  });
+  await settleArtwork(page);
   const above = await pixels(page, ABOVE_CRATE);
   const drill = await pixels(page, DRILL);
   // the hazards hidden with the objects still shown, so the masks over the sprites stay
@@ -131,18 +106,7 @@ test("over a sprite's image, the hover names what the eye sees before an unseen 
   const spot = { x: 4038, y: 992 };
   await page.goto(`/?embed=1#AE/MI/1/${spot.x}/${spot.y}/1.00`);
   await settle(page, PULLEY);
-  await page.evaluate(async () => {
-    const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
-    const render = await import(u("render.js"));
-    const deadline = Date.now() + 20000;
-    while (Date.now() < deadline) {
-      await render.preloadPath(st.state.path);
-      if (render.artworkReady(st.state.path)) break;
-      await new Promise((r) => setTimeout(r, 100));
-    }
-    render.draw();
-  });
+  await settleArtwork(page);
   const client = await page.evaluate(async (w) => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const st = await import(u("state.js"));
@@ -167,18 +131,7 @@ test("a sprite larger than its rectangle is hovered over its whole image", async
   await seedView(page, { show: { objects: true }, cats: ALL_CATS });
   await page.goto(`/?embed=1#AO/F2/4/${BALL.x1 + 12}/${BALL.y1 + 12}/1.60`);
   await settle(page, BALL);
-  await page.evaluate(async () => {
-    const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
-    const render = await import(u("render.js"));
-    const deadline = Date.now() + 20000;
-    while (Date.now() < deadline) {
-      await render.preloadPath(st.state.path);
-      if (render.artworkReady(st.state.path)) break;
-      await new Promise((r) => setTimeout(r, 100));
-    }
-    render.draw();
-  });
+  await settleArtwork(page);
   // a point inside the drawn sprite but clear of the placed rectangle
   const spot = await page.evaluate(async (b) => {
     const u = (m) => new URL("js/" + m, location.href).href;
@@ -219,18 +172,7 @@ test("the scenery carries no label until the setting asks, then it does", async 
   await seedView(page, { show: { objects: true, labels: true }, cats: ALL_CATS });
   await page.goto(`/#AO/R1/15/${LIGHT.x1 + 30}/${LIGHT.y1}/2.00`);
   await settle(page, LIGHT);
-  await page.evaluate(async () => {
-    const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
-    const render = await import(u("render.js"));
-    const deadline = Date.now() + 20000;
-    while (Date.now() < deadline) {
-      await render.preloadPath(st.state.path);
-      if (render.artworkReady(st.state.path)) break;
-      await new Promise((r) => setTimeout(r, 100));
-    }
-    render.draw();
-  });
+  await settleArtwork(page);
   // the label's colour is the Scenery filter's own, nowhere in the artwork above the light
   const pink = (px) => {
     let n = 0;

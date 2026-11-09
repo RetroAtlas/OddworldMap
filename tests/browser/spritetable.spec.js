@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ALL_CATS, SLIG, pixels, seedView, settle, trackErrors } from "./helpers.js";
+import { ALL_CATS, SLIG, pixels, seedView, settle, settleArtwork, trackErrors } from "./helpers.js";
 
 test("the toggle swaps a marker for the game's sprite, fetching the sidecar once, and leaves the console clean", async ({
   page,
@@ -23,19 +23,7 @@ test("the toggle swaps a marker for the game's sprite, fetching the sidecar once
   });
   // the sidecar and the sheets land, then a paint carries the sprite
   await page.waitForFunction(() => document.getElementById("tObjects").checked);
-  await page.evaluate(async () => {
-    const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
-    const render = await import(u("render.js"));
-    const deadline = Date.now() + 20000;
-    // the painter asks for the sheets through preloadPath once the sidecar is in
-    while (Date.now() < deadline) {
-      await render.preloadPath(st.state.path);
-      if (render.artworkReady(st.state.path)) break;
-      await new Promise((r) => setTimeout(r, 100));
-    }
-    render.draw();
-  });
+  await settleArtwork(page);
   await page.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
   await page.evaluate(async () => {
     const render = await import(new URL("js/render.js", location.href).href);
@@ -82,18 +70,7 @@ test("while the sidecar is still coming, nothing stands where a sprite will", as
   const landed = page.waitForResponse(/sprites_ae\.json$/);
   release();
   await landed;
-  await page.evaluate(async () => {
-    const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
-    const render = await import(u("render.js"));
-    const deadline = Date.now() + 20000;
-    while (Date.now() < deadline) {
-      await render.preloadPath(st.state.path);
-      if (render.artworkReady(st.state.path)) break;
-      await new Promise((r) => setTimeout(r, 100));
-    }
-    render.draw();
-  });
+  await settleArtwork(page);
   expect(await pixels(page, SLIG)).not.toEqual(bare);
   expect(errors).toEqual([]);
 });

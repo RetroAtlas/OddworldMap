@@ -1,5 +1,13 @@
 import { expect, test } from "@playwright/test";
-import { ALL_CATS, BOUND, pixels, seedView, settle, trackErrors } from "./helpers.js";
+import {
+  ALL_CATS,
+  BOUND,
+  pixels,
+  seedView,
+  settle,
+  settleArtwork,
+  trackErrors,
+} from "./helpers.js";
 
 // a bird portal's exit in Necrum, pointed at by an arrow and by nothing else
 const EXIT = { game: "AE", level: "NE", path: 2, x1: 650, y1: 440, x2: 674, y2: 464 };
@@ -71,18 +79,7 @@ test("Markers for the rest needs the objects shown; off, a bound's marker leaves
     sidebar.toggleShow("objects");
   });
   await expect(markers).toBeEnabled();
-  await page.evaluate(async () => {
-    const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
-    const render = await import(u("render.js"));
-    const deadline = Date.now() + 20000;
-    while (Date.now() < deadline) {
-      await render.preloadPath(st.state.path);
-      if (render.artworkReady(st.state.path)) break;
-      await new Promise((r) => setTimeout(r, 100));
-    }
-    render.draw();
-  });
+  await settleArtwork(page);
   // a bound has no sprite, so its marker stays while the toggle is on
   expect(await pixels(page, BOUND)).toEqual(withMarker);
   await page.evaluate(async () => {

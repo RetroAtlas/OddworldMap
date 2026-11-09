@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { test, expect } from "@playwright/test";
-import { DEFAULT_CATS, POLL, seedView, settle, trackErrors } from "./helpers.js";
+import { DEFAULT_CATS, POLL, seedView, settle, settleArtwork, trackErrors } from "./helpers.js";
 
 const pub = (name) => readFileSync(new URL(`../../public/${name}`, import.meta.url), "utf8");
 const CACHE_NAME = /^const CACHE_NAME = "([^"]+)";$/m.exec(pub("sw.js"))[1];
@@ -52,16 +52,9 @@ test("storing a family's sprite sheet retires that family's other sheets and wha
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const sidebar = await import(u("sidebar.js"));
-    const st = await import(u("state.js"));
-    const render = await import(u("render.js"));
     sidebar.toggleShow("objects");
-    const deadline = Date.now() + 20000;
-    while (Date.now() < deadline) {
-      await render.preloadPath(st.state.path);
-      if (render.artworkReady(st.state.path)) break;
-      await new Promise((r) => setTimeout(r, 100));
-    }
   });
+  await settleArtwork(page);
   const families = new Set([...requested].map((p) => p.split("/")[3].split(".")[0]));
   expect(families.has("Slig")).toBe(true);
 

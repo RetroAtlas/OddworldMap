@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { DEFAULT_CATS, seedView, settleAny, trackErrors } from "./helpers.js";
+import { DEFAULT_CATS, seedView, settleAny, settleArtwork, trackErrors } from "./helpers.js";
 import { aimAtDoor, armEditing, attach, doorCamera, download } from "./edithelpers.js";
 
 const editOn = (page) => page.evaluate(() => window.__st.edit);
@@ -155,18 +155,7 @@ test("the mode draws every marker, whatever Markers for the rest says", async ({
   await page.goto("/#AE/MI/1");
   await settleAny(page);
   // the sheets land after the first paint; the canvas is read only once they have
-  await page.evaluate(async () => {
-    const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
-    const render = await import(u("render.js"));
-    const deadline = Date.now() + 20000;
-    while (Date.now() < deadline) {
-      await render.preloadPath(st.state.path);
-      if (render.artworkReady(st.state.path)) break;
-      await new Promise((r) => setTimeout(r, 100));
-    }
-    render.draw();
-  });
+  await settleArtwork(page);
   // a spawner has no sprite, no wire drawn and no way out: unseen until the mode wants it;
   // the canvas under its rect, read after the paint the mode flip schedules
   const pixels = async () => {
