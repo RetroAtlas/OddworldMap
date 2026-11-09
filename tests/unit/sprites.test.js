@@ -170,7 +170,7 @@ test("every animation name written whole into the viewer's modules is on a sidec
       Object.keys(sheets[g].anims).some((k) => k === name || k.startsWith(name + "@")),
     );
   let seen = 0;
-  for (const m of readdirSync(dir).filter((f) => f.endsWith(".js"))) {
+  for (const m of readdirSync(dir, { recursive: true }).filter((f) => f.endsWith(".js"))) {
     const src = readFileSync(new URL(m, dir), "utf8");
     for (const [, name] of src.matchAll(/"([A-Z][A-Za-z0-9]*_[A-Za-z0-9_@]+)"/g)) {
       seen++;

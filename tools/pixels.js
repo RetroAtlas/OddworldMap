@@ -7,7 +7,7 @@
 // on one; --dump writes each view's canvas for both trees.
 import { chromium } from "@playwright/test";
 import { execFile } from "node:child_process";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -55,6 +55,23 @@ function serve(read) {
   return new Promise((resolve) => server.listen(0, "127.0.0.1", () => resolve(server)));
 }
 const fromTree = (path) => readFile(join(ROOT, "public", path));
+// a module by its name, wherever the tree keeps it under js/, so the two trees
+// need not lay their modules out alike
+const modulesOf = (files) =>
+  Object.fromEntries(
+    files
+      .filter((f) => f.endsWith(".js"))
+      .map((f) => f.replaceAll("\\", "/"))
+      .map((f) => [f.slice(f.lastIndexOf("/") + 1), f]),
+  );
+const treeModules = async () =>
+  modulesOf(await readdir(join(ROOT, "public", "js"), { recursive: true }));
+const refModules = async () =>
+  modulesOf(
+    (await run("git", ["-C", ROOT, "ls-tree", "-r", "--name-only", REF, "--", "public/js"])).stdout
+      .split("\n")
+      .map((f) => f.replace(/^public\/js\//, "")),
+  );
 const fromRef = () => {
   const blobs = new Map();
   return (path) => {
@@ -123,7 +140,7 @@ const QUIET = {
 
 // one view at one tree: a path standing, the canvas at rest for three frames, the artwork landed,
 // the transient prepared, one paint with the clock stopped, and the hashes read in the page
-async function capture(browser, port, view) {
+async function capture(browser, port, modules, view) {
   const ctx = await browser.newContext({
     viewport: { width: 1280, height: 720 },
     deviceScaleFactor: 1,
@@ -138,8 +155,11 @@ async function capture(browser, port, view) {
   );
   await page.goto(`http://127.0.0.1:${port}/?embed=1${view.hash}`);
   const result = await page.evaluate(
-    async ({ prep, dump }) => {
-      const u = (m) => new URL("js/" + m, location.href).href;
+    async ({ prep, dump, modules }) => {
+      const u = (m) => {
+        if (!modules[m]) throw new Error(`${m} is not under js/ in this tree`);
+        return new URL("js/" + modules[m], location.href).href;
+      };
       const st = await import(u("state.js"));
       const render = await import(u("render.js"));
       const spriteart = await import(u("spriteart.js"));
@@ -263,7 +283,7 @@ async function capture(browser, port, view) {
         png: dump ? cv.toDataURL("image/png") : null,
       };
     },
-    { prep: view.prep ?? null, dump: !!DUMP },
+    { prep: view.prep ?? null, dump: !!DUMP, modules },
   );
   await ctx.close();
   return result;
@@ -277,14 +297,15 @@ await run("git", ["-C", ROOT, "rev-parse", "--verify", "--quiet", `${REF}^{commi
 const browser = await chromium.launch();
 const tree = await serve(fromTree);
 const ref = await serve(fromRef());
+const [treeMods, refMods] = await Promise.all([treeModules(), refModules()]);
 let differing = 0;
 try {
   if (DUMP) await mkdir(DUMP, { recursive: true });
   for (const [i, view] of VIEWS.entries()) {
     const name = `${view.hash} ${view.prep ?? "plain"}`;
     const [a, b] = await Promise.all([
-      capture(browser, tree.address().port, view),
-      capture(browser, ref.address().port, view),
+      capture(browser, tree.address().port, treeMods, view),
+      capture(browser, ref.address().port, refMods, view),
     ]);
     if (DUMP)
       for (const [side, got] of [
