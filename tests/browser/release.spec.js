@@ -224,6 +224,7 @@ test("a patched screen paints the base's picture with the release's patches over
     const u = (m) => new URL("js/" + m, location.href).href;
     const { state, LAYOUT } = await import(u("state.js"));
     const render = await import(u("render.js"));
+    const spriteart = await import(u("spriteart.js"));
     const cam = state.path.cams.find((c) => c.patches);
     const decoded = async (src) => {
       const im = new Image();
@@ -245,7 +246,7 @@ test("a patched screen paints the base's picture with the release's patches over
     const want = canvas([base, 0, 0], ...patches);
     const under = canvas([base, 0, 0]);
     // the painter's own frame at zoom 1, the screen's corner at the canvas's
-    await render.preloadPath(state.path);
+    await spriteart.preloadPath(state.path);
     const got = canvas();
     const x = (cam.cell % state.path.w) * LAYOUT.cellW,
       y = Math.floor(cam.cell / state.path.w) * LAYOUT.cellH;
@@ -265,7 +266,7 @@ test("a patched screen paints the base's picture with the release's patches over
     const own = { png: cam.png, patches: cam.patches };
     cam.png = URL.createObjectURL(await new Promise((done) => want.toBlob(done)));
     delete cam.patches;
-    await render.preloadPath(state.path);
+    await spriteart.preloadPath(state.path);
     const whole = third();
     Object.assign(cam, own);
     return {

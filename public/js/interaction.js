@@ -35,16 +35,16 @@ import { toast } from "./toast.js";
 import { state, GEO, LAYOUT, wX, wY, gX, gY } from "./state.js";
 import {
   draw,
-  scheduleDraw,
   setConnFocus,
   setHighlight,
-  hitBoxes,
-  objectShown,
   setCarried,
   setPatrol,
   setWireFocus,
   settleView,
 } from "./render.js";
+import { scheduleDraw } from "./redraw.js";
+import { objectShown } from "./spriteart.js";
+import { hitBoxes } from "./spritepaint.js";
 import {
   camCenter,
   computeWiring,

@@ -45,7 +45,7 @@ import {
 import { ADDED_NOTE, REMOVED_NOTE, catOf, markerShown } from "./config.js";
 import { typeSummary } from "./typeinfo.js";
 import { toast } from "./toast.js";
-import { scheduleDraw } from "./render.js";
+import { scheduleDraw } from "./redraw.js";
 
 const btn = $("editBtn"),
   panel = $("editPanel"),

@@ -5,7 +5,8 @@ import { CATS, PENS, catOf } from "./config.js";
 import { $, cv, filterBox } from "./dom.js";
 import { state } from "./state.js";
 import { setPitch } from "./navigate.js";
-import { draw, syncMotion } from "./render.js";
+import { draw } from "./render.js";
+import { syncMotion } from "./spriteart.js";
 import { SHOW_KEYS, getViewSnapshot, viewChanged } from "./settings.js";
 import { toast } from "./toast.js";
 

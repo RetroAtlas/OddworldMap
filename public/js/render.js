@@ -48,10 +48,6 @@ import { movedBy, paintSprites, spriteBoxes } from "./spritepaint.js";
 import { spriteDraws } from "./sprites.js";
 import { CELL_H, CELL_W, GEO, LAYOUT, cellOrigin, state } from "./state.js";
 
-export { scheduleDraw } from "./redraw.js";
-export { artworkReady, objectShown, preloadPath, syncMotion, warmSprites } from "./spriteart.js";
-export { hitBoxes, standingBox } from "./spritepaint.js";
-
 // follow-destination highlight: a fading ring at (x, y) in draw space. A held
 // flash (object permalink) pulses at full strength until the normal timeout
 // has passed AND the user has interacted, or the hold cap runs out.

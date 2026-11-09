@@ -108,6 +108,7 @@ async function settleAt(page, sel) {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("state.js"));
       const render = await import(u("render.js"));
+      const spriteart = await import(u("spriteart.js"));
       const cv = document.getElementById("cv");
       const deadline = Date.now() + ms;
       const frame = () => {
@@ -134,8 +135,8 @@ async function settleAt(page, sel) {
           still = 0;
         }
       }
-      await render.preloadPath(st.state.path);
-      if (!render.artworkReady(st.state.path)) throw new Error("artwork did not load");
+      await spriteart.preloadPath(st.state.path);
+      if (!spriteart.artworkReady(st.state.path)) throw new Error("artwork did not load");
       render.draw();
     },
     { sel, ms },
@@ -159,10 +160,11 @@ export async function settleArtwork(page) {
     const u = (m) => new URL("js/" + m, location.href).href;
     const st = await import(u("state.js"));
     const render = await import(u("render.js"));
+    const spriteart = await import(u("spriteart.js"));
     const deadline = Date.now() + ms;
     for (;;) {
-      await render.preloadPath(st.state.path);
-      if (render.artworkReady(st.state.path)) break;
+      await spriteart.preloadPath(st.state.path);
+      if (spriteart.artworkReady(st.state.path)) break;
       if (Date.now() > deadline)
         throw new Error(`artwork timeout at ${location.hash || "the boot view"}`);
       await new Promise((r) => setTimeout(r, 100));

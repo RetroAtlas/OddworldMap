@@ -136,10 +136,10 @@ test("a sprite larger than its rectangle is hovered over its whole image", async
   const spot = await page.evaluate(async (b) => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const st = await import(u("state.js"));
-    const render = await import(u("render.js"));
+    const spritepaint = await import(u("spritepaint.js"));
     const model = await import(u("model.js"));
     const t = st.state.path.tlvs.find((o) => o.name === "RollingBall" && o.x1 === b.x1);
-    const [marker, sprite] = render.hitBoxes(t, st.LAYOUT);
+    const [marker, sprite] = spritepaint.hitBoxes(t, st.LAYOUT);
     if (!sprite) return null;
     const r = document.getElementById("cv").getBoundingClientRect();
     const client = (x, y) => ({
@@ -236,7 +236,8 @@ test("Dim backgrounds dims the foreground masks drawn over the sprites too", asy
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("state.js"));
       const render = await import(u("render.js"));
-      await render.preloadPath(st.state.path);
+      const spriteart = await import(u("spriteart.js"));
+      await spriteart.preloadPath(st.state.path);
       render.draw();
       const z = st.state.cam.z;
       const x = Math.round((st.dX(p.x) - st.state.cam.x) * z),

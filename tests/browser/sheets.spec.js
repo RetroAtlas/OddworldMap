@@ -28,13 +28,14 @@ const sligNow = (page) =>
   page.evaluate(async (s) => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const st = await import(u("state.js"));
-    const render = await import(u("render.js"));
+    const spriteart = await import(u("spriteart.js"));
+    const spritepaint = await import(u("spritepaint.js"));
     const motion = await import(u("motion.js"));
     const t = st.state.path?.tlvs.find((o) => o.name === "Slig" && o.x1 === s.x1 && o.y1 === s.y1);
     if (!t) return null;
     return {
-      present: render.objectShown(t),
-      painted: render.hitBoxes(t, st.LAYOUT).length > 1,
+      present: spriteart.objectShown(t),
+      painted: spritepaint.hitBoxes(t, st.LAYOUT).length > 1,
       running: motion.motionRunning(),
       tick: motion.sceneTick(),
     };
@@ -143,9 +144,10 @@ test("an edit that brings a family in leaves the path's sprites drawn while its 
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("state.js"));
       const render = await import(u("render.js"));
+      const spritepaint = await import(u("spritepaint.js"));
       render.draw();
       const t = st.state.path.tlvs.find((o) => o.name === "Slig" && o.x1 === s.x1 && o.y1 === s.y1);
-      return render.hitBoxes(t, st.LAYOUT).length > 1;
+      return spritepaint.hitBoxes(t, st.LAYOUT).length > 1;
     }, SLIG);
   expect(await paintedAsSprite()).toBe(true);
   await page.evaluate(async (s) => {
@@ -189,9 +191,9 @@ test("a sheet that fails leaves its objects as markers, and the map asking again
     page.evaluate(async (s) => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("state.js"));
-      const render = await import(u("render.js"));
+      const spritepaint = await import(u("spritepaint.js"));
       const t = st.state.path.tlvs.find((o) => o.name === "Slig" && o.x1 === s.x1 && o.y1 === s.y1);
-      return render.hitBoxes(t, st.LAYOUT).map((b) => b.drawn);
+      return spritepaint.hitBoxes(t, st.LAYOUT).map((b) => b.drawn);
     }, SLIG);
   release();
   await expect.poll(drawn, POLL).toEqual([true]);
@@ -217,11 +219,11 @@ test("a font that fails leaves the tally boards it writes as markers", async ({ 
     page.evaluate(async (b) => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("state.js"));
-      const render = await import(u("render.js"));
+      const spritepaint = await import(u("spritepaint.js"));
       const t = st.state.path?.tlvs.find(
         (o) => o.name === "LCDStatusBoard" && o.x1 === b.x1 && o.y1 === b.y1,
       );
-      return t ? render.hitBoxes(t, st.LAYOUT).map((x) => x.drawn) : null;
+      return t ? spritepaint.hitBoxes(t, st.LAYOUT).map((x) => x.drawn) : null;
     }, TALLY);
   await expect.poll(drawn, POLL).toEqual([true]);
   expect(errors.filter((e) => !/404|Failed to load/.test(e))).toEqual([]);
@@ -256,12 +258,14 @@ test.describe("below the zoom a creature reads at", () => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("state.js"));
       const render = await import(u("render.js"));
+      const spriteart = await import(u("spriteart.js"));
+      const spritepaint = await import(u("spritepaint.js"));
       const motion = await import(u("motion.js"));
       render.draw();
       const t = st.state.path.tlvs.find((o) => o.name === "Slig" && o.x1 === s.x1 && o.y1 === s.y1);
       return {
-        present: render.objectShown(t),
-        painted: render.hitBoxes(t, st.LAYOUT).length > 1,
+        present: spriteart.objectShown(t),
+        painted: spritepaint.hitBoxes(t, st.LAYOUT).length > 1,
         running: motion.motionRunning(),
       };
     }, SLIG);
@@ -311,13 +315,15 @@ test.describe("below the zoom a creature reads at", () => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("state.js"));
       const render = await import(u("render.js"));
+      const spriteart = await import(u("spriteart.js"));
+      const spritepaint = await import(u("spritepaint.js"));
       const motion = await import(u("motion.js"));
       const frame = window.requestAnimationFrame;
       const held = [];
       window.requestAnimationFrame = (cb) => held.push(cb);
       try {
-        await render.preloadPath(st.state.path);
-        const ready = render.artworkReady(st.state.path);
+        await spriteart.preloadPath(st.state.path);
+        const ready = spriteart.artworkReady(st.state.path);
         const oc = document.createElement("canvas");
         oc.width = 640;
         oc.height = 480;
@@ -327,7 +333,7 @@ test.describe("below the zoom a creature reads at", () => {
         );
         return {
           ready,
-          painted: render.hitBoxes(t, st.LAYOUT).length > 1,
+          painted: spritepaint.hitBoxes(t, st.LAYOUT).length > 1,
           running: motion.motionRunning(),
         };
       } finally {
