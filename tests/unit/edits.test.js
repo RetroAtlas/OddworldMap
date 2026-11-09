@@ -7,11 +7,13 @@ import assert from "node:assert/strict";
 import { state } from "../../public/js/state.js";
 import { pathVisible, revealPath } from "../../public/js/pathvisible.js";
 import {
+  addObject,
   applyFieldEdit,
   applyRectEdit,
   applyStoredEdits,
   canUndo,
   currentOf,
+  duplicateObject,
   editNotes,
   editStore,
   editedFields,
@@ -19,19 +21,25 @@ import {
   fitRect,
   forgetAll,
   gameEdits,
+  ghostOf,
   hasStoredEdits,
   isEdited,
   materializePath,
   objectKeys,
   pathEdited,
   pristineOf,
+  redoEdit,
+  removeObject,
   reportUnapplied,
   restoreEdits,
+  restoreObject,
+  revertObject,
   revertPath,
   sanitizeEdits,
   setEnabled,
   snapRect,
   takeReport,
+  undoEdit,
   validDelta,
   validRect,
 } from "../../public/js/edits.js";
@@ -465,4 +473,63 @@ test("a release's stored edits apply over its dataset alone and report under it"
   assert.deepEqual(takeReport("AE", "jp"), { applied: 1, dropped: 0, unapplied: 0 });
   assert.deepEqual(takeReport("AE"), { applied: 0, dropped: 0, unapplied: 0 });
   restoreEdits({}, "jp");
+});
+
+test("every change to the store is written to the device, and a boot writes back what it dropped", () => {
+  const device = new Map();
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      getItem: (k) => device.get(k) ?? null,
+      setItem: (k, v) => device.set(k, v),
+      removeItem: (k) => device.delete(k),
+    },
+  });
+  const kept = () => (device.has("owm:edits") ? JSON.parse(device.get("owm:edits")) : null);
+  const keys = () => Object.keys(kept().AE["MI/1"].objects);
+  try {
+    restoreEdits({});
+    const G = world();
+    const [d, d2] = G.levels[0].paths[0].tlvs;
+    stand(G);
+    const n = applyFieldEdit(d, "camera", 20);
+    assert.deepEqual(kept(), {
+      AE: { "MI/1": { objects: { "Door@10,10": { fields: { camera: 20 } } } } },
+    });
+    applyRectEdit(n, [20, 15, 44, 39]);
+    assert.deepEqual(kept().AE["MI/1"].objects["Door@10,10"], {
+      fields: { camera: 20 },
+      rect: [20, 15, 44, 39],
+    });
+    applyFieldEdit(currentOf(d2), "camera", 21);
+    assert.deepEqual(kept(), editStore());
+    removeObject(currentOf(d));
+    assert.equal(kept().AE["MI/1"].objects["Door@10,10"].removed, true);
+    restoreObject(ghostOf(d));
+    assert.equal("removed" in kept().AE["MI/1"].objects["Door@10,10"], false);
+    assert.deepEqual(kept(), editStore());
+    revertObject(currentOf(d));
+    assert.deepEqual(keys(), ["Door@400,10"]);
+    duplicateObject(addObject("Door", [100, 100, 124, 124]));
+    assert.deepEqual(keys(), ["Door@400,10", "+1", "+2"]);
+    undoEdit("AE", "MI", 1);
+    assert.deepEqual(keys(), ["Door@400,10", "+1"]);
+    redoEdit("AE", "MI", 1);
+    assert.deepEqual(keys(), ["Door@400,10", "+1", "+2"]);
+    revertPath("AE", "MI", 1);
+    assert.equal(kept(), null);
+    applyFieldEdit(currentOf(d2), "camera", 21);
+    assert.deepEqual(kept(), editStore());
+    forgetAll();
+    assert.equal(kept(), null);
+    // a boot that drops a stale delta writes the store back without it, down to none
+    const stale = { AE: { "MI/1": { objects: { "Door@999,999": { fields: { camera: 1 } } } } } };
+    restoreEdits(structuredClone(stale));
+    device.set("owm:edits", JSON.stringify(stale));
+    assert.deepEqual(applyStoredEdits(world()), { applied: 0, dropped: 1 });
+    assert.equal(kept(), null);
+  } finally {
+    delete globalThis.localStorage;
+    restoreEdits({});
+  }
 });
