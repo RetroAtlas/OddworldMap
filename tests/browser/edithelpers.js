@@ -35,20 +35,20 @@ export const armEditing = async (page) => {
   );
 };
 
-// centre the standing path's first Door by setting the camera itself, the way
+// centre the standing path's first object of a name by setting the camera itself, the way
 // settle() does, so no scheduled hash write can re-apply under the click; returns
-// where the door is on the screen. A jump's own pushed write is flushed first and
+// where it is on the screen. A jump's own pushed write is flushed first and
 // the re-apply of a hash it changed waited for: a hashchange still queued when
 // the camera is set would re-fit the view from under the click that follows
-export const aimAtDoor = (page) =>
-  page.evaluate(async () => {
+export const aimAt = (page, name) =>
+  page.evaluate(async (name) => {
     const st = window.__st;
     const render = await import(new URL("js/render.js", location.href).href);
     const stateModule = await import(new URL("js/state.js", location.href).href);
     window.__nav.flushHash();
     while (location.hash !== window.__applied)
       await new Promise((r) => window.addEventListener("hashchange", r, { once: true }));
-    const t = st.path.tlvs.find((o) => o.name === "Door" && o.fields);
+    const t = st.path.tlvs.find((o) => o.name === name && o.fields);
     const [cx, cy] = window.__model.markerCentre(t, stateModule.LAYOUT);
     const cv = document.getElementById("cv");
     Object.assign(
@@ -66,7 +66,8 @@ export const aimAtDoor = (page) =>
       y2: t.y2,
       camera: t.fields.camera,
     };
-  });
+  }, name);
+export const aimAtDoor = (page) => aimAt(page, "Door");
 
 // the camera of the standing path's first Door, as the page sees it now
 export const doorCamera = (page, d) =>

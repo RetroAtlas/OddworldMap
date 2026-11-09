@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { DEFAULT_CATS, digest, seedView, settleAny, trackErrors } from "./helpers.js";
-import { aimAtDoor, aimAtDoorNow, armEditing, attach } from "./edithelpers.js";
+import { DEFAULT_CATS, POLL, digest, seedView, settleAny, trackErrors } from "./helpers.js";
+import { aimAt, aimAtDoor, aimAtDoorNow, armEditing, attach } from "./edithelpers.js";
 
 // the selected object's rect as the page holds it now
 const selRect = (page) =>
@@ -215,5 +215,54 @@ test("a carried object stands where the pointer holds it, as its release will st
   await page.keyboard.press("Escape");
   await page.mouse.up();
   expect(await painted()).toEqual(landed);
+  expect(errors).toEqual([]);
+});
+
+test("a carried object stands in its first frame while the scene runs", async ({ page }) => {
+  const errors = trackErrors(page);
+  await armEditing(page);
+  await seedView(page, { show: { objects: true }, cats: DEFAULT_CATS });
+  await page.goto("/#AE");
+  await settleAny(page);
+  await attach(page);
+  await page.evaluate(async () => {
+    window.__motion = await import(new URL("js/motion.js", location.href).href);
+  });
+  await page.keyboard.press("e");
+  await page.waitForFunction(() => window.__st.edit === true);
+  const orb = await aimAt(page, "SecurityOrb");
+  // the orb's place and the place the carry below holds it, each padded for the sprite's spill
+  const around = (dx, dy) => ({
+    x1: orb.x1 + dx - 20,
+    y1: orb.y1 + dy - 20,
+    x2: orb.x2 + dx + 20,
+    y2: orb.y2 + dy + 20,
+  });
+  const painted = async (rect) => {
+    await page.evaluate(
+      () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
+    );
+    return digest(page, rect);
+  };
+  // the same read a few frames of the orb's turn later
+  const TURNS = 12;
+  const later = async (rect) => {
+    const since = await page.evaluate(() => window.__motion.sceneTick());
+    await page.waitForFunction((t) => window.__motion.sceneTick() >= t, since + TURNS, POLL);
+    return painted(rect);
+  };
+  await page.mouse.click(orb.x, orb.y);
+  await expect(page.locator("#editPanel")).toBeVisible();
+  await page.mouse.move(orb.x, orb.y);
+  await page.mouse.down();
+  await page.mouse.move(orb.x + 30, orb.y + 10);
+  await page.mouse.move(orb.x + 60, orb.y + 20);
+  const held = await painted(around(30, 10));
+  expect(await later(around(30, 10))).toEqual(held);
+  // let go with Escape, it turns again where it stood
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  const resting = await painted(around(0, 0));
+  expect(await later(around(0, 0))).not.toEqual(resting);
   expect(errors).toEqual([]);
 });
