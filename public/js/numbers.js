@@ -7,7 +7,6 @@ import { esc } from "./util.js";
 import { LAYOUT, state } from "./state.js";
 import { camCenter, cellAt } from "./model.js";
 import { census } from "./census.js";
-import { toggleMenu } from "./interaction.js";
 
 const panel = $("numbersPanel"),
   body = $("numbersBody"),
@@ -117,7 +116,8 @@ const closeNumbers = () => {
 
 $("numbersBtn").onclick = () => {
   openNumbers();
-  if (narrowMQ.matches) toggleMenu(false); // reveal the panel the way picking a path does
+  if (narrowMQ.matches)
+    window.dispatchEvent(new CustomEvent("menu-toggle", { detail: { open: false } })); // reveal the panel the way picking a path does
 };
 $("numbersClose").onclick = closeNumbers;
 filter.addEventListener("input", renderTypes);

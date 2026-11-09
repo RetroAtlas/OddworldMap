@@ -16,7 +16,6 @@ import { pathIn } from "./model.js";
 import { isAdded, isEdited } from "./edits.js";
 import { releaseNote } from "./release.js";
 import { ADDED_NOTE, EDITED_NOTE } from "./config.js";
-import { toggleMenu } from "./interaction.js";
 
 const HIT_CAP = 1500,
   GROUP_MAX = 8;
@@ -346,7 +345,7 @@ searchClear.onclick = () => {
 window.addEventListener("keydown", (e) => {
   if (e.key === "/" && !typingIn(e.target)) {
     e.preventDefault();
-    toggleMenu(true);
+    window.dispatchEvent(new CustomEvent("menu-toggle", { detail: { open: true } }));
     searchInput.focus();
     searchInput.select();
     return;

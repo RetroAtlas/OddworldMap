@@ -124,6 +124,7 @@ export function toggleMenu(open) {
 syncMenu();
 menuBtn.onclick = () => toggleMenu();
 scrim.onclick = () => toggleMenu(false);
+window.addEventListener("menu-toggle", (e) => toggleMenu(e.detail.open));
 // the sidebar's way to the picker; the sheet it opens would land under the drawer on narrow
 $("editAddBtn").onclick = () => {
   if (isNarrow()) toggleMenu(false);

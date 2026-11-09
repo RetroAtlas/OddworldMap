@@ -21,9 +21,11 @@ import { setTypeInfo } from "./typeinfo.js";
 import { initSettings, storedLocationHash, clearStoredLocation } from "./settings.js";
 import { syncNeeds } from "./sidebar.js";
 import { state } from "./state.js";
+// the hub before the panels: its listeners register first, so its drawer hands
+// focus on before a panel rebuilds its controls
+import { toggleMenu } from "./interaction.js";
 import "./search.js";
 import "./export.js";
-import { toggleMenu } from "./interaction.js";
 import { initFieldPanel } from "./fieldpanel.js";
 import "./a11y.js";
 import "./anchortip.js";

@@ -6,7 +6,6 @@ import { $ } from "./dom.js";
 import { state } from "./state.js";
 import { defaultVisible, fieldHelp } from "./fields.js";
 import { getSettings, fieldPrefsFor, persistSettings } from "./settings.js";
-import { toggleMenu } from "./interaction.js";
 
 const section = $("fieldPanel");
 const body = section.querySelector(".fp-body");
@@ -147,7 +146,7 @@ const here = () => state.path && `${state.data.id}/${state.lvl.short}/${state.pa
 // the sidebar up (it may be a closed drawer) and expand that type into view
 function revealType(name) {
   if (getSettings().fieldPrefs.mode !== "more") return; // the panel is hidden otherwise
-  toggleMenu(true);
+  window.dispatchEvent(new CustomEvent("menu-toggle", { detail: { open: true } }));
   const det = body.querySelector(`.fp-type[data-type="${CSS.escape(name)}"]`);
   if (!det) return;
   det.open = true;

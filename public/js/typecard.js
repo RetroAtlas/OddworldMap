@@ -12,7 +12,6 @@ import { census } from "./census.js";
 import { fieldHelp, unitNote } from "./fields.js";
 import { typeProse } from "./typeinfo.js";
 import { closeDialog, openDialog, trapDialogKeys } from "./dialog.js";
-import { toggleMenu } from "./interaction.js";
 
 const overlay = $("typeCardOverlay"),
   panel = $("typeCard"),
@@ -121,7 +120,7 @@ function render(name) {
   find.textContent = `find every ${name} with search`;
   find.onclick = () => {
     close();
-    toggleMenu(true);
+    window.dispatchEvent(new CustomEvent("menu-toggle", { detail: { open: true } }));
     searchInput.value = name;
     searchInput.dispatchEvent(new Event("input"));
     // focusing would pop the keyboard over the results on touch screens
