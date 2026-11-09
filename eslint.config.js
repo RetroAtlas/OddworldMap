@@ -5,7 +5,7 @@ import js from "@eslint/js";
 import globals from "globals";
 
 export default [
-  { ignores: ["node_modules/", "tools/*", "!tools/levelpages.js"] },
+  { ignores: ["node_modules/", "tools/*", "!tools/levelpages.js", "!tools/pixels.js"] },
   js.configs.recommended,
   {
     files: ["public/js/**/*.js", "eslint.config.js"],
@@ -21,6 +21,15 @@ export default [
       ecmaVersion: 2024,
       sourceType: "module",
       globals: globals.node,
+    },
+  },
+  {
+    // the pixel proof: a Node script whose page.evaluate bodies run in the browser
+    files: ["tools/pixels.js"],
+    languageOptions: {
+      ecmaVersion: 2024,
+      sourceType: "module",
+      globals: { ...globals.node, ...globals.browser },
     },
   },
   {

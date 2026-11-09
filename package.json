@@ -6,6 +6,7 @@
     "format": "prettier --write \"**/*.{js,css,html}\"",
     "format:check": "prettier --check \"**/*.{js,css,html}\"",
     "lint": "eslint .",
+    "pixels": "node tools/pixels.js",
     "test": "node --test",
     "test:browser": "playwright test -c tests/browser"
   },
