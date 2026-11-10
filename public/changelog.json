@@ -1,6 +1,13 @@
 {
  "entries": [
   {
+   "date": "2026-11-10",
+   "tag": "fixed",
+   "tiny": true,
+   "title": "A search hit's notes take their colours",
+   "detail": "A search result that says an object was edited on this device, or how a release differs, showed the note in the same grey as the details beside it. It now shows it in the edit colour or the release colour, as the tooltip and the screen list do."
+  },
+  {
    "date": "2026-11-04",
    "tag": "fixed",
    "tiny": true,

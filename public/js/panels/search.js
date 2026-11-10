@@ -137,10 +137,10 @@ function hitButton(h, terms) {
   b.innerHTML =
     `<span class="loc">${h.L.short} P${h.P.id}</span> ${highlight(h.t.name, terms)}` +
     (isEdited(h.t)
-      ? ` <span class="ex edited">${esc(isAdded(h.t) ? ADDED_NOTE : EDITED_NOTE)}</span>`
+      ? ` <span class="ex"><span class="edited">${esc(isAdded(h.t) ? ADDED_NOTE : EDITED_NOTE)}</span></span>`
       : "") +
     (state.show.release && releaseNote(h.G, h.t)
-      ? ` <span class="ex released">${esc(releaseNote(h.G, h.t))}</span>`
+      ? ` <span class="ex"><span class="released">${esc(releaseNote(h.G, h.t))}</span></span>`
       : "") +
     (ex ? ` <span class="ex">${highlight(ex, terms)}</span>` : "");
   b.onclick = () => jumpToTlv(h.G, h.L, h.P, h.t);

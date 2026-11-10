@@ -38,6 +38,8 @@ test("the mode selects an object, the form edits it, and every surface follows",
   await expect(page.locator("#tip")).toContainText("edited on this device: camera");
   await expect(page.locator("#pathBtns button.on")).toHaveClass(/edited/);
   await expect(page.locator("#placeEdited")).toBeVisible();
+  await page.fill("#searchInput", "door");
+  await expect(page.locator("#searchResults .hit .edited")).toHaveCSS("color", "rgb(95, 216, 232)");
 
   // and every export of the path says so in its name
   expect((await download(page, "#exportJsonBtn")).suggestedFilename()).toBe(
