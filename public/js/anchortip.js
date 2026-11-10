@@ -3,7 +3,7 @@
 // the document, so a surface can rebuild its DOM freely and a new consumer is
 // one attribute away.
 
-import { $ } from "./dom.js";
+import { $ } from "./ui/dom.js";
 import { clamp } from "./util.js";
 
 const el = $("anchorTip");

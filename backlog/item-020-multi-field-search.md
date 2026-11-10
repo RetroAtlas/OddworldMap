@@ -18,4 +18,4 @@ Watch out: don't split the `field=value` syntax on `=`, and keep highlighting ea
 
 Queries tokenise into OR-of-AND groups, each term matched independently against the blob. `=` is never split, so `field=value` stays one term. Rank is the best name-rank among the terms, and `highlight` marks every occurrence of every term, merging overlaps.
 
-The pure parsing and matching — `parseQuery` / `queryTerms` / `matchesQuery` / `rankFor` — lives in a new DOM-free [js/searchquery.js](../public/js/searchquery.js) so it can be unit-tested, which `search.js` itself cannot be in bare Node. The hidden-match append now explains each missing term rather than one.
+The pure parsing and matching — `parseQuery` / `queryTerms` / `matchesQuery` / `rankFor` — lives in a new DOM-free [js/searchquery.js](../public/js/ui/searchquery.js) so it can be unit-tested, which `search.js` itself cannot be in bare Node. The hidden-match append now explains each missing term rather than one.

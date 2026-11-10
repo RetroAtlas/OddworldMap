@@ -1,7 +1,7 @@
 // The painter: the live view's affordances, the frame, draw and paint with the map's
 // own layers and the markers, and the minimap
 
-import { scheduleDraw } from "./redraw.js";
+import { scheduleDraw } from "./ui/redraw.js";
 import {
   ENEMY_CAT,
   FLASH_HOLD_MAX_MS,
@@ -11,7 +11,7 @@ import {
   barrierDir,
   catOf,
 } from "./config.js";
-import { $, COLOR, cv, cvCtx } from "./dom.js";
+import { $, COLOR, cv, cvCtx } from "./ui/dom.js";
 import { isEdited, removedObjects } from "./edits.js";
 import { onBackgroundPlane } from "./fields.js";
 import { drawX, drawY } from "./geometry.js";

@@ -7,7 +7,7 @@ import { esc } from "./util.js";
 import { fieldEntries, fieldHelp } from "./fields.js";
 import { DARK_NOTE, objectMessages } from "./messages.js";
 import { ADDED_NOTE, CATS, EDITED_NOTE, OFFSCREEN_NOTE, REMOVED_NOTE, catOf } from "./config.js";
-import { $, narrowMQ, typingIn } from "./dom.js";
+import { $, narrowMQ, typingIn } from "./ui/dom.js";
 import { GEO, LAYOUT, state } from "./state.js";
 import { cellAt, nearestCam, offScreen, tlvCell } from "./model.js";
 import { setHighlight } from "./render.js";

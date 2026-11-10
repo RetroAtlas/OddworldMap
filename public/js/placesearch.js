@@ -3,7 +3,7 @@
 
 import { pathDisplayName, pathNickname } from "./annotations.js";
 import { camIdOf } from "./model.js";
-import { matchesBy, rankFor } from "./searchquery.js";
+import { matchesBy, rankFor } from "./ui/searchquery.js";
 
 // names go into a substring blob the way an object's fields do; the LV/Pn code
 // is held as whole tokens, so the "2" in "zulag 2" is not answered by an "R2"

@@ -4,7 +4,7 @@
 // click travels there and the keyboard reaches every path in the game.
 
 import { CONN_COLORS, DEMO_NOTE, EDITED_NOTE, ENTRY_NOTE, GRAPH, KEY_PAN_PX } from "./config.js";
-import { $, cv, menuBtn, typingIn } from "./dom.js";
+import { $, cv, menuBtn, typingIn } from "./ui/dom.js";
 import { esc } from "./util.js";
 import { state } from "./state.js";
 import { pathDisplayName, pathNickname, pathNote } from "./annotations.js";

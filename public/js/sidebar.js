@@ -2,13 +2,13 @@
 
 import { setEditMode } from "./editpanel.js";
 import { CATS, PENS, catOf } from "./config.js";
-import { $, cv, filterBox } from "./dom.js";
+import { $, cv, filterBox } from "./ui/dom.js";
 import { state } from "./state.js";
 import { setPitch } from "./navigate.js";
 import { draw } from "./render.js";
 import { syncMotion } from "./spriteart.js";
 import { SHOW_KEYS, getViewSnapshot, viewChanged } from "./settings.js";
-import { toast } from "./toast.js";
+import { toast } from "./ui/toast.js";
 
 // the switches the visitor has set (kept across visits when "remember" is on)
 // override the HTML/config defaults

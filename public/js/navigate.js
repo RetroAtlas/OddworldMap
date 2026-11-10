@@ -3,9 +3,9 @@
 
 import { clamp, esc } from "./util.js";
 import { DEMO_NOTE, EDITED_NOTE, ENTRY_NOTE, LOGIC_FPS, ZOOM_MIN, ZOOM_MAX } from "./config.js";
-import { $, cv, gameBtns, levelBtns, pathBtns, releaseBtns } from "./dom.js";
+import { $, cv, gameBtns, levelBtns, pathBtns, releaseBtns } from "./ui/dom.js";
 import { knownGame, loadGame, loadRelease, loadReleaseIndex } from "./data.js";
-import { toast } from "./toast.js";
+import { toast } from "./ui/toast.js";
 import {
   state,
   GEO,

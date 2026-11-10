@@ -3,7 +3,7 @@
 // archive holds for the selection as a control writing a delta through the edit
 // model; the map follows through data-changed like every other surface.
 
-import { $, cv, narrowMQ, typingIn } from "./dom.js";
+import { $, cv, narrowMQ, typingIn } from "./ui/dom.js";
 import { esc } from "./util.js";
 import { GEO, LAYOUT, state, wX, wY } from "./state.js";
 import { camCenter, cellAt, cellCentre, nearestCam, tlvCell } from "./model.js";
@@ -44,8 +44,8 @@ import {
 } from "./edits.js";
 import { ADDED_NOTE, REMOVED_NOTE, catOf, markerShown } from "./config.js";
 import { typeSummary } from "./typeinfo.js";
-import { toast } from "./toast.js";
-import { scheduleDraw } from "./redraw.js";
+import { toast } from "./ui/toast.js";
+import { scheduleDraw } from "./ui/redraw.js";
 
 const btn = $("editBtn"),
   panel = $("editPanel"),

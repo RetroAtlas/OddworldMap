@@ -3,11 +3,11 @@
 import { esc, extrasText } from "./util.js";
 import { fieldEntries } from "./fields.js";
 import { objectMessages } from "./messages.js";
-import { parseQuery, queryTerms, matchesQuery, rankFor } from "./searchquery.js";
+import { parseQuery, queryTerms, matchesQuery, rankFor } from "./ui/searchquery.js";
 import { matchPlaces } from "./placesearch.js";
 import { pendingGames } from "./data.js";
-import { searchClear, searchInput, searchResults, scopeBar, typingIn } from "./dom.js";
-import { CLOSE_SVG } from "./icons.js";
+import { searchClear, searchInput, searchResults, scopeBar, typingIn } from "./ui/dom.js";
+import { CLOSE_SVG } from "./ui/icons.js";
 import { pathVisible } from "./pathvisible.js";
 import { state } from "./state.js";
 import { fieldPrefsFor, getSettings } from "./settings.js";

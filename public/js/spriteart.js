@@ -2,7 +2,7 @@
 // asked for and whether it has arrived, whether an object is there at all, and the clock's
 // switch
 
-import { scheduleDraw } from "./redraw.js";
+import { scheduleDraw } from "./ui/redraw.js";
 import { CACHE_MAX_IMAGES, SPRITE_ZOOM } from "./config.js";
 import { loadSprites } from "./data.js";
 import { drawnAs, resetKept } from "./kept.js";

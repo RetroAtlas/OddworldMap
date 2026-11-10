@@ -2,8 +2,8 @@
 // its source lives. Wires itself up at import time; the prose is static markup
 // so the notice is in the page source with scripting off.
 
-import { $ } from "./dom.js";
-import { closeDialog, openDialog, trapDialogKeys } from "./dialog.js";
+import { $ } from "./ui/dom.js";
+import { closeDialog, openDialog, trapDialogKeys } from "./ui/dialog.js";
 
 const btn = $("aboutBtn"),
   overlay = $("aboutOverlay"),

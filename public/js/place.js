@@ -2,7 +2,7 @@
 // and the panel it discloses, which carries what the chip has no room for.
 
 import { DEMO_NOTE, EDITED_NOTE, ENTRY_NOTE } from "./config.js";
-import { $, typingIn } from "./dom.js";
+import { $, typingIn } from "./ui/dom.js";
 import { esc } from "./util.js";
 import { state } from "./state.js";
 import { pathDisplayName, pathNickname, pathNote } from "./annotations.js";

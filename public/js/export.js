@@ -4,7 +4,7 @@
 
 import { EXPORT_MAX_DIM, EXPORT_MAX_PX } from "./config.js";
 import { loadEditorData } from "./data.js";
-import { $, cv } from "./dom.js";
+import { $, cv } from "./ui/dom.js";
 import { graphName, graphSvg } from "./graphsvg.js";
 import { pathImage } from "./model.js";
 import { exportPath } from "./reliveexport.js";
@@ -12,7 +12,7 @@ import { pathEdited } from "./edits.js";
 import { paint } from "./render.js";
 import { artworkReady, preloadPath } from "./spriteart.js";
 import { LAYOUT, cellOrigin, state } from "./state.js";
-import { toast } from "./toast.js";
+import { toast } from "./ui/toast.js";
 
 // a permission prompt can defer the blob's read indefinitely, so the URL lives
 // until the next export replaces it

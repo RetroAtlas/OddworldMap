@@ -5,8 +5,8 @@
 
 import { CATS } from "./config.js";
 import { parseHash } from "./model.js";
-import { GEAR_SVG } from "./icons.js";
-import { closeDialog, openDialog, trapDialogKeys } from "./dialog.js";
+import { GEAR_SVG } from "./ui/icons.js";
+import { closeDialog, openDialog, trapDialogKeys } from "./ui/dialog.js";
 
 const SETTINGS_KEY = "owm:settings";
 const VIEW_KEY = "owm:view";

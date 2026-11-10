@@ -11,7 +11,7 @@ import {
   catOf,
   markerShown,
 } from "./config.js";
-import { COLOR } from "./dom.js";
+import { COLOR } from "./ui/dom.js";
 import { drawX } from "./geometry.js";
 import { connections } from "./kept.js";
 import { cellCentre, computeWiring, drawBox, markerCentre } from "./model.js";

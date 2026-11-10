@@ -49,7 +49,8 @@ const byName = (files) => new Map(files.map((f) => [posix.basename(f), f]));
 // itself included, a single file of a folder where a further import from it is
 // to be a change of the row, or a file every layer may import. "." is the root.
 const LAYERS = {
-  ".": ["."],
+  ui: ["ui", "config.js"],
+  ".": ["ui", "."],
 };
 
 // every viewer module, with the modules its import statements name

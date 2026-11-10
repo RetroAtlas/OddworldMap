@@ -6,7 +6,7 @@ import {
   matchesBy,
   matchesQuery,
   rankFor,
-} from "../../public/js/searchquery.js";
+} from "../../public/js/ui/searchquery.js";
 
 // A stand-in for the lowercased "name + fields" blob tlvSearchText builds.
 const MUD = "mudokon scale=0 state=chisle job=sit chant rescue_switch_id=70";

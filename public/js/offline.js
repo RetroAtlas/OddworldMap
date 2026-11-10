@@ -5,7 +5,7 @@
 import { CAM_FILE_BYTES, MASK_FILE_BYTES, PATCH_FILE_BYTES, SHEET_FILE_BYTES } from "./config.js";
 import { GAME_FILES, GAME_IDS, loadSprites } from "./data.js";
 import { hasAnyStoredEdits } from "./edits.js";
-import { $ } from "./dom.js";
+import { $ } from "./ui/dom.js";
 import { camFiles } from "./model.js";
 import { releaseSprites } from "./release.js";
 import {
@@ -16,7 +16,7 @@ import {
   workerRegistered,
 } from "./settings.js";
 import { state } from "./state.js";
-import { toast } from "./toast.js";
+import { toast } from "./ui/toast.js";
 
 const CONCURRENCY = 6; // fetches in flight
 const CONTROL_MS = 10000; // how long a download waits for the worker to take the page

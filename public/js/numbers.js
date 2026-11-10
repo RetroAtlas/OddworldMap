@@ -2,7 +2,7 @@
 // granularity at once — the screen under the view center, the path, the
 // level, the game — re-derived as the selection and the view move.
 
-import { $, cv, narrowMQ, typingIn } from "./dom.js";
+import { $, cv, narrowMQ, typingIn } from "./ui/dom.js";
 import { esc } from "./util.js";
 import { LAYOUT, state } from "./state.js";
 import { camCenter, cellAt } from "./model.js";

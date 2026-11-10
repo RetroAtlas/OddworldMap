@@ -4,14 +4,14 @@
 // search with the type name. Any surface opens it by dispatching the
 // "typecard-open" window event, so none has to import this module.
 
-import { $, narrowMQ, searchInput } from "./dom.js";
+import { $, narrowMQ, searchInput } from "./ui/dom.js";
 import { esc } from "./util.js";
 import { state } from "./state.js";
 import { catOf } from "./config.js";
 import { census } from "./census.js";
 import { fieldHelp, unitNote } from "./fields.js";
 import { typeProse } from "./typeinfo.js";
-import { closeDialog, openDialog, trapDialogKeys } from "./dialog.js";
+import { closeDialog, openDialog, trapDialogKeys } from "./ui/dialog.js";
 
 const overlay = $("typeCardOverlay"),
   panel = $("typeCard"),

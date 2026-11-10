@@ -2,7 +2,7 @@
 // on: a per-type checklist (notable fields pre-checked) that writes the user's
 // picks into the current game's fieldPrefs.byType bucket.
 
-import { $ } from "./dom.js";
+import { $ } from "./ui/dom.js";
 import { state } from "./state.js";
 import { defaultVisible, fieldHelp } from "./fields.js";
 import { getSettings, fieldPrefsFor, persistSettings } from "./settings.js";

@@ -7,10 +7,10 @@
 
 import { MAX_ROUTE_PTS } from "./config.js";
 import { formatDist } from "./util.js";
-import { $ } from "./dom.js";
+import { $ } from "./ui/dom.js";
 import { GEO, LAYOUT, routeTotal, state } from "./state.js";
 import { markerCentre, resolveTarget } from "./model.js";
-import { scheduleDraw } from "./redraw.js";
+import { scheduleDraw } from "./ui/redraw.js";
 import { scheduleHash } from "./navigate.js";
 
 const bar = $("routeBar"),

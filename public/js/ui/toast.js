@@ -1,7 +1,7 @@
 // Toasts (transient notices) at the bottom of the map: newest at the bottom of
 // the stack, older ones riding above it, the overflow waiting behind a badge.
 
-import { TOAST_MS, TOAST_OUT_MS, TOAST_MAX } from "./config.js";
+import { TOAST_MS, TOAST_OUT_MS, TOAST_MAX } from "../config.js";
 import { toastStack } from "./dom.js";
 
 const live = []; // oldest first; the DOM runs the other way (newest is prepended)

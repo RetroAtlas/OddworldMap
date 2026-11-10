@@ -30,8 +30,8 @@ import {
   openSiteBtn,
   narrowMQ,
   typingIn,
-} from "./dom.js";
-import { toast } from "./toast.js";
+} from "./ui/dom.js";
+import { toast } from "./ui/toast.js";
 import { state, GEO, LAYOUT, wX, wY, gX, gY } from "./state.js";
 import {
   draw,
@@ -42,7 +42,7 @@ import {
   setWireFocus,
   settleView,
 } from "./render.js";
-import { scheduleDraw } from "./redraw.js";
+import { scheduleDraw } from "./ui/redraw.js";
 import { objectShown } from "./spriteart.js";
 import { hitBoxes } from "./spritepaint.js";
 import {
@@ -74,7 +74,7 @@ import {
 import { typeSummary } from "./typeinfo.js";
 import { DARK_NOTE, objectMessages } from "./messages.js";
 import { toggleShow } from "./sidebar.js";
-import { lightCap } from "./keycap.js";
+import { lightCap } from "./ui/keycap.js";
 import { getSettings, fieldPrefsFor } from "./settings.js";
 import { focusCamPanel, openCamPanel, openCamPanelNear } from "./campanel.js";
 import { togglePlace } from "./place.js";
@@ -93,8 +93,8 @@ import {
 import { releaseNote } from "./release.js";
 import { toggleGraph } from "./graphview.js";
 import { addRoutePoint, routeArrive, routeSeam, undoRoutePoint } from "./route.js";
-import { closeDialog, openDialog, trapDialogKeys } from "./dialog.js";
-import { HAMBURGER_SVG, CLOSE_SVG, LINK_SVG, EXTERNAL_SVG } from "./icons.js";
+import { closeDialog, openDialog, trapDialogKeys } from "./ui/dialog.js";
+import { HAMBURGER_SVG, CLOSE_SVG, LINK_SVG, EXTERNAL_SVG } from "./ui/icons.js";
 
 let hoverTlvs = [],
   mouse = { x: 0, y: 0 };
