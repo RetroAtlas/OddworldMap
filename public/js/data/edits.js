@@ -8,15 +8,15 @@
 // Nothing here writes into a fetched object. Importable in bare Node.
 
 import { state } from "./state.js";
-import { clamp } from "./model/util.js";
-import { deriveExtra } from "./model/extra.js";
+import { clamp } from "../model/util.js";
+import { deriveExtra } from "../model/extra.js";
 import { pathVisible, revealPath } from "./pathvisible.js";
-import { invalidateEntry } from "./model/pathorder.js";
-import { onBackgroundPlane, valueMap } from "./model/fields.js";
-import { gridSize, snapAt } from "./engine/collide.js";
-import { buildTypeTable, newObject } from "./model/objecttypes.js";
+import { invalidateEntry } from "../model/pathorder.js";
+import { onBackgroundPlane, valueMap } from "../model/fields.js";
+import { gridSize, snapAt } from "../engine/collide.js";
+import { buildTypeTable, newObject } from "../model/objecttypes.js";
 import { store } from "./settings.js";
-import { RELEASE_CODE } from "./config.js";
+import { RELEASE_CODE } from "../config.js";
 
 const S16_MIN = -32768,
   S16_MAX = 32767;

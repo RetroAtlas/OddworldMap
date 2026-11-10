@@ -3,19 +3,19 @@
 // one go, so a place you have never opened still opens with no connection.
 
 import { CAM_FILE_BYTES, MASK_FILE_BYTES, PATCH_FILE_BYTES, SHEET_FILE_BYTES } from "./config.js";
-import { GAME_FILES, GAME_IDS, loadSprites } from "./data.js";
-import { hasAnyStoredEdits } from "./edits.js";
+import { GAME_FILES, GAME_IDS, loadSprites } from "./data/data.js";
+import { hasAnyStoredEdits } from "./data/edits.js";
 import { $ } from "./ui/dom.js";
 import { camFiles } from "./model/model.js";
-import { releaseSprites } from "./release.js";
+import { releaseSprites } from "./data/release.js";
 import {
   MARKER_CACHE,
   displayLabel,
   getSettings,
   markerReady,
   workerRegistered,
-} from "./settings.js";
-import { state } from "./state.js";
+} from "./data/settings.js";
+import { state } from "./data/state.js";
 import { toast } from "./ui/toast.js";
 
 const CONCURRENCY = 6; // fetches in flight

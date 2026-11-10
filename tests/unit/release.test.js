@@ -19,7 +19,7 @@ import {
   releaseNotes,
   releaseSprites,
   pathReleased,
-} from "../../public/js/release.js";
+} from "../../public/js/data/release.js";
 import { AE_GEOMETRY } from "./fixtures.js";
 
 const load = (f) => JSON.parse(readFileSync(new URL(`../../public/${f}`, import.meta.url), "utf8"));

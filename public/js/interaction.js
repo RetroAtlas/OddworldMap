@@ -32,7 +32,7 @@ import {
   typingIn,
 } from "./ui/dom.js";
 import { toast } from "./ui/toast.js";
-import { state, GEO, LAYOUT, wX, wY, gX, gY } from "./state.js";
+import { state, GEO, LAYOUT, wX, wY, gX, gY } from "./data/state.js";
 import {
   draw,
   setConnFocus,
@@ -75,7 +75,7 @@ import { typeSummary } from "./model/typeinfo.js";
 import { DARK_NOTE, objectMessages } from "./model/messages.js";
 import { toggleShow } from "./sidebar.js";
 import { lightCap } from "./ui/keycap.js";
-import { getSettings, fieldPrefsFor } from "./settings.js";
+import { getSettings, fieldPrefsFor } from "./data/settings.js";
 import { focusCamPanel, openCamPanel, openCamPanelNear } from "./campanel.js";
 import { togglePlace } from "./place.js";
 import { openAddPicker, selectObject, setEditMode } from "./editpanel.js";
@@ -89,8 +89,8 @@ import {
   isRemoved,
   removedObjects,
   snapRect,
-} from "./edits.js";
-import { releaseNote } from "./release.js";
+} from "./data/edits.js";
+import { releaseNote } from "./data/release.js";
 import { toggleGraph } from "./graphview.js";
 import { addRoutePoint, routeArrive, routeSeam, undoRoutePoint } from "./route.js";
 import { closeDialog, openDialog, trapDialogKeys } from "./ui/dialog.js";

@@ -1,7 +1,7 @@
-import { state } from "../../public/js/state.js";
+import { state } from "../../public/js/data/state.js";
 import { setEnumLabels, setFieldTypes } from "../../public/js/model/fields.js";
 import { deriveExtra } from "../../public/js/model/extra.js";
-import { setLevelShort } from "../../public/js/edits.js";
+import { setLevelShort } from "../../public/js/data/edits.js";
 import { AE_GEOMETRY } from "./fixtures.js";
 
 export const SHORT = { 0: "ST", 1: "MI", 2: "NE" };

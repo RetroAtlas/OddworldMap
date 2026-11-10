@@ -1,8 +1,8 @@
 // Shared mutable viewer state, and the world-to-draw transforms bound to the
 // live layout.
 
-import { GRID_UNIT } from "./config.js";
-import { drawX, drawY, worldX, worldY } from "./model/geometry.js";
+import { GRID_UNIT } from "../config.js";
+import { drawX, drawY, worldX, worldY } from "../model/geometry.js";
 
 // Both games address cameras on a grid coarser than the screen (data.geometry):
 // a visW x visH window of world units sits inside the cell at winX/winY, world

@@ -23,7 +23,7 @@ import {
   cellOrigin,
   setGeometry,
   setSpacing,
-} from "../../public/js/state.js";
+} from "../../public/js/data/state.js";
 import { isDemoPath } from "../../public/js/model/demo.js";
 import { AO_GEOMETRY, AE_GEOMETRY, CROSS_LEVEL_FOLLOWS, pitches } from "./fixtures.js";
 

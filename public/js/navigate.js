@@ -4,7 +4,7 @@
 import { clamp, esc } from "./model/util.js";
 import { DEMO_NOTE, EDITED_NOTE, ENTRY_NOTE, LOGIC_FPS, ZOOM_MIN, ZOOM_MAX } from "./config.js";
 import { $, cv, gameBtns, levelBtns, pathBtns, releaseBtns } from "./ui/dom.js";
-import { knownGame, loadGame, loadRelease, loadReleaseIndex } from "./data.js";
+import { knownGame, loadGame, loadRelease, loadReleaseIndex } from "./data/data.js";
 import { toast } from "./ui/toast.js";
 import {
   state,
@@ -19,7 +19,7 @@ import {
   dY,
   wX,
   wY,
-} from "./state.js";
+} from "./data/state.js";
 import { draw, flashAt, settleView } from "./render.js";
 import {
   camCell,
@@ -37,9 +37,9 @@ import {
 } from "./model/model.js";
 import { pathDisplayName, pathNickname } from "./model/annotations.js";
 import { isDemoPath } from "./model/demo.js";
-import { pathVisible, revealPath } from "./pathvisible.js";
+import { pathVisible, revealPath } from "./data/pathvisible.js";
 import { orderPaths } from "./model/pathorder.js";
-import { displayLabel, getSettings, rememberLocation } from "./settings.js";
+import { displayLabel, getSettings, rememberLocation } from "./data/settings.js";
 import {
   currentOf,
   isRemoved,
@@ -47,8 +47,8 @@ import {
   pristineOf,
   removedObjects,
   takeReport,
-} from "./edits.js";
-import { baseObject, pathRelease, pathReleased } from "./release.js";
+} from "./data/edits.js";
+import { baseObject, pathRelease, pathReleased } from "./data/release.js";
 import { setFrameRate } from "./model/fields.js";
 import { setTickRate } from "./engine/motion.js";
 

@@ -3,15 +3,15 @@
 // standalone SVG or a PNG rasterized from it.
 
 import { EXPORT_MAX_DIM, EXPORT_MAX_PX } from "./config.js";
-import { loadEditorData } from "./data.js";
+import { loadEditorData } from "./data/data.js";
 import { $, cv } from "./ui/dom.js";
-import { graphName, graphSvg } from "./graphsvg.js";
+import { graphName, graphSvg } from "./data/graphsvg.js";
 import { pathImage } from "./model/model.js";
 import { exportPath } from "./model/reliveexport.js";
-import { pathEdited } from "./edits.js";
+import { pathEdited } from "./data/edits.js";
 import { paint } from "./render.js";
 import { artworkReady, preloadPath } from "./spriteart.js";
-import { LAYOUT, cellOrigin, state } from "./state.js";
+import { LAYOUT, cellOrigin, state } from "./data/state.js";
 import { toast } from "./ui/toast.js";
 
 // a permission prompt can defer the blob's read indefinitely, so the URL lives

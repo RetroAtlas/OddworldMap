@@ -4,9 +4,9 @@
 
 import { $, cv, narrowMQ, typingIn } from "./ui/dom.js";
 import { esc } from "./model/util.js";
-import { LAYOUT, state } from "./state.js";
+import { LAYOUT, state } from "./data/state.js";
 import { camCenter, cellAt } from "./model/model.js";
-import { census } from "./census.js";
+import { census } from "./data/census.js";
 
 const panel = $("numbersPanel"),
   body = $("numbersBody"),

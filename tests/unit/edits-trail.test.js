@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { state } from "../../public/js/state.js";
+import { state } from "../../public/js/data/state.js";
 import {
   applyFieldEdit,
   applyRectEdit,
@@ -17,7 +17,7 @@ import {
   revertObject,
   revertPath,
   undoEdit,
-} from "../../public/js/edits.js";
+} from "../../public/js/data/edits.js";
 import { stand, world } from "./aeworld.js";
 
 test("a run of nudges is one step, which a drag, another edit, an undo or a redo ends", () => {

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { state } from "../../public/js/state.js";
+import { state } from "../../public/js/data/state.js";
 import { canonical, exportPath } from "../../public/js/model/reliveexport.js";
 import {
   addObject,
@@ -13,7 +13,7 @@ import {
   revertPath,
   setLevelShort,
   undoEdit,
-} from "../../public/js/edits.js";
+} from "../../public/js/data/edits.js";
 
 const load = (f) => JSON.parse(readFileSync(new URL(`../../public/${f}`, import.meta.url), "utf8"));
 

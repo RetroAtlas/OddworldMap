@@ -6,9 +6,9 @@
 
 import { $, narrowMQ, searchInput } from "./ui/dom.js";
 import { esc } from "./model/util.js";
-import { state } from "./state.js";
+import { state } from "./data/state.js";
 import { catOf } from "./config.js";
-import { census } from "./census.js";
+import { census } from "./data/census.js";
 import { fieldHelp, unitNote } from "./model/fields.js";
 import { typeProse } from "./model/typeinfo.js";
 import { closeDialog, openDialog, trapDialogKeys } from "./ui/dialog.js";

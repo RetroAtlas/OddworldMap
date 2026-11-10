@@ -9,7 +9,7 @@ const VIEW = "#AO/R1/15/9781/786/1.00";
 const probe = (page) =>
   page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const { state } = await import(u("state.js"));
+    const { state } = await import(u("data/state.js"));
     const nav = await import(u("navigate.js"));
     return {
       release: state.data.release?.code ?? null,
@@ -30,7 +30,7 @@ const probe = (page) =>
 
 const releaseIs = (page, code) =>
   page.waitForFunction(async (code) => {
-    const { state } = await import(new URL("js/state.js", location.href).href);
+    const { state } = await import(new URL("js/data/state.js", location.href).href);
     return (state.data?.release?.code ?? null) === code;
   }, code);
 
@@ -101,7 +101,7 @@ test("an object link names the base's origin, and opens on the object in any rel
   await releaseIs(page, "eu");
   const link = await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const { state } = await import(u("state.js"));
+    const { state } = await import(u("data/state.js"));
     const nav = await import(u("navigate.js"));
     const t = state.path.tlvs.find((o) => o.name === "StartController" && o.x1 === 3707);
     return t && nav.objectHash(t);
@@ -165,9 +165,9 @@ test("an edit in a release keeps a store of its own, and survives a reload", asy
   const nudge = () =>
     page.evaluate(async () => {
       const u = (m) => new URL("js/" + m, location.href).href;
-      const { state } = await import(u("state.js"));
-      const edits = await import(u("edits.js"));
-      const data = await import(u("data.js"));
+      const { state } = await import(u("data/state.js"));
+      const edits = await import(u("data/edits.js"));
+      const data = await import(u("data/data.js"));
       edits.setLevelShort("AO", (await data.loadEditorData("AO")).level_short);
       const t = state.path.tlvs.find((o) => o.name === "Door");
       edits.applyRectEdit(t, [t.x1 + 1, t.y1, t.x2 + 1, t.y2]);
@@ -191,7 +191,7 @@ test("an edit in a release keeps a store of its own, and survives a reload", asy
   await page.locator('#releaseBtns button[data-key=""]').click();
   await releaseIs(page, null);
   const shipped = await page.evaluate(async (x1) => {
-    const { state } = await import(new URL("js/state.js", location.href).href);
+    const { state } = await import(new URL("js/data/state.js", location.href).href);
     return state.path.tlvs.some((o) => o.name === "Door" && o.x1 === x1);
   }, door.x1);
   expect(shipped).toBe(true);
@@ -205,7 +205,7 @@ test("an edit in a release keeps a store of its own, and survives a reload", asy
   await settle(page, { game: "AO", level: "R1", path: 15 });
   await releaseIs(page, "eu");
   const moved = await page.evaluate(async (x1) => {
-    const { state } = await import(new URL("js/state.js", location.href).href);
+    const { state } = await import(new URL("js/data/state.js", location.href).href);
     return state.path.tlvs.some((o) => o.name === "Door" && o.x1 === x1);
   }, door.x1 + 1);
   expect(moved).toBe(true);
@@ -222,7 +222,7 @@ test("a patched screen paints the base's picture with the release's patches over
   await releaseIs(page, "jp");
   const seen = await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const { state, LAYOUT } = await import(u("state.js"));
+    const { state, LAYOUT } = await import(u("data/state.js"));
     const render = await import(u("render.js"));
     const spriteart = await import(u("spriteart.js"));
     const cam = state.path.cams.find((c) => c.patches);

@@ -109,7 +109,7 @@ test("over a sprite's image, the hover names what the eye sees before an unseen 
   await settleArtwork(page);
   const client = await page.evaluate(async (w) => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
+    const st = await import(u("data/state.js"));
     const r = document.getElementById("cv").getBoundingClientRect();
     return {
       x: r.left + (st.dX(w.x) - st.state.cam.x) * st.state.cam.z,
@@ -135,7 +135,7 @@ test("a sprite larger than its rectangle is hovered over its whole image", async
   // a point inside the drawn sprite but clear of the placed rectangle
   const spot = await page.evaluate(async (b) => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
+    const st = await import(u("data/state.js"));
     const spritepaint = await import(u("spritepaint.js"));
     const model = await import(u("model/model.js"));
     const t = st.state.path.tlvs.find((o) => o.name === "RollingBall" && o.x1 === b.x1);
@@ -204,7 +204,7 @@ test("Dim backgrounds dims the foreground masks drawn over the sprites too", asy
   // a point inside a piece of foreground: the first opaque pixel of the first mask
   const at = await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
+    const st = await import(u("data/state.js"));
     const { path } = st.state;
     const c = path.cams.find((c) => c.masks);
     const im = new Image();
@@ -234,7 +234,7 @@ test("Dim backgrounds dims the foreground masks drawn over the sprites too", asy
   const read = () =>
     page.evaluate(async (p) => {
       const u = (m) => new URL("js/" + m, location.href).href;
-      const st = await import(u("state.js"));
+      const st = await import(u("data/state.js"));
       const render = await import(u("render.js"));
       const spriteart = await import(u("spriteart.js"));
       await spriteart.preloadPath(st.state.path);

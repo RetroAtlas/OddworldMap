@@ -9,7 +9,7 @@ import {
   sanitizeLocationHash,
   sanitizeSettings,
   sanitizeView,
-} from "../../public/js/settings.js";
+} from "../../public/js/data/settings.js";
 import { CATS } from "../../public/js/config.js";
 
 // sanitizeSettings adds fieldPrefs (a non-boolean) on top of the boolean defaults
@@ -97,7 +97,7 @@ test("sanitizeChosen: the stored booleans of known keys, one at its default incl
 test("chooseSetting: records what the visitor has set, which persistSettings writes with the field picks", async () => {
   // an instance of its own, the settings being memoised on the first ask
   const { chooseSetting, getSettings, persistSettings } = await import(
-    new URL("../../public/js/settings.js?fresh", import.meta.url)
+    new URL("../../public/js/data/settings.js?fresh", import.meta.url)
   );
   const stored = new Map([
     ["owm:settings", JSON.stringify({ fullNames: true, showDemoPaths: true, animate: "yes" })],
@@ -139,7 +139,7 @@ test("chooseSetting: records what the visitor has set, which persistSettings wri
 test("getViewSnapshot: the stored snapshot seeds the kept set, which viewChanged writes back", async () => {
   // an instance of its own, the view being memoised on the first ask
   const { getViewSnapshot, viewChanged } = await import(
-    new URL("../../public/js/settings.js?view", import.meta.url)
+    new URL("../../public/js/data/settings.js?view", import.meta.url)
   );
   const stored = new Map([
     ["owm:view", JSON.stringify({ show: { grid: false, coll: "yes" }, cats: { nav: true } })],
@@ -176,7 +176,7 @@ test("SHOW_KEYS: every sidebar Display toggle is remembered, ruler and route exc
 });
 
 test("SETTINGS_DEFAULTS: a Settings row carries checked exactly when its default is on", () => {
-  const src = readFileSync(new URL("../../public/js/settings.js", import.meta.url), "utf8");
+  const src = readFileSync(new URL("../../public/js/data/settings.js", import.meta.url), "utf8");
   const bound = [...src.matchAll(/bind\("(\w+)", "(\w+)"/g)].map(([, id, key]) => [id, key]);
   assert.deepEqual(
     bound.map(([, key]) => key).sort(),

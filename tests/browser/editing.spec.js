@@ -164,7 +164,7 @@ test("the mode draws every marker, whatever Markers for the rest says", async ({
     );
     return page.evaluate(async () => {
       const u = (m) => new URL("js/" + m, location.href).href;
-      const st = await import(u("state.js"));
+      const st = await import(u("data/state.js"));
       const t = st.state.path.tlvs.find((o) => o.name === "SligSpawner");
       const cv = document.getElementById("cv");
       const z = st.state.cam.z;

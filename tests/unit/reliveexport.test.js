@@ -7,7 +7,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { materializeRelease } from "../../public/js/release.js";
+import { materializeRelease } from "../../public/js/data/release.js";
 
 import {
   bucketCells,

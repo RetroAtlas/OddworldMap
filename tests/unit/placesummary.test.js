@@ -1,9 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { placeSummary } from "../../public/js/placesummary.js";
+import { placeSummary } from "../../public/js/data/placesummary.js";
 import { setAnnotations } from "../../public/js/model/annotations.js";
-import { materializePath, setLevelShort } from "../../public/js/edits.js";
+import { materializePath, setLevelShort } from "../../public/js/data/edits.js";
 
 const load = (name) =>
   JSON.parse(readFileSync(new URL(`../../public/${name}`, import.meta.url), "utf8"));

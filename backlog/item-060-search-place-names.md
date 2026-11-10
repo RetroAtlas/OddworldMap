@@ -43,7 +43,7 @@ A README search bullet update and a `changelog.json` entry, tag `new`.
 
 ## Shipped
 
-[js/placesearch.js](../public/js/placesearch.js) builds one candidate per level and per path — 214 across both games — and `runSearch` renders the matches as a Places group above the object groups, `jumpToPlace` in [js/navigate.js](../public/js/navigate.js) taking a click on one (a level opens on the first path it lists).
+[js/placesearch.js](../public/js/data/placesearch.js) builds one candidate per level and per path — 214 across both games — and `runSearch` renders the matches as a Places group above the object groups, `jumpToPlace` in [js/navigate.js](../public/js/navigate.js) taking a click on one (a level opens on the first path it lists).
 
 **The sketch's single blob does not work, and it fails quietly.** Matching `"<short> <name> <path label>"` as one lowercased string hands the `2` in `zulag 2` to the `R2` that every Rupture Farms Return path sits in: the query returns all eighteen, and the four the game itself calls Zulag 2 arrive buried among them — the *Verify* line's own case, inverted. A candidate therefore carries two indexes: the names by substring as sketched, and the `LV Pn` code as whole tokens (`["r2", "p1"]`) that answer a term only in full. `matchesBy` in [js/searchquery.js](../public/js/ui/searchquery.js) is the seam, with `matchesQuery` redefined through it so the AND-within-OR semantics stay written once.
 

@@ -14,7 +14,7 @@ import {
   CELL_H,
   worldLen,
   routeTotal,
-} from "../../public/js/state.js";
+} from "../../public/js/data/state.js";
 import { AO_GEOMETRY, AE_GEOMETRY, SYNTH_GEOMETRY } from "./fixtures.js";
 
 const close = (a, b, eps = 1e-6) => assert.ok(Math.abs(a - b) < eps, `${a} ≈ ${b}`);

@@ -151,7 +151,7 @@ test("the selection drags where the pointer carries it, nudges on the arrows and
   ).toBe(true);
   const centre = await page.evaluate(async (d) => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const stateModule = await import(u("state.js"));
+    const stateModule = await import(u("data/state.js"));
     const st = stateModule.state;
     const t = st.path.tlvs.find((o) => o.name === "Door" && o.x1 === d.x1 + 100 && o.y1 === d.y1);
     const [cx, cy] = window.__model.markerCentre(t, stateModule.LAYOUT);

@@ -4,7 +4,7 @@
 
 ## Symptom
 
-No user-visible defect. [js/interaction.js](../public/js/interaction.js)'s `worldAtMouse` returns `{x: cam.x + mouse.x / cam.z, …}` — draw space, not world space. Its consumers are all correct: `state.ruler` (documented draw-space in [js/state.js](../public/js/state.js)), `addRoutePoint`, `openCamPanel` → `cellAt`, and the hover rect comparisons against `dX(t.x1)`. The single place that wants real world units converts explicitly on the next line, `wX(w.x)` in the HUD write.
+No user-visible defect. [js/interaction.js](../public/js/interaction.js)'s `worldAtMouse` returns `{x: cam.x + mouse.x / cam.z, …}` — draw space, not world space. Its consumers are all correct: `state.ruler` (documented draw-space in [js/state.js](../public/js/data/state.js)), `addRoutePoint`, `openCamPanel` → `cellAt`, and the hover rect comparisons against `dX(t.x1)`. The single place that wants real world units converts explicitly on the next line, `wX(w.x)` in the HUD write.
 
 ## Why it matters
 

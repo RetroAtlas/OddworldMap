@@ -3,8 +3,8 @@
 // named picture rather than an anonymous graphic.
 
 import { $, cv } from "./ui/dom.js";
-import { state } from "./state.js";
-import { placeSummary } from "./placesummary.js";
+import { state } from "./data/state.js";
+import { placeSummary } from "./data/placesummary.js";
 
 const region = $("a11yStatus");
 

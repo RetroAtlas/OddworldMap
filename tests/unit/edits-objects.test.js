@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { state } from "../../public/js/state.js";
+import { state } from "../../public/js/data/state.js";
 import {
   addObject,
   applyFieldEdit,
@@ -33,7 +33,7 @@ import {
   typeTable,
   undoEdit,
   validAdded,
-} from "../../public/js/edits.js";
+} from "../../public/js/data/edits.js";
 import { DOOR, door, plain, stand, world } from "./aeworld.js";
 
 test("a removed object leaves the standing path as a ghost carrying its deltas, and comes back as edited", () => {

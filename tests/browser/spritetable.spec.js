@@ -62,7 +62,7 @@ test("while the sidecar is still coming, nothing stands where a sprite will", as
   expect(
     await page.evaluate(async () => {
       const u = (m) => new URL("js/" + m, location.href).href;
-      const st = await import(u("state.js"));
+      const st = await import(u("data/state.js"));
       const spriteart = await import(u("spriteart.js"));
       return spriteart.artworkReady(st.state.path);
     }),

@@ -4,8 +4,8 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { state } from "../../public/js/state.js";
-import { pathVisible, revealPath } from "../../public/js/pathvisible.js";
+import { state } from "../../public/js/data/state.js";
+import { pathVisible, revealPath } from "../../public/js/data/pathvisible.js";
 import {
   addObject,
   applyFieldEdit,
@@ -42,7 +42,7 @@ import {
   undoEdit,
   validDelta,
   validRect,
-} from "../../public/js/edits.js";
+} from "../../public/js/data/edits.js";
 import { AE_GEOMETRY } from "./fixtures.js";
 import { door, plain, stand, world } from "./aeworld.js";
 

@@ -8,13 +8,13 @@ import { fieldEntries, fieldHelp } from "./model/fields.js";
 import { DARK_NOTE, objectMessages } from "./model/messages.js";
 import { ADDED_NOTE, CATS, EDITED_NOTE, OFFSCREEN_NOTE, REMOVED_NOTE, catOf } from "./config.js";
 import { $, narrowMQ, typingIn } from "./ui/dom.js";
-import { GEO, LAYOUT, state } from "./state.js";
+import { GEO, LAYOUT, state } from "./data/state.js";
 import { cellAt, nearestCam, offScreen, tlvCell } from "./model/model.js";
 import { setHighlight } from "./render.js";
-import { fieldPrefsFor, getSettings } from "./settings.js";
+import { fieldPrefsFor, getSettings } from "./data/settings.js";
 import { jumpToTlv } from "./navigate.js";
-import { currentOf, editNotes, isAdded, isRemoved, removedObjects } from "./edits.js";
-import { releaseNote } from "./release.js";
+import { currentOf, editNotes, isAdded, isRemoved, removedObjects } from "./data/edits.js";
+import { releaseNote } from "./data/release.js";
 import { restoreHere, selectObject } from "./editpanel.js";
 
 const panel = $("camPanel"),

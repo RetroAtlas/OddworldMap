@@ -53,7 +53,16 @@ const LAYERS = {
   engine: ["engine", "config.js"],
   model: ["model", "engine/lcd.js", "config.js"],
   rules: ["rules", "model", "engine", "config.js"],
-  ".": ["engine", "model", "rules", "ui", "."],
+  data: [
+    "data",
+    "model",
+    "engine/collide.js",
+    "ui/dialog.js",
+    "ui/icons.js",
+    "ui/searchquery.js",
+    "config.js",
+  ],
+  ".": ["data", "engine", "model", "rules", "ui", "."],
 };
 
 // every viewer module, with the modules its import statements name

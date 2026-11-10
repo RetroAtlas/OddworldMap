@@ -1,13 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { INK, graphName, graphSvg, marker, wirePath } from "../../public/js/graphsvg.js";
-import { graphLayout, worldGraph } from "../../public/js/worldgraph.js";
+import { INK, graphName, graphSvg, marker, wirePath } from "../../public/js/data/graphsvg.js";
+import { graphLayout, worldGraph } from "../../public/js/data/worldgraph.js";
 import { computeEntryPaths } from "../../public/js/model/model.js";
 import { setAnnotations } from "../../public/js/model/annotations.js";
-import { getSettings } from "../../public/js/settings.js";
+import { getSettings } from "../../public/js/data/settings.js";
 import { dataset, level, path, tlv } from "./fixtures.js";
-import { materializePath, setLevelShort } from "../../public/js/edits.js";
+import { materializePath, setLevelShort } from "../../public/js/data/edits.js";
 
 const load = (name) =>
   JSON.parse(readFileSync(new URL(`../../public/${name}`, import.meta.url), "utf8"));

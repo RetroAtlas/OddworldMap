@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { isDemoPath } from "../../public/js/model/demo.js";
-import { pathVisible, revealPath } from "../../public/js/pathvisible.js";
-import { getSettings } from "../../public/js/settings.js";
+import { pathVisible, revealPath } from "../../public/js/data/pathvisible.js";
+import { getSettings } from "../../public/js/data/settings.js";
 import { path, tlv } from "./fixtures.js";
 
 const demoPath = (id) => path(id, [tlv("Door"), tlv("DemoSpawnPoint")]);

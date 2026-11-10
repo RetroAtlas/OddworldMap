@@ -3,10 +3,10 @@
 // localStorage only inside the guarded store calls. initSettings() does all
 // the DOM wiring.
 
-import { CATS } from "./config.js";
-import { parseHash } from "./model/model.js";
-import { GEAR_SVG } from "./ui/icons.js";
-import { closeDialog, openDialog, trapDialogKeys } from "./ui/dialog.js";
+import { CATS } from "../config.js";
+import { parseHash } from "../model/model.js";
+import { GEAR_SVG } from "../ui/icons.js";
+import { closeDialog, openDialog, trapDialogKeys } from "../ui/dialog.js";
 
 const SETTINGS_KEY = "owm:settings";
 const VIEW_KEY = "owm:view";

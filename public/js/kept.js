@@ -6,7 +6,7 @@
 import { CATS, KEPT_UNSEEN, PENS, barrierDir, catOf, markerShown } from "./config.js";
 import { computeConnections, computeWiring, destOf, destTrusted } from "./model/model.js";
 import { spriteTypes } from "./rules/sprites.js";
-import { state } from "./state.js";
+import { state } from "./data/state.js";
 
 const ruled = {};
 const hasRule = (game, name) => (ruled[game] ??= new Set(spriteTypes(game))).has(name);

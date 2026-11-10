@@ -9,7 +9,7 @@ import {
   pathNote,
   setAnnotations,
 } from "../public/js/model/annotations.js";
-import { displayLabel } from "../public/js/settings.js";
+import { displayLabel } from "../public/js/data/settings.js";
 import { levelEntry, levelOrder } from "../public/js/model/pathorder.js";
 import { isDemoPath } from "../public/js/model/demo.js";
 import { esc } from "../public/js/model/util.js";

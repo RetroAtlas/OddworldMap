@@ -63,7 +63,7 @@ Three sidecars, all derived from the same decomp source the builder already pars
 - **the enum labels verbatim**, un-lowercased, keyed as `enum_labels_*` already keys them;
 - **the per-game `schema` blob**, one static object per game (types with their properties, the enum tables, the basic-type ranges), since the editor needs it and it never varies by path.
 
-The rest is assembly: `map`'s required scalars, `collisions.items`, and `cameras` with `map_objects` bucketed by cell — which is a straight read of `c.cell` against each TLV's world rect, since [js/state.js](../public/js/state.js)'s transforms already establish the cell geometry.
+The rest is assembly: `map`'s required scalars, `collisions.items`, and `cameras` with `map_objects` bucketed by cell — which is a straight read of `c.cell` against each TLV's world rect, since [js/state.js](../public/js/data/state.js)'s transforms already establish the cell geometry.
 
 ### How to verify it
 

@@ -12,10 +12,10 @@ export async function download(page, selector) {
 export async function attach(page) {
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    window.__st = (await import(u("state.js"))).state;
+    window.__st = (await import(u("data/state.js"))).state;
     window.__nav = await import(u("navigate.js"));
     window.__model = await import(u("model/model.js"));
-    window.__edits = await import(u("edits.js"));
+    window.__edits = await import(u("data/edits.js"));
     window.__applied = location.hash;
     window.addEventListener("hashchange", () => (window.__applied = location.hash));
     const replace = history.replaceState.bind(history);
@@ -44,7 +44,7 @@ export const aimAt = (page, name) =>
   page.evaluate(async (name) => {
     const st = window.__st;
     const render = await import(new URL("js/render.js", location.href).href);
-    const stateModule = await import(new URL("js/state.js", location.href).href);
+    const stateModule = await import(new URL("js/data/state.js", location.href).href);
     window.__nav.flushHash();
     while (location.hash !== window.__applied)
       await new Promise((r) => window.addEventListener("hashchange", r, { once: true }));
@@ -81,7 +81,7 @@ export const doorCamera = (page, d) =>
 export const aimAtDoorNow = (page) =>
   page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const stateModule = await import(u("state.js"));
+    const stateModule = await import(u("data/state.js"));
     const st = stateModule.state;
     const [cx, cy] = window.__model.markerCentre(st.sel, stateModule.LAYOUT);
     const r = document.getElementById("cv").getBoundingClientRect();

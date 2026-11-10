@@ -62,7 +62,7 @@ function imageData(page, rect, hashed) {
   return page.evaluate(
     async ([r, hashed]) => {
       const u = (m) => new URL("js/" + m, location.href).href;
-      const st = await import(u("state.js"));
+      const st = await import(u("data/state.js"));
       const cv = document.getElementById("cv");
       const z = st.state.cam.z;
       const x = (st.dX(r.x1) - st.state.cam.x) * z,
@@ -106,7 +106,7 @@ async function settleAt(page, sel) {
   await page.evaluate(
     async ({ sel, ms }) => {
       const u = (m) => new URL("js/" + m, location.href).href;
-      const st = await import(u("state.js"));
+      const st = await import(u("data/state.js"));
       const render = await import(u("render.js"));
       const spriteart = await import(u("spriteart.js"));
       const cv = document.getElementById("cv");
@@ -158,7 +158,7 @@ export async function settleArtwork(page) {
   const ms = inside();
   await page.evaluate(async (ms) => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
+    const st = await import(u("data/state.js"));
     const render = await import(u("render.js"));
     const spriteart = await import(u("spriteart.js"));
     const deadline = Date.now() + ms;
@@ -176,7 +176,7 @@ export async function settleArtwork(page) {
 export async function probeAnchor(page, anchor) {
   return await page.evaluate(async (a) => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
+    const st = await import(u("data/state.js"));
     const model = await import(u("model/model.js"));
     const render = await import(u("render.js"));
     const config = await import(u("config.js"));

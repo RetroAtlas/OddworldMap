@@ -8,7 +8,7 @@
 import { MAX_ROUTE_PTS } from "./config.js";
 import { formatDist } from "./model/util.js";
 import { $ } from "./ui/dom.js";
-import { GEO, LAYOUT, routeTotal, state } from "./state.js";
+import { GEO, LAYOUT, routeTotal, state } from "./data/state.js";
 import { markerCentre, resolveTarget } from "./model/model.js";
 import { scheduleDraw } from "./ui/redraw.js";
 import { scheduleHash } from "./navigate.js";

@@ -2,10 +2,10 @@
 // between two of them an edge, laid out as a column per level in progression
 // order with its paths stacked in play order. Importable in bare Node: no DOM.
 
-import { GRAPH } from "./config.js";
+import { GRAPH } from "../config.js";
 import { pathVisible } from "./pathvisible.js";
-import { pathIn, wayThrough } from "./model/model.js";
-import { levelOrder } from "./model/pathorder.js";
+import { pathIn, wayThrough } from "../model/model.js";
+import { levelOrder } from "../model/pathorder.js";
 
 const key = (lv, pa) => `${lv} P${pa}`;
 

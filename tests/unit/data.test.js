@@ -10,7 +10,7 @@ import {
   loadRelease,
   loadReleaseIndex,
   loadSprites,
-} from "../../public/js/data.js";
+} from "../../public/js/data/data.js";
 
 test("knownGame: the games the map ships, and nothing borrowed from Object", () => {
   for (const id of GAME_IDS) assert.equal(knownGame(id), true);

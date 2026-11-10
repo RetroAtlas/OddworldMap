@@ -3,9 +3,9 @@
 // picks into the current game's fieldPrefs.byType bucket.
 
 import { $ } from "./ui/dom.js";
-import { state } from "./state.js";
+import { state } from "./data/state.js";
 import { defaultVisible, fieldHelp } from "./model/fields.js";
-import { getSettings, fieldPrefsFor, persistSettings } from "./settings.js";
+import { getSettings, fieldPrefsFor, persistSettings } from "./data/settings.js";
 
 const section = $("fieldPanel");
 const body = section.querySelector(".fp-body");

@@ -27,7 +27,7 @@ const familiesArrived = (page, families) =>
 const sligNow = (page) =>
   page.evaluate(async (s) => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
+    const st = await import(u("data/state.js"));
     const spriteart = await import(u("spriteart.js"));
     const spritepaint = await import(u("spritepaint.js"));
     const motion = await import(u("engine/motion.js"));
@@ -135,14 +135,14 @@ test("an edit that brings a family in leaves the path's sprites drawn while its 
   await page.goto(`/#AE/MI/1/${SLIG.x1 + 12}/${SLIG.y1 - 10}/1.00`);
   await settle(page, SLIG);
   await page.evaluate(async () => {
-    window.__state = (await import(new URL("js/state.js", location.href).href)).state;
+    window.__state = (await import(new URL("js/data/state.js", location.href).href)).state;
   });
   await page.keyboard.press("e");
   await page.waitForFunction(() => window.__state.edit === true);
   const paintedAsSprite = () =>
     page.evaluate(async (s) => {
       const u = (m) => new URL("js/" + m, location.href).href;
-      const st = await import(u("state.js"));
+      const st = await import(u("data/state.js"));
       const render = await import(u("render.js"));
       const spritepaint = await import(u("spritepaint.js"));
       render.draw();
@@ -152,8 +152,8 @@ test("an edit that brings a family in leaves the path's sprites drawn while its 
   expect(await paintedAsSprite()).toBe(true);
   await page.evaluate(async (s) => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
-    const edits = await import(u("edits.js"));
+    const st = await import(u("data/state.js"));
+    const edits = await import(u("data/edits.js"));
     const rect = edits.freeSpot(st.state.path, st.state.data.geometry, [
       s.x1 + 100,
       s.y1,
@@ -190,7 +190,7 @@ test("a sheet that fails leaves its objects as markers, and the map asking again
   const drawn = () =>
     page.evaluate(async (s) => {
       const u = (m) => new URL("js/" + m, location.href).href;
-      const st = await import(u("state.js"));
+      const st = await import(u("data/state.js"));
       const spritepaint = await import(u("spritepaint.js"));
       const t = st.state.path.tlvs.find((o) => o.name === "Slig" && o.x1 === s.x1 && o.y1 === s.y1);
       return spritepaint.hitBoxes(t, st.LAYOUT).map((b) => b.drawn);
@@ -218,7 +218,7 @@ test("a font that fails leaves the tally boards it writes as markers", async ({ 
   const drawn = () =>
     page.evaluate(async (b) => {
       const u = (m) => new URL("js/" + m, location.href).href;
-      const st = await import(u("state.js"));
+      const st = await import(u("data/state.js"));
       const spritepaint = await import(u("spritepaint.js"));
       const t = st.state.path?.tlvs.find(
         (o) => o.name === "LCDStatusBoard" && o.x1 === b.x1 && o.y1 === b.y1,
@@ -241,7 +241,7 @@ test.describe("below the zoom a creature reads at", () => {
   };
   const screensIn = async (page) => {
     await page.evaluate(async () => {
-      window.__state = (await import(new URL("js/state.js", location.href).href)).state;
+      window.__state = (await import(new URL("js/data/state.js", location.href).href)).state;
     });
     await page.waitForFunction(() => {
       const p = window.__state.path;
@@ -256,7 +256,7 @@ test.describe("below the zoom a creature reads at", () => {
   const slig = (page) =>
     page.evaluate(async (s) => {
       const u = (m) => new URL("js/" + m, location.href).href;
-      const st = await import(u("state.js"));
+      const st = await import(u("data/state.js"));
       const render = await import(u("render.js"));
       const spriteart = await import(u("spriteart.js"));
       const spritepaint = await import(u("spritepaint.js"));
@@ -272,7 +272,7 @@ test.describe("below the zoom a creature reads at", () => {
   const zoomTo = (page, z) =>
     page.evaluate(async (z) => {
       const u = (m) => new URL("js/" + m, location.href).href;
-      const st = await import(u("state.js"));
+      const st = await import(u("data/state.js"));
       const model = await import(u("model/model.js"));
       const render = await import(u("render.js"));
       const cv = document.getElementById("cv");
@@ -313,7 +313,7 @@ test.describe("below the zoom a creature reads at", () => {
     // no live paint till the read, as in a hidden tab: an image is complete before its load event
     const exported = await page.evaluate(async (s) => {
       const u = (m) => new URL("js/" + m, location.href).href;
-      const st = await import(u("state.js"));
+      const st = await import(u("data/state.js"));
       const render = await import(u("render.js"));
       const spriteart = await import(u("spriteart.js"));
       const spritepaint = await import(u("spritepaint.js"));

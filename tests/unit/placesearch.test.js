@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { placeCandidates, matchPlaces } from "../../public/js/placesearch.js";
+import { placeCandidates, matchPlaces } from "../../public/js/data/placesearch.js";
 import { parseQuery, queryTerms } from "../../public/js/ui/searchquery.js";
 import { setAnnotations } from "../../public/js/model/annotations.js";
 

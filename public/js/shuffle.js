@@ -3,9 +3,9 @@
 // art-less cams stay out — a blank cell is nobody's prize.
 
 import { $ } from "./ui/dom.js";
-import { state } from "./state.js";
+import { state } from "./data/state.js";
 import { camIdOf } from "./model/model.js";
-import { pathVisible } from "./pathvisible.js";
+import { pathVisible } from "./data/pathvisible.js";
 import { jumpToPlace } from "./navigate.js";
 import { SHUFFLE_SVG } from "./ui/icons.js";
 

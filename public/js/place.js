@@ -4,11 +4,11 @@
 import { DEMO_NOTE, EDITED_NOTE, ENTRY_NOTE } from "./config.js";
 import { $, typingIn } from "./ui/dom.js";
 import { esc } from "./model/util.js";
-import { state } from "./state.js";
+import { state } from "./data/state.js";
 import { pathDisplayName, pathNickname, pathNote } from "./model/annotations.js";
 import { isDemoPath } from "./model/demo.js";
-import { pathEdited, revertPath } from "./edits.js";
-import { pathReleased } from "./release.js";
+import { pathEdited, revertPath } from "./data/edits.js";
+import { pathReleased } from "./data/release.js";
 
 const btn = $("placeBtn"),
   panel = $("placePanel"),

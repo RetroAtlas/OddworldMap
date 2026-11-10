@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { CATS, KEPT_UNSEEN, PENS, catOf } from "../../public/js/config.js";
 import { connections, drawnAs, kept, resetKept } from "../../public/js/kept.js";
 import { spriteTypes } from "../../public/js/rules/sprites.js";
-import { state } from "../../public/js/state.js";
+import { state } from "../../public/js/data/state.js";
 import { at, dataset, level, path, tlv } from "./fixtures.js";
 
 // one Exoddus path of two screens, standing as the live one; the data's id names

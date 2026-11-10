@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { census } from "../../public/js/census.js";
+import { census } from "../../public/js/data/census.js";
 import { AO_GEOMETRY, dataset, level, path, tlv } from "./fixtures.js";
 
 // an object with its corner in cell, off world units into its visible window

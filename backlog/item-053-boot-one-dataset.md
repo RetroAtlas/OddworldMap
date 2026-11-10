@@ -44,7 +44,7 @@ A `changelog.json` entry, tag `improved` — this one is squarely user-visible.
 
 ## Shipped
 
-[js/data.js](../public/js/data.js) is the new home for which datasets there are and when each is fetched: `bootGame` reads the game out of the link's own text, `loadGame` memoizes one promise per dataset, and `pendingGames` is what lets a surface say a wait is still on. `initGames` became `addGame`, called once per dataset.
+[js/data.js](../public/js/data/data.js) is the new home for which datasets there are and when each is fetched: `bootGame` reads the game out of the link's own text, `loadGame` memoizes one promise per dataset, and `pendingGames` is what lets a surface say a wait is still on. `initGames` became `addGame`, called once per dataset.
 
 **The measured payloads had moved since filing, and so had the advice.** Re-measured 2026-08-23 (gzip): `map_data_ao.json` 172 KB, `map_data_ae.json` 345 KB, and the sidecars **45 KB** rather than 7.8 — the two glossaries arrived after this item was written and are 36 KB of that. They stay on the critical path all the same: they feed the very first hover tooltip, which has no re-render to catch up with, and they are dwarfed by the 345 KB the change is actually about. `changelog.json` is a 22 KB boot fetch too, requested at import time by [js/whatsnew.js](../public/js/whatsnew.js) for the newest-entry dot, and is the one remaining candidate for the same treatment.
 

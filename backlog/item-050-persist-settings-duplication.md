@@ -4,7 +4,7 @@
 
 ## Symptom
 
-Three copies of "write the settings object to localStorage" in [js/settings.js](../public/js/settings.js): `persistSettings`, the intended helper; one inside `bind`; and one in the show-more binding. If the storage key, the serialisation or a migration step ever changes, two of the three are easy to miss.
+Three copies of "write the settings object to localStorage" in [js/settings.js](../public/js/data/settings.js): `persistSettings`, the intended helper; one inside `bind`; and one in the show-more binding. If the storage key, the serialisation or a migration step ever changes, two of the three are easy to miss.
 
 ## Sketch
 

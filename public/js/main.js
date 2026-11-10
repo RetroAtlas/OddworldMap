@@ -11,16 +11,16 @@ import {
   loadFieldSidecars,
   loadGame,
   loadJson,
-} from "./data.js";
-import { hasStoredEdits, setEnabled } from "./edits.js";
+} from "./data/data.js";
+import { hasStoredEdits, setEnabled } from "./data/edits.js";
 import { setAnnotations } from "./model/annotations.js";
 import { setFieldTypes, setEnumLabels } from "./model/fields.js";
 import { setGlossary } from "./model/glossary.js";
 import { setMessages } from "./model/messages.js";
 import { setTypeInfo } from "./model/typeinfo.js";
-import { initSettings, storedLocationHash, clearStoredLocation } from "./settings.js";
+import { initSettings, storedLocationHash, clearStoredLocation } from "./data/settings.js";
 import { syncNeeds } from "./sidebar.js";
-import { state } from "./state.js";
+import { state } from "./data/state.js";
 // the hub before the panels: its listeners register first, so its drawer hands
 // focus on before a panel rebuilds its controls
 import { toggleMenu } from "./interaction.js";

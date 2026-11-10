@@ -12,7 +12,7 @@ import {
   catOf,
 } from "./config.js";
 import { $, COLOR, cv, cvCtx } from "./ui/dom.js";
-import { isEdited, removedObjects } from "./edits.js";
+import { isEdited, removedObjects } from "./data/edits.js";
 import { onBackgroundPlane } from "./model/fields.js";
 import { drawX, drawY } from "./model/geometry.js";
 import { drawnAs } from "./kept.js";
@@ -33,7 +33,7 @@ import {
   paintSelection,
   paintWires,
 } from "./overlays.js";
-import { pathRelease, releaseNotes } from "./release.js";
+import { pathRelease, releaseNotes } from "./data/release.js";
 import { screenOf, tintedMasks } from "./screens.js";
 import {
   artOf,
@@ -46,7 +46,7 @@ import {
 } from "./spriteart.js";
 import { movedBy, paintSprites, spriteBoxes } from "./spritepaint.js";
 import { spriteDraws } from "./rules/sprites.js";
-import { CELL_H, CELL_W, GEO, LAYOUT, cellOrigin, state } from "./state.js";
+import { CELL_H, CELL_W, GEO, LAYOUT, cellOrigin, state } from "./data/state.js";
 
 // follow-destination highlight: a fading ring at (x, y) in draw space. A held
 // flash (object permalink) pulses at full strength until the normal timeout

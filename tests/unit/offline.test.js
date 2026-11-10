@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { CAM_FILE_BYTES, MASK_FILE_BYTES, SHEET_FILE_BYTES } from "../../public/js/config.js";
 import { camFiles } from "../../public/js/model/model.js";
-import { materializeRelease } from "../../public/js/release.js";
+import { materializeRelease } from "../../public/js/data/release.js";
 
 const read = (name) => readFileSync(new URL(`../../public/${name}`, import.meta.url), "utf8");
 const load = (name) => JSON.parse(read(name));

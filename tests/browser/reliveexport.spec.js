@@ -13,7 +13,7 @@ const BOOTS = { AO: ["R1", 15], AE: ["MI", 1] };
 
 const standing = (page) =>
   page.evaluate(async () => {
-    const st = await import(new URL("js/state.js", location.href).href);
+    const st = await import(new URL("js/data/state.js", location.href).href);
     return { game: st.state.data.id, level: st.state.lvl.short, path: st.state.path.id };
   });
 

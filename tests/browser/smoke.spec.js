@@ -77,7 +77,7 @@ test("Gaps between screens flipped while the map's box resizes keeps the view's 
   await settle(page, { game: "AO", level: "R1", path: 15 });
   const view = await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
+    const st = await import(u("data/state.js"));
     const nav = await import(u("navigate.js"));
     const main = document.getElementById("main");
     const frame = () => new Promise(requestAnimationFrame);
@@ -120,7 +120,7 @@ test("a link naming a path its level lacks selects nothing on the way", async ({
   await page.evaluate(() => (location.hash = "#AE/BR/98"));
   await page.waitForTimeout(500);
   const at = await page.evaluate(async () => {
-    const { state } = await import(new URL("js/state.js", location.href).href);
+    const { state } = await import(new URL("js/data/state.js", location.href).href);
     return [state.lvl.short, state.path.id, state.lvl.paths.includes(state.path)];
   });
   expect(at).toEqual(["MI", 1, true]);
@@ -134,7 +134,7 @@ test("clicking a door follows it to the level and path it names", async ({ page 
   await settle(page, { game: "AO", level: "R1", path: 15 });
   const pt = await page.evaluate(async (d) => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("state.js"));
+    const st = await import(u("data/state.js"));
     const model = await import(u("model/model.js"));
     const t = st.state.path.tlvs.find(
       (t) => t.name === d.name && t.x1 === d.world[0] && t.y1 === d.world[1],
@@ -163,7 +163,7 @@ test("search moves the view to what it finds", async ({ page }) => {
   await page.goto(`/${TRIP_HASH}`);
   await settle(page, { game: "AO", level: "R1", path: 15 });
   const before = await page.evaluate(async () => {
-    const st = await import(new URL("js/state.js", location.href).href);
+    const st = await import(new URL("js/data/state.js", location.href).href);
     return { hash: location.hash, cam: { ...st.state.cam } };
   });
   await page.fill("#searchInput", "lcdstatusboard");
@@ -171,7 +171,7 @@ test("search moves the view to what it finds", async ({ page }) => {
   await page.press("#searchInput", "Enter");
   await page.waitForFunction((h) => location.hash !== h, before.hash);
   const after = await page.evaluate(async () => {
-    const st = await import(new URL("js/state.js", location.href).href);
+    const st = await import(new URL("js/data/state.js", location.href).href);
     return { ...st.state.cam };
   });
   expect(after).not.toEqual(before.cam);
@@ -231,7 +231,7 @@ test("a switch clicked leaves the keys to the map, and a text field keeps its ow
   await expect(page.locator("#tColl")).toBeChecked();
   const cam = () =>
     page.evaluate(async () => {
-      const st = await import(new URL("js/state.js", location.href).href);
+      const st = await import(new URL("js/data/state.js", location.href).href);
       return { ...st.state.cam };
     });
   const before = await cam();

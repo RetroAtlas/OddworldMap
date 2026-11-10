@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { graphLayout, worldGraph } from "../../public/js/worldgraph.js";
+import { graphLayout, worldGraph } from "../../public/js/data/worldgraph.js";
 import { CONN_COLORS, GRAPH } from "../../public/js/config.js";
 import { setAnnotations } from "../../public/js/model/annotations.js";
 import { CROSS_LEVEL_FOLLOWS, dataset, level, path, tlv } from "./fixtures.js";
