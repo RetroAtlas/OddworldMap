@@ -1,4 +1,4 @@
-import { raycastDiag, raycastDown } from "./engine/collide.js";
+import { raycastDiag, raycastDown } from "../engine/collide.js";
 import {
   FLOOR,
   FLOOR_WALLS,

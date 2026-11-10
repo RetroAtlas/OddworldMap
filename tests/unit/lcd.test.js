@@ -14,7 +14,7 @@ import {
   measureOf,
 } from "../../public/js/engine/lcd.js";
 import { resolveEffects, resolveRecord } from "../../public/js/engine/motion.js";
-import { spriteDraws } from "../../public/js/sprites.js";
+import { spriteDraws } from "../../public/js/rules/sprites.js";
 import { lcdMessages, objectMessages, setMessages } from "../../public/js/model/messages.js";
 import { armFieldData } from "../../public/js/model/fields.js";
 

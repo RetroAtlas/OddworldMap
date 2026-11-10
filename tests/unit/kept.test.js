@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CATS, KEPT_UNSEEN, PENS, catOf } from "../../public/js/config.js";
 import { connections, drawnAs, kept, resetKept } from "../../public/js/kept.js";
-import { spriteTypes } from "../../public/js/sprites.js";
+import { spriteTypes } from "../../public/js/rules/sprites.js";
 import { state } from "../../public/js/state.js";
 import { at, dataset, level, path, tlv } from "./fixtures.js";
 

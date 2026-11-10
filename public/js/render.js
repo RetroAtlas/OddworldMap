@@ -45,7 +45,7 @@ import {
   spritesReady,
 } from "./spriteart.js";
 import { movedBy, paintSprites, spriteBoxes } from "./spritepaint.js";
-import { spriteDraws } from "./sprites.js";
+import { spriteDraws } from "./rules/sprites.js";
 import { CELL_H, CELL_W, GEO, LAYOUT, cellOrigin, state } from "./state.js";
 
 // follow-destination highlight: a fading ring at (x, y) in draw space. A held

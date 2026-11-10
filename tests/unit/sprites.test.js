@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { ownSheet, recordSheets, spriteDraws, spriteTypes } from "../../public/js/sprites.js";
+import { ownSheet, recordSheets, spriteDraws, spriteTypes } from "../../public/js/rules/sprites.js";
 import { armFieldData } from "../../public/js/model/fields.js";
 import { brainAt, resolveEffects, resolveRecord } from "../../public/js/engine/motion.js";
 import { raycast } from "../../public/js/engine/collide.js";

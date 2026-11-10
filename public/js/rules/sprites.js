@@ -5,7 +5,7 @@
 // draw records; the painter draws them and the motion clock advances them.
 // No DOM, so it stays importable in bare Node.
 
-import { onBackgroundPlane } from "./model/fields.js";
+import { onBackgroundPlane } from "../model/fields.js";
 import { rules } from "./spritekit.js";
 import "./furniturerules.js";
 import "./hazardrules.js";

@@ -10,7 +10,7 @@ import { resetScene, setMotionRunning, setPatrolsRunning } from "./engine/motion
 import { releaseSprites } from "./release.js";
 import { compose, composed, dimCache, images, img, tintCache } from "./screens.js";
 import { getSettings } from "./settings.js";
-import { ownSheet, recordSheets, spriteDraws } from "./sprites.js";
+import { ownSheet, recordSheets, spriteDraws } from "./rules/sprites.js";
 import { state } from "./state.js";
 
 // game id -> sidecar, null while it is coming, false once a fetch failed. A
