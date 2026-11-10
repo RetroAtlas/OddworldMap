@@ -25,6 +25,14 @@ const typeCard = (p) =>
   p.evaluate(() =>
     window.dispatchEvent(new CustomEvent("typecard-open", { detail: { type: "Door" } })),
   );
+// the feed's first entries are no flagship, so the flagship tag's foil and the entry's sheen show
+// only with the other kinds switched off
+const flagships = async (p) => {
+  await p.click("#whatsnewBtn");
+  await p.waitForSelector("#whatsnewOverlay.open");
+  for (const tag of ["new", "improved", "fixed"])
+    await p.click(`#whatsnewFilter .wn-chip[data-tag="${tag}"]`);
+};
 const pickTypes = async (p) => {
   await p.click("#numbersBtn");
   for (const i of [0, 1]) await p.locator("#numbersTypes input").nth(i).check();
@@ -57,6 +65,13 @@ const STATES = [
     size: WIDE,
     act: click("#whatsnewBtn"),
     stands: "#whatsnewOverlay.open",
+  },
+  {
+    name: "What's New's flagships",
+    hash: MI,
+    size: WIDE,
+    act: flagships,
+    stands: ".wn-entry.wn-flagship",
   },
   { name: "the shortcuts", hash: MI, size: WIDE, act: key("?"), stands: "#shortcutsOverlay.open" },
   { name: "About", hash: MI, size: WIDE, act: click("#aboutBtn"), stands: "#aboutOverlay.open" },
@@ -183,6 +198,8 @@ async function capture(browser, port, modules, state) {
     if (state.act.length > 1 && !door) throw new Error(`no door in view at ${state.hash}`);
     await state.act(page, door);
   }
+  // a click leaves the pointer on its button, whose anchored tip would show on its own clock
+  if (state.act && state.act.length < 2) await page.mouse.move(1, 1);
   if (state.stands) await page.waitForSelector(state.stands, { state: "visible", timeout: 10000 });
   await page.waitForTimeout(400);
   // every element and the pseudo-elements it draws, hashed as the state stands, with motion allowed and
