@@ -11,6 +11,7 @@ export default [
       "tools/*",
       "!tools/levelpages.js",
       "!tools/pixels.js",
+      "!tools/styles.js",
       "!tools/trees.js",
     ],
   },
@@ -32,9 +33,9 @@ export default [
     },
   },
   {
-    // the pixel proof and the two-tree server under it: Node scripts whose page.evaluate bodies
-    // run in the browser
-    files: ["tools/pixels.js", "tools/trees.js"],
+    // the pixel and style proofs and the two-tree server under them: Node scripts whose
+    // page.evaluate bodies run in the browser
+    files: ["tools/pixels.js", "tools/styles.js", "tools/trees.js"],
     languageOptions: {
       ecmaVersion: 2024,
       sourceType: "module",
