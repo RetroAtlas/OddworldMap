@@ -70,7 +70,7 @@ import {
   objectHash,
   scheduleHash,
   viewHash,
-} from "./navigate.js";
+} from "./navigation/navigate.js";
 import { typeSummary } from "./model/typeinfo.js";
 import { DARK_NOTE, objectMessages } from "./model/messages.js";
 import { toggleShow } from "./sidebar.js";
@@ -92,7 +92,7 @@ import {
 } from "./data/edits.js";
 import { releaseNote } from "./data/release.js";
 import { toggleGraph } from "./graphview.js";
-import { addRoutePoint, routeArrive, routeSeam, undoRoutePoint } from "./route.js";
+import { addRoutePoint, routeArrive, routeSeam, undoRoutePoint } from "./navigation/route.js";
 import { closeDialog, openDialog, trapDialogKeys } from "./ui/dialog.js";
 import { HAMBURGER_SVG, CLOSE_SVG, LINK_SVG, EXTERNAL_SVG } from "./ui/icons.js";
 

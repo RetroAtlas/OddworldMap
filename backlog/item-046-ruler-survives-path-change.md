@@ -8,7 +8,7 @@ Arm the ruler, drag a measurement, press `[` or `]`. The measurement stays on sc
 
 ## Cause
 
-`state.route` has an explicit lifecycle — [js/route.js](../public/js/route.js) clears it on `selection-changed` with the comment "waypoints don't outlive their path". `state.ruler` has no such listener. Its only clear site is in [js/sidebar.js](../public/js/sidebar.js), on mode-off: "measurements don't outlive the mode". Both comments state the same intent; only one was enforced against path changes.
+`state.route` has an explicit lifecycle — [js/route.js](../public/js/navigation/route.js) clears it on `selection-changed` with the comment "waypoints don't outlive their path". `state.ruler` has no such listener. Its only clear site is in [js/sidebar.js](../public/js/sidebar.js), on mode-off: "measurements don't outlive the mode". Both comments state the same intent; only one was enforced against path changes.
 
 ## Sketch
 

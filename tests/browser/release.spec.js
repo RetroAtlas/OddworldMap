@@ -10,7 +10,7 @@ const probe = (page) =>
   page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const { state } = await import(u("data/state.js"));
-    const nav = await import(u("navigate.js"));
+    const nav = await import(u("navigation/navigate.js"));
     return {
       release: state.data.release?.code ?? null,
       game: state.data.game,
@@ -102,7 +102,7 @@ test("an object link names the base's origin, and opens on the object in any rel
   const link = await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const { state } = await import(u("data/state.js"));
-    const nav = await import(u("navigate.js"));
+    const nav = await import(u("navigation/navigate.js"));
     const t = state.path.tlvs.find((o) => o.name === "StartController" && o.x1 === 3707);
     return t && nav.objectHash(t);
   });

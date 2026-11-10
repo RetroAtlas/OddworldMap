@@ -39,7 +39,7 @@ test("a view permalink lands where it points and reproduces itself", async ({ pa
   // be vacuous — the round trip is parse -> apply -> format landing on the same string
   const r = await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const nav = await import(u("navigate.js"));
+    const nav = await import(u("navigation/navigate.js"));
     return { hash: location.hash, view: nav.viewHash() };
   });
   expect(r.view).toBe(TRIP_HASH);
@@ -56,7 +56,7 @@ test("a view placed while the map's box resizes holds its spot", async ({ page }
   await settle(page, { game: "AO", level: "R1", path: 15 });
   const view = await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const nav = await import(u("navigate.js"));
+    const nav = await import(u("navigation/navigate.js"));
     const main = document.getElementById("main");
     const frame = () => new Promise(requestAnimationFrame);
     main.style.flex = `0 0 ${main.clientWidth - 40}px`;
@@ -78,7 +78,7 @@ test("Gaps between screens flipped while the map's box resizes keeps the view's 
   const view = await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const st = await import(u("data/state.js"));
-    const nav = await import(u("navigate.js"));
+    const nav = await import(u("navigation/navigate.js"));
     const main = document.getElementById("main");
     const frame = () => new Promise(requestAnimationFrame);
     main.style.flex = `0 0 ${main.clientWidth - 40}px`;

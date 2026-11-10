@@ -12,7 +12,7 @@ import { GEO, LAYOUT, state } from "./data/state.js";
 import { cellAt, nearestCam, offScreen, tlvCell } from "./model/model.js";
 import { setHighlight } from "./painter/render.js";
 import { fieldPrefsFor, getSettings } from "./data/settings.js";
-import { jumpToTlv } from "./navigate.js";
+import { jumpToTlv } from "./navigation/navigate.js";
 import { currentOf, editNotes, isAdded, isRemoved, removedObjects } from "./data/edits.js";
 import { releaseNote } from "./data/release.js";
 import { restoreHere, selectObject } from "./editpanel.js";

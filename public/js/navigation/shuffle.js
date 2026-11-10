@@ -2,12 +2,12 @@
 // screen of either game. Demo paths follow their setting, and the handful of
 // art-less cams stay out — a blank cell is nobody's prize.
 
-import { $ } from "./ui/dom.js";
-import { state } from "./data/state.js";
-import { camIdOf } from "./model/model.js";
-import { pathVisible } from "./data/pathvisible.js";
+import { $ } from "../ui/dom.js";
+import { state } from "../data/state.js";
+import { camIdOf } from "../model/model.js";
+import { pathVisible } from "../data/pathvisible.js";
 import { jumpToPlace } from "./navigate.js";
-import { SHUFFLE_SVG } from "./ui/icons.js";
+import { SHUFFLE_SVG } from "../ui/icons.js";
 
 const btn = $("shuffleBtn");
 btn.innerHTML = SHUFFLE_SVG;

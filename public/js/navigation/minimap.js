@@ -1,10 +1,10 @@
 // Minimap scrubbing: pointer input on the inset moves the main view. The
 // painting itself lives in render.js, at the end of each frame.
 
-import { $, cv } from "./ui/dom.js";
-import { state } from "./data/state.js";
-import { centerCam } from "./model/model.js";
-import { draw, minimapScale, settleView } from "./painter/render.js";
+import { $, cv } from "../ui/dom.js";
+import { state } from "../data/state.js";
+import { centerCam } from "../model/model.js";
+import { draw, minimapScale, settleView } from "../painter/render.js";
 import { scheduleHash } from "./navigate.js";
 
 const mm = $("minimap");

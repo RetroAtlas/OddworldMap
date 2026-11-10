@@ -4,7 +4,7 @@ import { setEditMode } from "./editpanel.js";
 import { CATS, PENS, catOf } from "./config.js";
 import { $, cv, filterBox } from "./ui/dom.js";
 import { state } from "./data/state.js";
-import { setPitch } from "./navigate.js";
+import { setPitch } from "./navigation/navigate.js";
 import { draw } from "./painter/render.js";
 import { syncMotion } from "./painter/spriteart.js";
 import { SHOW_KEYS, getViewSnapshot, viewChanged } from "./data/settings.js";

@@ -12,7 +12,7 @@ import { hideAnchorTip } from "./anchortip.js";
 import { isDemoPath } from "./model/demo.js";
 import { pathEdited } from "./data/edits.js";
 import { marker, wirePath } from "./data/graphsvg.js";
-import { jumpToPlace, scheduleHash } from "./navigate.js";
+import { jumpToPlace, scheduleHash } from "./navigation/navigate.js";
 import { graphLayout, worldGraph } from "./data/worldgraph.js";
 
 const view = $("graphView"),

@@ -10,7 +10,7 @@ The ruler's big sibling: click waypoints to build a polyline, get per-leg and cu
 
 A "Route" mode toggle, mutually exclusive with the ruler the way the ruler is with follow-clicks; waypoints as `#…&route=x1,y1;x2,y2;…` appended to the existing hash scheme; undo on Backspace and a clear; labels per leg; the existing 25-unit grid conversion for the readouts.
 
-Watch out: the hash already carries `GAME/LEVEL/path/x/y/zoom` — extend it without breaking old links, and keep `applyHash` in [js/navigate.js](../public/js/navigate.js) tolerant.
+Watch out: the hash already carries `GAME/LEVEL/path/x/y/zoom` — extend it without breaking old links, and keep `applyHash` in [js/navigate.js](../public/js/navigation/navigate.js) tolerant.
 
 ## Findings
 

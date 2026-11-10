@@ -13,7 +13,7 @@ export async function attach(page) {
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
     window.__st = (await import(u("data/state.js"))).state;
-    window.__nav = await import(u("navigate.js"));
+    window.__nav = await import(u("navigation/navigate.js"));
     window.__model = await import(u("model/model.js"));
     window.__edits = await import(u("data/edits.js"));
     window.__applied = location.hash;

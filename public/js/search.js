@@ -11,7 +11,7 @@ import { CLOSE_SVG } from "./ui/icons.js";
 import { pathVisible } from "./data/pathvisible.js";
 import { state } from "./data/state.js";
 import { fieldPrefsFor, getSettings } from "./data/settings.js";
-import { jumpToPlace, jumpToTlv } from "./navigate.js";
+import { jumpToPlace, jumpToTlv } from "./navigation/navigate.js";
 import { pathIn } from "./model/model.js";
 import { isAdded, isEdited } from "./data/edits.js";
 import { releaseNote } from "./data/release.js";

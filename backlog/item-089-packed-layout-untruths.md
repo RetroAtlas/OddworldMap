@@ -55,7 +55,7 @@ The sweep that pins it calls the same helper the renderer does. An invariant tes
 
 ## Shipped: the spacing toggle, 2026-08-15
 
-"Gaps between screens", off by default, in *Spread the screens onto the grid the games address them on*, `e4dffbd`. `setSpacing` in [js/state.js](../public/js/data/state.js) swaps the pitch for the cell's own, and `setPitch` in [js/navigate.js](../public/js/navigate.js) carries the view, the ruler and the route across it.
+"Gaps between screens", off by default, in *Spread the screens onto the grid the games address them on*, `e4dffbd`. `setSpacing` in [js/state.js](../public/js/data/state.js) swaps the pitch for the cell's own, and `setPitch` in [js/navigate.js](../public/js/navigation/navigate.js) carries the view, the ruler and the route across it.
 
 It cost far less than the estimate, because three things the sketch expected to pay for were already true. The transform degenerates to `dX(wx) = wx - winX` rather than needing a second one. `col * CELL_W` is where the window's corner lands at either pitch, so the artwork needed only its drawn *size* corrected from the cell to the window, which is a no-op packed. And permalinks needed nothing at all: coordinates were already world, and zoom is px per world unit inside a screen in both, so a link means the same place at the same magnification either way. That last one is the world-coordinate change paying for itself.
 

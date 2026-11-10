@@ -24,7 +24,7 @@ Decide the boot game *before* awaiting, then await only it.
 
 ## Watch out
 
-**`initGames` is currently once-only.** [js/navigate.js](../public/js/navigate.js) assigns `state.games = games` and appends buttons. Make it additive, or split an `addGame(G)` out of it. `markOn` uses `dataset.key`, so a later-appended button highlights correctly with no change.
+**`initGames` is currently once-only.** [js/navigate.js](../public/js/navigation/navigate.js) assigns `state.games = games` and appends buttons. Make it additive, or split an `addGame(G)` out of it. `markOn` uses `dataset.key`, so a later-appended button highlights correctly with no change.
 
 **Search assumes both games are loaded.** `runSearch` iterates `state.games`, the group scaffolding builds a group per game up front, and the summary line prints a per-game hit count. With one game loaded these silently narrow. Re-run an active search when the second dataset lands, and consider a note in the summary while it is still in flight. This is the part that will feel broken if skipped — a user who searches in the first 800 ms gets AO-only results with no indication.
 

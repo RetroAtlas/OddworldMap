@@ -3,7 +3,7 @@
 import { $ } from "./ui/dom.js";
 import { resize } from "./painter/render.js";
 import { warmSprites } from "./painter/spriteart.js";
-import { addGame, selectGame, applyHash } from "./navigate.js";
+import { addGame, selectGame, applyHash } from "./navigation/navigate.js";
 import {
   GAME_IDS,
   bootGame,
@@ -32,10 +32,10 @@ import "./anchortip.js";
 import "./whatsnew.js";
 import "./about.js";
 import "./typecard.js";
-import "./shuffle.js";
+import "./navigation/shuffle.js";
 import "./numbers.js";
 import "./editpanel.js";
-import "./minimap.js";
+import "./navigation/minimap.js";
 import "./graphview.js";
 import "./offline.js";
 
