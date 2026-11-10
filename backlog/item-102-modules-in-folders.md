@@ -1,6 +1,6 @@
 # 102. Lay the viewer's modules out in folders by layer
 
-**Status:** open · **Effort:** a day: one preparatory commit, one event, nine moves by script, two closing commits · **Where:** anywhere · **Filed:** 2026-11-10, from a survey of the viewer's import graph and two dry runs of the series
+**Status:** shipped 2026-11-10 · **Effort:** a day: one preparatory commit, one event, nine moves by script, two closing commits · **Where:** anywhere · **Filed:** 2026-11-10, from a survey of the viewer's import graph and two dry runs of the series
 
 ## What and why
 
@@ -59,3 +59,7 @@ The series, every commit green on its own by the suites and the pixel proof agai
 - Mirroring the folders under `tests/unit` and `tests/browser`: it doubles the series' churn for no new check.
 - Splitting `interaction.js` to free the drawer, or any file split; the three ratcheted modules keep their rows at their new paths.
 - A `modulepreload` list in `index.html`, a README per folder, barrels or index files, a `changelog.json` entry.
+
+## Shipped
+
+The series landed on 2026-11-10 as the sketch has it, fifteen commits: the filing, the drawer's event with a spec at a phone's width (`tests/browser/drawer.spec.js`, the suite's eighty-first test), the preparatory commit, the nine moves in the order `ui`, `engine`, `model`, `rules`, `data`, `painter`, `navigation`, `panels`, `chrome`, the pure check as a walk, the hub's place ahead of the panels in module evaluation held by a test, and this record. The sketch held for every module's place and for every row but two: `model`'s names `engine/lcd.js` rather than the engine, and `data`'s names `engine/collide.js`, `ui/dialog.js`, `ui/icons.js` and `ui/searchquery.js` rather than the two folders, so that a further import from either folder is a row change on purpose; the table is held to being an order of its own, a file standing for its folder and no row naming a folder whose row names it back, and a file a row names has to be one a module of that folder imports; and the root row names the nine folders and `config.js`. `imports.test.js` also holds `interaction.js` ahead of every panel it does not import in module evaluation, so its drawer's focus hand-off runs before a panel rebuilds its controls. What the landing settled beyond the sketch: the pure check imports fifty-one modules where the list named thirty-six, the four it keeps by name beside the four folders (`config.js`, `ui/redraw.js`, `ui/searchquery.js`, `painter/kept.js`) being the four of the old list that live outside them; `tests/unit/imports.test.js` grew from five tests to seven, so the unit suite counts 623; and CLAUDE.md's Source bullet split in two, the folders and the rule a new module follows standing in a bullet of their own. Measured as it landed and cheap to recount with `git show --stat -M`: the nine moves touched 43, 46, 118, 15, 80, 29, 25, 31 and 31 files, every moved file paired as a rename at 79% or better and 31 of the 80 byte-identical, every added line under `public/js` an import statement or part of one, and `npm run pixels` against each commit's parent alike on all 29 views at every commit that touched a module.

@@ -45,7 +45,6 @@ Item-specific reasoning and cross-references stay inside this folder. An item ma
 
 ## Code and build
 
-- [**102.** Lay the viewer's modules out in folders by layer](item-102-modules-in-folders.md) — nine folders beside `main.js` and `config.js`, each a row of a layer table in the imports test, so an import that points the wrong way fails by directory; one folder a commit, the drawer asked for through a window event first. _A day._
 - [**95.** A bare link's fit zoom is read off the canvas mid-slide](item-095-fit-zoom-boot-slide.md) — `fitView` reads the canvas width during the sidebar's boot slide, so the same path link opens at a slightly different zoom each visit; wait for the slide, or fit again when it ends. _Small._
 - [**57.** One module lifecycle: explicit `init()`](item-057-module-lifecycle.md) — the current boot order is a load-bearing accident. _Medium._
 
@@ -81,6 +80,7 @@ Rejected or disproved, kept so they are not re-proposed.
 
 Newest first, and a finished item is worth reading for the same reason an open one is: whether shipped or retired, each records what was decided, what was ruled out and where its own sketch turned out wrong.
 
+- [**102.** Lay the viewer's modules out in folders by layer](item-102-modules-in-folders.md): nine folders beside `main.js` and `config.js`, each a row of the layer table `imports.test.js` holds, the four that import in bare Node walked whole, and the drawer asked for through a window event so the panels stand apart from the hub; nothing drawn differently at any commit, proven against each parent. _2026-11-10._
 - [**101.** Hold every file to a size](item-101-file-size-caps.md): 800 lines for a module or a spec and 1,000 for a unit test or a tool, held by a test whose table ratchets the three files still over; the eight others were cut where their sections joined, the painter into six modules and the sprite rules into a kit and four. _2026-11-08._
 - [**100.** Every release of both games beside NTSC-U](item-100-regional-releases.md): every other retail release of both games, fourteen, read off its own discs by one census and one build into an overlay of final values over the base, its art patched over the base's screens, and offered on the game's row with what it changes marked; the Japanese signs and the localized Oddysee hint flies read through tables of their own characters. _2026-10-27._
 - [**12.** Curated path names](item-012-curated-path-names.md) — every path either game lets you walk now carries a name: the plumbing, the Oddysee batch from New 'n' Tasty's chapters and the Barebones titles, the Exoddus names off the signage and the wiki, and last the thirteen Oddysee paths no guide titles, named from the game's own hint flies, boards and story stones; the credits and title screens stay unnamed as non-places. _2026-10-14._
