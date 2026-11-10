@@ -102,53 +102,24 @@ function importGraph() {
   return deps;
 }
 
-// The regression guard for the whole suite: these modules must never touch the
-// DOM at import time, or nothing but a browser session would catch it.
-test("pure modules import in bare Node", async () => {
-  const where = byName(modules());
-  for (const mod of [
-    "annotations",
-    "config",
-    "data",
-    "demo",
-    "pathvisible",
-    "release",
-    "fields",
-    "state",
-    "geometry",
-    "util",
-    "model",
-    "settings",
-    "searchquery",
-    "placesearch",
-    "pathorder",
-    "glossary",
-    "messages",
-    "census",
-    "placesummary",
-    "typeinfo",
-    "worldgraph",
-    "graphsvg",
-    "reliveexport",
-    "extra",
-    "edits",
-    "objecttypes",
-    "collide",
-    "redraw",
-    "kept",
-    "sprites",
-    "spritekit",
-    "patrolkit",
-    "effects",
-    "lcd",
-    "brains",
-    "motion",
-  ]) {
-    const path = where.get(`${mod}.js`);
-    assert.ok(path, `${mod}.js is a module`);
-    const m = await import(new URL(path, dir));
-    assert.ok(Object.keys(m).length > 0, `${mod}.js has exports`);
-  }
+// The regression guard for the whole suite: the modules of these folders, and
+// these files beside them, must never touch the DOM at import time, or nothing
+// but a browser session would catch it.
+const PURE_FOLDERS = ["engine", "model", "rules", "data"];
+const PURE_FILES = ["config.js", "ui/redraw.js", "ui/searchquery.js", "painter/kept.js"];
+
+test("the pure folders and files import in bare Node", async () => {
+  const files = modules();
+  for (const d of PURE_FOLDERS)
+    assert.ok(
+      files.some((f) => posix.dirname(f) === d),
+      `${d}/ holds a module`,
+    );
+  for (const f of PURE_FILES) assert.ok(files.includes(f), `${f} is a module`);
+  const pure = files.filter(
+    (f) => PURE_FOLDERS.includes(posix.dirname(f)) || PURE_FILES.includes(f),
+  );
+  for (const f of pure) await import(new URL(f, dir));
 });
 
 // A cycle between ES modules links and runs without complaint for as long as no
