@@ -45,6 +45,7 @@ Item-specific reasoning and cross-references stay inside this folder. An item ma
 
 ## Code and build
 
+- [**103.** Give the Settings dialog a home of its own](item-103-settings-dialog-home.md) — `settings.js` is the store `edits.js` imports and the dialog's wiring in one file, which is why `data/`'s row names two primitives; the wiring moves to the chrome. _Small._
 - [**95.** A bare link's fit zoom is read off the canvas mid-slide](item-095-fit-zoom-boot-slide.md) — `fitView` reads the canvas width during the sidebar's boot slide, so the same path link opens at a slightly different zoom each visit; wait for the slide, or fit again when it ends. _Small._
 - [**57.** One module lifecycle: explicit `init()`](item-057-module-lifecycle.md) — the current boot order is a load-bearing accident. _Medium._
 
