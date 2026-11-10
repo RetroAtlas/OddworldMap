@@ -4,8 +4,8 @@
 
 import { GRAPH } from "./config.js";
 import { pathVisible } from "./pathvisible.js";
-import { pathIn, wayThrough } from "./model.js";
-import { levelOrder } from "./pathorder.js";
+import { pathIn, wayThrough } from "./model/model.js";
+import { levelOrder } from "./model/pathorder.js";
 
 const key = (lv, pa) => `${lv} P${pa}`;
 

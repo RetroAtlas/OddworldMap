@@ -13,10 +13,10 @@ import {
 } from "./config.js";
 import { $, COLOR, cv, cvCtx } from "./ui/dom.js";
 import { isEdited, removedObjects } from "./edits.js";
-import { onBackgroundPlane } from "./fields.js";
-import { drawX, drawY } from "./geometry.js";
+import { onBackgroundPlane } from "./model/fields.js";
+import { drawX, drawY } from "./model/geometry.js";
 import { drawnAs } from "./kept.js";
-import { camCenter, centerCam, drawBox, lineRuns, offScreen, screenRuns } from "./model.js";
+import { camCenter, centerCam, drawBox, lineRuns, offScreen, screenRuns } from "./model/model.js";
 import { motionRunning, patrolTick, sceneTick } from "./engine/motion.js";
 import {
   labelled,

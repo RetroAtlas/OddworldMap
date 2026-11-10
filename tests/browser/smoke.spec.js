@@ -135,7 +135,7 @@ test("clicking a door follows it to the level and path it names", async ({ page 
   const pt = await page.evaluate(async (d) => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const st = await import(u("state.js"));
-    const model = await import(u("model.js"));
+    const model = await import(u("model/model.js"));
     const t = st.state.path.tlvs.find(
       (t) => t.name === d.name && t.x1 === d.world[0] && t.y1 === d.world[1],
     );

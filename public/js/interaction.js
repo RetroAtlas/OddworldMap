@@ -1,7 +1,7 @@
 // Pointer input on the map (mouse, touch, pen), hover inspection, and the menu toggle.
 
-import { esc, formatDist, segDist } from "./util.js";
-import { fieldEntries, onBackgroundPlane } from "./fields.js";
+import { esc, formatDist, segDist } from "./model/util.js";
+import { fieldEntries, onBackgroundPlane } from "./model/fields.js";
 import { gridSize } from "./engine/collide.js";
 import { hideAnchorTip } from "./anchortip.js";
 import {
@@ -62,7 +62,7 @@ import {
   snapTarget,
   wireEnds,
   zoomAt,
-} from "./model.js";
+} from "./model/model.js";
 import {
   cyclePath,
   flushHash,
@@ -71,8 +71,8 @@ import {
   scheduleHash,
   viewHash,
 } from "./navigate.js";
-import { typeSummary } from "./typeinfo.js";
-import { DARK_NOTE, objectMessages } from "./messages.js";
+import { typeSummary } from "./model/typeinfo.js";
+import { DARK_NOTE, objectMessages } from "./model/messages.js";
 import { toggleShow } from "./sidebar.js";
 import { lightCap } from "./ui/keycap.js";
 import { getSettings, fieldPrefsFor } from "./settings.js";

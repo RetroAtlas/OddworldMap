@@ -4,7 +4,7 @@
 // one attribute away.
 
 import { $ } from "./ui/dom.js";
-import { clamp } from "./util.js";
+import { clamp } from "./model/util.js";
 
 const el = $("anchorTip");
 let anchor = null;

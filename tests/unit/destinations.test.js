@@ -7,7 +7,7 @@ import {
   isLoopback,
   resolveTarget,
   wayThrough,
-} from "../../public/js/model.js";
+} from "../../public/js/model/model.js";
 import { SYNTH_GEOMETRY, at, dataset, level, path, tlv } from "./fixtures.js";
 
 // the dataset destOf looks a destination's partner up in, with the level and

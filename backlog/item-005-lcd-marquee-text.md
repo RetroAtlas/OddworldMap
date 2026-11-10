@@ -12,7 +12,7 @@ Find where AO/AE store LCD strings: grep the alive_reversing decomp for the LCD 
 
 ## Shipped
 
-Three tables rather than one, read off the discs and resolved by [js/messages.js](../public/js/messages.js): AO's 90-entry LCD table, AE's 101-entry one, and AO's 36-entry HintFly table, which the sketch did not know about. The words reach the hover tooltip, the screen list and search.
+Three tables rather than one, read off the discs and resolved by [js/messages.js](../public/js/model/messages.js): AO's 90-entry LCD table, AE's 101-entry one, and AO's 36-entry HintFly table, which the sketch did not know about. The words reach the hover tooltip, the screen list and search.
 
 Where the sketch was wrong, in the order it mattered:
 

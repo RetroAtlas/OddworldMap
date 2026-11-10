@@ -6,7 +6,7 @@ import { CAM_FILE_BYTES, MASK_FILE_BYTES, PATCH_FILE_BYTES, SHEET_FILE_BYTES } f
 import { GAME_FILES, GAME_IDS, loadSprites } from "./data.js";
 import { hasAnyStoredEdits } from "./edits.js";
 import { $ } from "./ui/dom.js";
-import { camFiles } from "./model.js";
+import { camFiles } from "./model/model.js";
 import { releaseSprites } from "./release.js";
 import {
   MARKER_CACHE,

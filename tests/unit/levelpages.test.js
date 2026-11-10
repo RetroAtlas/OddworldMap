@@ -2,8 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { emitFiles, htmlUnder } from "../../tools/levelpages.js";
-import { parseHash } from "../../public/js/model.js";
-import { isDemoPath } from "../../public/js/demo.js";
+import { parseHash } from "../../public/js/model/model.js";
+import { isDemoPath } from "../../public/js/model/demo.js";
 
 const pub = (rel) => new URL(`../../public/${rel}`, import.meta.url);
 const load = (name) => JSON.parse(readFileSync(pub(name), "utf8"));

@@ -17,7 +17,7 @@ Add a "Places" group rendered *above* the object groups in `runSearch`:
 
 ## This gets better for free as annotations land
 
-Reading through `pathDisplayName` ([js/annotations.js](../public/js/annotations.js)) means the curated-name-overrides-in-game-name precedence is already handled, and every path name added under [12](item-012-curated-path-names.md) becomes searchable with no further code change. That is the reason to route through `pathDisplayName` rather than reading `P.name` directly.
+Reading through `pathDisplayName` ([js/annotations.js](../public/js/model/annotations.js)) means the curated-name-overrides-in-game-name precedence is already handled, and every path name added under [12](item-012-curated-path-names.md) becomes searchable with no further code change. That is the reason to route through `pathDisplayName` rather than reading `P.name` directly.
 
 [77](item-077-what-a-place-is-known-for.md) settled on a `nickname` — the players' name for a place, read by `pathNickname` — and shipped nine of them on the Brewery's zulags. They belong in the same blob as the name, and are the half of this that reaches a player who knows what a place is like but not what it is called: `tear extractors`, `high security` and `industrial machines` are now in the file and findable the moment a Places group exists to hold them. Measured 2026-08-04, before they landed: `tear`, `x-tractor` and `high security` returned nothing, while `slig` alone returns 819 object hits — which is why the Places group has to be counted and capped apart from the objects rather than merged with them.
 

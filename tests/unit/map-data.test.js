@@ -14,7 +14,7 @@ import {
   screenRuns,
   pathImage,
   pathIn,
-} from "../../public/js/model.js";
+} from "../../public/js/model/model.js";
 import { EXPORT_MAX_DIM, EXPORT_MAX_PX } from "../../public/js/config.js";
 import {
   CELL_H,
@@ -24,7 +24,7 @@ import {
   setGeometry,
   setSpacing,
 } from "../../public/js/state.js";
-import { isDemoPath } from "../../public/js/demo.js";
+import { isDemoPath } from "../../public/js/model/demo.js";
 import { AO_GEOMETRY, AE_GEOMETRY, CROSS_LEVEL_FOLLOWS, pitches } from "./fixtures.js";
 
 // Schema sanity over the shipped data: the invariants the viewer relies on.

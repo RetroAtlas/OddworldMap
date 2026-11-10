@@ -15,8 +15,8 @@ import {
 } from "../../public/js/engine/lcd.js";
 import { resolveEffects, resolveRecord } from "../../public/js/engine/motion.js";
 import { spriteDraws } from "../../public/js/sprites.js";
-import { lcdMessages, objectMessages, setMessages } from "../../public/js/messages.js";
-import { armFieldData } from "../../public/js/fields.js";
+import { lcdMessages, objectMessages, setMessages } from "../../public/js/model/messages.js";
+import { armFieldData } from "../../public/js/model/fields.js";
 
 const pub = (f) => JSON.parse(readFileSync(new URL(`../../public/${f}`, import.meta.url), "utf8"));
 

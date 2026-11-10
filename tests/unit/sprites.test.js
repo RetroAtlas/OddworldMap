@@ -2,11 +2,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { ownSheet, recordSheets, spriteDraws, spriteTypes } from "../../public/js/sprites.js";
-import { armFieldData } from "../../public/js/fields.js";
+import { armFieldData } from "../../public/js/model/fields.js";
 import { brainAt, resolveEffects, resolveRecord } from "../../public/js/engine/motion.js";
 import { raycast } from "../../public/js/engine/collide.js";
-import { patrolZone, sligBounds } from "../../public/js/model.js";
-import { drawX } from "../../public/js/geometry.js";
+import { patrolZone, sligBounds } from "../../public/js/model/model.js";
+import { drawX } from "../../public/js/model/geometry.js";
 
 const pub = (f) => JSON.parse(readFileSync(new URL(`../../public/${f}`, import.meta.url), "utf8"));
 const GAMES = ["AO", "AE"];

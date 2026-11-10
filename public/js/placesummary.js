@@ -1,7 +1,7 @@
 // The sentence that says where the map is: what the status region announces and
 // what the canvas is named. No DOM, so it stays importable in bare Node.
 
-import { pathDisplayName, pathNote } from "./annotations.js";
+import { pathDisplayName, pathNote } from "./model/annotations.js";
 import { EDITED_NOTE } from "./config.js";
 import { pathEdited } from "./edits.js";
 import { pathReleased } from "./release.js";

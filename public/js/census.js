@@ -4,7 +4,7 @@
 // and what the hidden paths hold comes back beside the rows, the way search
 // reports what it dropped. No DOM.
 
-import { tlvCell } from "./model.js";
+import { tlvCell } from "./model/model.js";
 import { pathVisible } from "./pathvisible.js";
 
 // the cell an object's top-left corner falls in, never where it is drawn:

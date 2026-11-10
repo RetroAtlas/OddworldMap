@@ -3,7 +3,7 @@
 
 import { $, cv } from "./ui/dom.js";
 import { state } from "./state.js";
-import { centerCam } from "./model.js";
+import { centerCam } from "./model/model.js";
 import { draw, minimapScale, settleView } from "./render.js";
 import { scheduleHash } from "./navigate.js";
 

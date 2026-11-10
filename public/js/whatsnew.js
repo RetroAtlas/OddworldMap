@@ -2,7 +2,7 @@
 // Wires itself up at import time; if the feed is missing the button stays hidden.
 
 import { $ } from "./ui/dom.js";
-import { esc } from "./util.js";
+import { esc } from "./model/util.js";
 import { NEWSPAPER_SVG } from "./ui/icons.js";
 import { closeDialog, openDialog, trapDialogKeys } from "./ui/dialog.js";
 

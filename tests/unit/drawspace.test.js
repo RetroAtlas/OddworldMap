@@ -13,7 +13,7 @@ import {
   screenRuns,
   sligBounds,
   snapTarget,
-} from "../../public/js/model.js";
+} from "../../public/js/model/model.js";
 import { AE_GEOMETRY, AO_GEOMETRY, SYNTH_GEOMETRY, path, pitches, tlv } from "./fixtures.js";
 
 test("camCell: zero-padded C## suffix lookup, null for unknown or missing ids", () => {

@@ -1,7 +1,7 @@
 // Selection (game/level/path), follow-to-destination, view fitting and hash permalinks.
 // Fires a "selection-changed" window event (detail.fromHash) whenever a path is picked.
 
-import { clamp, esc } from "./util.js";
+import { clamp, esc } from "./model/util.js";
 import { DEMO_NOTE, EDITED_NOTE, ENTRY_NOTE, LOGIC_FPS, ZOOM_MIN, ZOOM_MAX } from "./config.js";
 import { $, cv, gameBtns, levelBtns, pathBtns, releaseBtns } from "./ui/dom.js";
 import { knownGame, loadGame, loadRelease, loadReleaseIndex } from "./data.js";
@@ -34,11 +34,11 @@ import {
   markerCentre,
   parseHash,
   resolveTarget,
-} from "./model.js";
-import { pathDisplayName, pathNickname } from "./annotations.js";
-import { isDemoPath } from "./demo.js";
+} from "./model/model.js";
+import { pathDisplayName, pathNickname } from "./model/annotations.js";
+import { isDemoPath } from "./model/demo.js";
 import { pathVisible, revealPath } from "./pathvisible.js";
-import { orderPaths } from "./pathorder.js";
+import { orderPaths } from "./model/pathorder.js";
 import { displayLabel, getSettings, rememberLocation } from "./settings.js";
 import {
   currentOf,
@@ -49,7 +49,7 @@ import {
   takeReport,
 } from "./edits.js";
 import { baseObject, pathRelease, pathReleased } from "./release.js";
-import { setFrameRate } from "./fields.js";
+import { setFrameRate } from "./model/fields.js";
 import { setTickRate } from "./engine/motion.js";
 
 function markOn(box, key) {

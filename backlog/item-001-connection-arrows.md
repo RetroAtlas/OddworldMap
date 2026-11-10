@@ -16,7 +16,7 @@ A path's circulation — which door leads where, which well comes out on which s
 
 ## Shipped
 
-`computeConnections` in [js/model.js](../public/js/model.js) — unit-tested, consolidating mutual pairs into two-way edges, keeping asymmetric ones directed, and dashing camera-fallback edges — drawn as Bézier arrows in [js/render.js](../public/js/render.js) behind a persisted `tConn` toggle and an `a` shortcut.
+`computeConnections` in [js/model.js](../public/js/model/model.js) — unit-tested, consolidating mutual pairs into two-way edges, keeping asymmetric ones directed, and dashing camera-fallback edges — drawn as Bézier arrows in [js/render.js](../public/js/render.js) behind a persisted `tConn` toggle and an `a` shortcut.
 
 ## Grown since filing
 

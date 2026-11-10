@@ -4,7 +4,7 @@
 
 import { $ } from "./ui/dom.js";
 import { state } from "./state.js";
-import { defaultVisible, fieldHelp } from "./fields.js";
+import { defaultVisible, fieldHelp } from "./model/fields.js";
 import { getSettings, fieldPrefsFor, persistSettings } from "./settings.js";
 
 const section = $("fieldPanel");

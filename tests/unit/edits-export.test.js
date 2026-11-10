@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { state } from "../../public/js/state.js";
-import { canonical, exportPath } from "../../public/js/reliveexport.js";
+import { canonical, exportPath } from "../../public/js/model/reliveexport.js";
 import {
   addObject,
   applyFieldEdit,

@@ -5,11 +5,11 @@
 
 import { CONN_COLORS, DEMO_NOTE, EDITED_NOTE, ENTRY_NOTE, GRAPH, KEY_PAN_PX } from "./config.js";
 import { $, cv, menuBtn, typingIn } from "./ui/dom.js";
-import { esc } from "./util.js";
+import { esc } from "./model/util.js";
 import { state } from "./state.js";
-import { pathDisplayName, pathNickname, pathNote } from "./annotations.js";
+import { pathDisplayName, pathNickname, pathNote } from "./model/annotations.js";
 import { hideAnchorTip } from "./anchortip.js";
-import { isDemoPath } from "./demo.js";
+import { isDemoPath } from "./model/demo.js";
 import { pathEdited } from "./edits.js";
 import { marker, wirePath } from "./graphsvg.js";
 import { jumpToPlace, scheduleHash } from "./navigate.js";

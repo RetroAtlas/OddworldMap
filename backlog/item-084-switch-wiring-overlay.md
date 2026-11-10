@@ -20,7 +20,7 @@ Noise, also measured: `switch_id = 0` means unwired — AE holds 3,096 zeros aga
 
 ## Sketch
 
-- `computeWiring(path)` in [js/model.js](../public/js/model.js), a sibling of `computeConnections`: edges from each producer's output id to every consumer field carrying that id within the path, reading the raw `fields` bucket (ints, snake_case — the archive, not `extra`). Skip id 0.
+- `computeWiring(path)` in [js/model.js](../public/js/model/model.js), a sibling of `computeConnections`: edges from each producer's output id to every consumer field carrying that id within the path, reading the raw `fields` bucket (ints, snake_case — the archive, not `extra`). Skip id 0.
 - Phase 1: 1:1 wires for the unambiguous pairs (levers/switches → doors, trapdoors, electric walls, slam doors, drills, portals' create/delete). Phase 2: the gates — `WheelSyncer` / `MultiSwitchController` render as fan-in nodes, `IdSplitter` and `GlukkonSwitch` as one-to-many with labelled outputs.
 - Its own Display toggle beside Connection arrows, its own visual voice (the arrows own curves and solid strokes; wiring wants straight dotted runs or right-angle traces, so the two systems never read as one), hover spotlight exactly like `connFocus`.
 - The tooltip gains the reverse reading for free: a consumer can name the producers pointing at it.

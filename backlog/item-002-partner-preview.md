@@ -16,4 +16,4 @@ Hovering a door told you where it led in words. Outlining the object you would a
 
 ## Shipped
 
-Hovering a linked object outlines its same-path counterpart through `destOf` / `resolveTarget` in [js/model.js](../public/js/model.js).
+Hovering a linked object outlines its same-path counterpart through `destOf` / `resolveTarget` in [js/model.js](../public/js/model/model.js).

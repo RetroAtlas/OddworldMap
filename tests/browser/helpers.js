@@ -177,7 +177,7 @@ export async function probeAnchor(page, anchor) {
   return await page.evaluate(async (a) => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const st = await import(u("state.js"));
-    const model = await import(u("model.js"));
+    const model = await import(u("model/model.js"));
     const render = await import(u("render.js"));
     const config = await import(u("config.js"));
     const { state } = st;

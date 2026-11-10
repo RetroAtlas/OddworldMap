@@ -4,7 +4,7 @@
 // the DOM wiring.
 
 import { CATS } from "./config.js";
-import { parseHash } from "./model.js";
+import { parseHash } from "./model/model.js";
 import { GEAR_SVG } from "./ui/icons.js";
 import { closeDialog, openDialog, trapDialogKeys } from "./ui/dialog.js";
 

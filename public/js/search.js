@@ -1,8 +1,8 @@
 // Global TLV search: scope bar, grouped results, keyboard navigation.
 
-import { esc, extrasText } from "./util.js";
-import { fieldEntries } from "./fields.js";
-import { objectMessages } from "./messages.js";
+import { esc, extrasText } from "./model/util.js";
+import { fieldEntries } from "./model/fields.js";
+import { objectMessages } from "./model/messages.js";
 import { parseQuery, queryTerms, matchesQuery, rankFor } from "./ui/searchquery.js";
 import { matchPlaces } from "./placesearch.js";
 import { pendingGames } from "./data.js";
@@ -12,7 +12,7 @@ import { pathVisible } from "./pathvisible.js";
 import { state } from "./state.js";
 import { fieldPrefsFor, getSettings } from "./settings.js";
 import { jumpToPlace, jumpToTlv } from "./navigate.js";
-import { pathIn } from "./model.js";
+import { pathIn } from "./model/model.js";
 import { isAdded, isEdited } from "./edits.js";
 import { releaseNote } from "./release.js";
 import { ADDED_NOTE, EDITED_NOTE } from "./config.js";

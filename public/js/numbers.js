@@ -3,9 +3,9 @@
 // level, the game — re-derived as the selection and the view move.
 
 import { $, cv, narrowMQ, typingIn } from "./ui/dom.js";
-import { esc } from "./util.js";
+import { esc } from "./model/util.js";
 import { LAYOUT, state } from "./state.js";
-import { camCenter, cellAt } from "./model.js";
+import { camCenter, cellAt } from "./model/model.js";
 import { census } from "./census.js";
 
 const panel = $("numbersPanel"),

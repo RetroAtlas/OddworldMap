@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { drawX, drawY, worldX, worldY } from "../../public/js/geometry.js";
+import { drawX, drawY, worldX, worldY } from "../../public/js/model/geometry.js";
 import { AO_GEOMETRY, AE_GEOMETRY, SYNTH_GEOMETRY, pitches } from "./fixtures.js";
 
 test("drawX and drawY answer for the layout they are handed, packed or spaced", () => {

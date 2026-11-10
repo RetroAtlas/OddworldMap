@@ -8,7 +8,7 @@ With ~80 gameplay types carrying a full `fields` archive, something had to decid
 
 ## Sketch
 
-Go through each type and set the default in [js/fields.js](../public/js/fields.js) — global versus `DEFAULT_BY_TYPE`, adding a `Type.start_state` / `Type.state` enum where a value needs prettifying.
+Go through each type and set the default in [js/fields.js](../public/js/model/fields.js) — global versus `DEFAULT_BY_TYPE`, adding a `Type.start_state` / `Type.state` enum where a value needs prettifying.
 
 ## Findings
 

@@ -24,7 +24,7 @@ It shipped as a Display toggle instead, off by default. See *Shipped: the spacin
 
 The two halves want different answers and should not be bundled into one change.
 
-- **Lines**: the marker treatment ported over, a stroke that dots across the folded gap. The complication markers do not have is that a line is not a rect, so the split is per-segment rather than a clip, and `screenRuns` in [js/model.js](../public/js/model.js) answers about spans rather than points. Whether the ruler should then report the true distance is a separate question with a worse answer than it looks: the honest number counts ground nobody can cross.
+- **Lines**: the marker treatment ported over, a stroke that dots across the folded gap. The complication markers do not have is that a line is not a rect, so the split is per-segment rather than a clip, and `screenRuns` in [js/model.js](../public/js/model/model.js) answers about spans rather than points. Whether the ruler should then report the true distance is a separate question with a worse answer than it looks: the honest number counts ground nobody can cross.
 - **Counts**: bucket by coverage rather than by drawn centre, so a marker is counted under each screen it actually covers, or under none. That is a change to `inCell` in [js/census.js](../public/js/census.js) and the matching rule in [js/campanel.js](../public/js/campanel.js), which CLAUDE.md requires to agree. It also makes a straddling marker countable twice, which is either right or a new lie depending on what the count is for.
 
 ## Watch out
@@ -33,7 +33,7 @@ The counting rule is load-bearing for two surfaces that are pinned against each 
 
 ## Shipped: the lines 2026-08-15, the marker boxes 2026-08-18
 
-`lineRuns` in [js/model.js](../public/js/model.js), in *Collision lines dot where they leave the screen*, `87e4f57`. A line is cut wherever it crosses a window edge on either axis, each piece drawn solid or dotted by whether its midpoint is on screen. 1740 of AO's 2895 lines are dotted somewhere, and 812 of AE's 6645.
+`lineRuns` in [js/model.js](../public/js/model/model.js), in *Collision lines dot where they leave the screen*, `87e4f57`. A line is cut wherever it crosses a window edge on either axis, each piece drawn solid or dotted by whether its midpoint is on screen. 1740 of AO's 2895 lines are dotted somewhere, and 812 of AE's 6645.
 
 Three things the sketch guessed at turned out differently.
 

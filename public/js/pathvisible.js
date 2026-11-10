@@ -2,7 +2,7 @@
 // setting asks for them, and any path the visitor has arrived at this session.
 // Importable in bare Node: no DOM.
 
-import { isDemoPath } from "./demo.js";
+import { isDemoPath } from "./model/demo.js";
 import { getSettings } from "./settings.js";
 
 // held on the path object itself, so whatever stands a new object in for a path

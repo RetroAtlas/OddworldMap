@@ -1,6 +1,6 @@
 import { state } from "../../public/js/state.js";
-import { setEnumLabels, setFieldTypes } from "../../public/js/fields.js";
-import { deriveExtra } from "../../public/js/extra.js";
+import { setEnumLabels, setFieldTypes } from "../../public/js/model/fields.js";
+import { deriveExtra } from "../../public/js/model/extra.js";
 import { setLevelShort } from "../../public/js/edits.js";
 import { AE_GEOMETRY } from "./fixtures.js";
 

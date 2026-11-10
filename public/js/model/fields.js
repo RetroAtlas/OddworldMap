@@ -8,7 +8,7 @@
 //
 // Leaf module: no DOM/state imports, importable in bare Node for tests.
 
-import { LOGIC_FPS } from "./config.js";
+import { LOGIC_FPS } from "../config.js";
 import { fieldUnit, glossaryProse } from "./glossary.js";
 
 // shown by default for any type that carries it: a signal dozens of unrelated

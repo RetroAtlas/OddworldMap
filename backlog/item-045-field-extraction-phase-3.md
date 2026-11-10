@@ -15,7 +15,7 @@ Pure scenery — hoists, edges, zones, bounds, effects — and cosmetic pickups 
 **Two fixes it could not ship without:**
 
 - The schema parser now spreads the decomp's union-named sequential members. Door's `field_22_hub1..8` are all named `field_22` but are really words 9–16, so the parser advances whenever an offset fails to increase. (The same rule later answered the below-base case in [30](item-030-well-base-fields.md), from the opposite direction.)
-- [js/fields.js](../public/js/fields.js) scopes enums and default visibility by `Type.field`, because `start_state` is a Slig AI state *and* a Door lock state. A global map would have mislabelled every door.
+- [js/fields.js](../public/js/model/fields.js) scopes enums and default visibility by `Type.field`, because `start_state` is a Slig AI state *and* a Door lock state. A global map would have mislabelled every door.
 
 **The size figures, and why two of them differ.** Phase 3 took AE from 2.7 to 4.3 MB raw, but only about 370 KB gzipped — the keys repeat, so gzip absorbs most of it. The later remaining-region extraction ([24](item-024-eliminate-the-last-raw.md)) took it to 4.74 MB / 344 KB, so a figure elsewhere quoting 4.74 is not disagreeing with this one; it is measuring a later tree.
 

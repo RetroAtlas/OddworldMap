@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { clamp, esc, extrasText, formatDist, segDist } from "../../public/js/util.js";
+import { clamp, esc, extrasText, formatDist, segDist } from "../../public/js/model/util.js";
 
 test("clamp", () => {
   assert.equal(clamp(5, 0, 10), 5);

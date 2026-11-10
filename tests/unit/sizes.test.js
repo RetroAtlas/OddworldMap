@@ -27,7 +27,7 @@ const KINDS = [
 const OVER = {
   "public/js/edits.js": 900,
   "public/js/interaction.js": 900,
-  "public/js/model.js": 900,
+  "public/js/model/model.js": 900,
 };
 
 const lines = (path) =>

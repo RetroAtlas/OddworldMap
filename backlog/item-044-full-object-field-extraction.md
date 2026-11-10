@@ -12,7 +12,7 @@ Never filed as an idea before it was built — it was done rather than planned, 
 
 **The builder emits, the viewer displays.** Values are stored raw as s16 with their dev names; which fields show and how their values read are viewer decisions.
 
-**One indirection for the display question.** `visibleFields(type, prefs)` in [js/fields.js](../public/js/fields.js) is the single place that answers it, so default, "Show more fields" and a future per-type picker are just which set it returns — which is what let [18](item-018-per-type-field-picker.md) be a small change rather than a rework.
+**One indirection for the display question.** `visibleFields(type, prefs)` in [js/fields.js](../public/js/model/fields.js) is the single place that answers it, so default, "Show more fields" and a future per-type picker are just which set it returns — which is what let [18](item-018-per-type-field-picker.md) be a small change rather than a rework.
 
 **Search always resolves the full set**, whatever the display prefs say, so a field you have hidden is still findable.
 

@@ -6,10 +6,10 @@
 // route link opens visible with click-to-follow still live.
 
 import { MAX_ROUTE_PTS } from "./config.js";
-import { formatDist } from "./util.js";
+import { formatDist } from "./model/util.js";
 import { $ } from "./ui/dom.js";
 import { GEO, LAYOUT, routeTotal, state } from "./state.js";
-import { markerCentre, resolveTarget } from "./model.js";
+import { markerCentre, resolveTarget } from "./model/model.js";
 import { scheduleDraw } from "./ui/redraw.js";
 import { scheduleHash } from "./navigate.js";
 

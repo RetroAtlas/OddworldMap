@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { computeConnections } from "../../public/js/model.js";
+import { computeConnections } from "../../public/js/model/model.js";
 import { at, dataset, level, path, tlv } from "./fixtures.js";
 
 const load = (name) =>

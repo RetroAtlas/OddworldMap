@@ -14,7 +14,7 @@ export async function attach(page) {
     const u = (m) => new URL("js/" + m, location.href).href;
     window.__st = (await import(u("state.js"))).state;
     window.__nav = await import(u("navigate.js"));
-    window.__model = await import(u("model.js"));
+    window.__model = await import(u("model/model.js"));
     window.__edits = await import(u("edits.js"));
     window.__applied = location.hash;
     window.addEventListener("hashchange", () => (window.__applied = location.hash));

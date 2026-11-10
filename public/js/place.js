@@ -3,10 +3,10 @@
 
 import { DEMO_NOTE, EDITED_NOTE, ENTRY_NOTE } from "./config.js";
 import { $, typingIn } from "./ui/dom.js";
-import { esc } from "./util.js";
+import { esc } from "./model/util.js";
 import { state } from "./state.js";
-import { pathDisplayName, pathNickname, pathNote } from "./annotations.js";
-import { isDemoPath } from "./demo.js";
+import { pathDisplayName, pathNickname, pathNote } from "./model/annotations.js";
+import { isDemoPath } from "./model/demo.js";
 import { pathEdited, revertPath } from "./edits.js";
 import { pathReleased } from "./release.js";
 

@@ -1,6 +1,6 @@
-import { onBackgroundPlane } from "./fields.js";
+import { onBackgroundPlane } from "./model/fields.js";
 import { raycastDown, snapX } from "./engine/collide.js";
-import { filedAt, filedCell } from "./model.js";
+import { filedAt, filedCell } from "./model/model.js";
 import {
   FLOOR,
   FLOOR_WALLS,

@@ -8,11 +8,11 @@ import {
   pathNickname,
   pathNote,
   setAnnotations,
-} from "../public/js/annotations.js";
+} from "../public/js/model/annotations.js";
 import { displayLabel } from "../public/js/settings.js";
-import { levelEntry, levelOrder } from "../public/js/pathorder.js";
-import { isDemoPath } from "../public/js/demo.js";
-import { esc } from "../public/js/util.js";
+import { levelEntry, levelOrder } from "../public/js/model/pathorder.js";
+import { isDemoPath } from "../public/js/model/demo.js";
+import { esc } from "../public/js/model/util.js";
 
 const ORIGIN = "https://oddworldmap.com";
 const PUBLIC = new URL("../public/", import.meta.url);

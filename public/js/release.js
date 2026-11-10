@@ -4,8 +4,8 @@
 // Importable in bare Node.
 
 import { objectKeys, pristineLevels, pristineOf, typeTable } from "./edits.js";
-import { deriveExtra } from "./extra.js";
-import { newObject } from "./objecttypes.js";
+import { deriveExtra } from "./model/extra.js";
+import { newObject } from "./model/objecttypes.js";
 
 // a release's object -> the base object it stands for and the delta it carries
 const fromBase = new WeakMap();

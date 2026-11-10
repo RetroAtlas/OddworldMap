@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import { trackErrors, settleAny } from "./helpers.js";
-import { canonical } from "../../public/js/reliveexport.js";
+import { canonical } from "../../public/js/model/reliveexport.js";
 
 const DIGESTS = JSON.parse(
   readFileSync(new URL("../fixtures/relive-digests.json", import.meta.url), "utf8"),

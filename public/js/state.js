@@ -2,7 +2,7 @@
 // live layout.
 
 import { GRID_UNIT } from "./config.js";
-import { drawX, drawY, worldX, worldY } from "./geometry.js";
+import { drawX, drawY, worldX, worldY } from "./model/geometry.js";
 
 // Both games address cameras on a grid coarser than the screen (data.geometry):
 // a visW x visH window of world units sits inside the cell at winX/winY, world

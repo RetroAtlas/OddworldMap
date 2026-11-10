@@ -1,6 +1,6 @@
 // Small pure helpers shared across modules.
 
-import { GRID_UNIT } from "./config.js";
+import { GRID_UNIT } from "../config.js";
 import { fieldEntries } from "./fields.js";
 
 export const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));

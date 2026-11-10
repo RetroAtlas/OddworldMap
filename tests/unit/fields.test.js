@@ -19,8 +19,8 @@ import {
   DEFAULT_BY_TYPE,
   HIDE_WHEN_ZERO,
   LIVE_WHEN,
-} from "../../public/js/fields.js";
-import { setGlossary } from "../../public/js/glossary.js";
+} from "../../public/js/model/fields.js";
+import { setGlossary } from "../../public/js/model/glossary.js";
 
 // prettify resolves a field's game type (field_types sidecar), then its label —
 // a hand value-type transform, else the generated enum labels (enum_labels
@@ -100,7 +100,7 @@ test("the defaults and zero-hiding tables name only shipped types and fields", (
 });
 
 test("the defaults table is sorted: types within their group, fields within their type", () => {
-  const src = readFileSync(new URL("../../public/js/fields.js", import.meta.url), "utf8");
+  const src = readFileSync(new URL("../../public/js/model/fields.js", import.meta.url), "utf8");
   const body = src.split("export const DEFAULT_BY_TYPE = {")[1].split("\n};")[0];
   const groups = {};
   let group = "";

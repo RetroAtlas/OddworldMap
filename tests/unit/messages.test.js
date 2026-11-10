@@ -1,7 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
-import { DARK_NOTE, messageText, objectMessages, setMessages } from "../../public/js/messages.js";
+import {
+  DARK_NOTE,
+  messageText,
+  objectMessages,
+  setMessages,
+} from "../../public/js/model/messages.js";
 
 const load = (name) =>
   JSON.parse(readFileSync(new URL(`../../public/${name}`, import.meta.url), "utf8"));

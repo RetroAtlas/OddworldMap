@@ -19,7 +19,7 @@ Coverage, measured 2026-08-26: AO 41 of 74 paths curated, AE 114 of 117, and no 
 
 ## Shipped
 
-**The plumbing, 2026-07-20.** [annotations.json](../public/annotations.json) as the hand-curated source — one file, both games keyed by id, levels as `{name, note?}` for off-map levels only — with [js/annotations.js](../public/js/annotations.js) owning the shape and the precedence. Schema tests cross-check every entry against the shipped map data: existence, canonical keys, trimmed.
+**The plumbing, 2026-07-20.** [annotations.json](../public/annotations.json) as the hand-curated source — one file, both games keyed by id, levels as `{name, note?}` for off-map levels only — with [js/annotations.js](../public/js/model/annotations.js) owning the shape and the precedence. Schema tests cross-check every entry against the shipped map data: existence, canonical keys, trimmed.
 
 **The precedence flipped during the work, and the buttons are what showed why.** `pathDisplayName` was written as a fallback — use the curated name only where the disc has none — and became a deliberate override, because Rupture Farms Return's four identical zulag buttons were the case that made "the disc's own label always wins" indefensible.
 

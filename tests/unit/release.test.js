@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-import { deriveExtra } from "../../public/js/extra.js";
+import { deriveExtra } from "../../public/js/model/extra.js";
 import { glyphRun } from "../../public/js/engine/lcd.js";
 import {
   baseObject,

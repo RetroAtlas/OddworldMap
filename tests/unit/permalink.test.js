@@ -9,7 +9,7 @@ import {
   hashToDraw,
   parseHash,
   zoomAt,
-} from "../../public/js/model.js";
+} from "../../public/js/model/model.js";
 import { MAX_ROUTE_PTS, ZOOM_MAX, ZOOM_MIN } from "../../public/js/config.js";
 import { AO_GEOMETRY, SYNTH_GEOMETRY, at, tlv } from "./fixtures.js";
 

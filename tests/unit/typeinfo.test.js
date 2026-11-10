@@ -1,8 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { sanitizeTypeInfo, setTypeInfo, typeProse, typeSummary } from "../../public/js/typeinfo.js";
-import { objectMessages, setMessages } from "../../public/js/messages.js";
+import {
+  sanitizeTypeInfo,
+  setTypeInfo,
+  typeProse,
+  typeSummary,
+} from "../../public/js/model/typeinfo.js";
+import { objectMessages, setMessages } from "../../public/js/model/messages.js";
 
 const load = (name) =>
   JSON.parse(readFileSync(new URL(`../../public/${name}`, import.meta.url), "utf8"));

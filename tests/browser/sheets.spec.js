@@ -273,7 +273,7 @@ test.describe("below the zoom a creature reads at", () => {
     page.evaluate(async (z) => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("state.js"));
-      const model = await import(u("model.js"));
+      const model = await import(u("model/model.js"));
       const render = await import(u("render.js"));
       const cv = document.getElementById("cv");
       const c = model.camCenter(st.state.cam, cv.clientWidth, cv.clientHeight);

@@ -3,12 +3,12 @@
 // only, no classes, no var(), no external references — so the file renders
 // wherever it lands. Importable in bare Node: no DOM.
 
-import { pathDisplayName } from "./annotations.js";
+import { pathDisplayName } from "./model/annotations.js";
 import { CONN_COLORS, GRAPH } from "./config.js";
-import { isDemoPath } from "./demo.js";
+import { isDemoPath } from "./model/demo.js";
 import { pathEdited } from "./edits.js";
-import { computeEntryPaths } from "./model.js";
-import { esc } from "./util.js";
+import { computeEntryPaths } from "./model/model.js";
+import { esc } from "./model/util.js";
 import { graphLayout, worldGraph } from "./worldgraph.js";
 
 // main.css's :root resolved by hand — a standalone file cannot ask for var()

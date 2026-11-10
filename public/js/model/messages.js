@@ -9,7 +9,7 @@
 //
 // No DOM/state imports, importable in bare Node for tests.
 
-import { glyphRun } from "./engine/lcd.js";
+import { glyphRun } from "../engine/lcd.js";
 
 // The font's button-command code points, as the messages carry them. A code
 // outside this set fails the build, so the fallback is for a stale cache

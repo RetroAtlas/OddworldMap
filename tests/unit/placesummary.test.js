@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { placeSummary } from "../../public/js/placesummary.js";
-import { setAnnotations } from "../../public/js/annotations.js";
+import { setAnnotations } from "../../public/js/model/annotations.js";
 import { materializePath, setLevelShort } from "../../public/js/edits.js";
 
 const load = (name) =>

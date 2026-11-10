@@ -6,8 +6,8 @@ import {
   setGlossary,
   glossaryProse,
   fieldUnit,
-} from "../../public/js/glossary.js";
-import { UNITS } from "../../public/js/fields.js";
+} from "../../public/js/model/glossary.js";
+import { UNITS } from "../../public/js/model/fields.js";
 
 const load = (name) =>
   JSON.parse(readFileSync(new URL(`../../public/${name}`, import.meta.url), "utf8"));

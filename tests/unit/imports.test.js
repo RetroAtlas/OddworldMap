@@ -51,7 +51,8 @@ const byName = (files) => new Map(files.map((f) => [posix.basename(f), f]));
 const LAYERS = {
   ui: ["ui", "config.js"],
   engine: ["engine", "config.js"],
-  ".": ["engine", "ui", "."],
+  model: ["model", "engine/lcd.js", "config.js"],
+  ".": ["engine", "model", "ui", "."],
 };
 
 // every viewer module, with the modules its import statements name

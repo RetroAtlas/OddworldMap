@@ -5,12 +5,12 @@
 // "typecard-open" window event, so none has to import this module.
 
 import { $, narrowMQ, searchInput } from "./ui/dom.js";
-import { esc } from "./util.js";
+import { esc } from "./model/util.js";
 import { state } from "./state.js";
 import { catOf } from "./config.js";
 import { census } from "./census.js";
-import { fieldHelp, unitNote } from "./fields.js";
-import { typeProse } from "./typeinfo.js";
+import { fieldHelp, unitNote } from "./model/fields.js";
+import { typeProse } from "./model/typeinfo.js";
 import { closeDialog, openDialog, trapDialogKeys } from "./ui/dialog.js";
 
 const overlay = $("typeCardOverlay"),

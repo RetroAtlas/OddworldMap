@@ -4,11 +4,11 @@
 // model; the map follows through data-changed like every other surface.
 
 import { $, cv, narrowMQ, typingIn } from "./ui/dom.js";
-import { esc } from "./util.js";
+import { esc } from "./model/util.js";
 import { GEO, LAYOUT, state, wX, wY } from "./state.js";
-import { camCenter, cellAt, cellCentre, nearestCam, tlvCell } from "./model.js";
-import { LIVE_WHEN, fieldHelp, fieldType, valueMap } from "./fields.js";
-import { fieldUnit } from "./glossary.js";
+import { camCenter, cellAt, cellCentre, nearestCam, tlvCell } from "./model/model.js";
+import { LIVE_WHEN, fieldHelp, fieldType, valueMap } from "./model/fields.js";
+import { fieldUnit } from "./model/glossary.js";
 import { getSettings } from "./settings.js";
 import { GAME_IDS, loadEditorData } from "./data.js";
 import {
@@ -43,7 +43,7 @@ import {
   undoEdit,
 } from "./edits.js";
 import { ADDED_NOTE, REMOVED_NOTE, catOf, markerShown } from "./config.js";
-import { typeSummary } from "./typeinfo.js";
+import { typeSummary } from "./model/typeinfo.js";
 import { toast } from "./ui/toast.js";
 import { scheduleDraw } from "./ui/redraw.js";
 

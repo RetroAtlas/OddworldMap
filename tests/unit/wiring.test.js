@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { computeWiring, levelWiring, wireEnds } from "../../public/js/model.js";
+import { computeWiring, levelWiring, wireEnds } from "../../public/js/model/model.js";
 import { WIRES } from "../../public/js/config.js";
 
 const load = (name) =>

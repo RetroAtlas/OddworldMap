@@ -4,7 +4,7 @@
 
 import { $ } from "./ui/dom.js";
 import { state } from "./state.js";
-import { camIdOf } from "./model.js";
+import { camIdOf } from "./model/model.js";
 import { pathVisible } from "./pathvisible.js";
 import { jumpToPlace } from "./navigate.js";
 import { SHUFFLE_SVG } from "./ui/icons.js";

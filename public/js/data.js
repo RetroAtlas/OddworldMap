@@ -3,9 +3,9 @@
 // No DOM, so it stays importable in bare Node.
 
 import { RELEASE_CODE } from "./config.js";
-import { parseHash } from "./model.js";
+import { parseHash } from "./model/model.js";
 import { applyStoredEdits, hasStoredEdits, reportUnapplied, setLevelShort } from "./edits.js";
-import { armFieldData } from "./fields.js";
+import { armFieldData } from "./model/fields.js";
 import { materializeRelease } from "./release.js";
 
 // the games in canonical order; the first is what a visit boots on when

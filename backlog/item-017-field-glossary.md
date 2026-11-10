@@ -28,7 +28,7 @@ The floating hover tooltip cannot host a per-field hover, so the definitions liv
 
 ## Shipped
 
-**Architecture and wiring, 2026-07-25.** [glossary_fields.json](../public/glossary_fields.json), hand-curated and game-agnostic, plus [js/glossary.js](../public/js/glossary.js) — `sanitizeGlossary` / `setGlossary` / `glossaryProse`, a leaf — resolving a field's meaning through the three tiers. `fieldHelp(game, type, field)` in [js/fields.js](../public/js/fields.js) composes the prose with the field's full value list, so an entry only ever has to carry the prose. Wired at boot beside the other sidecars, with a schema test pinning every key to the shipped data.
+**Architecture and wiring, 2026-07-25.** [glossary_fields.json](../public/glossary_fields.json), hand-curated and game-agnostic, plus [js/glossary.js](../public/js/model/glossary.js) — `sanitizeGlossary` / `setGlossary` / `glossaryProse`, a leaf — resolving a field's meaning through the three tiers. `fieldHelp(game, type, field)` in [js/fields.js](../public/js/model/fields.js) composes the prose with the field's full value list, so an entry only ever has to carry the prose. Wired at boot beside the other sidecars, with a schema test pinning every key to the shipped data.
 
 Seeded with exactly three entries, one per tier — `scale`, `Path_Slig::StartState`, `Mudokon.state` — because the content needs game knowledge and inventing it would have been worse than leaving it thin.
 

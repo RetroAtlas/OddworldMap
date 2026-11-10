@@ -12,15 +12,15 @@ import {
   markerShown,
 } from "./config.js";
 import { COLOR } from "./ui/dom.js";
-import { drawX } from "./geometry.js";
+import { drawX } from "./model/geometry.js";
 import { connections } from "./kept.js";
-import { cellCentre, computeWiring, drawBox, markerCentre } from "./model.js";
+import { cellCentre, computeWiring, drawBox, markerCentre } from "./model/model.js";
 import { isRegional } from "./release.js";
 import { getSettings } from "./settings.js";
 import { objectShown } from "./spriteart.js";
 import { standingBox } from "./spritepaint.js";
 import { worldLen } from "./state.js";
-import { formatDist } from "./util.js";
+import { formatDist } from "./model/util.js";
 
 // filled arrowhead at (tx, ty) pointing along (dx, dy), h long in draw units
 function arrowhead(ctx, tx, ty, dx, dy, h) {

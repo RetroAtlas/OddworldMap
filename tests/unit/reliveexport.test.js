@@ -16,7 +16,7 @@ import {
   exportPath,
   norm,
   widenValue,
-} from "../../public/js/reliveexport.js";
+} from "../../public/js/model/reliveexport.js";
 
 const load = (f) => JSON.parse(readFileSync(new URL(`../../public/${f}`, import.meta.url), "utf8"));
 const DIGESTS = JSON.parse(

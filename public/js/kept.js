@@ -4,7 +4,7 @@
 // nothing
 
 import { CATS, KEPT_UNSEEN, PENS, barrierDir, catOf, markerShown } from "./config.js";
-import { computeConnections, computeWiring, destOf, destTrusted } from "./model.js";
+import { computeConnections, computeWiring, destOf, destTrusted } from "./model/model.js";
 import { spriteTypes } from "./sprites.js";
 import { state } from "./state.js";
 

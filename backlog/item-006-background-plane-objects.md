@@ -18,7 +18,7 @@ The badge lost to the dashing: the app has no badges anywhere, so one would have
 
 The builder-side `extra.plane` became unnecessary — the full-field extraction put `scale` in every gameplay object's `fields` archive, so the plane is derivable in the viewer with no rebuild at all.
 
-**And the raw value cannot be trusted directly.** The per-object scale enums disagree about which number means which plane: `InvisibleSwitch` and `GlukkonSwitch` read 1 as *full*. So `onBackgroundPlane(game, t)` in [js/fields.js](../public/js/fields.js) resolves `scale` through the field's game type and tests the resulting *label* for "half", falling back to the plain 1 = half only for an untyped bare-int scale. A viewer that had keyed off the raw 1 would have drawn those two types on the wrong plane.
+**And the raw value cannot be trusted directly.** The per-object scale enums disagree about which number means which plane: `InvisibleSwitch` and `GlukkonSwitch` read 1 as *full*. So `onBackgroundPlane(game, t)` in [js/fields.js](../public/js/model/fields.js) resolves `scale` through the field's game type and tests the resulting *label* for "half", falling back to the plain 1 = half only for an untyped bare-int scale. A viewer that had keyed off the raw 1 would have drawn those two types on the wrong plane.
 
 ## Shipped
 

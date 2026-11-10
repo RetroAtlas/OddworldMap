@@ -137,7 +137,7 @@ test("a sprite larger than its rectangle is hovered over its whole image", async
     const u = (m) => new URL("js/" + m, location.href).href;
     const st = await import(u("state.js"));
     const spritepaint = await import(u("spritepaint.js"));
-    const model = await import(u("model.js"));
+    const model = await import(u("model/model.js"));
     const t = st.state.path.tlvs.find((o) => o.name === "RollingBall" && o.x1 === b.x1);
     const [marker, sprite] = spritepaint.hitBoxes(t, st.LAYOUT);
     if (!sprite) return null;

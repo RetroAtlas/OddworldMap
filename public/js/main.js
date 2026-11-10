@@ -13,11 +13,11 @@ import {
   loadJson,
 } from "./data.js";
 import { hasStoredEdits, setEnabled } from "./edits.js";
-import { setAnnotations } from "./annotations.js";
-import { setFieldTypes, setEnumLabels } from "./fields.js";
-import { setGlossary } from "./glossary.js";
-import { setMessages } from "./messages.js";
-import { setTypeInfo } from "./typeinfo.js";
+import { setAnnotations } from "./model/annotations.js";
+import { setFieldTypes, setEnumLabels } from "./model/fields.js";
+import { setGlossary } from "./model/glossary.js";
+import { setMessages } from "./model/messages.js";
+import { setTypeInfo } from "./model/typeinfo.js";
 import { initSettings, storedLocationHash, clearStoredLocation } from "./settings.js";
 import { syncNeeds } from "./sidebar.js";
 import { state } from "./state.js";

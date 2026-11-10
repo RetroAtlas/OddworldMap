@@ -7,8 +7,8 @@ import {
   pathDisplayName,
   pathNickname,
   pathNote,
-} from "../../public/js/annotations.js";
-import { isDemoPath } from "../../public/js/demo.js";
+} from "../../public/js/model/annotations.js";
+import { isDemoPath } from "../../public/js/model/demo.js";
 
 const load = (name) =>
   JSON.parse(readFileSync(new URL(`../../public/${name}`, import.meta.url), "utf8"));

@@ -20,7 +20,7 @@ import {
   WIRES,
   DOOR_GATE,
   HUB_FIELDS,
-} from "./config.js";
+} from "../config.js";
 import { isDemoPath } from "./demo.js";
 import { drawAt, drawX, drawY, worldX, worldY } from "./geometry.js";
 

@@ -14,7 +14,7 @@ Both preconditions this needed have cleared: [40](item-040-validate-destinations
 
 ## Shipped
 
-**The walk, with the curated names deciding its branches rather than replacing it.** `levelOrder` in [js/pathorder.js](../public/js/pathorder.js) walks a level's own trusted transitions out from one elected way in and lists each path where the walk first meets it. "Paths in play order" in Settings, off by default, routed through `visiblePaths`, which is the one place a level's path order is decided. `orderPaths` sorts only what it is handed by that whole-level order, so the demo setting can change what is listed and never what the order is.
+**The walk, with the curated names deciding its branches rather than replacing it.** `levelOrder` in [js/pathorder.js](../public/js/model/pathorder.js) walks a level's own trusted transitions out from one elected way in and lists each path where the walk first meets it. "Paths in play order" in Settings, off by default, routed through `visiblePaths`, which is the one place a level's path order is decided. `orderPaths` sorts only what it is handed by that whole-level order, so the demo setting can change what is listed and never what the order is.
 
 **The area is the unit the walk moves in.** An area is a path's name with the `[Demo] ` mark and anything after a colon dropped, which pools a secret area, a sub-room and a demo copy with the area they name; a path the discs never named is an area of one. An area is finished before the walk leaves it, and that is what holds Zulag 1's five paths together where the way on out of it sits two rooms in with a dead end still unvisited behind it — a plain depth-first walk leaves for Zulag 2 and comes back for the dead end afterwards.
 

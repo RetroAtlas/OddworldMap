@@ -1,10 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { levelOrder, orderPaths, levelEntry, invalidateEntry } from "../../public/js/pathorder.js";
-import { setAnnotations, pathDisplayName } from "../../public/js/annotations.js";
-import { isDemoPath } from "../../public/js/demo.js";
-import { destOf, destTrusted, pathIn } from "../../public/js/model.js";
+import {
+  levelOrder,
+  orderPaths,
+  levelEntry,
+  invalidateEntry,
+} from "../../public/js/model/pathorder.js";
+import { setAnnotations, pathDisplayName } from "../../public/js/model/annotations.js";
+import { isDemoPath } from "../../public/js/model/demo.js";
+import { destOf, destTrusted, pathIn } from "../../public/js/model/model.js";
 import { dataset, level, path, tlv } from "./fixtures.js";
 
 const load = (name) =>
