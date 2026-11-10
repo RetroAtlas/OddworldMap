@@ -24,19 +24,19 @@ import { state } from "./data/state.js";
 // the hub before the panels: its listeners register first, so its drawer hands
 // focus on before a panel rebuilds its controls
 import { toggleMenu } from "./interaction.js";
-import "./search.js";
+import "./panels/search.js";
 import "./export.js";
-import { initFieldPanel } from "./fieldpanel.js";
+import { initFieldPanel } from "./panels/fieldpanel.js";
 import "./a11y.js";
-import "./anchortip.js";
-import "./whatsnew.js";
-import "./about.js";
-import "./typecard.js";
+import "./panels/anchortip.js";
+import "./panels/whatsnew.js";
+import "./panels/about.js";
+import "./panels/typecard.js";
 import "./navigation/shuffle.js";
-import "./numbers.js";
-import "./editpanel.js";
+import "./panels/numbers.js";
+import "./panels/editpanel.js";
 import "./navigation/minimap.js";
-import "./graphview.js";
+import "./panels/graphview.js";
 import "./offline.js";
 
 initSettings();

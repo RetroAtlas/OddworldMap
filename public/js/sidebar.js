@@ -1,6 +1,6 @@
 // Sidebar controls: category filters, display toggles, feedback link.
 
-import { setEditMode } from "./editpanel.js";
+import { setEditMode } from "./panels/editpanel.js";
 import { CATS, PENS, catOf } from "./config.js";
 import { $, cv, filterBox } from "./ui/dom.js";
 import { state } from "./data/state.js";

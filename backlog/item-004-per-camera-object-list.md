@@ -14,4 +14,4 @@ A click that found nothing followable did nothing at all, and on a touch screen 
 
 ## Shipped
 
-[js/campanel.js](../public/js/campanel.js): click or tap a screen with nothing followable to list its objects grouped by category. Rows outline on hover through render's `setHighlight` and jump on click.
+[js/campanel.js](../public/js/panels/campanel.js): click or tap a screen with nothing followable to list its objects grouped by category. Rows outline on hover through render's `setHighlight` and jump on click.

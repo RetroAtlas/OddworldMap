@@ -2,10 +2,10 @@
 // on: a per-type checklist (notable fields pre-checked) that writes the user's
 // picks into the current game's fieldPrefs.byType bucket.
 
-import { $ } from "./ui/dom.js";
-import { state } from "./data/state.js";
-import { defaultVisible, fieldHelp } from "./model/fields.js";
-import { getSettings, fieldPrefsFor, persistSettings } from "./data/settings.js";
+import { $ } from "../ui/dom.js";
+import { state } from "../data/state.js";
+import { defaultVisible, fieldHelp } from "../model/fields.js";
+import { getSettings, fieldPrefsFor, persistSettings } from "../data/settings.js";
 
 const section = $("fieldPanel");
 const body = section.querySelector(".fp-body");

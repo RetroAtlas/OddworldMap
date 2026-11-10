@@ -2,11 +2,11 @@
 // granularity at once — the screen under the view center, the path, the
 // level, the game — re-derived as the selection and the view move.
 
-import { $, cv, narrowMQ, typingIn } from "./ui/dom.js";
-import { esc } from "./model/util.js";
-import { LAYOUT, state } from "./data/state.js";
-import { camCenter, cellAt } from "./model/model.js";
-import { census } from "./data/census.js";
+import { $, cv, narrowMQ, typingIn } from "../ui/dom.js";
+import { esc } from "../model/util.js";
+import { LAYOUT, state } from "../data/state.js";
+import { camCenter, cellAt } from "../model/model.js";
+import { census } from "../data/census.js";
 
 const panel = $("numbersPanel"),
   body = $("numbersBody"),

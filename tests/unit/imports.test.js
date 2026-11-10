@@ -64,7 +64,8 @@ const LAYERS = {
   ],
   painter: ["painter", "rules", "data", "model", "engine", "ui", "config.js"],
   navigation: ["navigation", "painter", "data", "model", "engine", "ui", "config.js"],
-  ".": ["data", "engine", "model", "navigation", "painter", "rules", "ui", "."],
+  panels: ["panels", "navigation", "painter", "data", "model", "ui", "config.js"],
+  ".": ["data", "engine", "model", "navigation", "painter", "panels", "rules", "ui", "."],
 };
 
 // every viewer module, with the modules its import statements name

@@ -24,6 +24,6 @@ Nothing in the app said whose map this was. An unofficial fan project has to say
 
 ## Shipped
 
-The **About this map** dialog ([js/about.js](../public/js/about.js)), opened from the sidebar footer beside "Send feedback": the unofficial/trademark/no-affiliation notice as its own paragraph, then the AliveTeam and alive_reversing credit and the source repo link. The fourth dialog on the `.overlay`/`.dialog` + `trapDialogKeys` pattern.
+The **About this map** dialog ([js/about.js](../public/js/panels/about.js)), opened from the sidebar footer beside "Send feedback": the unofficial/trademark/no-affiliation notice as its own paragraph, then the AliveTeam and alive_reversing credit and the source repo link. The fourth dialog on the `.overlay`/`.dialog` + `trapDialogKeys` pattern.
 
 One shared-code change: `trapDialogKeys` counted `button, input`, so the dialog's two links would have been unreachable by keyboard. It counts `a[href]` now, inert for the other three dialogs, which hold no links.

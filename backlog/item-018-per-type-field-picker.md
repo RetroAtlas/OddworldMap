@@ -16,7 +16,7 @@ Once every gameplay object carried its full field archive, "Show more object fie
 
 ## Shipped
 
-[js/fieldpanel.js](../public/js/fieldpanel.js) renders a "Fields" sidebar section listing the gameplay types on the current path, category-ordered, each a collapsible `<details>` with a checklist of its fields (the defaults pre-checked), an `n / total` count and `all` / `reset` per type. Toggles write `fieldPrefs.byType[type]` and persist.
+[js/fieldpanel.js](../public/js/panels/fieldpanel.js) renders a "Fields" sidebar section listing the gameplay types on the current path, category-ordered, each a collapsible `<details>` with a checklist of its fields (the defaults pre-checked), an `n / total` count and `all` / `reset` per type. Toggles write `fieldPrefs.byType[type]` and persist.
 
 Verified end-to-end on a no-cache preview port — the browser pane caches modules hard, which is what the `oddmap-nocache` launch config exists for.
 

@@ -1,21 +1,21 @@
 // Global TLV search: scope bar, grouped results, keyboard navigation.
 
-import { esc, extrasText } from "./model/util.js";
-import { fieldEntries } from "./model/fields.js";
-import { objectMessages } from "./model/messages.js";
-import { parseQuery, queryTerms, matchesQuery, rankFor } from "./ui/searchquery.js";
-import { matchPlaces } from "./data/placesearch.js";
-import { pendingGames } from "./data/data.js";
-import { searchClear, searchInput, searchResults, scopeBar, typingIn } from "./ui/dom.js";
-import { CLOSE_SVG } from "./ui/icons.js";
-import { pathVisible } from "./data/pathvisible.js";
-import { state } from "./data/state.js";
-import { fieldPrefsFor, getSettings } from "./data/settings.js";
-import { jumpToPlace, jumpToTlv } from "./navigation/navigate.js";
-import { pathIn } from "./model/model.js";
-import { isAdded, isEdited } from "./data/edits.js";
-import { releaseNote } from "./data/release.js";
-import { ADDED_NOTE, EDITED_NOTE } from "./config.js";
+import { esc, extrasText } from "../model/util.js";
+import { fieldEntries } from "../model/fields.js";
+import { objectMessages } from "../model/messages.js";
+import { parseQuery, queryTerms, matchesQuery, rankFor } from "../ui/searchquery.js";
+import { matchPlaces } from "../data/placesearch.js";
+import { pendingGames } from "../data/data.js";
+import { searchClear, searchInput, searchResults, scopeBar, typingIn } from "../ui/dom.js";
+import { CLOSE_SVG } from "../ui/icons.js";
+import { pathVisible } from "../data/pathvisible.js";
+import { state } from "../data/state.js";
+import { fieldPrefsFor, getSettings } from "../data/settings.js";
+import { jumpToPlace, jumpToTlv } from "../navigation/navigate.js";
+import { pathIn } from "../model/model.js";
+import { isAdded, isEdited } from "../data/edits.js";
+import { releaseNote } from "../data/release.js";
+import { ADDED_NOTE, EDITED_NOTE } from "../config.js";
 
 const HIT_CAP = 1500,
   GROUP_MAX = 8;

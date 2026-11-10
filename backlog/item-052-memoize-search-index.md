@@ -8,7 +8,7 @@ Every keystroke past the 160 ms debounce rebuilt the searchable text for all 16,
 
 ## Cause
 
-`tlvSearchText` in [js/search.js](../public/js/search.js), called inside a four-deep scan. Each call runs `fieldEntries` → `Object.entries(t.fields).sort(localeCompare)` → a `prettify` per field (two object lookups plus a `resolve`) → a `map`/`join` → `toLowerCase`. The `localeCompare` sort in particular is not cheap at this multiplier.
+`tlvSearchText` in [js/search.js](../public/js/panels/search.js), called inside a four-deep scan. Each call runs `fieldEntries` → `Object.entries(t.fields).sort(localeCompare)` → a `prettify` per field (two object lookups plus a `resolve`) → a `map`/`join` → `toLowerCase`. The `localeCompare` sort in particular is not cheap at this multiplier.
 
 ## Sketch
 

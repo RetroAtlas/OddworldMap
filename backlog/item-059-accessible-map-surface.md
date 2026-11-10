@@ -30,7 +30,7 @@ Content: game, level (full name), path, its curated or in-game name if any, and 
 
 **Announcement volume.** `selection-changed` re-fires for the same path on every pushed hash write. Announcing on every fire would make a screen reader chatter during ordinary browsing. Guard on an actual path change, the way `fieldpanel.js` and `campanel.js` already do.
 
-**The place panel already announces this.** `#placePanel` ([js/place.js](../public/js/place.js)) is a live region carrying game, level, path and its name, so while it is open a global region would say the same thing twice. Make `#a11yStatus` the single announcer — drop the panel's `aria-live` when this lands — rather than gating one on the other. [39](item-039-where-am-i-surface.md) records the same obligation from its side.
+**The place panel already announces this.** `#placePanel` ([js/place.js](../public/js/panels/place.js)) is a live region carrying game, level, path and its name, so while it is open a global region would say the same thing twice. Make `#a11yStatus` the single announcer — drop the panel's `aria-live` when this lands — rather than gating one on the other. [39](item-039-where-am-i-surface.md) records the same obligation from its side.
 
 ## Related, already tracked
 

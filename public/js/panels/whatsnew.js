@@ -1,10 +1,10 @@
 // "What's New": a dated changelog panel driven by changelog.json.
 // Wires itself up at import time; if the feed is missing the button stays hidden.
 
-import { $ } from "./ui/dom.js";
-import { esc } from "./model/util.js";
-import { NEWSPAPER_SVG } from "./ui/icons.js";
-import { closeDialog, openDialog, trapDialogKeys } from "./ui/dialog.js";
+import { $ } from "../ui/dom.js";
+import { esc } from "../model/util.js";
+import { NEWSPAPER_SVG } from "../ui/icons.js";
+import { closeDialog, openDialog, trapDialogKeys } from "../ui/dialog.js";
 
 const PREVIEW_N = 5; // entries shown before "see all"
 const SEEN_KEY = "owm:whatsnew:lastSeen"; // newest date the visitor has opened

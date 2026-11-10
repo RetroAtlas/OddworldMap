@@ -3,7 +3,7 @@
 import { esc, formatDist, segDist } from "./model/util.js";
 import { fieldEntries, onBackgroundPlane } from "./model/fields.js";
 import { gridSize } from "./engine/collide.js";
-import { hideAnchorTip } from "./anchortip.js";
+import { hideAnchorTip } from "./panels/anchortip.js";
 import {
   KEY_PAN_PX,
   KEY_ZOOM_STEP,
@@ -76,9 +76,9 @@ import { DARK_NOTE, objectMessages } from "./model/messages.js";
 import { toggleShow } from "./sidebar.js";
 import { lightCap } from "./ui/keycap.js";
 import { getSettings, fieldPrefsFor } from "./data/settings.js";
-import { focusCamPanel, openCamPanel, openCamPanelNear } from "./campanel.js";
-import { togglePlace } from "./place.js";
-import { openAddPicker, selectObject, setEditMode } from "./editpanel.js";
+import { focusCamPanel, openCamPanel, openCamPanelNear } from "./panels/campanel.js";
+import { togglePlace } from "./panels/place.js";
+import { openAddPicker, selectObject, setEditMode } from "./panels/editpanel.js";
 import {
   applyRectEdit,
   currentOf,
@@ -91,7 +91,7 @@ import {
   snapRect,
 } from "./data/edits.js";
 import { releaseNote } from "./data/release.js";
-import { toggleGraph } from "./graphview.js";
+import { toggleGraph } from "./panels/graphview.js";
 import { addRoutePoint, routeArrive, routeSeam, undoRoutePoint } from "./navigation/route.js";
 import { closeDialog, openDialog, trapDialogKeys } from "./ui/dialog.js";
 import { HAMBURGER_SVG, CLOSE_SVG, LINK_SVG, EXTERNAL_SVG } from "./ui/icons.js";

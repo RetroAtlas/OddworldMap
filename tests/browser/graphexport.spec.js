@@ -4,7 +4,7 @@ import { trackErrors, settleAny } from "./helpers.js";
 
 async function openGraph(page) {
   await page.evaluate(async () => {
-    const gv = await import(new URL("js/graphview.js", location.href).href);
+    const gv = await import(new URL("js/panels/graphview.js", location.href).href);
     gv.toggleGraph(true);
   });
   await expect(page.locator("#graphPlane .gv-node").first()).toBeVisible();

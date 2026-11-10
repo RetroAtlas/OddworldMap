@@ -25,7 +25,7 @@ It shipped as a Display toggle instead, off by default. See *Shipped: the spacin
 The two halves want different answers and should not be bundled into one change.
 
 - **Lines**: the marker treatment ported over, a stroke that dots across the folded gap. The complication markers do not have is that a line is not a rect, so the split is per-segment rather than a clip, and `screenRuns` in [js/model.js](../public/js/model/model.js) answers about spans rather than points. Whether the ruler should then report the true distance is a separate question with a worse answer than it looks: the honest number counts ground nobody can cross.
-- **Counts**: bucket by coverage rather than by drawn centre, so a marker is counted under each screen it actually covers, or under none. That is a change to `inCell` in [js/census.js](../public/js/data/census.js) and the matching rule in [js/campanel.js](../public/js/campanel.js), which CLAUDE.md requires to agree. It also makes a straddling marker countable twice, which is either right or a new lie depending on what the count is for.
+- **Counts**: bucket by coverage rather than by drawn centre, so a marker is counted under each screen it actually covers, or under none. That is a change to `inCell` in [js/census.js](../public/js/data/census.js) and the matching rule in [js/campanel.js](../public/js/panels/campanel.js), which CLAUDE.md requires to agree. It also makes a straddling marker countable twice, which is either right or a new lie depending on what the count is for.
 
 ## Watch out
 

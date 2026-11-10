@@ -8,7 +8,7 @@ Fields in the picker, and so in the tooltip, followed the schema's payload order
 
 ## Sketch
 
-Sort a type's `fields` alphabetically in [js/fieldpanel.js](../public/js/fieldpanel.js) and in the `fieldEntries` output, instead of insertion order.
+Sort a type's `fields` alphabetically in [js/fieldpanel.js](../public/js/panels/fieldpanel.js) and in the `fieldEntries` output, instead of insertion order.
 
 ## Decided
 

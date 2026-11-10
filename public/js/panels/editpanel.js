@@ -3,14 +3,14 @@
 // archive holds for the selection as a control writing a delta through the edit
 // model; the map follows through data-changed like every other surface.
 
-import { $, cv, narrowMQ, typingIn } from "./ui/dom.js";
-import { esc } from "./model/util.js";
-import { GEO, LAYOUT, state, wX, wY } from "./data/state.js";
-import { camCenter, cellAt, cellCentre, nearestCam, tlvCell } from "./model/model.js";
-import { LIVE_WHEN, fieldHelp, fieldType, valueMap } from "./model/fields.js";
-import { fieldUnit } from "./model/glossary.js";
-import { getSettings } from "./data/settings.js";
-import { GAME_IDS, loadEditorData } from "./data/data.js";
+import { $, cv, narrowMQ, typingIn } from "../ui/dom.js";
+import { esc } from "../model/util.js";
+import { GEO, LAYOUT, state, wX, wY } from "../data/state.js";
+import { camCenter, cellAt, cellCentre, nearestCam, tlvCell } from "../model/model.js";
+import { LIVE_WHEN, fieldHelp, fieldType, valueMap } from "../model/fields.js";
+import { fieldUnit } from "../model/glossary.js";
+import { getSettings } from "../data/settings.js";
+import { GAME_IDS, loadEditorData } from "../data/data.js";
 import {
   addObject,
   applyFieldEdit,
@@ -41,11 +41,11 @@ import {
   typeNames,
   typeTable,
   undoEdit,
-} from "./data/edits.js";
-import { ADDED_NOTE, REMOVED_NOTE, catOf, markerShown } from "./config.js";
-import { typeSummary } from "./model/typeinfo.js";
-import { toast } from "./ui/toast.js";
-import { scheduleDraw } from "./ui/redraw.js";
+} from "../data/edits.js";
+import { ADDED_NOTE, REMOVED_NOTE, catOf, markerShown } from "../config.js";
+import { typeSummary } from "../model/typeinfo.js";
+import { toast } from "../ui/toast.js";
+import { scheduleDraw } from "../ui/redraw.js";
 
 const btn = $("editBtn"),
   panel = $("editPanel"),

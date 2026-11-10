@@ -4,7 +4,7 @@
 
 ## Symptom
 
-Searching `monsaic`, `paramonia`, `zulag 2`, `feeco` or `necrum` returns **zero hits**. `tlvSearchText` in [js/search.js](../public/js/search.js) indexes object name plus decoded fields only — level and path names are not in the index at all. Those are the words a player reaches for first, and the sidebar's level and path buttons are the only way to use them.
+Searching `monsaic`, `paramonia`, `zulag 2`, `feeco` or `necrum` returns **zero hits**. `tlvSearchText` in [js/search.js](../public/js/panels/search.js) indexes object name plus decoded fields only — level and path names are not in the index at all. Those are the words a player reaches for first, and the sidebar's level and path buttons are the only way to use them.
 
 ## Sketch
 

@@ -3,17 +3,17 @@
 // portal and transition between two of them an edge. A node is a button, so a
 // click travels there and the keyboard reaches every path in the game.
 
-import { CONN_COLORS, DEMO_NOTE, EDITED_NOTE, ENTRY_NOTE, GRAPH, KEY_PAN_PX } from "./config.js";
-import { $, cv, menuBtn, typingIn } from "./ui/dom.js";
-import { esc } from "./model/util.js";
-import { state } from "./data/state.js";
-import { pathDisplayName, pathNickname, pathNote } from "./model/annotations.js";
+import { CONN_COLORS, DEMO_NOTE, EDITED_NOTE, ENTRY_NOTE, GRAPH, KEY_PAN_PX } from "../config.js";
+import { $, cv, menuBtn, typingIn } from "../ui/dom.js";
+import { esc } from "../model/util.js";
+import { state } from "../data/state.js";
+import { pathDisplayName, pathNickname, pathNote } from "../model/annotations.js";
 import { hideAnchorTip } from "./anchortip.js";
-import { isDemoPath } from "./model/demo.js";
-import { pathEdited } from "./data/edits.js";
-import { marker, wirePath } from "./data/graphsvg.js";
-import { jumpToPlace, scheduleHash } from "./navigation/navigate.js";
-import { graphLayout, worldGraph } from "./data/worldgraph.js";
+import { isDemoPath } from "../model/demo.js";
+import { pathEdited } from "../data/edits.js";
+import { marker, wirePath } from "../data/graphsvg.js";
+import { jumpToPlace, scheduleHash } from "../navigation/navigate.js";
+import { graphLayout, worldGraph } from "../data/worldgraph.js";
 
 const view = $("graphView"),
   scroller = $("graphScroll"),
