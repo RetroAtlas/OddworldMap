@@ -1,6 +1,6 @@
 # 103. Give the Settings dialog a home of its own
 
-**Status:** open · **Effort:** small · **Where:** anywhere · **Filed:** 2026-11-10, from the review of the series that laid the modules out in folders
+**Status:** shipped 2026-11-11 · **Effort:** small · **Where:** anywhere · **Filed:** 2026-11-10, from the review of the series that laid the modules out in folders
 
 ## What and why
 
@@ -17,3 +17,7 @@ Cut the dialog's wiring, `markDefault`, `initSettings`, `workerRegistered`, `mar
 ## Ruled out
 
 - Moving `settings.js` whole into `chrome/`: `edits.js` and `pathvisible.js` import it from the pure band, so `data`'s row would name `chrome`, upward.
+
+## Shipped
+
+Landed 2026-11-11 as sketched: `chrome/settingsdialog.js` holds `MARKER_CACHE`, `markDefault`, `initSettings`, `workerRegistered`, `markerReady` and `applyCacheMap` verbatim but for the two clears, the store gained `clearStoredView` beside `clearStoredLocation`, `main.js` and `offline.js` take the dialog module's exports, `tests/unit/settings.test.js` reads the dialog module for its `bind` calls, and `data/`'s row names `ui/searchquery.js` alone among the primitives.

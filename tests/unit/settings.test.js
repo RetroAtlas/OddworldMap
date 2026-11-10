@@ -176,7 +176,10 @@ test("SHOW_KEYS: every sidebar Display toggle is remembered, ruler and route exc
 });
 
 test("SETTINGS_DEFAULTS: a Settings row carries checked exactly when its default is on", () => {
-  const src = readFileSync(new URL("../../public/js/data/settings.js", import.meta.url), "utf8");
+  const src = readFileSync(
+    new URL("../../public/js/chrome/settingsdialog.js", import.meta.url),
+    "utf8",
+  );
   const bound = [...src.matchAll(/bind\("(\w+)", "(\w+)"/g)].map(([, id, key]) => [id, key]);
   assert.deepEqual(
     bound.map(([, key]) => key).sort(),

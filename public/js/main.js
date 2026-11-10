@@ -18,7 +18,8 @@ import { setFieldTypes, setEnumLabels } from "./model/fields.js";
 import { setGlossary } from "./model/glossary.js";
 import { setMessages } from "./model/messages.js";
 import { setTypeInfo } from "./model/typeinfo.js";
-import { initSettings, storedLocationHash, clearStoredLocation } from "./data/settings.js";
+import { storedLocationHash, clearStoredLocation } from "./data/settings.js";
+import { initSettings } from "./chrome/settingsdialog.js";
 import { syncNeeds } from "./chrome/sidebar.js";
 import { state } from "./data/state.js";
 // the hub before the panels: its listeners register first, so its drawer hands

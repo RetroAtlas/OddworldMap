@@ -8,13 +8,8 @@ import { hasAnyStoredEdits } from "../data/edits.js";
 import { $ } from "../ui/dom.js";
 import { camFiles } from "../model/model.js";
 import { releaseSprites } from "../data/release.js";
-import {
-  MARKER_CACHE,
-  displayLabel,
-  getSettings,
-  markerReady,
-  workerRegistered,
-} from "../data/settings.js";
+import { displayLabel, getSettings } from "../data/settings.js";
+import { MARKER_CACHE, markerReady, workerRegistered } from "./settingsdialog.js";
 import { state } from "../data/state.js";
 import { toast } from "../ui/toast.js";
 

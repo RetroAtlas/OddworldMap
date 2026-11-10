@@ -45,7 +45,6 @@ Item-specific reasoning and cross-references stay inside this folder. An item ma
 
 ## Code and build
 
-- [**103.** Give the Settings dialog a home of its own](item-103-settings-dialog-home.md) — `settings.js` is the store `edits.js` imports and the dialog's wiring in one file, which is why `data/`'s row names two primitives; the wiring moves to the chrome. _Small._
 - [**95.** A bare link's fit zoom is read off the canvas mid-slide](item-095-fit-zoom-boot-slide.md) — `fitView` reads the canvas width during the sidebar's boot slide, so the same path link opens at a slightly different zoom each visit; wait for the slide, or fit again when it ends. _Small._
 - [**57.** One module lifecycle: explicit `init()`](item-057-module-lifecycle.md) — the current boot order is a load-bearing accident. _Medium._
 
@@ -81,6 +80,7 @@ Rejected or disproved, kept so they are not re-proposed.
 
 Newest first, and a finished item is worth reading for the same reason an open one is: whether shipped or retired, each records what was decided, what was ruled out and where its own sketch turned out wrong.
 
+- [**103.** Give the Settings dialog a home of its own](item-103-settings-dialog-home.md): the dialog's wiring in `chrome/settingsdialog.js` and the store in `data/settings.js`, a clear of the view added, so `data/` names one primitive, the query grammar. _2026-11-11._
 - [**104.** Cut the stylesheet into partials linked in name order](item-104-stylesheet-partials.md): nine files under `public/css`, ranked by name and each linked from `index.html` in that order, which is the cascade and which `stylesheet.test.js` holds; every line moved verbatim and the join proven equal to the old file, bringing the stylesheet under the size caps. _2026-11-10._
 - [**102.** Lay the viewer's modules out in folders by layer](item-102-modules-in-folders.md): nine folders beside `main.js` and `config.js`, each a row of the layer table `imports.test.js` holds, the four that import in bare Node walked whole, and the drawer asked for through a window event so the panels stand apart from the hub; nothing drawn differently at any commit, proven against each parent. _2026-11-10._
 - [**101.** Hold every file to a size](item-101-file-size-caps.md): 800 lines for a module or a spec and 1,000 for a unit test or a tool, held by a test whose table ratchets the three files still over; the eight others were cut where their sections joined, the painter into six modules and the sprite rules into a kit and four. _2026-11-08._
