@@ -1,0 +1,203 @@
+#main {
+  flex: 1;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+#cv {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+#cv.panning {
+  cursor: grabbing;
+}
+body.page-zoomed #cv {
+  touch-action: pinch-zoom;
+}
+/* the world graph: the game as one diagram, opaque over the canvas it replaces.
+   A mode is not a float, so it takes no stacking tier — a positioned sibling
+   after the canvas covers it, and every tier above (the toasts, the drawer, the
+   chrome, the dialogs) keeps standing over it untouched. What that leaves is
+   the map's own furniture, every piece of which has to be sent away by hand */
+#graphView {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+#graphView[hidden] {
+  display: none; /* the flex display would otherwise defeat the hidden attribute */
+}
+body.graph #chipRow,
+body.graph #minimap,
+body.graph #tip,
+body.graph #hud,
+body.graph #help,
+/* sidebar buttons that act on the map don't combine with world graph */
+body.graph #exportBtn,
+body.graph #exportPathBtn,
+body.graph #editBtn,
+body.graph #editTools,
+body.graph #numbersBtn {
+  display: none;
+}
+/* the route bar is the only sign a plotted route has been cleared, so it stays */
+body.graph #routeBar {
+  top: 49px;
+}
+#graphBar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 7px var(--corner-w) 7px 54px; /* clear of the menu button and the corner buttons */
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+#graphBar .linkbtn {
+  flex: none;
+  white-space: nowrap;
+}
+#graphTitle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+#graphLegend {
+  flex: 1;
+  display: flex;
+  flex-wrap: nowrap;
+  min-width: 0;
+  gap: 10px;
+  overflow: hidden;
+  color: var(--dim);
+  font-size: 11px;
+}
+.gv-key {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.gv-key i {
+  width: 9px;
+  height: 3px;
+  border-radius: 2px;
+}
+#graphScroll {
+  flex: 1;
+  overflow: auto;
+  overscroll-behavior: contain;
+  cursor: grab;
+}
+#graphScroll.panning {
+  cursor: grabbing;
+}
+#graphPlane {
+  position: relative;
+  transform-origin: 0 0;
+}
+#graphPlane svg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+/* a fat invisible line is what the pointer finds; the drawn one is too thin */
+.gv-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 9;
+  pointer-events: stroke;
+}
+.gv-wire {
+  fill: none;
+  stroke-width: 1.4;
+  opacity: 0.8;
+}
+/* the pointer finds one leg; the whole line answers */
+.gv-edge:has(.gv-hit:hover) .gv-wire {
+  opacity: 1;
+  stroke-width: 2.4;
+}
+.gv-head {
+  position: absolute;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.gv-node {
+  position: absolute;
+  width: var(--gv-node-w);
+  height: var(--gv-node-h);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 7px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+}
+.gv-node:hover {
+  border-color: var(--accent);
+}
+.gv-node.on {
+  border-color: var(--accent);
+  background: var(--panel2);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+/* which half of the level a run of boxes belongs to, where the game says */
+.gv-sec {
+  position: absolute;
+  width: var(--gv-node-w);
+  border-top: 1px solid var(--line);
+  padding-top: 3px;
+  color: var(--dim);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+/* fit: the boxes shrink with the diagram, the level codes are scaled back to
+   the size they were, since they are the only labels an overview can carry */
+body.graph-fit .gv-head {
+  transform: scale(var(--gv-back));
+  transform-origin: 0 100%;
+}
+body.graph-fit .gv-head span,
+body.graph-fit .gv-sec,
+body.graph-fit .gv-nm {
+  display: none;
+}
+.gv-node.entry::before {
+  content: "\25B8";
+  flex: none;
+  color: var(--accent);
+}
+.gv-pa {
+  flex: none;
+  color: var(--dim);
+}
+.gv-ed {
+  flex: none;
+  color: rgb(var(--edit-rgb));
+  font-size: 9px;
+}
+.gv-nm {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

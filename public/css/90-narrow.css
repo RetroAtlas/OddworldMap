@@ -1,0 +1,112 @@
+/* narrow: the sidebar leaves the flow and slides over the map instead of shrinking it
+   (the 720px breakpoint is duplicated in the script's narrowMQ) */
+@media (max-width: 720px) {
+  #sidebar {
+    position: absolute;
+    z-index: var(--z-drawer);
+    height: 100%;
+    width: 82vw;
+    max-width: 320px;
+    --collapsed: 0;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+  }
+  body.menu-open #sidebar {
+    transform: none;
+  }
+  body.menu-open #scrim {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-scrim);
+    background: rgba(0, 0, 0, 0.45);
+  }
+  #sidebar h1 {
+    padding-left: 60px;
+  }
+  #hud {
+    display: none;
+  }
+  #minimap {
+    bottom: 48px;
+  }
+  #main:has(#camPanel:not([hidden])) #minimap {
+    display: none;
+  }
+  #help {
+    left: auto;
+    right: 10px;
+    font-size: 10px;
+  }
+  .btnrow button,
+  #releaseMenu > summary,
+  #toggles .checkrow,
+  .filters .checkrow {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  .overlay {
+    padding: 10px;
+    align-items: end;
+  }
+  .dialog {
+    width: 100%;
+    max-height: 85vh;
+  }
+  body.menu-open #chipRow,
+  body.menu-open #placePanel {
+    display: none;
+  }
+  #graphLegend,
+  #graphSvgBtn,
+  #graphPngBtn {
+    display: none;
+  }
+  /* prose needs the width more than the anchoring does */
+  #placePanel {
+    left: 10px;
+    right: 10px;
+    width: auto;
+    max-width: none;
+  }
+  /* the screen list becomes a bottom sheet: the upper map stays visible */
+  #camPanel,
+  #numbersPanel,
+  #editPanel {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: none;
+    max-height: 40%;
+    border-radius: 10px 10px 0 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+  }
+}
+
+/* last in the file, so it outranks the narrow drawer's transition written later
+   at the same weight */
+@media (prefers-reduced-motion: reduce) {
+  #sidebar,
+  .overlay,
+  .overlay.open, /* two classes: a lone .overlay cannot outrank it */
+  .dialog,
+  .toast {
+    transition: none;
+  }
+  .toast-bar {
+    display: none;
+  }
+  /* the foil is colour and stays; only its sweep and the sheen are motion */
+  .wn-tags .wn-tag-flagship,
+  .wn-chip.wn-tag-flagship[aria-pressed="true"],
+  .wn-entry.wn-flagship::before {
+    animation: none;
+  }
+  .wn-entry.wn-flagship::after {
+    display: none;
+  }
+}

@@ -1,7 +1,17 @@
 # Stylesheet vocabulary
 
-[css/main.css](../public/css/main.css) has one shared vocabulary and a new surface reaches for it rather than restating a treatment. A value becomes a `:root` token when components that are otherwise unalike have to agree on it; a treatment that recurs whole becomes a class; a repetition that is only two numbers coinciding is left alone.
+The stylesheet is the partials under [css/](../public/css/), each linked by its own `<link>` from `index.html` in name order, which is the cascade: a later partial wins a tie in specificity, so the two-digit rank a name carries is where its rules stand, and `tests/unit/stylesheet.test.js` holds the links to the directory's sorted listing, each file once. A partial is named `NN-word.css`, one lowercase word after its rank; a rule joins its surface's partial, a shared class stays in the partial where it first appears, and a new partial takes a free number between what it must follow and what must follow it, a multiple of five where one is free. The stylesheet has one shared vocabulary and a new surface reaches for it rather than restating a treatment. A value becomes a `:root` token when components that are otherwise unalike have to agree on it; a treatment that recurs whole becomes a class; a repetition that is only two numbers coinciding is left alone.
 
+- **The partials**, in link order, which is the cascade:
+  - [10-base.css](../public/css/10-base.css): the tokens, the resets, `.sr-only` and the body.
+  - [20-sidebar.css](../public/css/20-sidebar.css): the sidebar with its level, path and release buttons, filters, fields picker, toggles, action buttons and exports.
+  - [30-map.css](../public/css/30-map.css): the map, the canvas and the world graph.
+  - [40-readouts.css](../public/css/40-readouts.css): the tooltips, the corner readouts, the minimap, the toasts and the route readout.
+  - [50-panels.css](../public/css/50-panels.css): the screen list, the edit form, the numbers panel and the list rows they share.
+  - [60-search.css](../public/css/60-search.css): the sidebar's search box, scope bar and results.
+  - [70-chrome.css](../public/css/70-chrome.css): the controls over the map, the menu, embed mode, the place chip and the path details.
+  - [80-dialogs.css](../public/css/80-dialogs.css): the dialog shell, What's New, the settings and offline rows, the shortcuts, About and the type card.
+  - [90-narrow.css](../public/css/90-narrow.css): the narrow drawer and reduced motion, last because it overrides the others at equal weight.
 - **Controls inherit the page font.** Browsers hand `button`/`input`/`select`/`textarea` a font of their own, so a reset beside the `*` rule gives them the page's, and no rule below it has to name a family to undo that — the three that do name one are asking for something (`--serif` for the What's New masthead and its dates, `inherit` on `kbd` to escape the UA's monospace).
   - Reach for `font-family`, never the `font:` shorthand, which also resets size, weight and line-height — measured, that takes the level and path buttons from 12px to 13px and the close glyph's box from 18x24 to 12x19.
   - `font-family` alone still costs one pixel of height on the 11px controls (the search scope buttons and the search results' "show more" rows), where the page font's normal line-height is a pixel taller than the UA font's.

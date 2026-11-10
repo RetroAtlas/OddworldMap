@@ -1,0 +1,100 @@
+#searchBox {
+  position: relative;
+  margin: 4px 12px 2px;
+}
+#searchBox input {
+  width: 100%;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 6px 28px 6px 9px;
+  font-size: 12px;
+  outline: none;
+}
+#searchBox input:focus {
+  border-color: var(--accent);
+}
+#searchBox input::-webkit-search-cancel-button {
+  display: none;
+}
+#searchBox .x {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 3px;
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  color: var(--dim);
+  cursor: pointer;
+}
+#searchBox .x svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+#searchBox .x:hover,
+#searchBox .x:focus-visible {
+  color: var(--text);
+}
+#searchResults {
+  padding: 2px 6px 10px;
+}
+#searchResults .hit mark {
+  background: none;
+  color: var(--accent);
+  font-weight: 600;
+}
+#searchResults .hit .loc {
+  color: var(--accent);
+}
+#searchResults .hit .ex {
+  color: var(--dim);
+  overflow-wrap: anywhere;
+}
+#searchResults .more {
+  color: var(--dim);
+  font-size: 11px;
+  padding: 3px 8px;
+}
+#scopeBar {
+  display: flex;
+  gap: 4px;
+  margin: 6px 12px 0;
+}
+#scopeBar button {
+  background: var(--panel2);
+  color: var(--dim);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 11px;
+}
+#scopeBar button.on {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+#searchResults .widen {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+#searchResults .showmore {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  color: var(--accent);
+  padding: 2px 8px 4px;
+  cursor: pointer;
+  font-size: 11px;
+}
+#searchResults .showmore:hover {
+  text-decoration: underline;
+}

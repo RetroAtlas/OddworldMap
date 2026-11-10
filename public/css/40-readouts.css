@@ -1,0 +1,219 @@
+/* the two tooltips share a surface and differ only in how they are placed */
+#tip,
+#anchorTip {
+  pointer-events: none;
+  overflow: hidden;
+  padding: 8px 10px;
+  font-size: 12px;
+  background: var(--surface-float);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--shadow-float);
+}
+#tip {
+  position: absolute;
+  z-index: var(--z-tip);
+  max-width: var(--tip-max-w);
+  max-height: calc(100% - 12px);
+  display: none;
+}
+#tip .t {
+  color: var(--accent);
+  font-weight: 600;
+}
+#tip hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 5px 0;
+}
+#tip .e {
+  color: var(--dim);
+}
+#tip .about {
+  font-style: italic;
+}
+#tip .offscreen {
+  font-size: 11px;
+  opacity: 0.68;
+}
+/* field pairs wrap as units; word-spacing opens only the seams between them */
+#tip .kv {
+  display: inline-block;
+  margin-top: 3px;
+  color: var(--dim);
+  word-spacing: 5px;
+}
+#tip .kv > span {
+  display: inline-block;
+  word-spacing: normal;
+  overflow-wrap: anywhere;
+}
+#tip .v {
+  color: var(--text);
+}
+#tip .f {
+  color: var(--accent);
+}
+#tip .said {
+  display: inline-block;
+  margin-top: 2px;
+}
+#tip .f.loop {
+  color: var(--dim);
+}
+/* anchored to an element, not the cursor: fixed so no scrolling host clips it */
+#anchorTip {
+  position: fixed;
+  z-index: var(--z-anchor-tip);
+  max-width: min(var(--tip-max-w), calc(100vw - 20px));
+  max-height: calc(100vh - 12px);
+}
+#anchorTip .detail {
+  white-space: pre-line;
+  color: var(--dim);
+  margin-top: 3px;
+}
+/* the map's two bottom-corner readouts, identical but for which corner */
+#hud,
+#help,
+#graphHelp {
+  position: absolute;
+  bottom: 8px;
+  color: var(--dim);
+  font-size: 11px;
+  background: rgba(var(--over-rgb), 0.7);
+  padding: 3px 8px;
+  border-radius: 5px;
+}
+#hud {
+  right: 10px;
+}
+#help,
+#graphHelp {
+  left: 10px;
+}
+/* the minimap: the path's grid in a corner with the viewport on it, for the
+   paths that outgrow the window; the numbers panel owns the same corner and
+   wins while open */
+#minimap {
+  position: absolute;
+  right: 10px;
+  bottom: 34px;
+  z-index: var(--z-map-overlay);
+  background: rgba(var(--over-rgb), 0.85);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--shadow-float);
+  cursor: pointer;
+  touch-action: none;
+}
+#minimap[hidden] {
+  display: none;
+}
+#main:has(#numbersPanel:not([hidden])) #minimap,
+#main:has(#editPanel:not([hidden])) #minimap {
+  display: none;
+}
+body.page-zoomed #minimap {
+  touch-action: pinch-zoom;
+}
+.muted {
+  color: var(--dim);
+  padding: 2px 14px 8px;
+  font-size: 11px;
+}
+/* toasts: bottom-anchored and reversed, so the newest sits where a
+   lone toast would and the older ones ride above it */
+#toastStack {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 44px;
+  z-index: var(--z-map-overlay);
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+.toast {
+  position: relative;
+  overflow: hidden;
+  max-width: min(90%, 420px);
+  background: rgba(var(--over-rgb), 0.92);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 6px 12px;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+.toast.show {
+  opacity: 1;
+  transform: none;
+}
+/* countdown: drains over the toast's lifetime, which JS hands down as --toast-ms */
+.toast-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--accent);
+  opacity: 0.55;
+  transform-origin: left center;
+  animation: toast-drain var(--toast-ms) linear forwards;
+}
+@keyframes toast-drain {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+/* the queue depth belongs above the stack; order beats DOM position under column-reverse */
+.toast-more {
+  order: 1;
+  background: rgba(var(--over-rgb), 0.85);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  color: var(--dim);
+  font-size: 11px;
+  padding: 1px 8px;
+}
+/* route-planner readout: the running total plus the touch undo/clear.
+   Top-center: the one edge spot no other overlay claims at any width */
+#routeBar {
+  position: absolute;
+  left: 50%;
+  top: 10px;
+  transform: translateX(-50%);
+  z-index: var(--z-map-overlay);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  white-space: nowrap;
+  background: rgba(var(--over-rgb), 0.85);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 4px 10px;
+}
+#routeBar[hidden] {
+  display: none; /* the flex display would otherwise defeat the hidden attribute */
+}
+#routeBar .linkbtn {
+  font-size: 12px;
+}
+#routeBar .linkbtn:disabled {
+  opacity: 0.4;
+  text-decoration: none;
+  cursor: default;
+}

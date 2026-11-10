@@ -11,7 +11,7 @@ import { computeEntryPaths } from "../model/model.js";
 import { esc } from "../model/util.js";
 import { graphLayout, worldGraph } from "./worldgraph.js";
 
-// main.css's :root resolved by hand — a standalone file cannot ask for var()
+// the stylesheet's :root resolved by hand — a standalone file cannot ask for var()
 export const INK = {
   bg: "#14161a",
   panel: "#1d2026",

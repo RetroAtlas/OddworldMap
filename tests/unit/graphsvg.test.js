@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { INK, graphName, graphSvg, marker, wirePath } from "../../public/js/data/graphsvg.js";
 import { graphLayout, worldGraph } from "../../public/js/data/worldgraph.js";
 import { computeEntryPaths } from "../../public/js/model/model.js";
@@ -153,11 +153,20 @@ test("what the data names is escaped on its way into the file, at every site", (
   assert.ok(!svg.includes("<y>") && !svg.includes("<Y>"));
 });
 
-// the serializer's palette is main.css's :root by hand, which is exactly the
+// the serializer's palette is the stylesheet's :root by hand, which is exactly the
 // drift a second renderer invites — the stylesheet is the authority
 test("the inlined palette matches the stylesheet", () => {
-  const css = readFileSync(new URL("../../public/css/main.css", import.meta.url), "utf8");
-  const decl = (name) => css.match(new RegExp(`  ${name}: ([^;]+);`))[1];
+  const cssDir = new URL("../../public/css/", import.meta.url);
+  const css = readdirSync(cssDir)
+    .filter((f) => f.endsWith(".css"))
+    .sort()
+    .map((f) => readFileSync(new URL(f, cssDir), "utf8"))
+    .join("\n");
+  const decl = (name) => {
+    const all = [...css.matchAll(new RegExp(`  ${name}: ([^;]+);`, "g"))];
+    assert.equal(all.length, 1, `${name} is declared once`);
+    return all[0][1];
+  };
   for (const [key, token] of [
     ["bg", "--bg"],
     ["panel", "--panel"],

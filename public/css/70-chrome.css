@@ -1,0 +1,223 @@
+/* controls sitting over the map (menu, What's New, the place chip): a dim
+   glyph or label that brightens to full colour with an accent border on hover/focus */
+.iconbtn,
+#placeBtn {
+  position: absolute;
+  top: 10px;
+  z-index: var(--z-map-chrome);
+  height: 34px;
+  background: rgba(var(--over-rgb), 0.5);
+  color: var(--dim);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+.iconbtn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+}
+.iconbtn:hover,
+.iconbtn:focus-visible,
+#placeBtn:hover,
+#placeBtn:focus-visible {
+  color: var(--text);
+  background: rgba(var(--over-rgb), 0.85);
+  border-color: var(--accent);
+  outline: none;
+}
+.iconbtn svg {
+  display: block;
+  width: 19px;
+  height: 19px;
+}
+/* menu toggle sits at the map's top-left corner, clear of the sidebar when it is open */
+#menuBtn {
+  left: 10px;
+}
+#scrim {
+  display: none;
+}
+#whatsnewBtn {
+  right: 10px;
+}
+#copyLinkBtn {
+  right: 54px;
+}
+/* no What's New (changelog feed missing): take over its corner spot */
+#main:has(#whatsnewBtn[hidden]) #copyLinkBtn {
+  right: 10px;
+}
+/* embed mode (?embed=1): .chrome marks the site furniture that hides */
+body.embed .chrome {
+  display: none;
+}
+/* the open-full-site link exists only inside embeds, in the freed corner */
+#openSiteBtn {
+  display: none;
+  right: 10px;
+}
+body.embed #openSiteBtn {
+  display: grid;
+}
+#whatsnewBtn[hidden] {
+  display: none;
+}
+#whatsnewBtn .wn-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  display: none;
+}
+#whatsnewBtn.hasnew .wn-dot {
+  display: block;
+}
+
+/* the place chip and the buttons riding beside it: the row is the positioned
+   box (anchored clear of both corner clusters), so the chip can grow and
+   shrink without anything tracking its width; only the buttons take clicks */
+#chipRow {
+  position: absolute;
+  top: 10px;
+  left: 54px;
+  right: var(--corner-w);
+  z-index: var(--z-map-chrome);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: none;
+}
+#chipRow > * {
+  pointer-events: auto;
+}
+#chipRow .iconbtn,
+#placeBtn {
+  position: static;
+}
+/* the chip does all the shrinking; a squeezed row must not thin the buttons */
+#chipRow .iconbtn {
+  flex: none;
+}
+/* the place chip: which level and path the map is showing, and the way into
+   that path's details */
+#placeBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  max-width: 340px;
+  padding: 0 10px;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+}
+#placeBtn[hidden],
+#shuffleBtn[hidden] {
+  display: none;
+}
+/* the route bar is centred over the map, so only a narrow map brings it within
+   reach of the chip row */
+@media (max-width: 1400px) {
+  #main:has(#routeBar:not([hidden])) #chipRow {
+    top: 52px;
+  }
+  #main:has(#routeBar:not([hidden])) #placePanel {
+    top: 94px;
+  }
+}
+#placeCode {
+  flex: none;
+  font-weight: 600;
+}
+#placeName {
+  color: var(--dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#placeDot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: none;
+}
+#placeBtn.hasnote #placeDot {
+  display: block;
+}
+#placeEdited {
+  flex: none;
+  color: rgb(var(--edit-rgb));
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+#placeRelease {
+  flex: none;
+  color: rgb(var(--release-rgb));
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+#placeEdited[hidden],
+#placeRelease[hidden],
+#releaseRow[hidden] {
+  display: none;
+}
+/* the path's details, under the chip that opens them */
+#placePanel {
+  position: absolute;
+  top: 52px;
+  left: 54px;
+  z-index: var(--z-map-overlay);
+  width: 300px;
+  max-width: calc(100% - 64px);
+  max-height: calc(100% - 100px);
+  overflow-y: auto;
+  padding: 8px 11px 10px;
+  background: var(--surface-float);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow-float);
+  font-size: 12px;
+}
+.pl-game {
+  color: var(--dim);
+  font-size: 11px;
+}
+.pl-level {
+  color: var(--accent);
+  font-weight: 600;
+}
+.pl-section,
+.pl-nickname,
+.pl-entry,
+.pl-demo {
+  color: var(--dim);
+}
+.pl-edited,
+#tip .edited,
+#camPanel .edited,
+#searchResults .edited {
+  color: rgb(var(--edit-rgb));
+}
+.pl-release,
+#tip .released,
+#camPanel .released,
+#searchResults .released {
+  color: rgb(var(--release-rgb));
+}
+.pl-note {
+  margin-top: 7px;
+  line-height: 1.55;
+}

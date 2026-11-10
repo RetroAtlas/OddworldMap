@@ -1,0 +1,325 @@
+/* per-camera object list: opens on click/tap of a screen with nothing to follow */
+#camPanel {
+  position: absolute;
+  left: 10px;
+  bottom: 34px;
+  z-index: var(--z-map-overlay);
+  width: 260px;
+  max-width: calc(100% - 20px);
+  max-height: 60%;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-float);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow-float);
+}
+#camPanel[hidden] {
+  display: none;
+}
+.cp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px 5px;
+  border-bottom: 1px solid var(--line);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+#camPanel .e {
+  color: var(--dim);
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+/* the cue that a field name has a glossary definition; data-tip carries it */
+.gloss {
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  cursor: help;
+}
+#camPanelClose,
+#numbersClose,
+#editClose {
+  font-size: 16px;
+  line-height: 18px;
+}
+#camPanelBody {
+  overflow-y: auto;
+  padding: 2px 4px 8px;
+}
+/* By the numbers: counts of the picked object types at every granularity,
+   following the selection and the view; the screen list keeps bottom-left,
+   this keeps bottom-right, so a desktop can hold both at once. The edit panel
+   takes the same corner, so the two close each other */
+#numbersPanel,
+#editPanel {
+  position: absolute;
+  right: 10px;
+  bottom: 34px;
+  z-index: var(--z-map-overlay);
+  width: 300px;
+  max-width: calc(100% - 20px);
+  max-height: 60%;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-float);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow-float);
+}
+#numbersPanel[hidden],
+#editPanel[hidden] {
+  display: none;
+}
+/* the property form: one row per archived field, its control beside its name */
+#editPanel .cp-head {
+  color: rgb(var(--edit-rgb));
+}
+#editBody {
+  overflow-y: auto;
+  padding: 4px 10px 8px;
+  font-size: 12px;
+}
+.ep-head {
+  margin: 6px 0 2px;
+}
+.ep-derived,
+.ep-none,
+.ep-keys,
+.ep-foot {
+  padding: 3px 0;
+  overflow-wrap: anywhere;
+}
+.ep-keys {
+  margin-top: 6px;
+  font-size: 11px;
+}
+.ep-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  padding: 4px 0 2px;
+}
+.ep-ghost {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.cp-row.cp-ghost {
+  opacity: 0.75;
+}
+.ep-filter {
+  margin: 6px 0 5px;
+}
+.ep-typerow {
+  font-size: 12px;
+}
+.ep-typerow.off {
+  opacity: 0.6;
+}
+.ep-place {
+  display: flex;
+  gap: 4px;
+}
+.ep-val.ep-place input {
+  width: 64px;
+}
+.ep-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1px 8px;
+  align-items: center;
+  padding: 2px 0;
+}
+.ep-row.ep-dead {
+  opacity: 0.55;
+}
+.ep-name {
+  overflow-wrap: anywhere;
+}
+.ep-val select,
+.ep-val input {
+  background: var(--panel2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 12px;
+  max-width: 150px;
+}
+.ep-val input {
+  width: 80px;
+}
+.ep-shipped {
+  grid-column: 1 / -1;
+  font-size: 11px;
+}
+.ep-back {
+  font-size: 12px;
+}
+#numbersBody {
+  flex: none;
+  padding: 8px 10px 7px;
+  font-size: 12px;
+}
+.np-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(4, auto);
+  gap: 2px 9px;
+  align-items: baseline;
+}
+.np-h {
+  color: var(--dim);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  text-align: right;
+}
+/* a row's name doubles as its remove button */
+.np-name {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--text);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.np-name:hover,
+.np-name:focus-visible {
+  color: var(--accent);
+  text-decoration: line-through;
+  outline: none;
+}
+.np-n {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.np-none,
+.np-demo {
+  color: var(--dim);
+}
+.np-demo {
+  margin-top: 6px;
+  font-size: 11px;
+}
+#numbersPick {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 8px 10px;
+  border-top: 1px solid var(--line);
+}
+#numbersTypes {
+  overflow-y: auto;
+  margin-top: 5px;
+}
+#numbersTypes .checkrow {
+  padding: 2.5px 2px;
+  font-size: 12px;
+}
+.checkrow:has(input:disabled) {
+  opacity: 0.4;
+  cursor: default;
+}
+/* a click on a greyed box reaches its row, which says what it needs */
+.checkrow input:disabled {
+  pointer-events: none;
+}
+/* the search box that narrows a panel's list */
+.filterbox {
+  width: 100%;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 5px 9px;
+  font-size: 12px;
+  outline: none;
+}
+.filterbox:focus {
+  border-color: var(--accent);
+}
+/* the small heading that divides a list, and the full-width row that acts as
+   a button within one */
+.listhead {
+  display: flex;
+  color: var(--dim);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 7px 8px 2px;
+}
+.cp-cat {
+  align-items: center;
+  gap: 6px;
+}
+.shead {
+  justify-content: space-between;
+}
+.rowbtn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  color: var(--text);
+  padding: 3px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.rowbtn:hover,
+.rowbtn.active {
+  background: var(--panel2);
+}
+.cp-row-wrap {
+  display: flex;
+  align-items: stretch;
+}
+.cp-row-wrap .cp-row {
+  flex: 1;
+  min-width: 0;
+}
+/* what a sign in the world says */
+.said {
+  color: var(--text);
+}
+.said .note {
+  color: var(--dim);
+}
+/* a quiet icon button at a row's edge */
+.rowtool {
+  flex: none;
+  background: none;
+  border: 0;
+  color: var(--dim);
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+}
+.rowtool:hover {
+  background: var(--panel2);
+  color: var(--text);
+}
+.cp-said {
+  padding: 1px 8px 4px 18px;
+  font-size: 11px;
+}
+.cp-none {
+  color: var(--dim);
+  padding: 6px 10px;
+}
+#noscript {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--dim);
+}

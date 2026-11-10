@@ -4,7 +4,7 @@
 
 ## Symptom
 
-Hover an object in the lower part of the map with several objects stacked, or with "show more object fields" on, and the tooltip is cut off at the bottom of the window. `html, body { overflow: hidden }` in [css/main.css](../public/css/main.css), so there is no scroll to recover it. The tooltip is tallest exactly when it carries the most information.
+Hover an object in the lower part of the map with several objects stacked, or with "show more object fields" on, and the tooltip is cut off at the bottom of the window. `html, body { overflow: hidden }` in [css/main.css](../public/css/10-base.css), so there is no scroll to recover it. The tooltip is tallest exactly when it carries the most information.
 
 ## Cause
 

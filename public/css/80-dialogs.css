@@ -1,0 +1,426 @@
+/* a dialog is .overlay > .dialog, with the module toggling .open on the
+   overlay; only a width that isn't the common one needs saying */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.18s ease,
+    visibility 0s 0.18s;
+}
+.overlay.open {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.18s ease;
+}
+.dialog {
+  width: var(--dialog-w, 460px);
+  max-width: 100%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow-modal);
+  overflow: hidden;
+  transform: translateY(8px);
+  transition: transform 0.18s ease;
+}
+.overlay.open .dialog {
+  transform: none;
+}
+#shortcuts {
+  --dialog-w: 400px;
+}
+#about {
+  --dialog-w: 420px;
+}
+.dlg-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 11px;
+  border-bottom: 2px solid var(--line);
+}
+.dlg-head h2 {
+  font-size: 15px;
+  font-weight: 600;
+}
+/* a newspaper masthead rather than a dialog title */
+#whatsnewTitle {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.closebtn {
+  background: none;
+  border: 0;
+  color: var(--dim);
+  padding: 0 2px;
+  cursor: pointer;
+  font-size: 21px;
+  line-height: 24px;
+  position: relative;
+  top: -0.04em;
+}
+.closebtn:hover {
+  color: var(--accent);
+}
+.dlg-body {
+  overflow-y: auto;
+  padding: 14px 18px 16px;
+}
+#whatsnewBody {
+  padding-top: 4px;
+}
+.wn-date {
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--dim);
+  font-size: 12px;
+  margin: 15px 0 5px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+.wn-entry {
+  padding: 8px 0;
+}
+.wn-tag {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  margin-bottom: 2px;
+  color: var(--dim);
+}
+.wn-tag-new {
+  color: var(--accent);
+}
+.wn-tag-improved {
+  color: var(--text);
+}
+.wn-tags {
+  display: flex;
+  gap: 5px;
+}
+/* the separator is the kind's, so the foil never carries one through its text clip,
+   and it is drawn rather than written so it stays out of the label's spoken name */
+.wn-tags .wn-tag:has(+ .wn-tag)::after {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  margin-left: 5px;
+  vertical-align: 0.15em;
+  border-radius: 50%;
+  background: var(--dim);
+}
+/* the filter row, pinned under the masthead */
+#whatsnewFilter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 9px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.wn-chip {
+  margin-bottom: 0;
+  padding: 3px 9px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  cursor: pointer;
+}
+.wn-chip[aria-pressed="false"] {
+  background: none;
+  color: var(--dim);
+  opacity: 0.6;
+}
+.wn-chip:hover,
+.wn-chip:focus-visible {
+  border-color: var(--accent);
+}
+.wn-empty {
+  color: var(--dim);
+  font-size: 12px;
+  padding: 6px 0;
+}
+.wn-title {
+  font-weight: 600;
+}
+.wn-detail {
+  color: var(--dim);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 3px;
+}
+.wn-more {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 7px;
+  cursor: pointer;
+  font: inherit;
+  background: var(--panel2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.wn-more:hover {
+  border-color: var(--accent);
+}
+.wn-tags .wn-tag-flagship {
+  background: var(--foil);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: foil-sweep 6s linear infinite;
+}
+/* the fill is the chip's on/off signal, so its foil is never clipped to text;
+   naming the on state outranks the off rule, so off needs no flagship case */
+.wn-chip.wn-tag-flagship[aria-pressed="true"] {
+  background: var(--foil);
+  background-size: 200% 100%;
+  color: var(--bg);
+  border-color: transparent;
+  box-shadow: 0 0 10px var(--foil-glow);
+  animation: foil-sweep 6s linear infinite;
+}
+/* the shared border-color hover cannot show through the foil */
+.wn-chip.wn-tag-flagship[aria-pressed="true"]:hover,
+.wn-chip.wn-tag-flagship[aria-pressed="true"]:focus-visible {
+  box-shadow: 0 0 15px var(--foil-glow);
+}
+.wn-entry.wn-flagship {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  /* the rail hangs in the dialog's gutter, so the title keeps the common left edge */
+  margin-left: -11px;
+  padding-left: 11px;
+  background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.07), transparent 60%);
+}
+.wn-entry.wn-flagship::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--foil);
+  background-size: 200% 100%;
+  animation: foil-sweep 6s linear infinite;
+}
+.wn-entry.wn-flagship::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 42%,
+    rgba(255, 255, 255, 0.07) 50%,
+    transparent 58%
+  );
+  animation: foil-sheen 7s ease-in-out infinite;
+}
+.wn-flagship .wn-title {
+  font-size: 14px;
+}
+@keyframes foil-sweep {
+  to {
+    background-position: 200% 0;
+  }
+}
+@keyframes foil-sheen {
+  from {
+    transform: translateX(-100%);
+  }
+  55%,
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.st-sec + .st-sec {
+  margin-top: 18px;
+}
+.st-sec h3 {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--dim);
+  margin-bottom: 8px;
+}
+.st-def {
+  flex: none;
+  margin-left: auto;
+  color: var(--dim);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.st-def:empty {
+  display: none;
+}
+.st-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 0 2px;
+  font-size: 12px;
+}
+.st-desc {
+  color: var(--dim);
+  font-size: 12px;
+  margin: 2px 0 12px 20px;
+}
+.st-desc:last-child {
+  margin-bottom: 0;
+}
+/* storing a whole game's artwork: one row per game, under the setting that
+   makes storing possible at all */
+#offlineStore,
+#editsHeld {
+  margin-left: 20px;
+}
+#editsHeld[hidden] {
+  display: none;
+}
+.ofl-intro {
+  color: var(--dim);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.ofl-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2px 10px;
+  margin-bottom: 10px;
+}
+.ofl-name {
+  font-size: 12px;
+}
+.ofl-stat {
+  grid-column: 1;
+  color: var(--dim);
+  font-size: 11px;
+}
+.ofl-go {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+.ofl-bar {
+  grid-column: 1 / -1;
+  height: 3px;
+  margin-top: 4px;
+  border-radius: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+.ofl-bar i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s linear;
+}
+#oflBoth {
+  font-size: 11px;
+}
+
+#shortcutsBody {
+  padding-top: 12px;
+}
+.sc-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 0;
+}
+.sc-keys {
+  display: flex;
+  gap: 3px;
+  min-width: 96px;
+  flex: none;
+}
+kbd {
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0 5px;
+  min-width: 20px;
+  text-align: center;
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+#aboutBody p {
+  line-height: 1.55;
+}
+#aboutBody p + p {
+  margin-top: 11px;
+}
+.ab-notice {
+  text-align: justify;
+}
+.ab-meta {
+  color: var(--dim);
+  font-size: 12px;
+}
+#aboutBody a {
+  color: var(--accent);
+}
+/* the type encyclopedia card's rows; the dialog shell is the shared one */
+.tc-cat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.tc-prose {
+  margin: 10px 0;
+  line-height: 1.55;
+}
+.tc-counts {
+  font-size: 12px;
+}
+#typeCardBody .e {
+  color: var(--dim);
+}
+.tc-fhead {
+  padding: 12px 0 3px;
+  border-bottom: 1px solid var(--line);
+}
+.tc-fnote {
+  margin-top: 7px;
+  font-size: 12px;
+}
+.tc-field {
+  margin: 7px 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.tc-fname {
+  color: var(--accent);
+}
+.tc-find {
+  margin-top: 12px;
+  font-size: 12px;
+}

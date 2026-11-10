@@ -1,0 +1,76 @@
+:root {
+  --bg: #14161a;
+  --panel: #1d2026;
+  --panel2: #23262e;
+  --text: #d8dbe2;
+  --dim: #8a8f9c;
+  --line: #32363f;
+  --accent-rgb: 232, 163, 61;
+  --accent: rgb(var(--accent-rgb));
+  /* edited data, wherever it shows: the marker's outline, the mode's button, the panel's head */
+  --edit-rgb: 95, 216, 232;
+  /* what a release changes from the base, wherever the mark shows it */
+  --release-rgb: 196, 140, 240;
+  /* the flagship foil; it ends where it starts, so a sweep loops */
+  --foil: linear-gradient(90deg, var(--accent), #ffe6b8, #c48cf0, #5fd8e8, var(--accent));
+  --foil-glow: rgba(196, 140, 240, 0.35);
+  /* canvas backdrop / empty camera cells, read by the script */
+  --map-bg-rgb: 14, 15, 18;
+  --map-bg: rgb(var(--map-bg-rgb));
+  --cell-empty: #1a1d22;
+  /* anything floating over the map is this one near-black, tinted by alpha */
+  --over-rgb: 18, 20, 24;
+  --surface-float: rgba(var(--over-rgb), 0.94);
+  --shadow-float: 0 4px 18px rgba(0, 0, 0, 0.5);
+  --shadow-modal: 0 10px 40px rgba(0, 0, 0, 0.6);
+  /* stacking tiers, low to high — the order is the system */
+  --z-map-overlay: 6;
+  --z-tip: 7;
+  --z-scrim: 12;
+  --z-drawer: 15;
+  --z-map-chrome: 21;
+  --z-anchor-tip: 22;
+  --z-modal: 25;
+  --sidebar-w: 250px;
+  --corner-w: 98px; /* the map's top-right buttons: what anything crossing that edge must leave them */
+  --tip-max-w: 340px;
+  --serif: Georgia, "Times New Roman", serif; /* newspaper masthead in the What's New panel */
+}
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+/* the UA stylesheet gives controls a font of their own instead of the page's */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+/* out of the layout, still in the accessibility tree: display: none and
+   visibility: hidden both leave that tree, and a region outside it is silent */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  pointer-events: none;
+}
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font:
+    13px/1.45 -apple-system,
+    "Segoe UI",
+    sans-serif;
+  display: flex;
+  touch-action: manipulation;
+}
