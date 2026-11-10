@@ -234,7 +234,7 @@ test.describe("below the zoom a creature reads at", () => {
   const record = (page) => {
     const asked = { sheets: 0, masks: 0 };
     page.on("request", (q) => {
-      if (/\/sprites\//.test(q.url())) asked.sheets++;
+      if (/\/cams\/[^/]+\/sprites\//.test(q.url())) asked.sheets++;
       if (/_fg\d+\.png$/.test(q.url())) asked.masks++;
     });
     return asked;

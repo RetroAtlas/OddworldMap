@@ -64,7 +64,7 @@ test("storing a family's sprite sheet retires that family's other sheets and wha
         const keys = await (await caches.open(name)).keys();
         return keys
           .map((k) => new URL(k.url).pathname.slice(1))
-          .filter((p) => p === camera || p.includes("/sprites/"))
+          .filter((p) => p === camera || /^cams\/[^/]+\/sprites\//.test(p))
           .sort();
       },
       { name: CACHE_NAME, camera: CAMERA },
