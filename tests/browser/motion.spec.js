@@ -57,7 +57,7 @@ test("a creature on patrol is hovered where it stands, not where its marker was 
   // let it walk a while by the patrol clock; it keeps going, so the hover
   // follows the read at once
   await page.evaluate(async () => {
-    window.__motion = await import(new URL("js/motion.js", location.href).href);
+    window.__motion = await import(new URL("js/engine/motion.js", location.href).href);
   });
   await page.waitForFunction(() => window.__motion.patrolTick() > 70);
   const spots = await page.evaluate(async (w) => {
@@ -99,7 +99,7 @@ test("the clock runs with the objects shown, stops with the setting, and the pat
   await page.goto(`/#AE/MI/1/${SLIG.x1}/${SLIG.y1}/1.00`);
   await settle(page, SLIG);
   await page.evaluate(async () => {
-    window.__motion = await import(new URL("js/motion.js", location.href).href);
+    window.__motion = await import(new URL("js/engine/motion.js", location.href).href);
   });
   const read = () =>
     page.evaluate(() => {
@@ -170,7 +170,7 @@ test("the Mines LCD scrolls its message into its panel once the scene has run pa
   await page.check("#sAnimate");
   await page.click("#settingsClose");
   await page.evaluate(async () => {
-    window.__motion = await import(new URL("js/motion.js", location.href).href);
+    window.__motion = await import(new URL("js/engine/motion.js", location.href).href);
   });
   // the first letter enters the right edge on tick 36; by 90 a few words are across the panel
   await page.waitForFunction(() => window.__motion.sceneTick() > 90);

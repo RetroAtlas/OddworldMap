@@ -30,7 +30,7 @@ const sligNow = (page) =>
     const st = await import(u("state.js"));
     const spriteart = await import(u("spriteart.js"));
     const spritepaint = await import(u("spritepaint.js"));
-    const motion = await import(u("motion.js"));
+    const motion = await import(u("engine/motion.js"));
     const t = st.state.path?.tlvs.find((o) => o.name === "Slig" && o.x1 === s.x1 && o.y1 === s.y1);
     if (!t) return null;
     return {
@@ -260,7 +260,7 @@ test.describe("below the zoom a creature reads at", () => {
       const render = await import(u("render.js"));
       const spriteart = await import(u("spriteart.js"));
       const spritepaint = await import(u("spritepaint.js"));
-      const motion = await import(u("motion.js"));
+      const motion = await import(u("engine/motion.js"));
       render.draw();
       const t = st.state.path.tlvs.find((o) => o.name === "Slig" && o.x1 === s.x1 && o.y1 === s.y1);
       return {
@@ -317,7 +317,7 @@ test.describe("below the zoom a creature reads at", () => {
       const render = await import(u("render.js"));
       const spriteart = await import(u("spriteart.js"));
       const spritepaint = await import(u("spritepaint.js"));
-      const motion = await import(u("motion.js"));
+      const motion = await import(u("engine/motion.js"));
       const frame = window.requestAnimationFrame;
       const held = [];
       window.requestAnimationFrame = (cb) => held.push(cb);

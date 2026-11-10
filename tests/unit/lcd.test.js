@@ -12,8 +12,8 @@ import {
   glyphRect,
   lcdIds,
   measureOf,
-} from "../../public/js/lcd.js";
-import { resolveEffects, resolveRecord } from "../../public/js/motion.js";
+} from "../../public/js/engine/lcd.js";
+import { resolveEffects, resolveRecord } from "../../public/js/engine/motion.js";
 import { spriteDraws } from "../../public/js/sprites.js";
 import { lcdMessages, objectMessages, setMessages } from "../../public/js/messages.js";
 import { armFieldData } from "../../public/js/fields.js";

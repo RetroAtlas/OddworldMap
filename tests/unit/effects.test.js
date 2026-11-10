@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveEffects, resolveRecord } from "../../public/js/motion.js";
+import { resolveEffects, resolveRecord } from "../../public/js/engine/motion.js";
 import { ROAMER_ANIMS, anim, creature, worker } from "./creatures.js";
 
 const FX_ANIMS = {

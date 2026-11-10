@@ -16,7 +16,7 @@ import {
   snapX,
   tlvAt,
   wallHit,
-} from "../../public/js/collide.js";
+} from "../../public/js/engine/collide.js";
 
 // a floor, a wall up from its end, a ledge off the wall's top, and a slope back down
 const LINES = [

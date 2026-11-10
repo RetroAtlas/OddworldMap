@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { ownSheet, recordSheets, spriteDraws, spriteTypes } from "../../public/js/sprites.js";
 import { armFieldData } from "../../public/js/fields.js";
-import { brainAt, resolveEffects, resolveRecord } from "../../public/js/motion.js";
-import { raycast } from "../../public/js/collide.js";
+import { brainAt, resolveEffects, resolveRecord } from "../../public/js/engine/motion.js";
+import { raycast } from "../../public/js/engine/collide.js";
 import { patrolZone, sligBounds } from "../../public/js/model.js";
 import { drawX } from "../../public/js/geometry.js";
 

@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 import { deriveExtra } from "../../public/js/extra.js";
-import { glyphRun } from "../../public/js/lcd.js";
+import { glyphRun } from "../../public/js/engine/lcd.js";
 import {
   baseObject,
   isRegional,

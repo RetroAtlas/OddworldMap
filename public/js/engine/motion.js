@@ -3,7 +3,7 @@
 // follows. The painter reads the tick; this module never draws.
 // No DOM at module top level, so it stays importable in bare Node.
 
-import { LOGIC_FPS } from "./config.js";
+import { LOGIC_FPS } from "../config.js";
 import { BRAINS, MOTIONS, SPAWN_FRAME, STARTS, burstParts, stepEffects } from "./brains.js";
 
 // an animation holds each frame `fps` ticks: at construction frame 0 stands

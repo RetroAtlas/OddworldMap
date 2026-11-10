@@ -1,7 +1,7 @@
-import { raycastDiag, raycastDown } from "./collide.js";
+import { raycastDiag, raycastDown } from "./engine/collide.js";
 import { filedCell, sligBounds, tlvCell } from "./model.js";
 import { lcdMessages } from "./messages.js";
-import { AE_MUDOKONS_IN_LEVEL, AO_MUDOKONS, TALLY_EDGE, lcdIds } from "./lcd.js";
+import { AE_MUDOKONS_IN_LEVEL, AO_MUDOKONS, TALLY_EDGE, lcdIds } from "./engine/lcd.js";
 import {
   FLOOR,
   TRACK,

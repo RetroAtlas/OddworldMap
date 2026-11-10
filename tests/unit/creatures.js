@@ -1,4 +1,4 @@
-import { resolveRecord } from "../../public/js/motion.js";
+import { resolveRecord } from "../../public/js/engine/motion.js";
 
 export const anim = (n, fps, loop, loopStart = 0) => ({
   fps,

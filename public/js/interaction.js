@@ -2,7 +2,7 @@
 
 import { esc, formatDist, segDist } from "./util.js";
 import { fieldEntries, onBackgroundPlane } from "./fields.js";
-import { gridSize } from "./collide.js";
+import { gridSize } from "./engine/collide.js";
 import { hideAnchorTip } from "./anchortip.js";
 import {
   KEY_PAN_PX,

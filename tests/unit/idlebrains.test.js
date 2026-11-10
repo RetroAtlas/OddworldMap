@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveRecord } from "../../public/js/motion.js";
+import { resolveRecord } from "../../public/js/engine/motion.js";
 import { IDLE_ANIMS, WORK_ANIMS, creature, segments, worker } from "./creatures.js";
 
 // dice that always roll zero: the shortest timer of every range, and a sad or

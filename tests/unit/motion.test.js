@@ -11,7 +11,7 @@ import {
   sceneTick,
   setMotionRunning,
   setPatrolsRunning,
-} from "../../public/js/motion.js";
+} from "../../public/js/engine/motion.js";
 import { PATROL_ANIMS, anim, tlv, walker, world } from "./creatures.js";
 
 test("frameAt: frame 0 stands at construction and the first tick decodes it again", () => {

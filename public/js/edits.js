@@ -13,7 +13,7 @@ import { deriveExtra } from "./extra.js";
 import { pathVisible, revealPath } from "./pathvisible.js";
 import { invalidateEntry } from "./pathorder.js";
 import { onBackgroundPlane, valueMap } from "./fields.js";
-import { gridSize, snapAt } from "./collide.js";
+import { gridSize, snapAt } from "./engine/collide.js";
 import { buildTypeTable, newObject } from "./objecttypes.js";
 import { store } from "./settings.js";
 import { RELEASE_CODE } from "./config.js";

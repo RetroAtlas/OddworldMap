@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { brainAt, resolveEffects, resolveRecord } from "../../public/js/motion.js";
-import { burstParts } from "../../public/js/effects.js";
-import { fpDiv, fpMul } from "../../public/js/patrolkit.js";
+import { brainAt, resolveEffects, resolveRecord } from "../../public/js/engine/motion.js";
+import { burstParts } from "../../public/js/engine/effects.js";
+import { fpDiv, fpMul } from "../../public/js/engine/patrolkit.js";
 import { anim } from "./creatures.js";
 
 // ---- falling items ---------------------------------------------------------

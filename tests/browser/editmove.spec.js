@@ -226,7 +226,7 @@ test("a carried object stands in its first frame while the scene runs", async ({
   await settleAny(page);
   await attach(page);
   await page.evaluate(async () => {
-    window.__motion = await import(new URL("js/motion.js", location.href).href);
+    window.__motion = await import(new URL("js/engine/motion.js", location.href).href);
   });
   await page.keyboard.press("e");
   await page.waitForFunction(() => window.__st.edit === true);

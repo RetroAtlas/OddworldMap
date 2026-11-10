@@ -50,7 +50,8 @@ const byName = (files) => new Map(files.map((f) => [posix.basename(f), f]));
 // to be a change of the row, or a file every layer may import. "." is the root.
 const LAYERS = {
   ui: ["ui", "config.js"],
-  ".": ["ui", "."],
+  engine: ["engine", "config.js"],
+  ".": ["engine", "ui", "."],
 };
 
 // every viewer module, with the modules its import statements name

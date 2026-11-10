@@ -17,7 +17,7 @@ import { onBackgroundPlane } from "./fields.js";
 import { drawX, drawY } from "./geometry.js";
 import { drawnAs } from "./kept.js";
 import { camCenter, centerCam, drawBox, lineRuns, offScreen, screenRuns } from "./model.js";
-import { motionRunning, patrolTick, sceneTick } from "./motion.js";
+import { motionRunning, patrolTick, sceneTick } from "./engine/motion.js";
 import {
   labelled,
   outline,

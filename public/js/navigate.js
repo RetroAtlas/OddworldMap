@@ -50,7 +50,7 @@ import {
 } from "./edits.js";
 import { baseObject, pathRelease, pathReleased } from "./release.js";
 import { setFrameRate } from "./fields.js";
-import { setTickRate } from "./motion.js";
+import { setTickRate } from "./engine/motion.js";
 
 function markOn(box, key) {
   for (const b of box.children) b.classList.toggle("on", b.dataset.key === key);

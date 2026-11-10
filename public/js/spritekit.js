@@ -3,7 +3,7 @@
 // builders, and the table a rule registers into, one entry per type and game.
 // Nothing here reads the DOM, so the kit and every rule module import in bare Node.
 
-import { snapAt as snapWorldX } from "./collide.js";
+import { snapAt as snapWorldX } from "./engine/collide.js";
 import { filedCell } from "./model.js";
 
 // collision-line types a constructor raycasts against; the background plane's

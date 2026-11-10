@@ -6,7 +6,7 @@ import { scheduleDraw } from "./ui/redraw.js";
 import { CACHE_MAX_IMAGES, SPRITE_ZOOM } from "./config.js";
 import { loadSprites } from "./data.js";
 import { drawnAs, resetKept } from "./kept.js";
-import { resetScene, setMotionRunning, setPatrolsRunning } from "./motion.js";
+import { resetScene, setMotionRunning, setPatrolsRunning } from "./engine/motion.js";
 import { releaseSprites } from "./release.js";
 import { compose, composed, dimCache, images, img, tintCache } from "./screens.js";
 import { getSettings } from "./settings.js";

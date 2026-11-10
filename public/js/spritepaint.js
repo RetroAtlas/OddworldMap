@@ -6,7 +6,7 @@ import { markerShown } from "./config.js";
 import { drawX, drawY } from "./geometry.js";
 import { drawnAs } from "./kept.js";
 import { drawBox } from "./model.js";
-import { resolveEffects, resolveRecord } from "./motion.js";
+import { resolveEffects, resolveRecord } from "./engine/motion.js";
 import { dimmedImg, img } from "./screens.js";
 import { artOf, paintedSprites, processedFrame } from "./spriteart.js";
 

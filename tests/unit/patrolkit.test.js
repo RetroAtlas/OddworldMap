@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveRecord } from "../../public/js/motion.js";
+import { resolveRecord } from "../../public/js/engine/motion.js";
 import {
   PATROL_ANIMS,
   ROAMER_ANIMS,
