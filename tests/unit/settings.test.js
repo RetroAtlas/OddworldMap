@@ -165,7 +165,7 @@ test("getViewSnapshot: the stored snapshot seeds the kept set, which viewChanged
 });
 
 test("SHOW_KEYS: every sidebar Display toggle is remembered, ruler and route excepted", () => {
-  const src = readFileSync(new URL("../../public/js/sidebar.js", import.meta.url), "utf8");
+  const src = readFileSync(new URL("../../public/js/chrome/sidebar.js", import.meta.url), "utf8");
   const body = src.split("Object.entries({")[1].split("})")[0];
   const toggles = [...body.matchAll(/(\w+): "t\w+"/g)].map((m) => m[1]);
   assert.ok(toggles.length > 0, "the toggle map is read off the source");

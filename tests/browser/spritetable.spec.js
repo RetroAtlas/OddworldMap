@@ -18,7 +18,7 @@ test("the toggle swaps a marker for the game's sprite, fetching the sidecar once
 
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const sidebar = await import(u("sidebar.js"));
+    const sidebar = await import(u("chrome/sidebar.js"));
     sidebar.toggleShow("objects");
   });
   // the sidecar and the sheets land, then a paint carries the sprite
@@ -52,7 +52,7 @@ test("while the sidecar is still coming, nothing stands where a sprite will", as
   });
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const sidebar = await import(u("sidebar.js"));
+    const sidebar = await import(u("chrome/sidebar.js"));
     sidebar.toggleShow("objects");
   });
   const bare = await pixels(page, SLIG);
@@ -103,7 +103,7 @@ test("a sidecar that fails to load is asked for once, the objects fall back to m
   const fallen = await pixels(page, SLIG);
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const sidebar = await import(u("sidebar.js"));
+    const sidebar = await import(u("chrome/sidebar.js"));
     sidebar.toggleShow("objects");
   });
   expect(await pixels(page, SLIG)).toEqual(fallen);
@@ -111,7 +111,7 @@ test("a sidecar that fails to load is asked for once, the objects fall back to m
   const second = page.waitForResponse(/sprites_ae\.json$/);
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const sidebar = await import(u("sidebar.js"));
+    const sidebar = await import(u("chrome/sidebar.js"));
     sidebar.toggleShow("objects");
   });
   await second;
@@ -149,7 +149,7 @@ test("a sidecar of another shape is refused, and the objects stand as markers", 
   const asMarker = await pixels(page, SLIG);
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const sidebar = await import(u("sidebar.js"));
+    const sidebar = await import(u("chrome/sidebar.js"));
     sidebar.toggleShow("objects");
   });
   expect(await pixels(page, SLIG)).toEqual(asMarker);

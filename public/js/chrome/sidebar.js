@@ -1,14 +1,14 @@
 // Sidebar controls: category filters, display toggles, feedback link.
 
-import { setEditMode } from "./panels/editpanel.js";
-import { CATS, PENS, catOf } from "./config.js";
-import { $, cv, filterBox } from "./ui/dom.js";
-import { state } from "./data/state.js";
-import { setPitch } from "./navigation/navigate.js";
-import { draw } from "./painter/render.js";
-import { syncMotion } from "./painter/spriteart.js";
-import { SHOW_KEYS, getViewSnapshot, viewChanged } from "./data/settings.js";
-import { toast } from "./ui/toast.js";
+import { setEditMode } from "../panels/editpanel.js";
+import { CATS, PENS, catOf } from "../config.js";
+import { $, cv, filterBox } from "../ui/dom.js";
+import { state } from "../data/state.js";
+import { setPitch } from "../navigation/navigate.js";
+import { draw } from "../painter/render.js";
+import { syncMotion } from "../painter/spriteart.js";
+import { SHOW_KEYS, getViewSnapshot, viewChanged } from "../data/settings.js";
+import { toast } from "../ui/toast.js";
 
 // the switches the visitor has set (kept across visits when "remember" is on)
 // override the HTML/config defaults

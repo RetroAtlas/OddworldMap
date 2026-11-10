@@ -26,7 +26,7 @@ That sketch is exactly what landed and was dropped, as *Let the page zoom on tou
 
 Resetting the zoom when a panel closes is the wrong shape: it needs a viewport-meta hack on iOS, it cannot cover a transient toast, and it throws away a zoom the user asked for.
 
-**What shipped instead** (*Let the page zoom without trapping the user*, `f1222f7`): [js/interaction.js](../public/js/interaction.js) watches `visualViewport.scale` and sets `body.page-zoomed`, which relaxes the canvas to `touch-action: pinch-zoom`, suspends the app's own pinch, and skips `setPointerCapture` — capture would keep the gesture from reaching the browser. One finger still pans throughout; at scale 1 the map takes its pinch back.
+**What shipped instead** (*Let the page zoom without trapping the user*, `f1222f7`): [js/interaction.js](../public/js/chrome/interaction.js) watches `visualViewport.scale` and sets `body.page-zoomed`, which relaxes the canvas to `touch-action: pinch-zoom`, suspends the app's own pinch, and skips `setPointerCapture` — capture would keep the gesture from reaching the browser. One finger still pans throughout; at scale 1 the map takes its pinch back.
 
 Two more things the sketch missed: `user-scalable=no` was also suppressing double-tap zoom and the ~300 ms tap delay a zoomable page costs, so `body { touch-action: manipulation }` restores the responsiveness without touching pinch; and the meta gained `minimum-scale=1`, which WCAG does not care about and which removes the pinch-out-below-fit state.
 

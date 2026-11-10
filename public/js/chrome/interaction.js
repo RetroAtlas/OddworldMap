@@ -1,9 +1,9 @@
 // Pointer input on the map (mouse, touch, pen), hover inspection, and the menu toggle.
 
-import { esc, formatDist, segDist } from "./model/util.js";
-import { fieldEntries, onBackgroundPlane } from "./model/fields.js";
-import { gridSize } from "./engine/collide.js";
-import { hideAnchorTip } from "./panels/anchortip.js";
+import { esc, formatDist, segDist } from "../model/util.js";
+import { fieldEntries, onBackgroundPlane } from "../model/fields.js";
+import { gridSize } from "../engine/collide.js";
+import { hideAnchorTip } from "../panels/anchortip.js";
 import {
   KEY_PAN_PX,
   KEY_ZOOM_STEP,
@@ -17,7 +17,7 @@ import {
   REMOVED_NOTE,
   WIRE_COLOR,
   markerShown,
-} from "./config.js";
+} from "../config.js";
 import {
   $,
   cv,
@@ -30,9 +30,9 @@ import {
   openSiteBtn,
   narrowMQ,
   typingIn,
-} from "./ui/dom.js";
-import { toast } from "./ui/toast.js";
-import { state, GEO, LAYOUT, wX, wY, gX, gY } from "./data/state.js";
+} from "../ui/dom.js";
+import { toast } from "../ui/toast.js";
+import { state, GEO, LAYOUT, wX, wY, gX, gY } from "../data/state.js";
 import {
   draw,
   setConnFocus,
@@ -41,10 +41,10 @@ import {
   setPatrol,
   setWireFocus,
   settleView,
-} from "./painter/render.js";
-import { scheduleDraw } from "./ui/redraw.js";
-import { objectShown } from "./painter/spriteart.js";
-import { hitBoxes } from "./painter/spritepaint.js";
+} from "../painter/render.js";
+import { scheduleDraw } from "../ui/redraw.js";
+import { objectShown } from "../painter/spriteart.js";
+import { hitBoxes } from "../painter/spritepaint.js";
 import {
   camCenter,
   computeWiring,
@@ -62,7 +62,7 @@ import {
   snapTarget,
   wireEnds,
   zoomAt,
-} from "./model/model.js";
+} from "../model/model.js";
 import {
   cyclePath,
   flushHash,
@@ -70,15 +70,15 @@ import {
   objectHash,
   scheduleHash,
   viewHash,
-} from "./navigation/navigate.js";
-import { typeSummary } from "./model/typeinfo.js";
-import { DARK_NOTE, objectMessages } from "./model/messages.js";
+} from "../navigation/navigate.js";
+import { typeSummary } from "../model/typeinfo.js";
+import { DARK_NOTE, objectMessages } from "../model/messages.js";
 import { toggleShow } from "./sidebar.js";
-import { lightCap } from "./ui/keycap.js";
-import { getSettings, fieldPrefsFor } from "./data/settings.js";
-import { focusCamPanel, openCamPanel, openCamPanelNear } from "./panels/campanel.js";
-import { togglePlace } from "./panels/place.js";
-import { openAddPicker, selectObject, setEditMode } from "./panels/editpanel.js";
+import { lightCap } from "../ui/keycap.js";
+import { getSettings, fieldPrefsFor } from "../data/settings.js";
+import { focusCamPanel, openCamPanel, openCamPanelNear } from "../panels/campanel.js";
+import { togglePlace } from "../panels/place.js";
+import { openAddPicker, selectObject, setEditMode } from "../panels/editpanel.js";
 import {
   applyRectEdit,
   currentOf,
@@ -89,12 +89,12 @@ import {
   isRemoved,
   removedObjects,
   snapRect,
-} from "./data/edits.js";
-import { releaseNote } from "./data/release.js";
-import { toggleGraph } from "./panels/graphview.js";
-import { addRoutePoint, routeArrive, routeSeam, undoRoutePoint } from "./navigation/route.js";
-import { closeDialog, openDialog, trapDialogKeys } from "./ui/dialog.js";
-import { HAMBURGER_SVG, CLOSE_SVG, LINK_SVG, EXTERNAL_SVG } from "./ui/icons.js";
+} from "../data/edits.js";
+import { releaseNote } from "../data/release.js";
+import { toggleGraph } from "../panels/graphview.js";
+import { addRoutePoint, routeArrive, routeSeam, undoRoutePoint } from "../navigation/route.js";
+import { closeDialog, openDialog, trapDialogKeys } from "../ui/dialog.js";
+import { HAMBURGER_SVG, CLOSE_SVG, LINK_SVG, EXTERNAL_SVG } from "../ui/icons.js";
 
 let hoverTlvs = [],
   mouse = { x: 0, y: 0 };

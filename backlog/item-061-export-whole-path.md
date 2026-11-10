@@ -4,7 +4,7 @@
 
 ## What the current button actually does
 
-`cv.toBlob` in [js/sidebar.js](../public/js/sidebar.js) copies **the pixels currently on screen**. So "Export view as PNG" is a screenshot: cropped to the window, at whatever zoom happens to be set, at `devicePixelRatio` scaling, including whatever slivers of neighbouring screens are visible and excluding everything scrolled out of frame. To get a whole level today you must zoom out until it fits — which downsamples 368×240 artwork until the objects are unreadable — and you still get window letterboxing around it.
+`cv.toBlob` in [js/sidebar.js](../public/js/chrome/sidebar.js) copies **the pixels currently on screen**. So "Export view as PNG" is a screenshot: cropped to the window, at whatever zoom happens to be set, at `devicePixelRatio` scaling, including whatever slivers of neighbouring screens are visible and excluding everything scrolled out of frame. To get a whole level today you must zoom out until it fits — which downsamples 368×240 artwork until the objects are unreadable — and you still get window letterboxing around it.
 
 ## What is proposed instead
 
@@ -60,7 +60,7 @@ Export AO R1 P15 and confirm 4416×720 with all 20 screens present and no missin
 
 **A `null` from `toBlob` is not the only way this fails.** A canvas past a browser's limit ignores what is drawn into it, or quietly clamps the size it was asked for, and a blank canvas encodes to a perfectly valid multi-megabyte PNG — exactly the blank download the *Watch out* above is about. `sizedCanvas` paints one pixel and reads it back before the real paint runs, quartering the area and halving the side until one sticks or the side falls under 1024.
 
-**[49](item-049-png-export-revoke-race.md) asked for its revoke to move into whatever shared download helper this item introduced**, and it has: one `exportUrl` in [js/export.js](../public/js/export.js), released when the next export of either kind replaces it.
+**[49](item-049-png-export-revoke-race.md) asked for its revoke to move into whatever shared download helper this item introduced**, and it has: one `exportUrl` in [js/export.js](../public/js/chrome/export.js), released when the next export of either kind replaces it.
 
 **No label scale, and the running signal is the button rather than a toast.** At 1:1 an 11 px label sits on a 368 px screen exactly as it does at 100% zoom in the browser; doubling it would draw labels larger than the map ever draws them, and at fit-to-window sizes the artwork is illegible anyway, so bigger labels rescue nothing. `imageSmoothingEnabled` needed no change either — off at scale 1 for the pixel art, on when the budget forces a downscale, which is what it was already saying. And a toast is fixed at three seconds, which would leave it standing long after the 207 ms `AE MI P4` takes; `Rendering…` on the disabled button starts and ends with the work.
 

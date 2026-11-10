@@ -4,7 +4,7 @@
 
 ## What it is
 
-Rendering `S1` took AO's count of destinations naming a level the map does not render from two to zero, and AE has none. Three things were left describing nothing in the shipped data: the tooltip's off-map clause in [js/interaction.js](../public/js/interaction.js), `levelInfo` in [js/annotations.js](../public/js/model/annotations.js), and `annotations.json`'s `levels` section, `{}` in both games, along with the schema rules policing it — a level entry must name a level *not* on the map, and may not be note-only.
+Rendering `S1` took AO's count of destinations naming a level the map does not render from two to zero, and AE has none. Three things were left describing nothing in the shipped data: the tooltip's off-map clause in [js/interaction.js](../public/js/chrome/interaction.js), `levelInfo` in [js/annotations.js](../public/js/model/annotations.js), and `annotations.json`'s `levels` section, `{}` in both games, along with the schema rules policing it — a level entry must name a level *not* on the map, and may not be note-only.
 
 ## Decided: they are not the same question
 

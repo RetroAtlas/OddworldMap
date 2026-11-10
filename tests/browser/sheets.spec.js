@@ -366,7 +366,7 @@ test.describe("below the zoom a creature reads at", () => {
     await page.goto(`/?embed=1${FAR}`);
     await screensIn(page);
     await page.evaluate(async () => {
-      const sidebar = await import(new URL("js/sidebar.js", location.href).href);
+      const sidebar = await import(new URL("js/chrome/sidebar.js", location.href).href);
       sidebar.toggleShow("objects");
     });
     await expect.poll(async () => (await slig(page)).painted, POLL).toBe(true);

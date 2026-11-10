@@ -22,7 +22,7 @@ test("the Connections switch stands as the seed set it and follows its toggle", 
   await expect(page.locator("#tConn")).toBeChecked();
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const sidebar = await import(u("sidebar.js"));
+    const sidebar = await import(u("chrome/sidebar.js"));
     sidebar.toggleShow("conn");
   });
   await expect(page.locator("#tConn")).not.toBeChecked();
@@ -75,7 +75,7 @@ test("Markers for the rest needs the objects shown; off, a bound's marker leaves
   const withMarker = await pixels(page, BOUND);
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const sidebar = await import(u("sidebar.js"));
+    const sidebar = await import(u("chrome/sidebar.js"));
     sidebar.toggleShow("objects");
   });
   await expect(markers).toBeEnabled();
@@ -84,7 +84,7 @@ test("Markers for the rest needs the objects shown; off, a bound's marker leaves
   expect(await pixels(page, BOUND)).toEqual(withMarker);
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const sidebar = await import(u("sidebar.js"));
+    const sidebar = await import(u("chrome/sidebar.js"));
     sidebar.toggleShow("markers");
   });
   await expect(markers).not.toBeChecked();

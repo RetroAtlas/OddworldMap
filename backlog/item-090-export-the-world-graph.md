@@ -10,7 +10,7 @@ Sizes are already the right shape for it: Oddysee's diagram is 3491 × 809 and E
 
 ## Why it is not the same job
 
-The map exports because `paint` in [js/render.js](../public/js/painter/render.js) draws into any canvas and [js/export.js](../public/js/export.js) hands it an offscreen one. None of that reaches the diagram: its nodes are DOM buttons and its edges an SVG layer, chosen in [86](item-086-world-graph.md) precisely so the keyboard, the ellipsis, the focus ring and `data-tip` came for free. So the export is a serialisation problem, not a second painter, and the shape of the answer is the decision this item exists to make.
+The map exports because `paint` in [js/render.js](../public/js/painter/render.js) draws into any canvas and [js/export.js](../public/js/chrome/export.js) hands it an offscreen one. None of that reaches the diagram: its nodes are DOM buttons and its edges an SVG layer, chosen in [86](item-086-world-graph.md) precisely so the keyboard, the ellipsis, the focus ring and `data-tip` came for free. So the export is a serialisation problem, not a second painter, and the shape of the answer is the decision this item exists to make.
 
 ## Sketch
 

@@ -123,7 +123,7 @@ test("the clock runs with the objects shown, stops with the setting, and the pat
   const before = await read();
   const after = await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const sidebar = await import(u("sidebar.js"));
+    const sidebar = await import(u("chrome/sidebar.js"));
     sidebar.toggleShow("patrols");
     sidebar.toggleShow("patrols");
     const m = window.__motion;

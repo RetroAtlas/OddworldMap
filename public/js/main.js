@@ -19,15 +19,15 @@ import { setGlossary } from "./model/glossary.js";
 import { setMessages } from "./model/messages.js";
 import { setTypeInfo } from "./model/typeinfo.js";
 import { initSettings, storedLocationHash, clearStoredLocation } from "./data/settings.js";
-import { syncNeeds } from "./sidebar.js";
+import { syncNeeds } from "./chrome/sidebar.js";
 import { state } from "./data/state.js";
 // the hub before the panels: its listeners register first, so its drawer hands
 // focus on before a panel rebuilds its controls
-import { toggleMenu } from "./interaction.js";
+import { toggleMenu } from "./chrome/interaction.js";
 import "./panels/search.js";
-import "./export.js";
+import "./chrome/export.js";
 import { initFieldPanel } from "./panels/fieldpanel.js";
-import "./a11y.js";
+import "./chrome/a11y.js";
 import "./panels/anchortip.js";
 import "./panels/whatsnew.js";
 import "./panels/about.js";
@@ -37,7 +37,7 @@ import "./panels/numbers.js";
 import "./panels/editpanel.js";
 import "./navigation/minimap.js";
 import "./panels/graphview.js";
-import "./offline.js";
+import "./chrome/offline.js";
 
 initSettings();
 syncNeeds();

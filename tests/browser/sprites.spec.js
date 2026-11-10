@@ -44,7 +44,7 @@ test("the patrol pens draw their posts with the markers off", async ({ page }) =
   expect(purple(await pixels(page, post))).toBeGreaterThan(0);
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const sidebar = await import(u("sidebar.js"));
+    const sidebar = await import(u("chrome/sidebar.js"));
     sidebar.toggleShow("pens");
   });
   expect(purple(await pixels(page, post))).toBe(0);
@@ -62,7 +62,7 @@ test("a lift's top wheel is drawn at its pulley, screens above the lift's own re
   const withWheel = await pixels(page, WHEEL);
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const sidebar = await import(u("sidebar.js"));
+    const sidebar = await import(u("chrome/sidebar.js"));
     sidebar.toggleShow("objects");
   });
   expect(await pixels(page, WHEEL)).not.toEqual(withWheel);
@@ -246,7 +246,7 @@ test("Dim backgrounds dims the foreground masks drawn over the sprites too", asy
     }, at);
   const toggle = (key) =>
     page.evaluate(async (k) => {
-      const sidebar = await import(new URL("js/sidebar.js", location.href).href);
+      const sidebar = await import(new URL("js/chrome/sidebar.js", location.href).href);
       sidebar.toggleShow(k);
     }, key);
   // the foreground is the same art as the screen beneath it, so a dimmed mask

@@ -8,11 +8,11 @@ Arm the ruler, drag a measurement, press `[` or `]`. The measurement stays on sc
 
 ## Cause
 
-`state.route` has an explicit lifecycle — [js/route.js](../public/js/navigation/route.js) clears it on `selection-changed` with the comment "waypoints don't outlive their path". `state.ruler` has no such listener. Its only clear site is in [js/sidebar.js](../public/js/sidebar.js), on mode-off: "measurements don't outlive the mode". Both comments state the same intent; only one was enforced against path changes.
+`state.route` has an explicit lifecycle — [js/route.js](../public/js/navigation/route.js) clears it on `selection-changed` with the comment "waypoints don't outlive their path". `state.ruler` has no such listener. Its only clear site is in [js/sidebar.js](../public/js/chrome/sidebar.js), on mode-off: "measurements don't outlive the mode". Both comments state the same intent; only one was enforced against path changes.
 
 ## Sketch
 
-Add the missing clear, in [js/interaction.js](../public/js/interaction.js) which owns the ruler's pointer lifecycle, or alongside the other `selection-changed` listeners:
+Add the missing clear, in [js/interaction.js](../public/js/chrome/interaction.js) which owns the ruler's pointer lifecycle, or alongside the other `selection-changed` listeners:
 
 ```js
 window.addEventListener("selection-changed", () => {
@@ -30,7 +30,7 @@ AO R1: arm the ruler with `m`, drag a measurement, press `]` — line gone. Swit
 
 ## Shipped
 
-*Clear the ruler when the path changes* (`6158571`) chose the unconditional rule: [js/interaction.js](../public/js/interaction.js) discards a measurement on every `selection-changed`, including a same-path re-fire, with no `rulerPath` identity guard. A follow is navigation even when it lands on the current path, so the measurement does not survive it.
+*Clear the ruler when the path changes* (`6158571`) chose the unconditional rule: [js/interaction.js](../public/js/chrome/interaction.js) discards a measurement on every `selection-changed`, including a same-path re-fire, with no `rulerPath` identity guard. A follow is navigation even when it lands on the current path, so the measurement does not survive it.
 
 ## Ships with
 

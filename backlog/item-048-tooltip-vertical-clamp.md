@@ -8,7 +8,7 @@ Hover an object in the lower part of the map with several objects stacked, or wi
 
 ## Cause
 
-Three defects in three lines of [js/interaction.js](../public/js/interaction.js):
+Three defects in three lines of [js/interaction.js](../public/js/chrome/interaction.js):
 
 ```js
 const px = Math.min(mouse.x + 16, cv.clientWidth - (TIP_MAX_W + 10));

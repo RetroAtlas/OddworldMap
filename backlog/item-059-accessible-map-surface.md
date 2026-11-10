@@ -52,7 +52,7 @@ A README controls-list update and a `changelog.json` entry, tag `improved`, for 
 
 ## Shipped: the announcer and the keyboard's route into a screen, 2026-08-22
 
-`#a11yStatus` and [js/a11y.js](../public/js/a11y.js), in *The map says where it is, out loud*: a `.sr-only` `role="status"` region on `<body>` naming the game, the level, the path and its name, the object count, and that the path carries a note where it does, with `#cv` taking the same sentence as its `aria-label` under `role="img"`. And `l`, in *A key lists what is on the screen you are looking at*: the screen list opened on the view's centre with focus inside it.
+`#a11yStatus` and [js/a11y.js](../public/js/chrome/a11y.js), in *The map says where it is, out loud*: a `.sr-only` `role="status"` region on `<body>` naming the game, the level, the path and its name, the object count, and that the path carries a note where it does, with `#cv` taking the same sentence as its `aria-label` under `role="img"`. And `l`, in *A key lists what is on the screen you are looking at*: the screen list opened on the view's centre with focus inside it.
 
 Four things the sketch did not know.
 

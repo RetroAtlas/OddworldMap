@@ -8,7 +8,7 @@
 
 ## Cause
 
-In [js/sidebar.js](../public/js/sidebar.js), `a.click()` is followed on the very next line by `URL.revokeObjectURL(a.href)`. The download is queued, not completed, when `click()` returns. Chrome usually survives it; Firefox and Safari can cancel the transfer. A well-known footgun rather than a subtle race.
+In [js/sidebar.js](../public/js/chrome/sidebar.js), `a.click()` is followed on the very next line by `URL.revokeObjectURL(a.href)`. The download is queued, not completed, when `click()` returns. Chrome usually survives it; Firefox and Safari can cancel the transfer. A well-known footgun rather than a subtle race.
 
 ## Sketch
 
@@ -31,7 +31,7 @@ Export in Firefox and Safari — the two that actually fail — and confirm the 
 
 ## Shipped
 
-**The sketch's `setTimeout(…, 0)` is not enough, and the reason is the comment that replaced it.** A permission prompt — the browser asking where to save, or whether to allow the download at all — can defer the blob's read indefinitely, so no fixed delay is long enough to be correct. *Release the export blob URL on the next export, not on the click* (`1939f66`) holds the URL in a module-level `exportUrl` in [js/sidebar.js](../public/js/sidebar.js) and revokes the *previous* one when the next export replaces it, which is timing-free.
+**The sketch's `setTimeout(…, 0)` is not enough, and the reason is the comment that replaced it.** A permission prompt — the browser asking where to save, or whether to allow the download at all — can defer the blob's read indefinitely, so no fixed delay is long enough to be correct. *Release the export blob URL on the next export, not on the click* (`1939f66`) holds the URL in a module-level `exportUrl` in [js/sidebar.js](../public/js/chrome/sidebar.js) and revokes the *previous* one when the next export replaces it, which is timing-free.
 
 **So the *Watch out* above was half right and is worth reading as it stands.** Never revoking was the wrong answer; revoking on the next use is the narrow version of it, and it does leave one blob pinned until the next export or until the tab closes. That is a bounded cost — one canvas, not one per export — and it is what an unconditionally landing download turned out to be worth.
 

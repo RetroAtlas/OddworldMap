@@ -51,7 +51,7 @@ test("storing a family's sprite sheet retires that family's other sheets and wha
   // the sheets the page asks for pass through the worker, and land before the read
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
-    const sidebar = await import(u("sidebar.js"));
+    const sidebar = await import(u("chrome/sidebar.js"));
     sidebar.toggleShow("objects");
   });
   await settleArtwork(page);
