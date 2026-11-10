@@ -1,8 +1,11 @@
 // Toasts (transient notices) at the bottom of the map: newest at the bottom of
 // the stack, older ones riding above it, the overflow waiting behind a badge.
 
-import { TOAST_MS, TOAST_OUT_MS, TOAST_MAX } from "../config.js";
 import { toastStack } from "./dom.js";
+
+const TOAST_MS = 3000; // a toast's lifetime, and its countdown bar's drain
+const TOAST_OUT_MS = 150; // the fade before a spent toast leaves the stack
+const TOAST_MAX = 3; // toasts on screen at once; the rest wait behind a badge
 
 const live = []; // oldest first; the DOM runs the other way (newest is prepended)
 const queued = [];

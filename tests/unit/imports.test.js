@@ -47,9 +47,9 @@ const byName = (files) => new Map(files.map((f) => [posix.basename(f), f]));
 // The folders are layers, and a module reaches only its own layer and those
 // beneath it. A row names the folders a module in that folder may import from,
 // itself included, a single file of a folder where a further import from it is
-// to be a change of the row, or a file every layer may import. "." is the root.
+// to be a change of the row, or the root's config.js. "." is the root.
 const LAYERS = {
-  ui: ["ui", "config.js"],
+  ui: ["ui"],
   engine: ["engine", "config.js"],
   model: ["model", "engine/lcd.js", "config.js"],
   rules: ["rules", "model", "engine", "config.js"],
