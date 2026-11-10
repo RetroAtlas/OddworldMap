@@ -8,7 +8,7 @@ import { $, cv, menuBtn, typingIn } from "../ui/dom.js";
 import { esc } from "../model/util.js";
 import { state } from "../data/state.js";
 import { pathDisplayName, pathNickname, pathNote } from "../model/annotations.js";
-import { hideAnchorTip } from "./anchortip.js";
+import { hideAnchorTip } from "../ui/anchortip.js";
 import { isDemoPath } from "../model/demo.js";
 import { pathEdited } from "../data/edits.js";
 import { marker, wirePath } from "../data/graphsvg.js";

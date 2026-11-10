@@ -3,8 +3,7 @@
 // the document, so a surface can rebuild its DOM freely and a new consumer is
 // one attribute away.
 
-import { $ } from "../ui/dom.js";
-import { clamp } from "../model/util.js";
+import { $ } from "./dom.js";
 
 const el = $("anchorTip");
 let anchor = null;
@@ -40,7 +39,7 @@ function place() {
   const vw = document.documentElement.clientWidth,
     vh = document.documentElement.clientHeight;
   const below = r.bottom + 6;
-  el.style.left = clamp(r.left, 6, vw - w - 6) + "px";
+  el.style.left = Math.max(6, Math.min(vw - w - 6, r.left)) + "px";
   el.style.top = (below + h <= vh - 6 ? below : Math.max(6, r.top - h - 6)) + "px";
 }
 

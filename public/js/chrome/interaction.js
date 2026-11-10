@@ -3,7 +3,7 @@
 import { esc, formatDist, segDist } from "../model/util.js";
 import { fieldEntries, onBackgroundPlane } from "../model/fields.js";
 import { gridSize } from "../engine/collide.js";
-import { hideAnchorTip } from "../panels/anchortip.js";
+import { hideAnchorTip } from "../ui/anchortip.js";
 import {
   KEY_PAN_PX,
   KEY_ZOOM_STEP,

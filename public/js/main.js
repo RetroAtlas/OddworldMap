@@ -28,7 +28,7 @@ import "./panels/search.js";
 import "./chrome/export.js";
 import { initFieldPanel } from "./panels/fieldpanel.js";
 import "./chrome/a11y.js";
-import "./panels/anchortip.js";
+import "./ui/anchortip.js";
 import "./panels/whatsnew.js";
 import "./panels/about.js";
 import "./panels/typecard.js";
