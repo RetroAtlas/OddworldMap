@@ -5,10 +5,10 @@ The stylesheet is the partials under [css/](../public/css/), each linked by its 
 - **The partials**, in link order, which is the cascade:
   - [10-base.css](../public/css/10-base.css): the tokens, the resets, `.sr-only` and the body.
   - [20-sidebar.css](../public/css/20-sidebar.css): the sidebar with its level, path and release buttons, filters, fields picker, toggles, action buttons and exports.
+  - [25-search.css](../public/css/25-search.css): the sidebar's search box, scope bar and results.
   - [30-map.css](../public/css/30-map.css): the map, the canvas and the world graph.
   - [40-readouts.css](../public/css/40-readouts.css): the tooltips, the corner readouts, the minimap, the toasts and the route readout.
   - [50-panels.css](../public/css/50-panels.css): the screen list, the edit form, the numbers panel and the list rows they share.
-  - [60-search.css](../public/css/60-search.css): the sidebar's search box, scope bar and results.
   - [70-chrome.css](../public/css/70-chrome.css): the controls over the map, the menu, embed mode, the place chip and the path details.
   - [80-dialogs.css](../public/css/80-dialogs.css): the dialog shell, What's New, the settings and offline rows, the shortcuts, About and the type card.
   - [90-narrow.css](../public/css/90-narrow.css): the narrow drawer and reduced motion, last because it overrides the others at equal weight.
