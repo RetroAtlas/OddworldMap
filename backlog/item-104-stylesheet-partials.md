@@ -1,6 +1,6 @@
 # 104. Cut the stylesheet into partials linked in name order
 
-**Status:** shipped 2026-11-10 · **Effort:** small: one commit, proven by a join · **Where:** anywhere · **Filed:** 2026-11-10, from a reading of the stylesheet's structure, its cascade and every reference to it
+**Status:** shipped 2026-11-10 · **Effort:** small: two commits, each proven by a join or a cascade check · **Where:** anywhere · **Filed:** 2026-11-10, from a reading of the stylesheet's structure, its cascade and every reference to it
 
 ## What and why
 
@@ -13,6 +13,7 @@
 - A new partial takes a free number between what it must follow and what must follow it, a multiple of five where one is free, with no rename: every future partial is an insert, since the narrow block is pinned last by the cascade and the tokens first, and the stylesheet's history (92 commits since it left `index.html` on 2026-07-16; seven of the nine subjects present that day, the other two within three days, none since) says inserts will be rare but never appends. The ranks run in tens for that reason; nothing can follow 90, so no third digit is ever needed, and 00 to 09 stay free ahead of the base for a tokens partial, the one thing that could ever precede it.
 - Every line verbatim, in one commit with every reference the split forces: the links, the test, the `public/css` row at 800 in `sizes.test.js`, `graphsvg.test.js` reading the partials joined in name order (it reads the tokens from the base and the graph's rules from the map, and requires each token declared once), the docs and this record. The proof, run before the commit and not kept as a test since the old file is then gone: the partials joined in link order, blank lines stripped, equal the old file with blank lines stripped (the three cuts on a blank line lose it, Prettier stripping a trailing blank line), and `npm run pixels` against the parent paints alike.
 - A rule joins its surface's partial and a shared class stays in the partial where it first appears; the shared vocabulary [docs/stylesheet.md](../docs/stylesheet.md) describes is spread over the sidebar, the panels and the dialogs by that rule, and gathering it into one partial would be a cascade change needing a proof of its own, computed styles of fixed page states before and after, not a move.
+- Three rules the cut left where the file had them stand with their surface: `.muted`, worn by the sidebar's game name alone, in the sidebar after the heading's button; `#noscript`, the map's fallback text, in the map after the canvas; and `.shead`, the search results' heading's own modifier of the shared `.listhead`, in the search partial. Nothing but the base's `*` reset matches any of the three elements, and the base precedes every partial, so no rule changes rank against another.
 - Loading, measured on 2026-11-10 against the live site: HTTP/2 through Cloudflare over GitHub Pages, `max-age=600` on every file; nine links in the first 3 KB of the page open nine streams on the one connection at once, so first render waits for the last as it waited for one, and the cost is bytes, 3.9 KB more gzip (10.3 KB whole, 14.1 KB summed, at `gzip -9`) and the headers of eight more responses. The deploy-boundary window, 600 s at the edge and 600 s in the browser, is the one the site lives with for `index.html` against its modules; a stale partial beside a fresh one fails softer than a stale module, an unmatched rule rather than a thrown error.
 
 ## Ruled out
@@ -30,4 +31,4 @@
 
 ## Shipped
 
-Landed on 2026-11-10: nine partials holding every line of the old file verbatim and in order, the join in link order equal to it but for three blank lines; `npm run pixels` against the parent draws all 29 views alike, and the unit and browser suites are green.
+Landed on 2026-11-10: nine partials holding every line of the old file verbatim, the join in link order equal to it but for three blank lines and the three rules that stand with their surface; `npm run pixels` against the parent draws all 29 views alike, the unit and browser suites are green, and a one-off comparison of every element's computed style in six page states, before the cut and after, found no difference.

@@ -19,6 +19,13 @@
 body.page-zoomed #cv {
   touch-action: pinch-zoom;
 }
+#noscript {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--dim);
+}
 /* the world graph: the game as one diagram, opaque over the canvas it replaces.
    A mode is not a float, so it takes no stacking tier — a positioned sibling
    after the canvas covers it, and every tier above (the toasts, the drawer, the

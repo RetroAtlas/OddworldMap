@@ -259,9 +259,6 @@
   align-items: center;
   gap: 6px;
 }
-.shead {
-  justify-content: space-between;
-}
 .rowbtn {
   display: block;
   width: 100%;
@@ -315,11 +312,4 @@
 .cp-none {
   color: var(--dim);
   padding: 6px 10px;
-}
-#noscript {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: var(--dim);
 }

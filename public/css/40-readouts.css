@@ -117,11 +117,6 @@
 body.page-zoomed #minimap {
   touch-action: pinch-zoom;
 }
-.muted {
-  color: var(--dim);
-  padding: 2px 14px 8px;
-  font-size: 11px;
-}
 /* toasts: bottom-anchored and reversed, so the newest sits where a
    lone toast would and the older ones ride above it */
 #toastStack {
