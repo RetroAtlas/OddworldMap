@@ -28,8 +28,8 @@ const sligNow = (page) =>
   page.evaluate(async (s) => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const st = await import(u("data/state.js"));
-    const spriteart = await import(u("spriteart.js"));
-    const spritepaint = await import(u("spritepaint.js"));
+    const spriteart = await import(u("painter/spriteart.js"));
+    const spritepaint = await import(u("painter/spritepaint.js"));
     const motion = await import(u("engine/motion.js"));
     const t = st.state.path?.tlvs.find((o) => o.name === "Slig" && o.x1 === s.x1 && o.y1 === s.y1);
     if (!t) return null;
@@ -143,8 +143,8 @@ test("an edit that brings a family in leaves the path's sprites drawn while its 
     page.evaluate(async (s) => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("data/state.js"));
-      const render = await import(u("render.js"));
-      const spritepaint = await import(u("spritepaint.js"));
+      const render = await import(u("painter/render.js"));
+      const spritepaint = await import(u("painter/spritepaint.js"));
       render.draw();
       const t = st.state.path.tlvs.find((o) => o.name === "Slig" && o.x1 === s.x1 && o.y1 === s.y1);
       return spritepaint.hitBoxes(t, st.LAYOUT).length > 1;
@@ -191,7 +191,7 @@ test("a sheet that fails leaves its objects as markers, and the map asking again
     page.evaluate(async (s) => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("data/state.js"));
-      const spritepaint = await import(u("spritepaint.js"));
+      const spritepaint = await import(u("painter/spritepaint.js"));
       const t = st.state.path.tlvs.find((o) => o.name === "Slig" && o.x1 === s.x1 && o.y1 === s.y1);
       return spritepaint.hitBoxes(t, st.LAYOUT).map((b) => b.drawn);
     }, SLIG);
@@ -219,7 +219,7 @@ test("a font that fails leaves the tally boards it writes as markers", async ({ 
     page.evaluate(async (b) => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("data/state.js"));
-      const spritepaint = await import(u("spritepaint.js"));
+      const spritepaint = await import(u("painter/spritepaint.js"));
       const t = st.state.path?.tlvs.find(
         (o) => o.name === "LCDStatusBoard" && o.x1 === b.x1 && o.y1 === b.y1,
       );
@@ -257,9 +257,9 @@ test.describe("below the zoom a creature reads at", () => {
     page.evaluate(async (s) => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("data/state.js"));
-      const render = await import(u("render.js"));
-      const spriteart = await import(u("spriteart.js"));
-      const spritepaint = await import(u("spritepaint.js"));
+      const render = await import(u("painter/render.js"));
+      const spriteart = await import(u("painter/spriteart.js"));
+      const spritepaint = await import(u("painter/spritepaint.js"));
       const motion = await import(u("engine/motion.js"));
       render.draw();
       const t = st.state.path.tlvs.find((o) => o.name === "Slig" && o.x1 === s.x1 && o.y1 === s.y1);
@@ -274,7 +274,7 @@ test.describe("below the zoom a creature reads at", () => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("data/state.js"));
       const model = await import(u("model/model.js"));
-      const render = await import(u("render.js"));
+      const render = await import(u("painter/render.js"));
       const cv = document.getElementById("cv");
       const c = model.camCenter(st.state.cam, cv.clientWidth, cv.clientHeight);
       Object.assign(
@@ -314,9 +314,9 @@ test.describe("below the zoom a creature reads at", () => {
     const exported = await page.evaluate(async (s) => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("data/state.js"));
-      const render = await import(u("render.js"));
-      const spriteart = await import(u("spriteart.js"));
-      const spritepaint = await import(u("spritepaint.js"));
+      const render = await import(u("painter/render.js"));
+      const spriteart = await import(u("painter/spriteart.js"));
+      const spritepaint = await import(u("painter/spritepaint.js"));
       const motion = await import(u("engine/motion.js"));
       const frame = window.requestAnimationFrame;
       const held = [];

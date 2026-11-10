@@ -89,7 +89,7 @@ test("Markers for the rest needs the objects shown; off, a bound's marker leaves
   });
   await expect(markers).not.toBeChecked();
   await page.evaluate(async () => {
-    const render = await import(new URL("js/render.js", location.href).href);
+    const render = await import(new URL("js/painter/render.js", location.href).href);
     render.draw();
   });
   expect(await pixels(page, BOUND)).not.toEqual(withMarker);

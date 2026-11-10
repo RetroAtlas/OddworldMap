@@ -2,8 +2,8 @@
 // screen composed as one picture, the tinted and dimmed masks, each cached under
 // its file
 
-import { scheduleDraw } from "./ui/redraw.js";
-import { COLOR } from "./ui/dom.js";
+import { scheduleDraw } from "../ui/redraw.js";
+import { COLOR } from "../ui/dom.js";
 
 export const images = {}; // png -> Image
 export function img(src) {

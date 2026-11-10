@@ -62,7 +62,8 @@ const LAYERS = {
     "ui/searchquery.js",
     "config.js",
   ],
-  ".": ["data", "engine", "model", "rules", "ui", "."],
+  painter: ["painter", "rules", "data", "model", "engine", "ui", "config.js"],
+  ".": ["data", "engine", "model", "painter", "rules", "ui", "."],
 };
 
 // every viewer module, with the modules its import statements name

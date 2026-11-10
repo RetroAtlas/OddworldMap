@@ -26,7 +26,7 @@ test("the toggle swaps a marker for the game's sprite, fetching the sidecar once
   await settleArtwork(page);
   await page.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
   await page.evaluate(async () => {
-    const render = await import(new URL("js/render.js", location.href).href);
+    const render = await import(new URL("js/painter/render.js", location.href).href);
     render.draw();
   });
   const after = await pixels(page, SLIG);
@@ -63,7 +63,7 @@ test("while the sidecar is still coming, nothing stands where a sprite will", as
     await page.evaluate(async () => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("data/state.js"));
-      const spriteart = await import(u("spriteart.js"));
+      const spriteart = await import(u("painter/spriteart.js"));
       return spriteart.artworkReady(st.state.path);
     }),
   ).toBe(false);
@@ -91,7 +91,7 @@ test("a sidecar that fails to load is asked for once, the objects fall back to m
   await first;
   // a second of repaints passes with the failure known, and nothing asks again
   await page.evaluate(async () => {
-    const render = await import(new URL("js/render.js", location.href).href);
+    const render = await import(new URL("js/painter/render.js", location.href).href);
     for (let i = 0; i < 60; i++) {
       render.draw();
       await new Promise(requestAnimationFrame);
@@ -140,7 +140,7 @@ test("a sidecar of another shape is refused, and the objects stand as markers", 
   await landed;
   // refused, the sidecar leaves the slig as its marker: the same pixels the objects off would paint
   await page.evaluate(async () => {
-    const render = await import(new URL("js/render.js", location.href).href);
+    const render = await import(new URL("js/painter/render.js", location.href).href);
     for (let i = 0; i < 3; i++) {
       render.draw();
       await new Promise(requestAnimationFrame);

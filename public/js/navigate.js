@@ -20,7 +20,7 @@ import {
   wX,
   wY,
 } from "./data/state.js";
-import { draw, flashAt, settleView } from "./render.js";
+import { draw, flashAt, settleView } from "./painter/render.js";
 import {
   camCell,
   camCenter,

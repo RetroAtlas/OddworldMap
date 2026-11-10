@@ -223,8 +223,8 @@ test("a patched screen paints the base's picture with the release's patches over
   const seen = await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const { state, LAYOUT } = await import(u("data/state.js"));
-    const render = await import(u("render.js"));
-    const spriteart = await import(u("spriteart.js"));
+    const render = await import(u("painter/render.js"));
+    const spriteart = await import(u("painter/spriteart.js"));
     const cam = state.path.cams.find((c) => c.patches);
     const decoded = async (src) => {
       const im = new Image();

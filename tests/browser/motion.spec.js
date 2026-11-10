@@ -63,7 +63,7 @@ test("a creature on patrol is hovered where it stands, not where its marker was 
   const spots = await page.evaluate(async (w) => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const st = await import(u("data/state.js"));
-    const spritepaint = await import(u("spritepaint.js"));
+    const spritepaint = await import(u("painter/spritepaint.js"));
     const model = await import(u("model/model.js"));
     const t = st.state.path.tlvs.find((o) => o.name === "Slig" && o.x1 === w.x1 && o.y1 === w.y1);
     const r = document.getElementById("cv").getBoundingClientRect();
@@ -149,8 +149,8 @@ test("the Mines LCD scrolls its message into its panel once the scene has run pa
     page.evaluate(async () => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("data/state.js"));
-      const render = await import(u("render.js"));
-      const spriteart = await import(u("spriteart.js"));
+      const render = await import(u("painter/render.js"));
+      const spriteart = await import(u("painter/spriteart.js"));
       await spriteart.preloadPath(st.state.path);
       render.draw();
     });

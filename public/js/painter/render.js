@@ -1,7 +1,7 @@
 // The painter: the live view's affordances, the frame, draw and paint with the map's
 // own layers and the markers, and the minimap
 
-import { scheduleDraw } from "./ui/redraw.js";
+import { scheduleDraw } from "../ui/redraw.js";
 import {
   ENEMY_CAT,
   FLASH_HOLD_MAX_MS,
@@ -10,14 +10,14 @@ import {
   PENS,
   barrierDir,
   catOf,
-} from "./config.js";
-import { $, COLOR, cv, cvCtx } from "./ui/dom.js";
-import { isEdited, removedObjects } from "./data/edits.js";
-import { onBackgroundPlane } from "./model/fields.js";
-import { drawX, drawY } from "./model/geometry.js";
+} from "../config.js";
+import { $, COLOR, cv, cvCtx } from "../ui/dom.js";
+import { isEdited, removedObjects } from "../data/edits.js";
+import { onBackgroundPlane } from "../model/fields.js";
+import { drawX, drawY } from "../model/geometry.js";
 import { drawnAs } from "./kept.js";
-import { camCenter, centerCam, drawBox, lineRuns, offScreen, screenRuns } from "./model/model.js";
-import { motionRunning, patrolTick, sceneTick } from "./engine/motion.js";
+import { camCenter, centerCam, drawBox, lineRuns, offScreen, screenRuns } from "../model/model.js";
+import { motionRunning, patrolTick, sceneTick } from "../engine/motion.js";
 import {
   labelled,
   outline,
@@ -33,7 +33,7 @@ import {
   paintSelection,
   paintWires,
 } from "./overlays.js";
-import { pathRelease, releaseNotes } from "./data/release.js";
+import { pathRelease, releaseNotes } from "../data/release.js";
 import { screenOf, tintedMasks } from "./screens.js";
 import {
   artOf,
@@ -45,8 +45,8 @@ import {
   spritesReady,
 } from "./spriteart.js";
 import { movedBy, paintSprites, spriteBoxes } from "./spritepaint.js";
-import { spriteDraws } from "./rules/sprites.js";
-import { CELL_H, CELL_W, GEO, LAYOUT, cellOrigin, state } from "./data/state.js";
+import { spriteDraws } from "../rules/sprites.js";
+import { CELL_H, CELL_W, GEO, LAYOUT, cellOrigin, state } from "../data/state.js";
 
 // follow-destination highlight: a fading ring at (x, y) in draw space. A held
 // flash (object permalink) pulses at full strength until the normal timeout

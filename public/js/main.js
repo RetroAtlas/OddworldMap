@@ -1,8 +1,8 @@
 // Boot: fetch the map data, then hand over to the modules.
 
 import { $ } from "./ui/dom.js";
-import { resize } from "./render.js";
-import { warmSprites } from "./spriteart.js";
+import { resize } from "./painter/render.js";
+import { warmSprites } from "./painter/spriteart.js";
 import { addGame, selectGame, applyHash } from "./navigate.js";
 import {
   GAME_IDS,

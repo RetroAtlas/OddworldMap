@@ -107,8 +107,8 @@ async function settleAt(page, sel) {
     async ({ sel, ms }) => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("data/state.js"));
-      const render = await import(u("render.js"));
-      const spriteart = await import(u("spriteart.js"));
+      const render = await import(u("painter/render.js"));
+      const spriteart = await import(u("painter/spriteart.js"));
       const cv = document.getElementById("cv");
       const deadline = Date.now() + ms;
       const frame = () => {
@@ -159,8 +159,8 @@ export async function settleArtwork(page) {
   await page.evaluate(async (ms) => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const st = await import(u("data/state.js"));
-    const render = await import(u("render.js"));
-    const spriteart = await import(u("spriteart.js"));
+    const render = await import(u("painter/render.js"));
+    const spriteart = await import(u("painter/spriteart.js"));
     const deadline = Date.now() + ms;
     for (;;) {
       await spriteart.preloadPath(st.state.path);
@@ -178,7 +178,7 @@ export async function probeAnchor(page, anchor) {
     const u = (m) => new URL("js/" + m, location.href).href;
     const st = await import(u("data/state.js"));
     const model = await import(u("model/model.js"));
-    const render = await import(u("render.js"));
+    const render = await import(u("painter/render.js"));
     const config = await import(u("config.js"));
     const { state } = st;
     const z = state.cam.z;

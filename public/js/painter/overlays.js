@@ -10,17 +10,17 @@ import {
   barrierDir,
   catOf,
   markerShown,
-} from "./config.js";
-import { COLOR } from "./ui/dom.js";
-import { drawX } from "./model/geometry.js";
+} from "../config.js";
+import { COLOR } from "../ui/dom.js";
+import { drawX } from "../model/geometry.js";
 import { connections } from "./kept.js";
-import { cellCentre, computeWiring, drawBox, markerCentre } from "./model/model.js";
-import { isRegional } from "./data/release.js";
-import { getSettings } from "./data/settings.js";
+import { cellCentre, computeWiring, drawBox, markerCentre } from "../model/model.js";
+import { isRegional } from "../data/release.js";
+import { getSettings } from "../data/settings.js";
 import { objectShown } from "./spriteart.js";
 import { standingBox } from "./spritepaint.js";
-import { worldLen } from "./data/state.js";
-import { formatDist } from "./model/util.js";
+import { worldLen } from "../data/state.js";
+import { formatDist } from "../model/util.js";
 
 // filled arrowhead at (tx, ty) pointing along (dx, dy), h long in draw units
 function arrowhead(ctx, tx, ty, dx, dy, h) {

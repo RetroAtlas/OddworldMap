@@ -87,7 +87,7 @@ test("a falling item is drawn on the screen of the camera that builds it, not th
   await page.evaluate(async () => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const config = await import(u("config.js"));
-    const render = await import(u("render.js"));
+    const render = await import(u("painter/render.js"));
     config.CATS.find((c) => c.key === "hazard").on = false;
     render.draw();
   });
@@ -136,7 +136,7 @@ test("a sprite larger than its rectangle is hovered over its whole image", async
   const spot = await page.evaluate(async (b) => {
     const u = (m) => new URL("js/" + m, location.href).href;
     const st = await import(u("data/state.js"));
-    const spritepaint = await import(u("spritepaint.js"));
+    const spritepaint = await import(u("painter/spritepaint.js"));
     const model = await import(u("model/model.js"));
     const t = st.state.path.tlvs.find((o) => o.name === "RollingBall" && o.x1 === b.x1);
     const [marker, sprite] = spritepaint.hitBoxes(t, st.LAYOUT);
@@ -186,7 +186,7 @@ test("the scenery carries no label until the setting asks, then it does", async 
   await page.check("#sLabelScenery");
   await page.click("#settingsClose");
   await page.evaluate(async () => {
-    const render = await import(new URL("js/render.js", location.href).href);
+    const render = await import(new URL("js/painter/render.js", location.href).href);
     render.draw();
   });
   expect(pink(await pixels(page, band))).toBeGreaterThan(0);
@@ -235,8 +235,8 @@ test("Dim backgrounds dims the foreground masks drawn over the sprites too", asy
     page.evaluate(async (p) => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("data/state.js"));
-      const render = await import(u("render.js"));
-      const spriteart = await import(u("spriteart.js"));
+      const render = await import(u("painter/render.js"));
+      const spriteart = await import(u("painter/spriteart.js"));
       await spriteart.preloadPath(st.state.path);
       render.draw();
       const z = st.state.cam.z;

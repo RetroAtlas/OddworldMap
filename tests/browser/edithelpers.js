@@ -43,7 +43,7 @@ export const armEditing = async (page) => {
 export const aimAt = (page, name) =>
   page.evaluate(async (name) => {
     const st = window.__st;
-    const render = await import(new URL("js/render.js", location.href).href);
+    const render = await import(new URL("js/painter/render.js", location.href).href);
     const stateModule = await import(new URL("js/data/state.js", location.href).href);
     window.__nav.flushHash();
     while (location.hash !== window.__applied)

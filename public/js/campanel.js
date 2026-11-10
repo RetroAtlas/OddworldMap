@@ -10,7 +10,7 @@ import { ADDED_NOTE, CATS, EDITED_NOTE, OFFSCREEN_NOTE, REMOVED_NOTE, catOf } fr
 import { $, narrowMQ, typingIn } from "./ui/dom.js";
 import { GEO, LAYOUT, state } from "./data/state.js";
 import { cellAt, nearestCam, offScreen, tlvCell } from "./model/model.js";
-import { setHighlight } from "./render.js";
+import { setHighlight } from "./painter/render.js";
 import { fieldPrefsFor, getSettings } from "./data/settings.js";
 import { jumpToTlv } from "./navigate.js";
 import { currentOf, editNotes, isAdded, isRemoved, removedObjects } from "./data/edits.js";

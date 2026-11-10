@@ -3,10 +3,10 @@
 // at while the markers are off, and the one rule that says sprite, marker, unseen or
 // nothing
 
-import { CATS, KEPT_UNSEEN, PENS, barrierDir, catOf, markerShown } from "./config.js";
-import { computeConnections, computeWiring, destOf, destTrusted } from "./model/model.js";
-import { spriteTypes } from "./rules/sprites.js";
-import { state } from "./data/state.js";
+import { CATS, KEPT_UNSEEN, PENS, barrierDir, catOf, markerShown } from "../config.js";
+import { computeConnections, computeWiring, destOf, destTrusted } from "../model/model.js";
+import { spriteTypes } from "../rules/sprites.js";
+import { state } from "../data/state.js";
 
 const ruled = {};
 const hasRule = (game, name) => (ruled[game] ??= new Set(spriteTypes(game))).has(name);

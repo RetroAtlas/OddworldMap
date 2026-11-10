@@ -16,7 +16,7 @@ This is the artifact people actually want from a map site — the thing that get
 
 ## Sketch
 
-1. **Parameterise the renderer.** `draw()` in [js/render.js](../public/js/render.js) uses the module-level `ctx`/`cv` and reads `state.cam` directly. Extract the body into `paint(ctx, cam, width, height, dpr)` and reduce `draw()` to a call with the live values. Mechanical.
+1. **Parameterise the renderer.** `draw()` in [js/render.js](../public/js/painter/render.js) uses the module-level `ctx`/`cv` and reads `state.cam` directly. Extract the body into `paint(ctx, cam, width, height, dpr)` and reduce `draw()` to a call with the live values. Mechanical.
 2. **Preload the artwork.** `img()` is lazy and `draw()` skips images that are not `complete` — fine for an interactive canvas that repaints, fatal for a one-shot export, where you would silently get holes. Add a helper that resolves when every `png` (and `fg`, if `show.fg`) of `path.cams` has loaded, and await it before painting. Same for `tintedImg`, which returns `null` until its source is loaded.
 3. **Paint and download.** Create the offscreen canvas at full path size, paint at `z = 1`, `toBlob`, reuse the download helper with [49](item-049-png-export-revoke-race.md)'s deferred revoke.
 4. **UI.** Two buttons — "Export view" and "Export whole path" — is the clearest and avoids a mode.

@@ -9,8 +9,8 @@ import { graphName, graphSvg } from "./data/graphsvg.js";
 import { pathImage } from "./model/model.js";
 import { exportPath } from "./model/reliveexport.js";
 import { pathEdited } from "./data/edits.js";
-import { paint } from "./render.js";
-import { artworkReady, preloadPath } from "./spriteart.js";
+import { paint } from "./painter/render.js";
+import { artworkReady, preloadPath } from "./painter/spriteart.js";
 import { LAYOUT, cellOrigin, state } from "./data/state.js";
 import { toast } from "./ui/toast.js";
 

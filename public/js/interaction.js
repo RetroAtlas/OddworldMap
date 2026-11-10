@@ -41,10 +41,10 @@ import {
   setPatrol,
   setWireFocus,
   settleView,
-} from "./render.js";
+} from "./painter/render.js";
 import { scheduleDraw } from "./ui/redraw.js";
-import { objectShown } from "./spriteart.js";
-import { hitBoxes } from "./spritepaint.js";
+import { objectShown } from "./painter/spriteart.js";
+import { hitBoxes } from "./painter/spritepaint.js";
 import {
   camCenter,
   computeWiring,

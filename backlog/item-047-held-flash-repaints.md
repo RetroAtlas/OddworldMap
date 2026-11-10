@@ -8,7 +8,7 @@ Open an object permalink — the links right-click produces. The held marker pul
 
 ## Cause
 
-[js/render.js](../public/js/render.js)'s `animateFlash` releases the hold only when `performance.now() - flash.t0 > FLASH_MS` **and** `flashInteracted`. That flag is set only by `pointerdown`, `wheel` and `keydown`. Moving the mouse is not interaction, so the loop never terminates. Entered from [js/navigate.js](../public/js/navigate.js), `flashAt(fx, fy, true)`.
+[js/render.js](../public/js/painter/render.js)'s `animateFlash` releases the hold only when `performance.now() - flash.t0 > FLASH_MS` **and** `flashInteracted`. That flag is set only by `pointerdown`, `wheel` and `keydown`. Moving the mouse is not interaction, so the loop never terminates. Entered from [js/navigate.js](../public/js/navigate.js), `flashAt(fx, fy, true)`.
 
 ## The guard was already there
 
