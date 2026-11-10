@@ -5,7 +5,15 @@ import js from "@eslint/js";
 import globals from "globals";
 
 export default [
-  { ignores: ["node_modules/", "tools/*", "!tools/levelpages.js", "!tools/pixels.js"] },
+  {
+    ignores: [
+      "node_modules/",
+      "tools/*",
+      "!tools/levelpages.js",
+      "!tools/pixels.js",
+      "!tools/trees.js",
+    ],
+  },
   js.configs.recommended,
   {
     files: ["public/js/**/*.js", "eslint.config.js"],
@@ -24,8 +32,9 @@ export default [
     },
   },
   {
-    // the pixel proof: a Node script whose page.evaluate bodies run in the browser
-    files: ["tools/pixels.js"],
+    // the pixel proof and the two-tree server under it: Node scripts whose page.evaluate bodies
+    // run in the browser
+    files: ["tools/pixels.js", "tools/trees.js"],
     languageOptions: {
       ecmaVersion: 2024,
       sourceType: "module",

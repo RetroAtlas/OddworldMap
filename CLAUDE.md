@@ -43,7 +43,7 @@ One file per area, read when the work reaches it rather than loaded with this on
 ## Build & verify
 
 - The Pages deploy is the last job of [.github/workflows/ci.yml](.github/workflows/ci.yml) and `needs` every check job in it, so a push to `main` publishes only what passed and the site waits on the browser suite; a check that lands in a workflow of its own would gate nothing.
-- `npm run lint` — ESLint over the viewer modules, `public/sw.js` and `tests/`, each with its own globals; `tools/` is ignored except its two Node files, `tools/levelpages.js` and `tools/pixels.js`. CI runs it on every push to `main` and on every pull request. There is no JS build step: the modules are served as-is, so lint is the only static pre-runtime check — the browser suite is what runs them before a visitor does.
+- `npm run lint` — ESLint over the viewer modules, `public/sw.js` and `tests/`, each with its own globals; `tools/` is ignored except its Node files, `tools/levelpages.js`, `tools/pixels.js` and the two-tree server `tools/trees.js` under it. CI runs it on every push to `main` and on every pull request. There is no JS build step: the modules are served as-is, so lint is the only static pre-runtime check — the browser suite is what runs them before a visitor does.
 - `python3 -m compileall -q tools/` and `pipx run ruff==0.16.0 check tools/` — the builder's static checks; CI runs both on 3.12.
   - The ruff version is pinned exactly, like Prettier's, because which rules fire moves between releases; run it locally the same way or a clean tree can still fail CI.
   - `ruff.toml` selects the defect rules alone (undefined names, unused imports, f-string and syntax errors), not ruff's default set, which fights the parsers' deliberate compactness.

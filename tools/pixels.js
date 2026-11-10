@@ -6,86 +6,14 @@
 // a route) through the page's own modules. The run names every view whose hashes differ and fails
 // on one; --dump writes each view's canvas for both trees.
 import { chromium } from "@playwright/test";
-import { execFile } from "node:child_process";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
-import { createServer } from "node:http";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { promisify } from "node:util";
+import { fromRef, fromTree, refExists, refModules, serve, treeModules } from "./trees.js";
 
-const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const args = process.argv.slice(2);
 const dumpAt = args.indexOf("--dump");
 const DUMP = dumpAt >= 0 ? args.splice(dumpAt, 2)[1] : null;
 const REF = args[0] ?? "HEAD";
-const run = promisify(execFile);
-
-const TYPES = {
-  html: "text/html",
-  js: "text/javascript",
-  css: "text/css",
-  json: "application/json",
-  png: "image/png",
-  svg: "image/svg+xml",
-  webmanifest: "application/manifest+json",
-  xml: "application/xml",
-  txt: "text/plain",
-  ico: "image/x-icon",
-};
-
-// a tree served from one read of a path under its public/, on a port of its own
-function serve(read) {
-  const server = createServer(async (req, res) => {
-    const path = decodeURIComponent(new URL(req.url, "http://127.0.0.1").pathname)
-      .replace(/\/$/, "/index.html")
-      .slice(1);
-    const body = await read(path).catch(() => null);
-    if (body === null) {
-      console.error(`404 ${path}`);
-      res.writeHead(404);
-      res.end();
-      return;
-    }
-    res.writeHead(200, {
-      "content-type": TYPES[path.split(".").pop()] ?? "application/octet-stream",
-      "cache-control": "no-store",
-    });
-    res.end(body);
-  });
-  return new Promise((resolve) => server.listen(0, "127.0.0.1", () => resolve(server)));
-}
-const fromTree = (path) => readFile(join(ROOT, "public", path));
-// a module by its name, wherever the tree keeps it under js/, so the two trees
-// need not lay their modules out alike
-const modulesOf = (files) =>
-  Object.fromEntries(
-    files
-      .filter((f) => f.endsWith(".js"))
-      .map((f) => f.replaceAll("\\", "/"))
-      .map((f) => [f.slice(f.lastIndexOf("/") + 1), f]),
-  );
-const treeModules = async () =>
-  modulesOf(await readdir(join(ROOT, "public", "js"), { recursive: true }));
-const refModules = async () =>
-  modulesOf(
-    (await run("git", ["-C", ROOT, "ls-tree", "-r", "--name-only", REF, "--", "public/js"])).stdout
-      .split("\n")
-      .map((f) => f.replace(/^public\/js\//, "")),
-  );
-const fromRef = () => {
-  const blobs = new Map();
-  return (path) => {
-    if (!blobs.has(path))
-      blobs.set(
-        path,
-        run("git", ["-C", ROOT, "show", `${REF}:public/${path}`], {
-          encoding: "buffer",
-          maxBuffer: 1 << 26,
-        }).then((r) => r.stdout),
-      );
-    return blobs.get(path);
-  };
-};
 
 const MI = "#AE/MI/1/1412/712/1.00";
 const R1 = "#AO/R1/15/9781/786/1.00";
@@ -290,14 +218,14 @@ async function capture(browser, port, modules, view) {
 }
 
 const KEYS = ["canvas", "minimap", "export", "boxes"];
-await run("git", ["-C", ROOT, "rev-parse", "--verify", "--quiet", `${REF}^{commit}`]).catch(() => {
+if (!(await refExists(REF))) {
   console.error(`no such ref: ${REF}`);
   process.exit(2);
-});
+}
 const browser = await chromium.launch();
 const tree = await serve(fromTree);
-const ref = await serve(fromRef());
-const [treeMods, refMods] = await Promise.all([treeModules(), refModules()]);
+const ref = await serve(fromRef(REF));
+const [treeMods, refMods] = await Promise.all([treeModules(), refModules(REF)]);
 let differing = 0;
 try {
   if (DUMP) await mkdir(DUMP, { recursive: true });
