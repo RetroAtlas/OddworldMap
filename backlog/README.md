@@ -59,6 +59,8 @@ Item-specific reasoning and cross-references stay inside this folder. An item ma
 
 Each needs a verdict before anyone builds it.
 
+- [**106.** Every file of the site in the Wayback Machine, each deploy consistent with itself](item-106-wayback-complete-copies.md): the archive holds 1,885 of 8,900 files and serves each file from the capture nearest the page's own; one Save Page Now job per file around every deploy, the outgoing bytes captured before the switch and the incoming after, verified by the deploy's stamp, with a scheduled audit as the notice. _Medium; needs an account, two secrets and three experiments first._
+
 ## Deferred
 
 Decided not now, with the reason recorded.
