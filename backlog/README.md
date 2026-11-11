@@ -28,7 +28,7 @@ Item-specific reasoning and cross-references stay inside this folder. An item ma
 
 **Next up**:
 
-- Nothing queued.
+- [105. Purge the edge's copies of the code after each deploy](item-105-purge-edge-at-deploy.md): the zone id and a purge token as secrets, then the step and one deploy watched.
 
 **Field system:** every gameplay object carries its full field archive, each value transform is write-once and collision-safe and keyed by the field's game type, enum values are generated straight from the decomp, and per-object default visibility is curated. A bare-int field carries the unit it is measured in ([28](item-028-readable-units.md)). The one open branch is upstream label fixes ([29](item-029-decomp-label-sweep.md), ongoing).
 
@@ -45,6 +45,7 @@ Item-specific reasoning and cross-references stay inside this folder. An item ma
 
 ## Code and build
 
+- [**105.** Purge the edge's copies of the code after each deploy](item-105-purge-edge-at-deploy.md): Cloudflare keeps the modules and the partials for the origin's 600 s, so a deploy is seen as a mix of two until every file has expired, which broke the live page twice on 2026-11-10; one step after the Pages deploy purges the `.js` and `.css` files by URL, skipped without the two secrets, the artwork left where it is. _Small; needs the zone id and a purge token as secrets._
 - [**95.** A bare link's fit zoom is read off the canvas mid-slide](item-095-fit-zoom-boot-slide.md) — `fitView` reads the canvas width during the sidebar's boot slide, so the same path link opens at a slightly different zoom each visit; wait for the slide, or fit again when it ends. _Small._
 - [**57.** One module lifecycle: explicit `init()`](item-057-module-lifecycle.md) — the current boot order is a load-bearing accident. _Medium._
 
