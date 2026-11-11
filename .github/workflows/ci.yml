@@ -43,14 +43,15 @@ jobs:
 
   browser:
     runs-on: ubuntu-latest
+    # Playwright's own image carries the browser build the pinned @playwright/test expects, so nothing
+    # is installed here; ci.test.js holds the tag to the pin. The runner's uid keeps the checkout and
+    # what the suite writes the runner's files rather than root's
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+      options: --user 1001
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v5
-        with:
-          node-version: lts/*
-          cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
 
   deploy:
