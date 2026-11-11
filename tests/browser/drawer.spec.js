@@ -35,6 +35,18 @@ test("a path change with a scope button focused closes the drawer onto the menu 
   expect(errors).toEqual([]);
 });
 
+test("a path change with nothing focused closes the drawer onto the menu button", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await drawerHolding(page, "#searchInput");
+  await page.evaluate(() => document.activeElement.blur());
+  await page.keyboard.press("]");
+  await page.waitForFunction(() => !document.body.classList.contains("menu-open"), null, POLL);
+  expect(await page.evaluate(() => document.activeElement?.id)).toBe("menuBtn");
+  expect(errors).toEqual([]);
+});
+
 test("a path change with the gear button focused closes the drawer onto the menu button", async ({
   page,
 }) => {
