@@ -1,6 +1,13 @@
 {
  "entries": [
   {
+   "date": "2026-11-11",
+   "tag": "fixed",
+   "tiny": true,
+   "title": "A search scope button keeps the focus when the path changes",
+   "detail": "The row of scope buttons above the search results is built afresh whenever you move to another path, and pressing ] or [ with one of them focused left the keyboard with nothing focused. The focus now stays on the same button."
+  },
+  {
    "date": "2026-11-10",
    "tag": "fixed",
    "tiny": true,

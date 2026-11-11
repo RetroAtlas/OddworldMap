@@ -220,6 +220,21 @@ test("the box's clear button shows for as long as it holds text, and the keyboar
   expect(errors).toEqual([]);
 });
 
+test("a scope button keeps the focus through the path change that rebuilds it", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await page.goto(`/${TRIP_HASH}`);
+  await settle(page, { game: "AO", level: "R1", path: 15 });
+  const game = page.locator("#scopeBar button").nth(1);
+  await game.focus();
+  await page.keyboard.press("]");
+  await page.waitForFunction(() => location.hash.startsWith("#AO/R1/16"));
+  await expect(page.locator("#scopeBar button").nth(1)).toBeFocused();
+  await expect(page.locator("#scopeBar button").nth(3)).toHaveText("P16");
+  expect(errors).toEqual([]);
+});
+
 test("a switch clicked leaves the keys to the map, and a text field keeps its own", async ({
   page,
 }) => {

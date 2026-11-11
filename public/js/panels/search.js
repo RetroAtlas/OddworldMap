@@ -70,6 +70,7 @@ function scopeLabel() {
 
 function updateScopeBar() {
   if (!state.data || !state.lvl || !state.path) return;
+  const held = [...scopeBar.children].indexOf(document.activeElement); // the rebuild drops the focus
   scopeBar.innerHTML = "";
   for (const [key, label] of [
     ["all", "All"],
@@ -87,6 +88,7 @@ function updateScopeBar() {
     };
     scopeBar.appendChild(b);
   }
+  if (held >= 0) scopeBar.children[held].focus();
 }
 window.addEventListener("selection-changed", updateScopeBar);
 
