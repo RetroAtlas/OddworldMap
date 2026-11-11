@@ -7,7 +7,7 @@
     "format:check": "prettier --check \"**/*.{js,css,html}\"",
     "lint": "eslint .",
     "pixels": "node tools/pixels.js",
-    "styles": "node tools/styles.js",
+    "styles": "node tools/styles/styles.js",
     "test": "node --test",
     "test:browser": "playwright test -c tests/browser"
   },
