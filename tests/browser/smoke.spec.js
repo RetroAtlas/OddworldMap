@@ -155,6 +155,7 @@ test("?embed=1 hides the chrome and offers the way to the full site", async ({ p
   await settle(page, { game: "AO", level: "R2", path: 1 });
   for (const el of await page.locator(".chrome").all()) await expect(el).toBeHidden();
   await expect(page.locator("#openSiteBtn")).toBeVisible();
+  expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true);
   expect(errors).toEqual([]);
 });
 

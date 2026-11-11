@@ -196,31 +196,6 @@ test("a module imports only its own layer and those beneath it", () => {
   assert.deepEqual(wrong, []);
 });
 
-// A window listener runs in registration order and a module registers its
-// listeners as it evaluates, so the hub, whose drawer hands focus on in
-// selection-changed, has to evaluate before a panel that rebuilds its controls
-// on the same event: a panel it imports evaluates first as a dependency must,
-// and main.js imports it ahead of the others.
-test("the hub evaluates before every panel it does not reach", () => {
-  const deps = importGraph();
-  const order = [];
-  const seen = new Set();
-  const visit = (f) => {
-    if (seen.has(f)) return;
-    seen.add(f);
-    for (const d of deps.get(f)) visit(d);
-    order.push(f);
-  };
-  visit("main.js");
-  const hub = "chrome/interaction.js";
-  const under = new Set([hub]);
-  for (const f of under) for (const d of deps.get(f)) under.add(d);
-  const early = [...deps.keys()].filter(
-    (f) => posix.dirname(f) === "panels" && !under.has(f) && order.indexOf(f) < order.indexOf(hub),
-  );
-  assert.deepEqual(early, [], "a panel the hub does not reach evaluates after it");
-});
-
 // model.js is handed the layout and the dataset, level and path a call depends
 // on, so nothing it runs may reach the module holding the live ones
 test("model.js never reaches state.js", () => {

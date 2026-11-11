@@ -22,8 +22,6 @@ import { storedLocationHash, clearStoredLocation } from "./data/settings.js";
 import { initSettings } from "./chrome/settingsdialog.js";
 import { syncNeeds } from "./chrome/sidebar.js";
 import { state } from "./data/state.js";
-// the hub before the panels: its listeners register first, so its drawer hands
-// focus on before a panel rebuilds its controls
 import { toggleMenu } from "./chrome/interaction.js";
 import "./panels/search.js";
 import "./chrome/export.js";

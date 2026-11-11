@@ -109,17 +109,28 @@ function syncMenu() {
   const label = open ? "Close menu" : "Open menu";
   menuBtn.title = label;
   menuBtn.setAttribute("aria-label", label);
-  if (!open && sidebar.contains(document.activeElement)) menuBtn.focus();
   if (!open) hideAnchorTip(); // a tap that closes the drawer takes its own anchor off-screen
   sidebar.inert = !open; // sliding it off-screen leaves its controls focusable
 }
 document.body.classList.toggle("menu-open", !isNarrow()); // set before first paint: open on wide, out of the way on narrow
+let keyInput = false; // the last input was a key rather than a pointer
+window.addEventListener("keydown", () => (keyInput = true), true);
+window.addEventListener("pointerdown", () => (keyInput = false), true);
 export function toggleMenu(open) {
-  document.body.classList.toggle(
-    "menu-open",
-    open ?? !document.body.classList.contains("menu-open"),
-  );
+  const was = document.body.classList.contains("menu-open");
+  document.body.classList.toggle("menu-open", open ?? !was);
   syncMenu();
+  // a close hands the focus on once the dispatch is through, where the drawer
+  // still holds it (inert blurs a control it keeps only later) or where the last
+  // input was a key and the focus is on the body, dropped there by a panel
+  // rebuilding its controls on the same event; a tap leaves a focus outside the
+  // drawer where it put it, and a close before any input moves nothing
+  if (was && !document.body.classList.contains("menu-open"))
+    queueMicrotask(() => {
+      const a = document.activeElement;
+      if (document.body.classList.contains("menu-open")) return;
+      if (sidebar.contains(a) || (a === document.body && keyInput)) menuBtn.focus();
+    });
 }
 syncMenu();
 menuBtn.onclick = () => toggleMenu();
