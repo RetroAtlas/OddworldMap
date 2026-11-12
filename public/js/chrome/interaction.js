@@ -419,7 +419,7 @@ cv.addEventListener("click", () => {
       flushHash(); // the entry left behind keeps the route as plotted so far
       const [sx, sy] = markerCentre(seam, LAYOUT);
       routeSeam({ x: sx, y: sy }, d);
-      navigateToDest(d);
+      navigateToDest(d, seam);
       routeArrive(d);
     } else addRoutePoint(snapAtMouse()); // click-to-add: pan/pinch/wheel gestures stay live
     return;
@@ -432,7 +432,7 @@ cv.addEventListener("click", () => {
   for (const t of hoverTlvs) {
     const d = followableDest(t);
     if (d) {
-      navigateToDest(d);
+      navigateToDest(d, t);
       return;
     }
   }

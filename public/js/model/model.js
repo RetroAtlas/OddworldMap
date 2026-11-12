@@ -796,7 +796,7 @@ function decodeFragment(h) {
 }
 
 // the view is all-or-nothing: an incomplete or unreadable trio yields none at
-// all, so the caller fits the path rather than centering on a NaN
+// all, so the caller opens the path as paths open rather than centering on a NaN
 const finiteView = (x, y, z) =>
   Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z) && z > 0 ? { x, y, z } : null;
 

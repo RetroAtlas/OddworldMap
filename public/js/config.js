@@ -5,6 +5,10 @@
 export const ZOOM_MIN = 0.02, ZOOM_MAX = 4;              // manual zoom clamp (px per draw unit)
 export const FOCUS_ZOOM_MIN = 0.5, FOCUS_ZOOM_MAX = 1.6; // zoom clamp when jumping to an object
 export const FOCUS_SCREENS = 2.6;                        // jump target: ~this many screens across
+export const FIT_ZOOM_MIN = 0.17, FIT_ZOOM_NARROW = 0.5; // a path fitting under this opens on one screen; the second on a canvas under two screens wide
+export const ENTRY_ZOOM_MAX = 1;                         // that one screen is shown at its art's size at most
+export const ENTRY_CLEAR = { top: 52, side: 8, bottom: 36, mapRight: 18, mapBottom: 56 }; // px it keeps clear: the chip row, the edges, the help line, and beside or above the minimap
+export const MINIMAP_MAX = { w: 180, h: 120 };           // the box a path's grid is scaled into, in the map's lower right corner
 export const SPRITE_ZOOM = 0.12;                         // below this zoom a path waits to fetch its sprites
 export const FLASH_MS = 1600;                            // follow-destination highlight duration
 export const FLASH_HOLD_MAX_MS = 30000;                  // held highlight's cap when no interaction comes

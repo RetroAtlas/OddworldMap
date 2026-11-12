@@ -2,9 +2,10 @@
 // painting itself lives in render.js, at the end of each frame.
 
 import { $, cv } from "../ui/dom.js";
-import { state } from "../data/state.js";
+import { LAYOUT, state } from "../data/state.js";
 import { centerCam } from "../model/model.js";
-import { draw, minimapScale, settleView } from "../painter/render.js";
+import { minimapScale } from "../model/opening.js";
+import { draw, settleView } from "../painter/render.js";
 import { scheduleHash } from "./navigate.js";
 
 const mm = $("minimap");
@@ -14,7 +15,7 @@ function scrubTo(e) {
   const r = mm.getBoundingClientRect();
   // a mid-drag hide leaves a zero rect: no flinging the view off it
   if (mm.hidden || !r.width) return;
-  const s = minimapScale(state.path);
+  const s = minimapScale(state.path, LAYOUT);
   const v = { x: (e.clientX - r.left) / s, y: (e.clientY - r.top) / s, z: state.cam.z };
   settleView();
   Object.assign(state.cam, centerCam(v, cv.clientWidth, cv.clientHeight));

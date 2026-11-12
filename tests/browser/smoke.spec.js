@@ -186,6 +186,78 @@ test("the numbers panel counts the screen a follow lands on", async ({ page }) =
   expect(errors).toEqual([]);
 });
 
+// a screen of the standing path as the page draws it
+const screenBox = (page, name) =>
+  page.evaluate(async (name) => {
+    const st = await import(new URL("js/data/state.js", location.href).href);
+    const { cam, path } = st.state;
+    const c = path.cams.find((c) => c.name === name);
+    const r = document.getElementById("cv").getBoundingClientRect();
+    const x = r.left + ((c.cell % path.w) * st.LAYOUT.cellW - cam.x) * cam.z,
+      y = r.top + (Math.floor(c.cell / path.w) * st.LAYOUT.cellH - cam.y) * cam.z;
+    return { x, y, right: x + st.LAYOUT.visW * cam.z, foot: y + st.LAYOUT.visH * cam.z };
+  }, name);
+
+test.describe("in a box under two screens wide", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("a path opens on the screen it is entered on, at its art's own size", async ({ page }) => {
+    const errors = trackErrors(page);
+    await page.goto("/#AE/MI/1");
+    await settle(page, { game: "AE", level: "MI", path: 1 });
+    const cam = await page.evaluate(async () => {
+      const st = await import(new URL("js/data/state.js", location.href).href);
+      return { ...st.state.cam };
+    });
+    // Abe's first screen in the Mines, MIP01C04 in the grid's third column and sixth
+    // row, in the middle of the box clear of the chip row and the minimap
+    expect(cam).toEqual({ x: 725, y: 935, z: 1 });
+    expect(errors).toEqual([]);
+  });
+
+  test("a path transition's follow opens the path on the screen it lands on", async ({ page }) => {
+    const errors = trackErrors(page);
+    // the transition at the left edge of R1 P18, which leads back to R1 P16's seventh screen
+    await page.goto("/#AO/R1/18/184/242/1.00");
+    await settle(page, { game: "AO", level: "R1", path: 18 });
+    const pt = await spotOf(page, { name: "PathTransition", world: [113, 120] });
+    await page.mouse.click(pt.x, pt.y);
+    await settle(page, { game: "AO", level: "R1", path: 16 });
+    const { x, y, right, foot } = await screenBox(page, "R1P16C07");
+    expect(Math.min(x, y, 390 - right, 844 - foot)).toBeGreaterThanOrEqual(0);
+    expect(errors).toEqual([]);
+  });
+
+  test("the screen a path opens on stands clear of the chip row, the help line and the minimap", async ({
+    page,
+  }) => {
+    const errors = trackErrors(page);
+    const clear = async (path, name) => {
+      await settle(page, { game: "AO", level: "R1", path });
+      const screen = await screenBox(page, name);
+      for (const id of ["chipRow", "help", "minimap"]) {
+        const box = await page.locator(`#${id}`).boundingBox();
+        const apart =
+          screen.right <= box.x ||
+          box.x + box.width <= screen.x ||
+          screen.foot <= box.y ||
+          box.y + box.height <= screen.y;
+        expect(apart, `${name} and #${id}`).toBe(true);
+      }
+    };
+    // Rupture Farms' first path is entered at the top of its screens, its twentieth at their
+    // foot, above the minimap on a phone held upright and beside it on one on its side
+    await page.goto("/#AO/R1/15");
+    await clear(15, "R1P15C01");
+    await page.goto("/#AO/R1/20");
+    await clear(20, "R1P20C01");
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.reload();
+    await clear(20, "R1P20C01");
+    expect(errors).toEqual([]);
+  });
+});
+
 test("?embed=1 hides the chrome and offers the way to the full site", async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto("/?embed=1#AO/R2/1/554/287/1.00");
@@ -453,5 +525,29 @@ test("a place found by search opens its path whole", async ({ page }) => {
   });
   // ten screens in a row and the fit's margin in a box 1030 wide, to a link's two decimals
   expect(zoom.toFixed(2)).toBe((1030 / 3880).toFixed(2));
+  expect(errors).toEqual([]);
+});
+
+test("a follow that lands nowhere on the path in hand leaves the view where it is", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  // a door of Necrum Mines' eleventh path naming its own path and a camera the path lacks
+  await page.goto("/#AE/MI/11/437/91/1.00");
+  await settle(page, { game: "AE", level: "MI", path: 11 });
+  const view = () =>
+    page.evaluate(async () => {
+      const st = await import(new URL("js/data/state.js", location.href).href);
+      return { cam: { ...st.state.cam }, hash: location.hash };
+    });
+  const before = await view();
+  const pt = await spotOf(page, { name: "Door", world: [425, 79] });
+  await page.evaluate(() => {
+    window.__selections = 0;
+    window.addEventListener("selection-changed", () => window.__selections++);
+  });
+  await page.mouse.click(pt.x, pt.y);
+  await page.waitForFunction(() => window.__selections > 0, null, POLL);
+  expect(await view()).toEqual(before);
   expect(errors).toEqual([]);
 });

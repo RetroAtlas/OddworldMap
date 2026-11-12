@@ -17,6 +17,7 @@ import { onBackgroundPlane } from "../model/fields.js";
 import { drawX, drawY } from "../model/geometry.js";
 import { drawnAs } from "./kept.js";
 import { camCenter, centerCam, drawBox, lineRuns, offScreen, screenRuns } from "../model/model.js";
+import { minimapScale } from "../model/opening.js";
 import { motionRunning, patrolTick, sceneTick } from "../engine/motion.js";
 import {
   labelled,
@@ -496,12 +497,6 @@ function paintMarkers(f, sprites, art) {
 // ---- minimap: the path's cell grid in a corner, the viewport drawn on it ----
 const mm = $("minimap");
 const mmCtx = mm.getContext("2d");
-const MM_MAX_W = 180,
-  MM_MAX_H = 120;
-
-// draw units to minimap pixels
-export const minimapScale = (path) =>
-  Math.min(MM_MAX_W / (path.w * CELL_W), MM_MAX_H / (path.h * CELL_H));
 
 function paintMinimap(cam, path) {
   // the inset earns its corner only while some of the path lies off-screen
@@ -509,7 +504,7 @@ function paintMinimap(cam, path) {
     path.w * CELL_W * cam.z <= cv.clientWidth && path.h * CELL_H * cam.z <= cv.clientHeight;
   mm.hidden = fits;
   if (fits) return;
-  const s = minimapScale(path);
+  const s = minimapScale(path, LAYOUT);
   const w = Math.round(path.w * CELL_W * s),
     h = Math.round(path.h * CELL_H * s);
   // rounded before comparing: canvas sizes truncate to ints, and a fractional

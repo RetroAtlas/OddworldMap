@@ -1,4 +1,4 @@
-// Selection (game/level/path), follow-to-destination, view fitting and hash permalinks.
+// Selection (game/level/path), follow-to-destination, the view a path opens on and hash permalinks.
 // Fires a "selection-changed" window event (detail.fromHash) whenever a path is picked.
 
 import { clamp, esc } from "../model/util.js";
@@ -29,6 +29,7 @@ import {
   focusZoom,
   formatHash,
   hashToDraw,
+  landingCam,
   markerCentre,
   parseHash,
   resolveTarget,
@@ -36,8 +37,8 @@ import {
 import { pathDisplayName, pathNickname } from "../model/annotations.js";
 import { isDemoPath } from "../model/demo.js";
 import { pathVisible, revealPath } from "../data/pathvisible.js";
-import { pathFit } from "../model/opening.js";
-import { orderPaths } from "../model/pathorder.js";
+import { opensWhole, pathFit, screenView } from "../model/opening.js";
+import { entryCell, orderPaths } from "../model/pathorder.js";
 import { displayLabel, getSettings, rememberLocation } from "../data/settings.js";
 import {
   currentOf,
@@ -290,7 +291,7 @@ window.addEventListener("settings-changed", (e) => {
 
 // `place` puts the camera where the selection is headed, ahead of its first
 // paint; null keeps the view
-function selectPath(P, place = fitView) {
+function selectPath(P, place = openView) {
   state.path = P;
   markOn(pathBtns, String(P.id));
   place?.();
@@ -316,28 +317,36 @@ export function cyclePath(dir) {
   selectPath(paths[(paths.indexOf(state.path) + dir + paths.length) % paths.length]);
 }
 
-let camToken = 0; // bumped on explicit positioning to invalidate pending fits
+let camToken = 0; // bumped on explicit positioning to invalidate pending placements
 
-function fitView() {
+// `cell` stands in for the entry screen where a way through lands on another
+function openingCam(cw, ch, cell) {
+  const P = state.path;
+  const at = opensWhole(P, cw, ch, GEO) ? null : (cell ?? entryCell(state.data, P));
+  return at == null ? pathFit(P, cw, ch, LAYOUT, cellOrigin()) : screenView(P, at, cw, ch, LAYOUT);
+}
+
+function openView(cell) {
   const token = ++camToken;
   const attempt = () => {
     if (token !== camToken) return; // superseded by hash restore or follow
-    if (!cv.clientWidth || !cv.clientHeight) {
+    const cw = cv.clientWidth,
+      ch = cv.clientHeight;
+    if (!cw || !ch) {
       requestAnimationFrame(attempt);
       return;
     }
     settleView();
-    const fit = pathFit(state.path, cv.clientWidth, cv.clientHeight, LAYOUT, cellOrigin());
-    Object.assign(state.cam, fit);
+    Object.assign(state.cam, openingCam(cw, ch, cell));
     draw();
   };
   attempt();
 }
 
 // put (fx, fy) at the middle of the viewport, at zoom z or the focus zoom when
-// z is null. Waits on layout like fitView: the corner comes from the canvas size
+// z is null. Waits on layout like openView: the corner comes from the canvas size
 function centerOn(fx, fy, z) {
-  const token = ++camToken; // cancel any fit still waiting on layout
+  const token = ++camToken; // cancel any placement still waiting on layout
   const attempt = () => {
     if (token !== camToken) return;
     const cw = cv.clientWidth,
@@ -365,11 +374,11 @@ function leaveGraph() {
 }
 
 // a selection headed for a point puts it mid-view ahead of the first paint, and
-// fits the path where `at` names none
+// opens the path as a path opens where `at` names none
 const aimed = (at) => () => {
   const p = at();
   if (p) centerOn(p[0], p[1], null);
-  else fitView();
+  else openView();
 };
 
 // center on (fx, fy) zoomed to a few screens across, flash the spot
@@ -403,13 +412,14 @@ export function objectHash(t) {
 const linkOrigin = (t) => baseObject(t) ?? pristineOf(t);
 
 // ---- follow (click a door/portal/well to jump to its destination) -----
-export function navigateToDest(d) {
+export function navigateToDest(d, t) {
   if (!cv.clientWidth) {
-    requestAnimationFrame(() => navigateToDest(d));
+    requestAnimationFrame(() => navigateToDest(d, t));
     return;
   }
   const L = state.data.levels.find((l) => l.short === d.lv);
   if (!L) return;
+  const here = state.lvl === L && state.path?.id === d.pa;
   if (state.lvl !== L) setLevel(L);
   // the partner where one resolves, else the middle of the camera the link names
   const at = () => {
@@ -418,9 +428,18 @@ export function navigateToDest(d) {
     const cell = camCell(state.path, d.ca);
     return cell == null ? null : cellCentre(cell, state.path, LAYOUT);
   };
-  if (!selectPathById(d.pa, aimed(at))) return;
+  // a way through naming neither opens its path as a path opens, on the screen
+  // it lands on where its archive names one; one that lands nowhere on the path
+  // in hand leaves the view where it is
+  const place = () => {
+    const p = at();
+    if (p) return centerOn(p[0], p[1], null);
+    const cell = camCell(state.path, landingCam(t, d));
+    if (cell != null || !here) openView(cell);
+  };
+  if (!selectPathById(d.pa, place)) return;
   const p = at();
-  if (p) focusOn(p[0], p[1]); // a path-level target stays on its path, fitted
+  if (p) focusOn(p[0], p[1]);
 }
 
 // the level, path and object a caller kept name places, not the objects now

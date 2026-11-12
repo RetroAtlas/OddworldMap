@@ -3,6 +3,12 @@
   {
    "date": "2026-11-12",
    "tag": "improved",
+   "title": "On a small screen, a path opens on the screen you enter it by",
+   "detail": "A phone opened every path whole, fitted to the screen: Rupture Farms' first path was a strip of twenty screens too small to make out, and every path button led to another strip. Where the whole would not read, a path now opens on the screen the game first brings you into it by, Abe's first screen in Rupture Farms, at the artwork's own size. The rest is a drag away, and the minimap shows where you are. A tablet held upright and a narrow window open the same way; a window of 1280×720 or larger opens every path whole as before, and a link to a spot still opens on that spot."
+  },
+  {
+   "date": "2026-11-12",
+   "tag": "improved",
    "title": "The screens you are looking at load first",
    "detail": "A path asked for all of its screens at once, so on a slow connection the screen in front of you could be among the last to arrive, and the sprites could turn up before the scenery they stand on. The map now fetches the screens in view first, then the path's sprites, then the rest of its screens, nearest first: where a link or a door takes you fills in before what lies off to the side."
   },
