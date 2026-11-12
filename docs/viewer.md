@@ -147,7 +147,8 @@ Edited data says so wherever it shows: the path's button and the chip carry a ma
 
 - the URL hash (`#GAME/LEVEL/path/x/y/zoom`, where x/y is the point in the middle of the view, in the game's own world coordinates) always reflects the current view, including any plotted route
   - copy it to share an exact location, and it opens on that spot whatever the size of the window it lands in; the browser back button retraces follows
-  - the chain button in the top-right corner copies the same link, for phones and installed-app mode where there may be no address bar
+  - a path you have not moved since it opened is linked by its level and path alone (`#AO/R1/15`), so the link opens it to suit the window it lands in, whole on a wide screen and on its entry screen on a phone; pan or zoom and the link takes on your view, as it does while it carries a route, the world graph or a release other than the one the map is built on, each of which follows a view
+  - the chain button in the top-right corner copies the link as the view stands, for phones and installed-app mode where there may be no address bar; the address bar's own can lag it after the window changes size, until the view next moves
   - a release other than the one the map is built on rides the link as its code (`…/eu`, `…/jp`), and a link without one opens the release the map is built on; a code the map does not carry opens that release and says so
 - **right-click** an object to copy a direct link to it — opening that link centers the object, holds a marker on it until you interact, and names what the marker is on at the bottom of the map
   - the link names the object where the release the map is built on places it, so it opens on the same object in every release, however far a release moved it; opened on a release that drops the object, it says so

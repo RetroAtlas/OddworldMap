@@ -3,6 +3,12 @@
   {
    "date": "2026-11-12",
    "tag": "improved",
+   "title": "A link to a path you have not moved suits the screen it opens on",
+   "detail": "The address bar took on your view the moment a path opened, so a link copied from a wide screen carried that screen's whole-path view to a phone, which opened it as a strip in the middle of the path. A path you have not moved since it opened is now linked by its level and path alone. Whoever follows the link sees it open as it would for them: whole on a wide screen, on its entry screen on a phone. Pan or zoom and the link carries your view, as before."
+  },
+  {
+   "date": "2026-11-12",
+   "tag": "improved",
    "tiny": true,
    "title": "On a small screen, a follow lands at the size a path opens at",
    "detail": "Following a door, picking a search result or opening a link to an object on a phone zoomed the map out to half size, where the object labels crowd one another. Each now lands at the size a path opens at there, a screen across, so the first tap no longer shrinks what you were reading."

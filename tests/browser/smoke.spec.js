@@ -57,6 +57,28 @@ test("a bare link's path rests fitted to the map's box as it stands beside the s
   expect(r.hash).toBe("#AO/R1/19");
 });
 
+// the default boot once its own hash has come back: Rupture Farms' first path, not moved
+async function unmoved(page) {
+  await page.goto("/");
+  await settleAny(page);
+  await page.waitForFunction(() => location.hash === "#AO/R1/15", null, POLL);
+}
+
+test("a path not moved since it opened is linked by its path alone", async ({ page }) => {
+  const errors = trackErrors(page);
+  await unmoved(page);
+  expect(errors).toEqual([]);
+});
+
+test("a pan gives a path's link its view", async ({ page }) => {
+  const errors = trackErrors(page);
+  await unmoved(page);
+  await page.keyboard.press("ArrowRight");
+  const viewed = () => /^#AO\/R1\/15\/\d+\/\d+\/\d\.\d\d$/.test(location.hash);
+  await page.waitForFunction(viewed, null, POLL);
+  expect(errors).toEqual([]);
+});
+
 test("a view permalink lands where it points and reproduces itself", async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto(`/${TRIP_HASH}`);
@@ -523,8 +545,8 @@ test("a place found by search opens its path whole", async ({ page }) => {
     const st = await import(new URL("js/data/state.js", location.href).href);
     return st.state.cam.z;
   });
-  // ten screens in a row and the fit's margin in a box 1030 wide, to a link's two decimals
-  expect(zoom.toFixed(2)).toBe((1030 / 3880).toFixed(2));
+  // ten screens in a row and the fit's margin, in a box 1030 wide
+  expect(zoom).toBe(1030 / 3880);
   expect(errors).toEqual([]);
 });
 
@@ -549,5 +571,31 @@ test("a follow that lands nowhere on the path in hand leaves the view where it i
   await page.mouse.click(pt.x, pt.y);
   await page.waitForFunction(() => window.__selections > 0, null, POLL);
   expect(await view()).toEqual(before);
+  expect(errors).toEqual([]);
+});
+
+test("an embed's way to the full site says the view its frame shows, though the path has not moved", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await page.goto("/?embed=1#AO/R1/15");
+  await settle(page, { game: "AO", level: "R1", path: 15 });
+  await page.dispatchEvent("#openSiteBtn", "pointerdown");
+  const link = new URL(await page.locator("#openSiteBtn").getAttribute("href"));
+  expect(link.search).toBe("");
+  expect(link.hash).toMatch(/^#AO\/R1\/15\/\d+\/\d+\/\d\.\d\d$/);
+  expect(errors).toEqual([]);
+});
+
+test("the chain button copies the link the address bar holds", async ({ page }) => {
+  const errors = trackErrors(page);
+  await page.addInitScript(() =>
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: (t) => ((window.__copied = t), Promise.resolve()) },
+    }),
+  );
+  await unmoved(page);
+  await page.click("#copyLinkBtn");
+  expect(await page.evaluate(() => window.__copied)).toBe(page.url());
   expect(errors).toEqual([]);
 });

@@ -725,19 +725,39 @@ export const focusZoom = (cw, ch, geo) =>
 // "route=nCOUNT;sLV.PA;x,y;…;end": every segment names its path, so no
 // waypoint can ever rebind to artwork it was not plotted on. The world graph
 // reads as a place of its own, so a bare word carries it, and a release other
-// than the base is the bare code it is named by; no code is the base.
+// than the base is the bare code it is named by; no code is the base. A link
+// of the path alone opens it as any path opens, and a view that reads as that
+// opening view is left unsaid where nothing would follow it.
 //
 // Every coordinate a link carries is a world coordinate, the object segment's
 // included: draw space is a packing of the world that a change of pitch would
 // slide under a link, while a world point names a place in the game.
 const GRAPH_TOKEN = "graph";
 
-export function formatHash(layout, gameId, levelShort, pathId, view, obj, route, graph, release) {
-  let h = `#${gameId}/${levelShort}/${pathId}/${Math.round(worldX(view.x, layout))}/${Math.round(worldY(view.y, layout))}/${view.z.toFixed(2)}`;
+export function formatHash(
+  layout,
+  gameId,
+  levelShort,
+  pathId,
+  view,
+  obj,
+  route,
+  graph,
+  release,
+  opening,
+) {
+  const at = (v) =>
+    `/${Math.round(worldX(v.x, layout))}/${Math.round(worldY(v.y, layout))}/${v.z.toFixed(2)}`;
+  let h = `#${gameId}/${levelShort}/${pathId}`;
+  const count = route?.reduce((n, s) => n + s.pts.length, 0);
+  // within what a link's rounding moves a view by: half a world unit, half a hundredth of zoom
+  const near = (a, b) =>
+    Math.abs(a.x - b.x) < 0.5001 && Math.abs(a.y - b.y) < 0.5001 && Math.abs(a.z - b.z) < 0.005001;
+  if (opening && !obj && !release && !graph && !count && near(view, opening)) return h;
+  h += at(view);
   if (obj) h += `/${obj.name}@${obj.x1},${obj.y1}`;
   if (release) h += `/${release}`;
   if (graph) h += `/${GRAPH_TOKEN}`;
-  const count = route?.reduce((n, s) => n + s.pts.length, 0);
   if (count) {
     const pair = (p) => `${Math.round(worldX(p.x, layout))},${Math.round(worldY(p.y, layout))}`;
     const body = route.map((s) => [`s${s.lv}.${s.pa}`, ...s.pts.map(pair)].join(";")).join(";");

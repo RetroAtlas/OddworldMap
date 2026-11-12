@@ -466,10 +466,10 @@ cv.addEventListener("contextmenu", (e) => {
 
 // the full-site permalink to the current view. viewHash(), not location.href:
 // the hash write is debounced and can lag a pan
-function fullSiteUrl() {
+function fullSiteUrl(exact) {
   const url = new URL(location.href);
   url.searchParams.delete("embed");
-  url.hash = state.path ? viewHash() : location.hash;
+  url.hash = state.path ? viewHash(exact) : location.hash;
   return url.href;
 }
 
@@ -479,7 +479,7 @@ copyLinkBtn.innerHTML = LINK_SVG;
 copyLinkBtn.onclick = () => {
   if (!state.path) return;
   (navigator.clipboard?.writeText(fullSiteUrl()) ?? Promise.reject()).then(
-    () => toast("view link copied"),
+    () => toast("link copied"),
     () => toast("copy failed"),
   );
 };
@@ -488,9 +488,9 @@ copyLinkBtn.onclick = () => {
 // the same view; the href is seeded at boot (an <a> without one isn't even
 // focusable) and refreshed on pointerdown/click, before navigation reads it
 openSiteBtn.innerHTML = EXTERNAL_SVG;
-openSiteBtn.href = fullSiteUrl();
+openSiteBtn.href = fullSiteUrl(true);
 openSiteBtn.onpointerdown = openSiteBtn.onclick = () => {
-  openSiteBtn.href = fullSiteUrl();
+  openSiteBtn.href = fullSiteUrl(true);
 };
 
 cv.addEventListener(

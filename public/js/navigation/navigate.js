@@ -525,19 +525,23 @@ const toDraw = (p) => ({ x: dX(p.x), y: dY(p.y) });
 const inEmbed = () => document.body.classList.contains("embed");
 
 // permalink to the current view (what the address bar shows once the
-// debounced hash write lands)
-export function viewHash() {
-  const v = camCenter(state.cam, cv.clientWidth, cv.clientHeight);
+// debounced hash write lands). formatHash is handed the view this canvas opens
+// the standing path on, so a view still there is linked by its path alone and
+// the link opens to suit the canvas it lands in; `exact` says the view regardless
+export function viewHash(exact) {
+  const cw = cv.clientWidth,
+    ch = cv.clientHeight;
   return formatHash(
     LAYOUT,
     state.data.id,
     state.lvl.short,
     state.path.id,
-    v,
+    camCenter(state.cam, cw, ch),
     null,
     state.route,
     state.graph,
     releaseCode(state.data),
+    exact || !cw || !ch ? null : camCenter(openingCam(cw, ch), cw, ch),
   );
 }
 

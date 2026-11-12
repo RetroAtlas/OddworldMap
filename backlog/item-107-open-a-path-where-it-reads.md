@@ -65,6 +65,7 @@ Left as it is:
 - **The room above the minimap** is the narrow layout's on every layout, 14 px more than the minimap needs beside the sidebar, which costs a phone on its side a few hundredths of its zoom.
 - **What the canvas shows outside what is clear**, beside the minimap or under the help line, holds no view at an edge, so a screen two rows from the entry can be left as a strip at the page's foot.
 - **A jump's size** leaves the minimap out, so where passing it costs the opening its size, on a phone on its side, a jump lands a little larger than the path opened.
+- **A window resized after the open** counts as a move for the chain button, which asks afresh and copies a view, and not for the address bar, which nothing rewrites until the view next moves.
 - **The route planner's bar** takes the chip row's place and drops the row onto the entry screen's top, and on a canvas under some 330 px wide the help line's mouse wording wraps to a second line, over the screen's foot.
 - **A label above the top row.** Rupture Farms' `AbeStart` stands partly in the slack above its screen, so its label is drawn into the chip row of the very first view.
 - **The level pages** picture each level by a pinned screen, else the first its entry path stores, on 13 of the 25 another screen than the one their link opens on.

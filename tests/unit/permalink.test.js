@@ -74,6 +74,37 @@ test("a permalinked center survives a change of viewport, a corner would not", (
   assert.equal(Math.round(got.y - cam.y), 78);
 });
 
+test("a view that reads as its path's opening goes unsaid, where nothing would follow it", () => {
+  const opening = { x: 2041.2, y: 317.9, z: 0.2231 };
+  const link = (view, obj = null, route = null, graph = false, release = null) =>
+    formatHash(AO_GEOMETRY, "AO", "R1", 15, view, obj, route, graph, release, opening);
+  assert.equal(link(opening), "#AO/R1/15");
+  const p = parseHash(link(opening));
+  assert.deepEqual([p.game, p.level, p.path, p.view], ["AO", "R1", 15, null]);
+  // the link's own rounding is the measure: a view back from one is still unmoved
+  assert.equal(link({ x: 2041.4, y: 318.2, z: 0.22 }), "#AO/R1/15");
+  // on a seam between two screens, where a link writes the two sides a cell's slack apart, too
+  const seam = { x: 2208, y: 360, z: 0.2231 };
+  const by = (view) => formatHash(AO_GEOMETRY, "AO", "R1", 15, view, null, null, false, null, seam);
+  assert.equal(by({ ...seam, x: 2208 - 2 ** -40 }), "#AO/R1/15");
+  assert.equal(by({ ...seam, x: 2207.6 }), "#AO/R1/15");
+  assert.equal(by({ ...seam, x: 2207.4 }), "#AO/R1/15/5743/720/0.22");
+  // a unit of pan or a hundredth of zoom is a view of its own
+  assert.equal(link({ ...opening, x: 2042.2 }), "#AO/R1/15/5578/678/0.22");
+  assert.equal(link({ ...opening, z: 0.2331 }), "#AO/R1/15/5577/678/0.23");
+  // and whatever follows a view keeps it, since the tail has nowhere else to stand
+  const obj = { name: "Door", x1: 9769, y1: 774 };
+  const route = [{ lv: "R1", pa: 15, pts: [{ x: 10, y: 20 }] }];
+  assert.match(link(opening, obj), /^#AO\/R1\/15\/5577\/678\/0\.22\/Door@9769,774$/);
+  assert.match(link(opening, null, route), /^#AO\/R1\/15\/5577\/678\/0\.22\/route=/);
+  assert.equal(link(opening, null, null, true), "#AO/R1/15/5577/678/0.22/graph");
+  assert.equal(link(opening, null, null, false, "eu"), "#AO/R1/15/5577/678/0.22/eu");
+  // a route with no waypoint left writes nothing, and holds nothing
+  assert.equal(link(opening, null, [{ lv: "R1", pa: 15, pts: [] }]), "#AO/R1/15");
+  // with no opening view handed over the view is always said
+  assert.equal(formatHash(AO_GEOMETRY, "AO", "R1", 15, opening), "#AO/R1/15/5577/678/0.22");
+});
+
 test("formatHash writes world coordinates, rounded, and zoom to two decimals", () => {
   // draw (177.4, 54.6) sits in cell 0, whose window starts at world (256, 120)
   assert.equal(
