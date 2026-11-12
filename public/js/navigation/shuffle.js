@@ -3,6 +3,7 @@
 // art-less cams stay out — a blank cell is nobody's prize.
 
 import { $ } from "../ui/dom.js";
+import { releaseGames } from "../data/data.js";
 import { state } from "../data/state.js";
 import { camIdOf } from "../model/model.js";
 import { pathVisible } from "../data/pathvisible.js";
@@ -13,6 +14,7 @@ const btn = $("shuffleBtn");
 btn.innerHTML = SHUFFLE_SVG;
 
 btn.onclick = () => {
+  releaseGames();
   const pool = [];
   for (const G of state.games)
     for (const L of G.levels)

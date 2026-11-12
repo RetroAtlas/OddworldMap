@@ -1,6 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { artSettled, nearestFirst, showing, wanted } from "../../public/js/painter/artorder.js";
+import {
+  artSettled,
+  nearestFirst,
+  showing,
+  viewComplete,
+  wanted,
+} from "../../public/js/painter/artorder.js";
 import { SYNTH_GEOMETRY, path, pitches } from "./fixtures.js";
 
 const [PACKED, SPACED] = pitches(SYNTH_GEOMETRY); // 200x100 screens, 300x150 and 400x200 apart
@@ -140,6 +146,43 @@ test("a view over no screen of the path's goes straight to the rest", () => {
   assert.deepEqual(
     want([], [], () => true, FROM_6),
     [0, 1, 3, 4],
+  );
+});
+
+test("a view stands complete once its screens have come and the sprite art holds nothing back", () => {
+  const complete = (arrived, settled, view = FROM_4) =>
+    viewComplete(SCREENS, PACKED, view, { arrived: (c) => arrived.includes(c.cell), settled });
+  assert.equal(
+    complete([4], () => true),
+    true,
+  );
+  assert.equal(
+    complete([], () => true),
+    false,
+  );
+  assert.equal(
+    complete([4], () => false),
+    false,
+  );
+  // every screen showing is waited for: cells 3 and 4 in a view over both
+  const both = { x: 0, y: 150, w: 500, h: 100 };
+  assert.equal(
+    complete([4], () => true, both),
+    false,
+  );
+  assert.equal(
+    complete([3, 4], () => true, both),
+    true,
+  );
+  // and over the camera that draws no screen, the sprite art alone
+  const none = { x: 0, y: 300, w: 200, h: 100 };
+  assert.equal(
+    complete([], () => true, none),
+    true,
+  );
+  assert.equal(
+    complete([], () => false, none),
+    false,
   );
 });
 

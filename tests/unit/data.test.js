@@ -5,11 +5,13 @@ import {
   GAME_FILES,
   GAME_IDS,
   bootGame,
+  gamesReleased,
   knownGame,
   loadGame,
   loadRelease,
   loadReleaseIndex,
   loadSprites,
+  releaseGames,
 } from "../../public/js/data/data.js";
 
 test("knownGame: the games the map ships, and nothing borrowed from Object", () => {
@@ -27,6 +29,17 @@ test("bootGame: the link's game, else the remembered one, else the first", () =>
   assert.equal(bootGame("#XX/R1/1", "#AE/MI/1"), "AE");
   assert.equal(bootGame("#XX/R1/1", null), GAME_IDS[0]);
   assert.equal(bootGame("not a hash", null), GAME_IDS[0]);
+});
+
+test("the games a visit is not looking at are let go once, whoever asks first", async () => {
+  let times = 0;
+  gamesReleased.then(() => times++);
+  await null;
+  assert.equal(times, 0);
+  releaseGames();
+  releaseGames();
+  await gamesReleased;
+  assert.equal(times, 1);
 });
 
 test("every game's file is a shipped dataset that names it back", async () => {

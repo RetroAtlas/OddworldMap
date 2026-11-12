@@ -4,6 +4,13 @@
    "date": "2026-11-12",
    "tag": "improved",
    "tiny": true,
+   "title": "On a slow connection, the first screen arrives sooner",
+   "detail": "The other game's map data was fetched the moment a path opened, and on a slow connection it came down ahead of the screen in front of you, or shared the line with it. It now waits until that screen and its sprites are in. On a slow phone the first screen is complete from half a second to two and a half seconds sooner, depending on the connection. A search, a shuffle or a link to the other game still fetches it straight away."
+  },
+  {
+   "date": "2026-11-12",
+   "tag": "improved",
+   "tiny": true,
    "title": "The map's help line speaks touch on a touch screen",
    "detail": "The line at the foot of the map told a phone about arrow keys, a mouse wheel, hovering and the ? key, none of which it has. On a phone or a tablet it now says what a touch does: drag to pan, pinch to zoom, tap to inspect."
   },

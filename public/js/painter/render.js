@@ -35,7 +35,7 @@ import {
   paintWires,
 } from "./overlays.js";
 import { pathRelease, releaseNotes } from "../data/release.js";
-import { wanted } from "./artorder.js";
+import { viewComplete, wanted } from "./artorder.js";
 import { arrived, asked, screenOf, tintedMasks } from "./screens.js";
 import {
   artOf,
@@ -238,6 +238,18 @@ export function draw() {
   }
   paint(cvCtx, state.cam, cv.clientWidth, cv.clientHeight, devicePixelRatio);
   paintMinimap(state.cam, state.path);
+  sayComplete();
+}
+
+// said once, by the first view to stand complete
+let said = false;
+function sayComplete() {
+  if (said) return;
+  const { x, y, z } = state.cam;
+  const view = { x, y, w: cv.clientWidth / z, h: cv.clientHeight / z };
+  if (!viewComplete(state.path, LAYOUT, view, { arrived, settled: spriteArtSettled })) return;
+  said = true;
+  window.dispatchEvent(new CustomEvent("view-complete"));
 }
 window.addEventListener("frame-due", draw);
 

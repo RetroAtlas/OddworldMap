@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { ALL_CATS, POLL, SLIG, TALLY, seedView, settle, spotOf, trackErrors } from "./helpers.js";
+import { GAMES_HOLD_MS } from "../../public/js/config.js";
 
 // MI P1's families, every one of which lands but the held one before a probe reads
 const MI_P1_FAMILIES = [
@@ -269,6 +270,106 @@ test("a search hit asks first for the screens showing where it lands", async ({ 
     });
     await hit.first().click();
   });
+});
+
+// Rupture Farms' first screens at the art's own size: a boot on Oddysee, which leaves
+// Exoddus the other game, with the requests made for its dataset
+const FARMS = "#AO/R1/15/1464/720/1.00";
+// well inside the hold, so its own clock cannot answer for the trigger
+const SOON = { timeout: GAMES_HOLD_MS / 4 };
+function otherGame(page) {
+  const asked = [];
+  page.on("request", (q) => /\/map_data_ae\.json$/.test(q.url()) && asked.push(q.url()));
+  return asked;
+}
+
+test("the other game's dataset waits for the view's screens and its sprite art", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  const other = otherGame(page);
+  const screen = hold(page, /\/R1P15C\d+\.png$/);
+  const sheet = hold(page, /\/cams\/ao\/sprites\/Slig\./);
+  await seedView(page, { show: { objects: true }, cats: ALL_CATS });
+  await page.goto(`/?embed=1${FARMS}`);
+  await expect.poll(() => screen.reached, POLL).toBe(true);
+  await page.waitForTimeout(400);
+  expect(other).toEqual([]);
+  screen.release();
+  await expect.poll(() => sheet.reached, POLL).toBe(true);
+  await page.waitForTimeout(400);
+  expect(other).toEqual([]);
+  sheet.release();
+  await expect.poll(() => other.length, SOON).toBe(1);
+  expect(errors).toEqual([]);
+});
+
+// the same boot on the full site with every screen of Oddysee's held, so no view of it
+// stands complete, and the other game's dataset not asked for
+async function heldBoot(page) {
+  const other = otherGame(page);
+  const screens = hold(page, /\/cams\/ao\/\w+\/\w+P\d+C\d+\.png$/, true);
+  await page.goto(`/${FARMS}`);
+  await expect.poll(() => screens.reached, POLL).toBe(true);
+  await page.waitForTimeout(400);
+  expect(other).toEqual([]);
+  return { other, screens };
+}
+
+test("a view that never stands complete gives the other game's dataset up after a wait", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await page.clock.install();
+  const { other, screens } = await heldBoot(page);
+  await page.clock.fastForward(GAMES_HOLD_MS);
+  await expect.poll(() => other.length, SOON).toBe(1);
+  screens.release();
+  expect(errors).toEqual([]);
+});
+
+test("a search asks for the other game's dataset at once", async ({ page }) => {
+  const errors = trackErrors(page);
+  const { other, screens } = await heldBoot(page);
+  await page.fill("#searchInput", "zulag");
+  await expect.poll(() => other.length, SOON).toBe(1);
+  screens.release();
+  expect(errors).toEqual([]);
+});
+
+test("a shuffle press asks for the other game's dataset at once", async ({ page }) => {
+  const errors = trackErrors(page);
+  const { other, screens } = await heldBoot(page);
+  await page.click("#shuffleBtn");
+  await expect.poll(() => other.length, SOON).toBe(1);
+  screens.release();
+  expect(errors).toEqual([]);
+});
+
+test("a link naming the other game fetches its dataset at once", async ({ page }) => {
+  const errors = trackErrors(page);
+  const { other, screens } = await heldBoot(page);
+  await page.evaluate(() => (location.hash = "#AE/MI/1"));
+  await expect.poll(() => other.length, SOON).toBe(1);
+  await settle(page, { game: "AE", level: "MI", path: 1 });
+  expect(other).toHaveLength(1);
+  screens.release();
+  expect(errors).toEqual([]);
+});
+
+test("the offline warm-up waits with the other game's dataset", async ({ page }) => {
+  const errors = trackErrors(page);
+  const { other, screens } = await heldBoot(page);
+  await page.click("#settingsBtn");
+  await page.check("#sCacheMap");
+  await page.click("#settingsClose");
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller, null, POLL);
+  await page.waitForTimeout(400);
+  expect(other).toEqual([]);
+  screens.release();
+  // the boot's own request, and the warm-up's
+  await expect.poll(() => other.length, POLL).toBe(2);
+  expect(errors).toEqual([]);
 });
 
 test("an edit that brings a family in leaves the path's sprites drawn while its sheet comes", async ({

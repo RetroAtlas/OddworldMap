@@ -70,3 +70,18 @@ Left as it is:
 - **A label above the top row.** Rupture Farms' `AbeStart` stands partly in the slack above its screen, so its label is drawn into the chip row of the very first view.
 - **The level pages** picture each level by a pinned screen, else the first its entry path stores, on 13 of the 25 another screen than the one their link opens on.
 - **How often a phone paints.** At the fit a phone at rest painted nothing, the zoom being under the one that draws the sprites; on its entry screen it paints with the engine's clock like any view that shows them. Headless, with the CPU slowed six times, a paint takes 5 ms of script; no check here has put it on a real phone.
+
+## Shipped: the other game's dataset held back, 2026-11-12
+
+The game a visit is not looking at is asked for once the first view stands complete, its screens in and its sprite art holding nothing back, which the painter says once; ten seconds after the boot path stands where no view gets there; and at once by a search, a shuffle press or a link naming it. [docs/viewer-boot.md](../docs/viewer-boot.md) has the rule. What the measuring showed:
+
+- **It stood in the first view's way at any priority.** Asked for behind the first paint at low priority, as the cam bitmaps are, its request went out just ahead of theirs. The live site's HTTP/2 serves one response at a time, so its 395 KB went before the first screen; its HTTP/3 shares among them, so it took a share of every screen and sheet of the view.
+- **Let go at the default priority.** At low priority it shares with the rest of the path's screens, four of them in flight, and lands five to seven seconds later than it did; ahead of them it lands within three seconds of the sprites.
+- **The signal is the painter's and the way out a clock.** A file that hangs and a tab opened in the background never complete a view. Every measured run was let go by the signal.
+
+Measured on the throttled phone against the commit before (slow 4G's 1.6 Mbit/s, the CPU slowed four times, the default boot, medians of two or three runs, 2026-11-12), over a link paced as the live site was seen to deliver, with 150 ms of round trip. Served one response at a time, as over HTTP/2: the first view complete at 5.7 s where it took 8.1 s, its sprites at 7.5 s rather than 9.9 s, the other game's dataset in at 10.0 s where it had come first, at 6.6 s, and the whole path at 19.3 s either way. Shared among the responses, as over HTTP/3: 5.3 s rather than 5.9 s, 7.1 s rather than 8.0 s, the dataset at 9.6 s rather than 13.6 s, the whole path at 19.0 s rather than 18.7 s. Throttled by the browser instead, which honours no priority: 7.9 s rather than 8.4 s and 10.2 s rather than 11.1 s, the dataset at 20.1 s rather than 13.2 s, behind the rest of the path, and the whole path at 22.5 s rather than 21.8 s. A 1280×720 window on fast 4G: 3.7 s rather than 3.8 s, the sprites at 4.2 s rather than 4.4 s, the dataset at 4.7 s rather than 4.4 s.
+
+Left as it is:
+
+- **A link into Exoddus** holds nothing back: the page preloads Oddysee's dataset before its first script runs.
+- **A type card opened before the release** counts the game in hand alone until the other lands, as it did before the other landed.

@@ -3,7 +3,7 @@
 // one go, so a place you have never opened still opens with no connection.
 
 import { CAM_FILE_BYTES, MASK_FILE_BYTES, PATCH_FILE_BYTES, SHEET_FILE_BYTES } from "../config.js";
-import { GAME_FILES, GAME_IDS, loadSprites } from "../data/data.js";
+import { GAME_FILES, GAME_IDS, gamesReleased, loadSprites } from "../data/data.js";
 import { hasAnyStoredEdits } from "../data/edits.js";
 import { $ } from "../ui/dom.js";
 import { camFiles } from "../model/model.js";
@@ -50,11 +50,12 @@ async function whenControlled() {
 // loaded uncontrolled — so once the worker takes the page, re-fetch everything
 // it already pulled, and offline works from the enabling visit onward. Named
 // outright: the document, which is no resource entry of its own, the datasets,
-// one of which may still be in flight and so have no entry yet, and the editor
-// data a game with saved edits boots through
+// one of which may have no entry yet and is waited for until it is let go, and
+// the editor data a game with saved edits boots through
 async function warmShell() {
   await markerReady();
   if (!(await whenControlled())) return;
+  await gamesReleased;
   if (!getSettings().cacheMap) return; // toggled back off before the worker took the page
   const named = [
     "index.html",

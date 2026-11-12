@@ -10,6 +10,7 @@ export const ENTRY_ZOOM_MAX = 1;                         // that one screen is s
 export const ENTRY_CLEAR = { top: 52, side: 8, bottom: 36, mapRight: 18, mapBottom: 56 }; // px it keeps clear: the chip row, the edges, the help line, and beside or above the minimap
 export const MINIMAP_MAX = { w: 180, h: 120 };           // the box a path's grid is scaled into, in the map's lower right corner
 export const SPRITE_ZOOM = 0.12;                         // below this zoom a path waits to fetch its sprites
+export const GAMES_HOLD_MS = 10000;                      // the games a visit is not looking at are asked for this long after its path stands, at the latest
 export const FLASH_MS = 1600;                            // follow-destination highlight duration
 export const FLASH_HOLD_MAX_MS = 30000;                  // held highlight's cap when no interaction comes
 export const CACHE_MAX_IMAGES = 500;                     // cam bitmaps kept before eviction (~70 KB compressed each)

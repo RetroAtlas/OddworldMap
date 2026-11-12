@@ -1,5 +1,6 @@
 // Boot: fetch the map data, then hand over to the modules.
 
+import { GAMES_HOLD_MS } from "./config.js";
 import { $, embedded } from "./ui/dom.js";
 import { resize } from "./painter/render.js";
 import { warmSprites } from "./painter/spriteart.js";
@@ -7,10 +8,12 @@ import { addGame, selectGame, applyHash } from "./navigation/navigate.js";
 import {
   GAME_IDS,
   bootGame,
+  gamesReleased,
   loadEditorData,
   loadFieldSidecars,
   loadGame,
   loadJson,
+  releaseGames,
 } from "./data/data.js";
 import { hasStoredEdits, setEnabled } from "./data/edits.js";
 import { setAnnotations } from "./model/annotations.js";
@@ -41,6 +44,9 @@ import "./chrome/offline.js";
 initSettings();
 syncNeeds();
 initFieldPanel();
+
+// the first view to stand complete lets the rest of the map go
+window.addEventListener("view-complete", releaseGames, { once: true });
 
 // ?embed=1: iframe view (wikis, forums) — chrome hides via body.embed, and
 // the hash still works, so an embed can point at an exact screen
@@ -82,6 +88,7 @@ Promise.all([
     $("gameName").textContent = "Map data failed to load.";
     $("help").textContent =
       "map data failed to load — check that map_data_ao.json / map_data_ae.json are served";
+    releaseGames();
     return;
   }
   addGame(G);
@@ -97,6 +104,9 @@ Promise.all([
       selectGame(G);
     }
   }
-  // the rest of the map, behind the first paint
-  for (const id of GAME_IDS) if (id !== G.id) loadGame(id, true).then(addGame);
+  // the rest of the map, behind the first view: once that stands complete, or
+  // after a wait where it never does
+  setTimeout(releaseGames, GAMES_HOLD_MS);
+  await gamesReleased;
+  for (const id of GAME_IDS) if (id !== G.id) loadGame(id).then(addGame);
 });

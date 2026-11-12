@@ -1,5 +1,5 @@
 // The site's JSON payloads and when each is fetched: first paint waits on the
-// game the link names, and the other arrives behind it.
+// game the link names, and the other is let go behind the first view.
 // No DOM, so it stays importable in bare Node.
 
 import { RELEASE_CODE } from "../config.js";
@@ -40,17 +40,15 @@ const started = new Map(),
   settled = new Set();
 
 // one fetch per dataset however many callers ask, so a permalink into a game
-// still in flight awaits that fetch rather than starting a second. `low` drops
-// the game the visitor is not looking at out of the default high priority, so it
-// cannot push ahead of the opening screen's artwork, which is low itself.
-export function loadGame(id, low) {
+// still in flight awaits that fetch rather than starting a second
+export function loadGame(id) {
   let p = started.get(id);
   if (!p)
     started.set(
       id,
-      (p = loadJson(GAME_FILES[id], low ? { priority: "low" } : null)
+      (p = loadJson(GAME_FILES[id])
         .then((d) => (d && d.levels && d.levels.length ? d : null))
-        .then((d) => withStoredEdits(d, low))
+        .then(withStoredEdits)
         .finally(() => settled.add(id))),
     );
   return p;
@@ -72,21 +70,20 @@ export function loadReleaseIndex() {
 // retries. The level map a changed object's destinations derive through rides
 // the editor sidecar, fetched only for an overlay that changes objects
 const releases = new Map();
-export function loadRelease(id, code, low) {
+export function loadRelease(id, code) {
   if (!knownGame(id) || !RELEASE_CODE.test(code)) return Promise.resolve(null);
   const key = `${id}:${code}`;
   let p = releases.get(key);
   if (!p) {
-    const opts = low ? { priority: "low" } : null;
-    p = Promise.all([loadGame(id, low), loadJson(`release_${id.toLowerCase()}_${code}.json`, opts)])
+    p = Promise.all([loadGame(id), loadJson(`release_${id.toLowerCase()}_${code}.json`)])
       .then(async ([base, overlay]) => {
         if (!base || overlay?.game !== id || overlay.code !== code) return null;
         const objects = Object.values(overlay.paths ?? {}).some((e) => e.objects);
-        const side = objects ? await loadEditorData(id, low) : null;
+        const side = objects ? await loadEditorData(id) : null;
         if (objects && !side) return null;
         return materializeRelease(base, overlay, side?.level_short ?? {});
       })
-      .then((R) => withStoredEdits(R, low))
+      .then(withStoredEdits)
       .then((R) => {
         if (!R) releases.delete(key);
         return R;
@@ -103,10 +100,10 @@ export function loadRelease(id, code, low) {
 // un-labelled would slip through whenever the dataset outran the boot's own
 // fetch of them. A table that did not load validates against nothing, so it
 // refuses like a missing sidecar: nothing applies and the page is told
-async function withStoredEdits(d, low) {
+async function withStoredEdits(d) {
   const code = d?.release?.code ?? "";
   if (!d || !hasStoredEdits(d.id, code)) return d;
-  const [side, fd] = await Promise.all([loadEditorData(d.id, low), loadFieldSidecars(d.id, low)]);
+  const [side, fd] = await Promise.all([loadEditorData(d.id), loadFieldSidecars(d.id)]);
   if (side && fd.fieldTypes && fd.enumLabels) {
     setLevelShort(d.id, side.level_short);
     armFieldData(d.id, fd.fieldTypes, fd.enumLabels);
@@ -118,18 +115,23 @@ async function withStoredEdits(d, low) {
 // the field-type and enum-label pair, one fetch per game shared between the
 // boot's own use and the validation above
 const fieldSidecars = new Map();
-export function loadFieldSidecars(id, low) {
+export function loadFieldSidecars(id) {
   let p = fieldSidecars.get(id);
   if (!p) {
-    const opts = low ? { priority: "low" } : null;
     p = Promise.all([
-      loadJson(`field_types_${id.toLowerCase()}.json`, opts),
-      loadJson(`enum_labels_${id.toLowerCase()}.json`, opts),
+      loadJson(`field_types_${id.toLowerCase()}.json`),
+      loadJson(`enum_labels_${id.toLowerCase()}.json`),
     ]).then(([fieldTypes, enumLabels]) => ({ fieldTypes, enumLabels }));
     fieldSidecars.set(id, p);
   }
   return p;
 }
+
+// the games a visit is not looking at wait to be asked for until they are let
+// go, by the first view standing complete or by whoever reaches for them
+let letGo;
+export const gamesReleased = new Promise((done) => (letGo = done));
+export const releaseGames = () => letGo();
 
 // the games that have neither landed nor been given up on
 export const pendingGames = () => GAME_IDS.filter((id) => !settled.has(id));
@@ -139,15 +141,13 @@ export const pendingGames = () => GAME_IDS.filter((id) => !settled.has(id));
 // many uses follow, and a fetch that came back with nothing is forgotten so the
 // next ask is a real retry rather than the first failure repeating.
 const editorData = new Map();
-export function loadEditorData(id, low) {
+export function loadEditorData(id) {
   let p = editorData.get(id);
   if (!p) {
-    p = loadJson(`relive_export_${id.toLowerCase()}.json`, low ? { priority: "low" } : null).then(
-      (d) => {
-        if (!d) editorData.delete(id);
-        return d;
-      },
-    );
+    p = loadJson(`relive_export_${id.toLowerCase()}.json`).then((d) => {
+      if (!d) editorData.delete(id);
+      return d;
+    });
     editorData.set(id, p);
   }
   return p;

@@ -5,7 +5,7 @@ import { fieldEntries } from "../model/fields.js";
 import { objectMessages } from "../model/messages.js";
 import { parseQuery, queryTerms, matchesQuery, rankFor } from "../ui/searchquery.js";
 import { matchPlaces } from "../data/placesearch.js";
-import { pendingGames } from "../data/data.js";
+import { pendingGames, releaseGames } from "../data/data.js";
 import { searchClear, searchInput, searchResults, scopeBar, typingIn } from "../ui/dom.js";
 import { CLOSE_SVG } from "../ui/icons.js";
 import { pathVisible } from "../data/pathvisible.js";
@@ -190,6 +190,7 @@ function runSearch(q) {
     updateScopeBar();
     return;
   }
+  releaseGames();
 
   const orGroups = parseQuery(q);
   const terms = queryTerms(orGroups);

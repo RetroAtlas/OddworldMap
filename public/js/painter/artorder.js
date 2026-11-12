@@ -29,6 +29,11 @@ export function nearestFirst(cams, path, layout, view) {
   return [...cams].sort((a, b) => far(a) - far(b));
 }
 
+// whether a view stands complete: the screens showing in it have come, and the
+// sprite art holds nothing back
+export const viewComplete = (path, layout, view, { arrived, settled }) =>
+  path.cams.filter((c) => c.png && showing(c.cell, path, layout, view)).every(arrived) && settled();
+
 const NONE = new Set();
 
 // the cameras a paint of a view asks for: those whose screens show in it, and
@@ -39,7 +44,7 @@ export function wanted(path, layout, view, { asked, arrived, settled }) {
   if (path.cams.every((c) => !c.png || asked(c))) return NONE;
   const cams = path.cams.filter((c) => c.png);
   const want = new Set(cams.filter((c) => showing(c.cell, path, layout, view)));
-  if (![...want].every(arrived) || !settled()) return want;
+  if (!viewComplete(path, layout, view, { arrived, settled })) return want;
   const rest = cams.filter((c) => !want.has(c));
   let room = REST_AT_ONCE - rest.filter((c) => asked(c) && !arrived(c)).length;
   const next = rest.filter((c) => !asked(c));
