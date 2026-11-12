@@ -2,9 +2,6 @@
 
 import { GAMES_HOLD_MS } from "./config.js";
 import { $, embedded } from "./ui/dom.js";
-import { resize, initRender } from "./painter/render.js";
-import { warmSprites, initSpriteArt } from "./painter/spriteart.js";
-import { addGame, selectGame, applyHash, initNavigate } from "./navigation/navigate.js";
 import {
   GAME_IDS,
   bootGame,
@@ -22,27 +19,30 @@ import { setGlossary } from "./model/glossary.js";
 import { setMessages } from "./model/messages.js";
 import { setTypeInfo } from "./model/typeinfo.js";
 import { storedLocationHash, clearStoredLocation } from "./data/settings.js";
-import { initSettings } from "./chrome/settingsdialog.js";
-import { syncNeeds, initSidebar } from "./chrome/sidebar.js";
 import { state } from "./data/state.js";
+import { initSpriteArt, warmSprites } from "./painter/spriteart.js";
+import { initRender, resize } from "./painter/render.js";
+import { initNavigate, addGame, selectGame, applyHash } from "./navigation/navigate.js";
+import { initEditPanel } from "./panels/editpanel.js";
+import { initSidebar, syncNeeds } from "./chrome/sidebar.js";
+import { initAnchorTip } from "./ui/anchortip.js";
+import { initCamPanel } from "./panels/campanel.js";
+import { initPlace } from "./panels/place.js";
+import { initGraphView } from "./panels/graphview.js";
+import { initRoute } from "./navigation/route.js";
 import { initInteraction } from "./chrome/interaction.js";
 import { initSearch } from "./panels/search.js";
 import { initExport } from "./chrome/export.js";
-import { initFieldPanel } from "./panels/fieldpanel.js";
 import { initA11y } from "./chrome/a11y.js";
-import { initAnchorTip } from "./ui/anchortip.js";
 import { initWhatsNew } from "./panels/whatsnew.js";
 import { initAbout } from "./panels/about.js";
 import { initTypeCard } from "./panels/typecard.js";
 import { initShuffle } from "./navigation/shuffle.js";
 import { initNumbers } from "./panels/numbers.js";
-import { initEditPanel } from "./panels/editpanel.js";
 import { initMinimap } from "./navigation/minimap.js";
-import { initGraphView } from "./panels/graphview.js";
 import { initOffline } from "./chrome/offline.js";
-import { initRoute } from "./navigation/route.js";
-import { initPlace } from "./panels/place.js";
-import { initCamPanel } from "./panels/campanel.js";
+import { initSettings } from "./chrome/settingsdialog.js";
+import { initFieldPanel } from "./panels/fieldpanel.js";
 
 initSpriteArt();
 initRender();
