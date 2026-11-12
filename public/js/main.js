@@ -1,6 +1,6 @@
 // Boot: fetch the map data, then hand over to the modules.
 
-import { $ } from "./ui/dom.js";
+import { $, embedded } from "./ui/dom.js";
 import { resize } from "./painter/render.js";
 import { warmSprites } from "./painter/spriteart.js";
 import { addGame, selectGame, applyHash } from "./navigation/navigate.js";
@@ -22,7 +22,7 @@ import { storedLocationHash, clearStoredLocation } from "./data/settings.js";
 import { initSettings } from "./chrome/settingsdialog.js";
 import { syncNeeds } from "./chrome/sidebar.js";
 import { state } from "./data/state.js";
-import { toggleMenu } from "./chrome/interaction.js";
+import "./chrome/interaction.js";
 import "./panels/search.js";
 import "./chrome/export.js";
 import { initFieldPanel } from "./panels/fieldpanel.js";
@@ -44,10 +44,8 @@ initFieldPanel();
 
 // ?embed=1: iframe view (wikis, forums) — chrome hides via body.embed, and
 // the hash still works, so an embed can point at an exact screen
-const embedded = new URLSearchParams(location.search).get("embed") === "1";
 if (embedded) {
   document.body.classList.add("embed");
-  toggleMenu(false);
   setEnabled(false); // someone else's page shows the shipped map
 }
 

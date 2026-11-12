@@ -123,18 +123,6 @@ async function settleAt(page, sel) {
             st.state.path?.id === sel.path
         : () => !!st.state.path;
       while (!(there() && cv.clientWidth > 0)) await frame();
-      // the sidebar's boot slide shrinks the canvas for a while and the view recentres
-      // with it, so a read waits for the width to come to rest
-      let width = cv.clientWidth,
-        still = 0;
-      while (still < 3) {
-        await frame();
-        if (cv.clientWidth === width) still++;
-        else {
-          width = cv.clientWidth;
-          still = 0;
-        }
-      }
       await spriteart.preloadPath(st.state.path);
       if (!spriteart.artworkReady(st.state.path)) throw new Error("artwork did not load");
       render.draw();

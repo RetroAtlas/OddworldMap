@@ -29,6 +29,7 @@ import {
   copyLinkBtn,
   openSiteBtn,
   narrowMQ,
+  embedded,
   typingIn,
 } from "../ui/dom.js";
 import { toast } from "../ui/toast.js";
@@ -112,11 +113,18 @@ function syncMenu() {
   if (!open) hideAnchorTip(); // a tap that closes the drawer takes its own anchor off-screen
   sidebar.inert = !open; // sliding it off-screen leaves its controls focusable
 }
-document.body.classList.toggle("menu-open", !isNarrow()); // set before first paint: open on wide, out of the way on narrow
+// the boot stands the sidebar open with no slide, so the map's box is at rest
+// before a view is placed by its size; narrow and an embed start with it away
+if (!isNarrow() && !embedded) {
+  sidebar.style.transition = "none";
+  document.body.classList.add("menu-open");
+  void sidebar.offsetWidth;
+  sidebar.style.transition = "";
+}
 let keyInput = false; // the last input was a key rather than a pointer
 window.addEventListener("keydown", () => (keyInput = true), true);
 window.addEventListener("pointerdown", () => (keyInput = false), true);
-export function toggleMenu(open) {
+function toggleMenu(open) {
   const was = document.body.classList.contains("menu-open");
   document.body.classList.toggle("menu-open", open ?? !was);
   syncMenu();

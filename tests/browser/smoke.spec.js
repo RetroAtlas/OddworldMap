@@ -31,6 +31,32 @@ test("boot on an empty hash paints a map and no console errors", async ({ page }
   expect(errors).toEqual([]);
 });
 
+test("a bare link's path rests fitted to the map's box as it stands beside the sidebar", async ({
+  page,
+}) => {
+  // a slide of the sidebar is held at its first frame, were the boot to start one
+  await page.addInitScript(() =>
+    document.addEventListener(
+      "transitionrun",
+      (e) => {
+        if (e.target.id === "sidebar") for (const a of e.target.getAnimations()) a.pause();
+      },
+      true,
+    ),
+  );
+  await page.goto("/#AO/R1/19");
+  await settle(page, { game: "AO", level: "R1", path: 19 });
+  const r = await page.evaluate(async () => {
+    const st = await import(new URL("js/data/state.js", location.href).href);
+    return { cam: { ...st.state.cam }, hash: location.hash };
+  });
+  // three screens in a row and the fit's margin, in a box 1030 wide
+  expect(r.cam.z).toBe(1030 / 1304);
+  expect(r.cam.x).toBeCloseTo(-100, 6);
+  expect(r.cam.y).toBeCloseTo(-335.77, 2);
+  expect(r.hash).toBe("#AO/R1/19");
+});
+
 test("a view permalink lands where it points and reproduces itself", async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto(`/${TRIP_HASH}`);

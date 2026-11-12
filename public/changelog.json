@@ -1,6 +1,13 @@
 {
  "entries": [
   {
+   "date": "2026-11-12",
+   "tag": "fixed",
+   "tiny": true,
+   "title": "On a wide screen, a path opens whole, the same size every visit",
+   "detail": "On a wide screen the sidebar slid into place as the map opened. When the map loaded quickly, from the cache or over a fast connection, a path was fitted to the map while the slide was still under way: a little too large, with its ends cut off. The sidebar now stands in place from the start, so a path opens whole and the same link opens the same view each time."
+  },
+  {
    "date": "2026-11-11",
    "tag": "fixed",
    "tiny": true,

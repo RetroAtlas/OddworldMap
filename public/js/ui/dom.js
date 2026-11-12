@@ -3,6 +3,7 @@
 export const $ = (id) => document.getElementById(id);
 
 export const narrowMQ = window.matchMedia("(max-width: 720px)"); // keep in sync with the CSS breakpoint
+export const embedded = new URLSearchParams(location.search).get("embed") === "1"; // the view made for an iframe
 
 // one-off reads of stylesheet tokens
 export const cssVar = (name) =>
