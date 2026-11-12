@@ -114,51 +114,53 @@ const closeNumbers = () => {
   panel.hidden = true;
 };
 
-$("numbersBtn").onclick = () => {
-  openNumbers();
-  if (narrowMQ.matches)
-    window.dispatchEvent(new CustomEvent("menu-toggle", { detail: { open: false } })); // reveal the panel the way picking a path does
-};
-$("numbersClose").onclick = closeNumbers;
-filter.addEventListener("input", renderTypes);
+export function initNumbers() {
+  $("numbersBtn").onclick = () => {
+    openNumbers();
+    if (narrowMQ.matches)
+      window.dispatchEvent(new CustomEvent("menu-toggle", { detail: { open: false } })); // reveal the panel the way picking a path does
+  };
+  $("numbersClose").onclick = closeNumbers;
+  filter.addEventListener("input", renderTypes);
 
-// the type list is per game, so a game switch rebuilds the picker too
-window.addEventListener("selection-changed", () => {
-  if (panel.hidden) return;
-  if (!state.path) {
-    closeNumbers();
-    return;
-  }
-  renderAll();
-});
+  // the type list is per game, so a game switch rebuilds the picker too
+  window.addEventListener("selection-changed", () => {
+    if (panel.hidden) return;
+    if (!state.path) {
+      closeNumbers();
+      return;
+    }
+    renderAll();
+  });
 
-// pan/zoom settle: only the screen column can have moved
-window.addEventListener("view-changed", () => {
-  if (panel.hidden || !state.path) return;
-  if (centerCell() !== lastCell) renderCounts();
-});
+  // pan/zoom settle: only the screen column can have moved
+  window.addEventListener("view-changed", () => {
+    if (panel.hidden || !state.path) return;
+    if (centerCell() !== lastCell) renderCounts();
+  });
 
-window.addEventListener("settings-changed", (e) => {
-  if (e.detail?.key === "demoPaths" && !panel.hidden) renderCounts();
-});
+  window.addEventListener("settings-changed", (e) => {
+    if (e.detail?.key === "demoPaths" && !panel.hidden) renderCounts();
+  });
 
-window.addEventListener("data-changed", () => {
-  if (!panel.hidden && state.path) renderCounts();
-});
+  window.addEventListener("data-changed", () => {
+    if (!panel.hidden && state.path) renderCounts();
+  });
 
-// narrow screens hold one floating panel at a time — two bottom sheets stack —
-// and the edit panel takes this corner at every width
-window.addEventListener("float-opened", (e) => {
-  if (e.detail.id === "editPanel" || (narrowMQ.matches && e.detail.id !== "numbersPanel"))
-    closeNumbers();
-});
+  // narrow screens hold one floating panel at a time — two bottom sheets stack —
+  // and the edit panel takes this corner at every width
+  window.addEventListener("float-opened", (e) => {
+    if (e.detail.id === "editPanel" || (narrowMQ.matches && e.detail.id !== "numbersPanel"))
+      closeNumbers();
+  });
 
-// the world graph stands over the map this describes, and it is unusable and
-// out of date by the time the mode closes
-window.addEventListener("graph-changed", () => {
-  if (state.graph) closeNumbers();
-});
+  // the world graph stands over the map this describes, and it is unusable and
+  // out of date by the time the mode closes
+  window.addEventListener("graph-changed", () => {
+    if (state.graph) closeNumbers();
+  });
 
-window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !panel.hidden && !typingIn(e.target)) closeNumbers();
-});
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !panel.hidden && !typingIn(e.target)) closeNumbers();
+  });
+}
