@@ -30,7 +30,7 @@ import { initSearch } from "./panels/search.js";
 import { initExport } from "./chrome/export.js";
 import { initFieldPanel } from "./panels/fieldpanel.js";
 import { initA11y } from "./chrome/a11y.js";
-import "./ui/anchortip.js";
+import { initAnchorTip } from "./ui/anchortip.js";
 import { initWhatsNew } from "./panels/whatsnew.js";
 import { initAbout } from "./panels/about.js";
 import { initTypeCard } from "./panels/typecard.js";
@@ -44,6 +44,7 @@ import { initRoute } from "./navigation/route.js";
 import { initPlace } from "./panels/place.js";
 import { initCamPanel } from "./panels/campanel.js";
 
+initAnchorTip();
 initCamPanel();
 initPlace();
 initGraphView();
