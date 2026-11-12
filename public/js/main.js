@@ -39,8 +39,9 @@ import "./panels/numbers.js";
 import "./panels/editpanel.js";
 import "./navigation/minimap.js";
 import "./panels/graphview.js";
-import "./chrome/offline.js";
+import { initOffline } from "./chrome/offline.js";
 
+initOffline();
 initSettings();
 syncNeeds();
 initFieldPanel();

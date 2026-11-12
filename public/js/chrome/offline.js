@@ -199,7 +199,6 @@ function askSheets() {
     });
   }
 }
-window.addEventListener("selection-changed", askSheets);
 
 function render() {
   for (const row of rows.values()) {
@@ -349,21 +348,25 @@ function sync() {
   refresh();
 }
 
-$("oflBoth").onclick = () => {
-  for (const row of rows.values()) if (pending(row)) start(row);
-};
+export function initOffline() {
+  window.addEventListener("selection-changed", askSheets);
 
-// only a switch-on warms, which is what this event is: a page that booted with
-// the setting already on refreshed the shell through its own boot fetches
-window.addEventListener("settings-changed", (e) => {
-  if (e.detail?.key !== "cacheMap") return;
+  $("oflBoth").onclick = () => {
+    for (const row of rows.values()) if (pending(row)) start(row);
+  };
+
+  // only a switch-on warms, which is what this event is: a page that booted with
+  // the setting already on refreshed the shell through its own boot fetches
+  window.addEventListener("settings-changed", (e) => {
+    if (e.detail?.key !== "cacheMap") return;
+    sync();
+    if (getSettings().cacheMap) warmShell();
+  });
+
+  window.addEventListener("settings-opened", sync);
+
+  // a dataset landing behind the boot one brings a game's artwork with it
+  window.addEventListener("games-changed", sync);
+
   sync();
-  if (getSettings().cacheMap) warmShell();
-});
-
-window.addEventListener("settings-opened", sync);
-
-// a dataset landing behind the boot one brings a game's artwork with it
-window.addEventListener("games-changed", sync);
-
-sync();
+}
