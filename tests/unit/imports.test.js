@@ -100,6 +100,7 @@ function importGraph() {
 const PURE_FOLDERS = ["engine", "model", "rules", "data"];
 const PURE_FILES = [
   "config.js",
+  "ui/keycap.js",
   "ui/redraw.js",
   "ui/searchquery.js",
   "painter/artorder.js",
