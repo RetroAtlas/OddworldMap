@@ -38,10 +38,10 @@ const game = (data) => `${data.id.toLowerCase()}${data.release ? "-" + data.rele
 const exportName = (kind) =>
   `oddworld-${game(state.data)}${state.lvl ? "-" + state.lvl.short : ""}${state.path ? "-P" + state.path.id : ""}-${kind}${edited(state.path)}.png`;
 
-$("exportBtn").onclick = () => {
+function saveView() {
   const name = exportName("view");
   cv.toBlob((blob) => download(blob, name), "image/png");
-};
+}
 
 // A canvas past a browser's limit says nothing about it: drawing into one is
 // ignored, or the size asked for is quietly clamped, and a blank canvas encodes
@@ -68,7 +68,7 @@ function sizedCanvas(w, h) {
 const pathBtn = $("exportPathBtn");
 const PATH_LABEL = pathBtn.textContent.trim();
 
-pathBtn.onclick = async () => {
+async function savePath() {
   const path = state.path;
   if (!path) return;
   pathBtn.disabled = true;
@@ -116,12 +116,12 @@ pathBtn.onclick = async () => {
     pathBtn.disabled = false;
     pathBtn.textContent = PATH_LABEL;
   }
-};
+}
 
 const jsonBtn = $("exportJsonBtn");
 const JSON_LABEL = jsonBtn.textContent.trim();
 
-jsonBtn.onclick = async () => {
+async function saveJson() {
   const { data, lvl, path } = state;
   if (!path) return;
   jsonBtn.disabled = true;
@@ -153,18 +153,18 @@ jsonBtn.onclick = async () => {
     jsonBtn.disabled = false;
     jsonBtn.textContent = JSON_LABEL;
   }
-};
+}
 
-$("graphSvgBtn").onclick = () => {
+function saveGraphSvg() {
   const { svg, demo, edited } = graphSvg(state.data, { entry: state.entry });
   const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
   download(blob, graphName(state.data.id, demo, edited, "svg", state.data.release?.code));
-};
+}
 
 const gPngBtn = $("graphPngBtn");
 const GPNG_LABEL = gPngBtn.textContent.trim();
 
-gPngBtn.onclick = async () => {
+async function saveGraphPng() {
   gPngBtn.disabled = true;
   gPngBtn.textContent = "rendering…";
   let canvas, sized;
@@ -214,4 +214,12 @@ gPngBtn.onclick = async () => {
     gPngBtn.disabled = false;
     gPngBtn.textContent = GPNG_LABEL;
   }
-};
+}
+
+export function initExport() {
+  $("exportBtn").onclick = saveView;
+  pathBtn.onclick = savePath;
+  jsonBtn.onclick = saveJson;
+  $("graphSvgBtn").onclick = saveGraphSvg;
+  gPngBtn.onclick = saveGraphPng;
+}
