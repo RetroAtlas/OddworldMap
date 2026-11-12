@@ -37,10 +37,11 @@ import "./panels/typecard.js";
 import "./navigation/shuffle.js";
 import "./panels/numbers.js";
 import "./panels/editpanel.js";
-import "./navigation/minimap.js";
+import { initMinimap } from "./navigation/minimap.js";
 import "./panels/graphview.js";
 import { initOffline } from "./chrome/offline.js";
 
+initMinimap();
 initOffline();
 initSettings();
 syncNeeds();

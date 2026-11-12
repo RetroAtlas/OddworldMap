@@ -23,20 +23,23 @@ function scrubTo(e) {
   scheduleHash(false);
 }
 
-mm.addEventListener("pointerdown", (e) => {
-  if (!state.path) return;
-  // a page-zoomed pinch must reach the browser, exactly as #cv yields it
-  if (document.body.classList.contains("page-zoomed") && e.pointerType === "touch") return;
-  scrubbing = true;
-  try {
-    mm.setPointerCapture(e.pointerId);
-  } catch {
-    /* pointer already lifted */
-  }
-  scrubTo(e);
-  e.preventDefault();
-});
-mm.addEventListener("pointermove", (e) => scrubbing && scrubTo(e));
 const endScrub = () => (scrubbing = false);
-mm.addEventListener("pointerup", endScrub);
-mm.addEventListener("pointercancel", endScrub);
+
+export function initMinimap() {
+  mm.addEventListener("pointerdown", (e) => {
+    if (!state.path) return;
+    // a page-zoomed pinch must reach the browser, exactly as #cv yields it
+    if (document.body.classList.contains("page-zoomed") && e.pointerType === "touch") return;
+    scrubbing = true;
+    try {
+      mm.setPointerCapture(e.pointerId);
+    } catch {
+      /* pointer already lifted */
+    }
+    scrubTo(e);
+    e.preventDefault();
+  });
+  mm.addEventListener("pointermove", (e) => scrubbing && scrubTo(e));
+  mm.addEventListener("pointerup", endScrub);
+  mm.addEventListener("pointercancel", endScrub);
+}
