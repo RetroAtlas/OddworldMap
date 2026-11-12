@@ -264,29 +264,6 @@ export function artworkReady(path) {
   return true;
 }
 
-// a long browse would pin every visited cam's compressed PNG (and tint canvas)
-// for the session; once past the cap, drop what the new path doesn't reference
-window.addEventListener("selection-changed", () => {
-  if (Object.keys(images).length <= CACHE_MAX_IMAGES) return;
-  const keep = new Set(sheetSrcs(state.data.id));
-  for (const c of state.path.cams) {
-    if (c.png) keep.add(c.png);
-    for (const [, , src] of c.patches ?? []) keep.add(src);
-    for (const [, src] of c.masks ?? []) keep.add(src);
-  }
-  for (const src of Object.keys(images)) {
-    if (keep.has(src)) continue;
-    images[src].onload = images[src].onerror = null; // in-flight loads must not repaint after eviction
-    delete images[src];
-    delete composed[src];
-    delete tintCache[src];
-    delete dimCache[src];
-  }
-});
-
-// an edit stands the path as new objects, which the kept set no longer answers for
-window.addEventListener("data-changed", resetKept);
-
 // a visitor who asks for reduced motion still sees the sprites, on their first frame
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 // null until the first sync: the boot is neither a flip nor a switch
@@ -313,20 +290,46 @@ export function syncMotion() {
   setPatrolsRunning(!!state.show.patrols);
   if (shown && state.data) spriteSet(state.data.id);
 }
-document.addEventListener("visibilitychange", syncMotion);
-window.addEventListener("settings-changed", (e) => {
-  if (e.detail?.key === "animate") {
+
+export function initSpriteArt() {
+  // a long browse would pin every visited cam's compressed PNG (and tint canvas)
+  // for the session; once past the cap, drop what the new path doesn't reference
+  window.addEventListener("selection-changed", () => {
+    if (Object.keys(images).length <= CACHE_MAX_IMAGES) return;
+    const keep = new Set(sheetSrcs(state.data.id));
+    for (const c of state.path.cams) {
+      if (c.png) keep.add(c.png);
+      for (const [, , src] of c.patches ?? []) keep.add(src);
+      for (const [, src] of c.masks ?? []) keep.add(src);
+    }
+    for (const src of Object.keys(images)) {
+      if (keep.has(src)) continue;
+      images[src].onload = images[src].onerror = null; // in-flight loads must not repaint after eviction
+      delete images[src];
+      delete composed[src];
+      delete tintCache[src];
+      delete dimCache[src];
+    }
+  });
+
+  // an edit stands the path as new objects, which the kept set no longer answers for
+  window.addEventListener("data-changed", resetKept);
+
+  document.addEventListener("visibilitychange", syncMotion);
+  window.addEventListener("settings-changed", (e) => {
+    if (e.detail?.key === "animate") {
+      syncMotion();
+      scheduleDraw();
+    }
+    if (e.detail?.key === "labelScenery") scheduleDraw();
+  });
+  window.addEventListener("graph-changed", syncMotion);
+  window.addEventListener("edit-changed", scheduleDraw);
+  reducedMotion.addEventListener("change", syncMotion);
+  window.addEventListener("selection-changed", syncMotion); // a game switch wants its own sheets
+  window.addEventListener("online", () => {
+    if (!state.data) return;
+    retrySprites(state.data.id);
     syncMotion();
-    scheduleDraw();
-  }
-  if (e.detail?.key === "labelScenery") scheduleDraw();
-});
-window.addEventListener("graph-changed", syncMotion);
-window.addEventListener("edit-changed", scheduleDraw);
-reducedMotion.addEventListener("change", syncMotion);
-window.addEventListener("selection-changed", syncMotion); // a game switch wants its own sheets
-window.addEventListener("online", () => {
-  if (!state.data) return;
-  retrySprites(state.data.id);
-  syncMotion();
-});
+  });
+}
