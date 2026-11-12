@@ -202,57 +202,59 @@ function list(cam, focus) {
   body.querySelector(".active")?.scrollIntoView({ block: "nearest" }); // after unhide: needs layout
 }
 
-// narrow screens hold one floating panel at a time — two bottom sheets stack
-window.addEventListener("float-opened", (e) => {
-  if (narrowMQ.matches && e.detail.id !== "camPanel" && !panel.hidden) closeCamPanel();
-});
+export function initCamPanel() {
+  // narrow screens hold one floating panel at a time — two bottom sheets stack
+  window.addEventListener("float-opened", (e) => {
+    if (narrowMQ.matches && e.detail.id !== "camPanel" && !panel.hidden) closeCamPanel();
+  });
 
-// the world graph stands over the map this describes, and it is unusable and
-// out of date by the time the mode closes
-window.addEventListener("graph-changed", () => {
-  if (state.graph) closeCamPanel();
-});
+  // the world graph stands over the map this describes, and it is unusable and
+  // out of date by the time the mode closes
+  window.addEventListener("graph-changed", () => {
+    if (state.graph) closeCamPanel();
+  });
 
-// the removed rows come and go with the mode
-window.addEventListener("edit-changed", () => {
-  if (!panel.hidden && lastOpen) list(lastOpen.cam, lastOpen.focus);
-});
+  // the removed rows come and go with the mode
+  window.addEventListener("edit-changed", () => {
+    if (!panel.hidden && lastOpen) list(lastOpen.cam, lastOpen.focus);
+  });
 
-$("camPanelClose").onclick = closeCamPanel;
-// close when the listed path is gone; same-path re-selections (every pushed
-// hash write re-applies the hash) keep the panel, so a row jump doesn't
-// yank the list away mid-browse
-window.addEventListener("selection-changed", () => {
-  if (!panel.hidden && here() !== listedAt) closeCamPanel();
-});
+  $("camPanelClose").onclick = closeCamPanel;
+  // close when the listed path is gone; same-path re-selections (every pushed
+  // hash write re-applies the hash) keep the panel, so a row jump doesn't
+  // yank the list away mid-browse
+  window.addEventListener("selection-changed", () => {
+    if (!panel.hidden && here() !== listedAt) closeCamPanel();
+  });
 
-// the mark turned on or off names what the release changes, or stops
-window.addEventListener("show-changed", (e) => {
-  if (e.detail.key === "release" && !panel.hidden && lastOpen) list(lastOpen.cam, lastOpen.focus);
-});
+  // the mark turned on or off names what the release changes, or stops
+  window.addEventListener("show-changed", (e) => {
+    if (e.detail.key === "release" && !panel.hidden && lastOpen) list(lastOpen.cam, lastOpen.focus);
+  });
 
-// an edit stands the listed path as new objects: the same screen, listed again
-window.addEventListener("data-changed", (e) => {
-  if (panel.hidden || !lastOpen || listedAt !== `${e.detail.game}/${e.detail.lv}/${e.detail.pa}`)
-    return;
-  const top = body.scrollTop;
-  list(lastOpen.cam, lastOpen.focus && currentOf(lastOpen.focus));
-  body.scrollTop = top;
-});
+  // an edit stands the listed path as new objects: the same screen, listed again
+  window.addEventListener("data-changed", (e) => {
+    if (panel.hidden || !lastOpen || listedAt !== `${e.detail.game}/${e.detail.lv}/${e.detail.pa}`)
+      return;
+    const top = body.scrollTop;
+    list(lastOpen.cam, lastOpen.focus && currentOf(lastOpen.focus));
+    body.scrollTop = top;
+  });
 
-// field-display settings change how the listed objects render — raw vs
-// prettified values, the ⚙ affordance (mode), and which fields show (per-type
-// picks); rebuild the open panel so it doesn't sit stale
-window.addEventListener("settings-changed", (e) => {
-  const key = e.detail?.key;
-  if (
-    (key === "rawValues" || key === "fieldPrefs" || key === "fieldPicks") &&
-    !panel.hidden &&
-    lastOpen
-  )
-    list(lastOpen.cam, lastOpen.focus);
-});
+  // field-display settings change how the listed objects render — raw vs
+  // prettified values, the ⚙ affordance (mode), and which fields show (per-type
+  // picks); rebuild the open panel so it doesn't sit stale
+  window.addEventListener("settings-changed", (e) => {
+    const key = e.detail?.key;
+    if (
+      (key === "rawValues" || key === "fieldPrefs" || key === "fieldPicks") &&
+      !panel.hidden &&
+      lastOpen
+    )
+      list(lastOpen.cam, lastOpen.focus);
+  });
 
-window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !panel.hidden && !typingIn(e.target)) closeCamPanel();
-});
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !panel.hidden && !typingIn(e.target)) closeCamPanel();
+  });
+}

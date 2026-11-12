@@ -42,7 +42,9 @@ import { initGraphView } from "./panels/graphview.js";
 import { initOffline } from "./chrome/offline.js";
 import { initRoute } from "./navigation/route.js";
 import { initPlace } from "./panels/place.js";
+import { initCamPanel } from "./panels/campanel.js";
 
+initCamPanel();
 initPlace();
 initGraphView();
 initRoute();
