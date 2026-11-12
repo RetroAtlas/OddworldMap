@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { trackErrors, settle, settleAny } from "./helpers.js";
+import { POLL, trackErrors, settle, settleAny, spotOf } from "./helpers.js";
 
 // The door below is pinned like an anchor: AO R1 P15's one followable at that
 // spot, centre world (9781,786) — window-interior on both axes, which is what
@@ -154,24 +154,35 @@ test("a link naming a path its level lacks selects nothing on the way", async ({
   expect(errors).toEqual([]);
 });
 
-test("clicking a door follows it to the level and path it names", async ({ page }) => {
-  const errors = trackErrors(page);
+// the page at the pinned door, and where on it the door is drawn
+async function atDoor(page) {
   await page.goto(`/${TRIP_HASH}`);
   await settle(page, { game: "AO", level: "R1", path: 15 });
-  const pt = await page.evaluate(async (d) => {
-    const u = (m) => new URL("js/" + m, location.href).href;
-    const st = await import(u("data/state.js"));
-    const model = await import(u("model/model.js"));
-    const t = st.state.path.tlvs.find(
-      (t) => t.name === d.name && t.x1 === d.world[0] && t.y1 === d.world[1],
-    );
-    const [cx, cy] = model.markerCentre(t, st.LAYOUT);
-    const r = document.getElementById("cv").getBoundingClientRect();
-    const { cam } = st.state;
-    return { x: r.left + (cx - cam.x) * cam.z, y: r.top + (cy - cam.y) * cam.z };
-  }, DOOR);
+  return spotOf(page, DOOR);
+}
+
+test("clicking a door follows it to the level and path it names", async ({ page }) => {
+  const errors = trackErrors(page);
+  const pt = await atDoor(page);
   await page.mouse.click(pt.x, pt.y);
   await page.waitForFunction(() => location.hash.startsWith("#AO/R1/16/"));
+  expect(errors).toEqual([]);
+});
+
+test("the numbers panel counts the screen a follow lands on", async ({ page }) => {
+  const errors = trackErrors(page);
+  const pt = await atDoor(page);
+  await page.click("#numbersBtn");
+  await page.locator("#numbersTypes label", { hasText: /^\s*Door$/ }).click();
+  // the follow's own hash comes back as a hashchange, which selects the path again
+  await page.evaluate(() => {
+    window.__echoed = false;
+    window.addEventListener("selection-changed", (e) => (window.__echoed ||= e.detail.fromHash));
+  });
+  await page.mouse.click(pt.x, pt.y);
+  await page.waitForFunction(() => window.__echoed, null, POLL);
+  // the door it comes out of stands on the screen under the view's centre
+  await expect(page.locator("#numbersBody .np-n").first()).toHaveText("1", { timeout: 1 });
   expect(errors).toEqual([]);
 });
 
@@ -423,5 +434,24 @@ test("the settings dialog's switches stand after a reload as they were set, Show
   await expect(page.locator("#sAnimate")).toBeChecked();
   await expect(page.locator("#sDemoPaths")).toBeChecked();
   await expect(page.locator("#sShowMore")).not.toBeChecked();
+  expect(errors).toEqual([]);
+});
+
+test("a place found by search opens its path whole", async ({ page }) => {
+  const errors = trackErrors(page);
+  await page.goto(`/${TRIP_HASH}`);
+  await settle(page, { game: "AO", level: "R1", path: 15 });
+  await page.fill("#searchInput", "R1 P16");
+  const place = page.locator("#searchResults .hit", {
+    has: page.locator(".loc", { hasText: /^AO · R1 P16$/ }),
+  });
+  await place.first().click();
+  await settle(page, { game: "AO", level: "R1", path: 16 });
+  const zoom = await page.evaluate(async () => {
+    const st = await import(new URL("js/data/state.js", location.href).href);
+    return st.state.cam.z;
+  });
+  // ten screens in a row and the fit's margin in a box 1030 wide, to a link's two decimals
+  expect(zoom.toFixed(2)).toBe((1030 / 3880).toFixed(2));
   expect(errors).toEqual([]);
 });

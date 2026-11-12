@@ -292,6 +292,21 @@ export async function probeAnchor(page, anchor) {
   }, anchor);
 }
 
+// where on the page an object of the standing path is drawn
+export const spotOf = (page, obj) =>
+  page.evaluate(async (d) => {
+    const u = (m) => new URL("js/" + m, location.href).href;
+    const st = await import(u("data/state.js"));
+    const model = await import(u("model/model.js"));
+    const t = st.state.path.tlvs.find(
+      (t) => t.name === d.name && t.x1 === d.world[0] && t.y1 === d.world[1],
+    );
+    const [cx, cy] = model.markerCentre(t, st.LAYOUT);
+    const r = document.getElementById("cv").getBoundingClientRect();
+    const { cam } = st.state;
+    return { x: r.left + (cx - cam.x) * cam.z, y: r.top + (cy - cam.y) * cam.z };
+  }, obj);
+
 // the sleeping slig at the mouth of the Mines, read off the shipped data: its
 // marker box and where its sprite stands
 export const SLIG = { game: "AE", level: "MI", path: 1, x1: 1400, y1: 700, x2: 1424, y2: 724 };

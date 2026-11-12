@@ -174,7 +174,7 @@ function standRelease(G) {
     const L = levelOf(lv);
     if (L) {
       setLevel(L);
-      selectPathById(pa, false);
+      selectPathById(pa, null);
     }
   }
   window.dispatchEvent(
@@ -288,11 +288,12 @@ window.addEventListener("settings-changed", (e) => {
   buildPathButtons();
 });
 
-// `fit` frames the path; a release swapped in keeps the view on the place it shares
-function selectPath(P, fit = true) {
+// `place` puts the camera where the selection is headed, ahead of its first
+// paint; null keeps the view
+function selectPath(P, place = fitView) {
   state.path = P;
   markOn(pathBtns, String(P.id));
-  if (fit) fitView();
+  place?.();
   draw();
   scheduleHash(true);
   window.dispatchEvent(
@@ -300,11 +301,11 @@ function selectPath(P, fit = true) {
   );
 }
 
-function selectPathById(id, fit = true) {
+function selectPathById(id, place) {
   const P = state.lvl.paths.find((p) => p.id === id);
   if (!P) return false;
   if (revealPath(P)) buildPathButtons(); // a hidden path arrives with no button of its own
-  selectPath(P, fit);
+  selectPath(P, place);
   return true;
 }
 
@@ -363,6 +364,14 @@ function leaveGraph() {
   window.dispatchEvent(new CustomEvent("graph-changed"));
 }
 
+// a selection headed for a point puts it mid-view ahead of the first paint, and
+// fits the path where `at` names none
+const aimed = (at) => () => {
+  const p = at();
+  if (p) centerOn(p[0], p[1], null);
+  else fitView();
+};
+
 // center on (fx, fy) zoomed to a few screens across, flash the spot
 function focusOn(fx, fy) {
   leaveGraph();
@@ -402,18 +411,16 @@ export function navigateToDest(d) {
   const L = state.data.levels.find((l) => l.short === d.lv);
   if (!L) return;
   if (state.lvl !== L) setLevel(L);
-  if (!selectPathById(d.pa)) return;
-
-  let fx = null,
-    fy = null;
-  const tgt = resolveTarget(d, state.path, GEO);
-  if (tgt) {
-    [fx, fy] = markerCentre(tgt, LAYOUT);
-  }
-  const cell = camCell(state.path, d.ca);
-  if (fx == null && cell != null) [fx, fy] = cellCentre(cell, state.path, LAYOUT);
-  if (fx == null) return; // path-level target: selectPath already fit the view
-  focusOn(fx, fy);
+  // the partner where one resolves, else the middle of the camera the link names
+  const at = () => {
+    const tgt = resolveTarget(d, state.path, GEO);
+    if (tgt) return markerCentre(tgt, LAYOUT);
+    const cell = camCell(state.path, d.ca);
+    return cell == null ? null : cellCentre(cell, state.path, LAYOUT);
+  };
+  if (!selectPathById(d.pa, aimed(at))) return;
+  const p = at();
+  if (p) focusOn(p[0], p[1]); // a path-level target stays on its path, fitted
 }
 
 // the level, path and object a caller kept name places, not the objects now
@@ -422,8 +429,9 @@ export function jumpToTlv(G, L, P, t) {
   const moved = state.data !== G || state.lvl?.short !== L.short; // another level's path can share the id
   if (state.data !== G) selectGame(G, true);
   if (state.lvl?.short !== L.short) setLevel(L);
-  if (moved || state.path?.id !== P.id) selectPathById(P.id);
-  focusOn(...markerCentre(currentOf(t, state.path) ?? t, LAYOUT));
+  const at = () => markerCentre(currentOf(t, state.path) ?? t, LAYOUT);
+  if (moved || state.path?.id !== P.id) selectPathById(P.id, aimed(at));
+  focusOn(...at());
 }
 
 // a whole place: one path, a level (which opens on the first path it lists),
@@ -437,10 +445,13 @@ export function jumpToPlace(G, lv, pa, cam) {
     return;
   }
   if (state.lvl !== L) setLevel(L);
-  selectPathById(pa);
-  if (cam == null) return;
-  const cell = camCell(state.path, cam);
-  if (cell != null) focusOn(...cellCentre(cell, state.path, LAYOUT));
+  const at = () => {
+    const cell = cam == null ? null : camCell(state.path, cam);
+    return cell == null ? null : cellCentre(cell, state.path, LAYOUT);
+  };
+  selectPathById(pa, aimed(at));
+  const p = at();
+  if (p) focusOn(p[0], p[1]);
 }
 
 // an edit stands a rebuilt level in the dataset: the entry set is game-wide,
@@ -595,24 +606,25 @@ export async function applyHash() {
   applyingHash = true;
   if (state.data !== G) selectGame(G, true);
   if (state.lvl !== L) setLevel(L);
-  selectPathById(p.path);
   // the geometry is the link's own from here, which is what world coordinates
   // in it are waiting on
   const { view, route } = hashToDraw(p, LAYOUT);
-  if (view) centerOn(view.x, view.y, clamp(view.z, ZOOM_MIN, ZOOM_MAX));
+  // a link to a specific object centres it and holds a marker on it. The link
+  // names the shipped origin; the marker lands on what now stands for it
+  const P = state.lvl.paths.find((q) => q.id === p.path);
+  const standing = p.obj ? [...P.tlvs, ...removedObjects(P)] : [];
+  const origins = standing.map(linkOrigin);
+  const origin = p.obj && findTlv(origins, p.obj);
+  const t = origin && standing[origins.indexOf(origin)];
+  const spot =
+    p.obj && ((t && markerCentre(t, LAYOUT)) || [view?.x ?? dX(p.obj.x1), view?.y ?? dY(p.obj.y1)]);
+  const land = spot
+    ? () => centerOn(spot[0], spot[1], null) // the focus zoom of this viewport, not the link's
+    : view && (() => centerOn(view.x, view.y, clamp(view.z, ZOOM_MIN, ZOOM_MAX)));
+  selectPathById(p.path, land || undefined);
   applyingHash = false;
   if (p.obj) {
-    // a link to a specific object: center it and hold a marker on it. The link
-    // names the shipped origin; the marker lands on what now stands for it
-    const standing = [...state.path.tlvs, ...removedObjects(state.path)];
-    const origins = standing.map(linkOrigin);
-    const origin = findTlv(origins, p.obj);
-    const t = origin && standing[origins.indexOf(origin)];
-    const c = t && markerCentre(t, LAYOUT);
-    const fx = c ? c[0] : (view?.x ?? dX(p.obj.x1)),
-      fy = c ? c[1] : (view?.y ?? dY(p.obj.y1));
-    centerOn(fx, fy, null); // re-derives the focus zoom for this viewport
-    flashAt(fx, fy, true);
+    flashAt(spot[0], spot[1], true);
     const dropped = !t && findTlv(pathRelease(state.path)?.removed ?? [], p.obj);
     toast(
       dropped

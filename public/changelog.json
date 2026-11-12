@@ -4,6 +4,13 @@
    "date": "2026-11-12",
    "tag": "fixed",
    "tiny": true,
+   "title": "By the numbers counts the screen you land on",
+   "detail": "With \"By the numbers\" open, following a door, jumping from a search result or going back left the panel's screen column counting whichever screen lay under the middle of the whole path, until you moved the view. It now counts the screen you landed on."
+  },
+  {
+   "date": "2026-11-12",
+   "tag": "fixed",
+   "tiny": true,
    "title": "A search result on a same-numbered path opens it at once",
    "detail": "Picking a search result on a path that shares its number with the one you were on, Necrum's P1 from the Mines' P1 say, switched the level and only then the path, by way of the address bar. On a phone it also left the menu open over the map. The result now opens its path straight away and the menu closes, as for any other result."
   },

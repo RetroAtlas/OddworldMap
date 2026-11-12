@@ -60,7 +60,7 @@ test("the mode selects an object, the form edits it, and every surface follows",
   expect((await doorCamera(page, door)).camera).toBe(door.camera + 1);
 
   // a number input takes `e` as an exponent, never as the mode's key
-  const again = await aimAtDoor(page); // the jump re-fit the view
+  const again = await aimAtDoor(page); // the jump moved the view
   await page.mouse.click(again.x, again.y);
   await expect(page.locator("#editPanel")).toBeVisible();
   await page.locator('#editBody input[data-field="camera"]').focus();

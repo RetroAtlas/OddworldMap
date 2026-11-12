@@ -129,9 +129,9 @@ const placeShown = () => !!state.path && shownPlaces.has(place());
 const askedPlaces = new Set();
 
 // a place yet to draw its sprites asks for their art a frame after the paint
-// that wants it, against the view as it settles, since a link paints its path
-// at the fit zoom before its own zoom lands; below SPRITE_ZOOM it waits, unless
-// the objects were turned on there or the mode is editing them
+// that wants it, against the view as it stands then, since a view waiting on
+// the canvas's layout is placed after its path's first paint; below SPRITE_ZOOM
+// it waits, unless the objects were turned on there or the mode is editing them
 let asking = false;
 function askSoon() {
   if (asking) return;

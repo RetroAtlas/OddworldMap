@@ -39,7 +39,7 @@ export const armEditing = async (page) => {
 // settle() does, so no scheduled hash write can re-apply under the click; returns
 // where it is on the screen. A jump's own pushed write is flushed first and
 // the re-apply of a hash it changed waited for: a hashchange still queued when
-// the camera is set would re-fit the view from under the click that follows
+// the camera is set would place the view again from under the click that follows
 export const aimAt = (page, name) =>
   page.evaluate(async (name) => {
     const st = window.__st;
