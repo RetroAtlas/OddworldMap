@@ -31,7 +31,7 @@ import "./chrome/export.js";
 import { initFieldPanel } from "./panels/fieldpanel.js";
 import "./chrome/a11y.js";
 import "./ui/anchortip.js";
-import "./panels/whatsnew.js";
+import { initWhatsNew } from "./panels/whatsnew.js";
 import { initAbout } from "./panels/about.js";
 import { initTypeCard } from "./panels/typecard.js";
 import { initShuffle } from "./navigation/shuffle.js";
@@ -41,6 +41,7 @@ import { initMinimap } from "./navigation/minimap.js";
 import "./panels/graphview.js";
 import { initOffline } from "./chrome/offline.js";
 
+initWhatsNew();
 initAbout();
 initTypeCard();
 initShuffle();

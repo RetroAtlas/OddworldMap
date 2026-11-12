@@ -1,5 +1,5 @@
 // "What's New": a dated changelog panel driven by changelog.json.
-// Wires itself up at import time; if the feed is missing the button stays hidden.
+// If the feed is missing the button stays hidden.
 
 import { $ } from "../ui/dom.js";
 import { esc } from "../model/util.js";
@@ -52,9 +52,7 @@ const store = {
   },
 };
 
-init();
-
-async function init() {
+export async function initWhatsNew() {
   let entries;
   try {
     const r = await fetch("changelog.json", { cache: "no-cache" });
