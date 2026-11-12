@@ -1,10 +1,20 @@
 // The order a level lists its paths in: the order a player meets them. One walk
 // of the level's own transitions out from the way in, with each area taken whole
 // before the walk leaves it and the level's own numbering deciding which branch
-// to take first. Importable in bare Node: no DOM.
+// to take first; and the screen each path is entered on along it. Importable in
+// bare Node: no DOM.
 
 import { pathDisplayName } from "./annotations.js";
-import { pathIn, wayThrough } from "./model.js";
+import { isDemoPath } from "./demo.js";
+import {
+  camCell,
+  camIdOf,
+  landingCam,
+  pathIn,
+  resolveTarget,
+  tlvCell,
+  wayThrough,
+} from "./model.js";
 
 const DEMO = "[Demo] ";
 
@@ -191,6 +201,7 @@ let elected = new WeakMap();
 // them are recomputed on the next ask, whichever level's object the change sat in
 export function invalidateEntry(data) {
   elected.delete(data);
+  entered.delete(data);
   ordered = new WeakMap();
 }
 
@@ -220,4 +231,67 @@ export function levelEntry(data) {
     e[L.short] = fwd[L.short] ?? start[L.short] ?? back[L.short] ?? L.paths[0].id;
   elected.set(data, e);
   return e;
+}
+
+const entered = new WeakMap();
+
+// the screen a path is entered on, as a cell of its grid: the lowest-numbered
+// of the screens the first path before it in play order to lead in lands on,
+// else of those its own start markers stand on, else of those the first path
+// to lead in from anywhere lands on, else of them all
+export function entryCell(data, path) {
+  let cells = entered.get(data);
+  if (!cells) entered.set(data, (cells = entryCells(data)));
+  return cells.get(path) ?? null;
+}
+
+const STARTS = ["AbeStart", "DemoSpawnPoint"];
+
+function entryCells(data) {
+  const geo = data.geometry;
+  const order = data.levels.flatMap((L) => {
+    const byId = new Map(L.paths.map((P) => [P.id, P]));
+    return levelOrder(data, L).map((id) => [L, byId.get(id)]);
+  });
+  const at = new Map(order.map(([, P], i) => [P, i]));
+  const standsOn = (t, P) => {
+    const cell = tlvCell(t, P, geo);
+    return P.cams.some((c) => c.cell === cell) ? cell : null;
+  };
+  // per path, the first path found leading into it and the screens that one
+  // lands on: `ahead` among the paths before it, `any` among them all
+  const ahead = new Map(),
+    any = new Map();
+  const note = (found, Q, P, cell) => {
+    const was = found.get(Q);
+    if (!was) found.set(Q, { from: P, cells: [cell] });
+    else if (was.from === P) was.cells.push(cell);
+  };
+  for (const [L, P] of order) {
+    if (isDemoPath(P)) continue; // nothing travels out of a copy only the demos play
+    for (const t of P.tlvs) {
+      const d = wayThrough(t, data, L, P);
+      const Q = d && pathIn(data, d.lv, d.pa);
+      if (!Q || Q === P) continue;
+      const g = resolveTarget(d, Q, geo);
+      const cell = (g && standsOn(g, Q)) ?? camCell(Q, landingCam(t, d));
+      if (cell == null) continue;
+      note(any, Q, P, cell);
+      if (at.get(P) < at.get(Q)) note(ahead, Q, P, cell);
+    }
+  }
+  const cells = new Map();
+  for (const [, P] of order) {
+    const number = (cell) => camIdOf(P.cams.find((c) => c.cell === cell).name);
+    const marks = P.tlvs.filter((t) => STARTS.includes(t.name)).map((t) => standsOn(t, P));
+    const screens = [
+      ahead.get(P)?.cells,
+      marks.filter((cell) => cell != null),
+      any.get(P)?.cells,
+      P.cams.map((c) => c.cell),
+    ].find((s) => s?.length);
+    const lower = (a, c) => (number(a) <= number(c) ? a : c);
+    if (screens) cells.set(P, screens.reduce(lower));
+  }
+  return cells;
 }

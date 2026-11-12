@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
+  entryCell,
   levelOrder,
   orderPaths,
   levelEntry,
@@ -9,8 +10,8 @@ import {
 } from "../../public/js/model/pathorder.js";
 import { setAnnotations, pathDisplayName } from "../../public/js/model/annotations.js";
 import { isDemoPath } from "../../public/js/model/demo.js";
-import { destOf, destTrusted, pathIn } from "../../public/js/model/model.js";
-import { dataset, level, path, tlv } from "./fixtures.js";
+import { camIdOf, destOf, destTrusted, pathIn } from "../../public/js/model/model.js";
+import { at, dataset, level, path, tlv } from "./fixtures.js";
 
 const load = (name) =>
   JSON.parse(readFileSync(new URL(`../../public/${name}`, import.meta.url), "utf8"));
@@ -452,4 +453,231 @@ test("a dataset whose transitions changed recomputes its elections and every wal
   invalidateEntry(data);
   assert.equal(levelEntry(data).M, 3);
   assert.deepEqual(levelOrder(data, M), [3, 5]);
+});
+
+// ---- the screen a path is entered on ---------------------------------------
+
+// a 3x1 path of three screens numbered against their cells, so the lowest
+// number is never the first cell; SYNTH_GEOMETRY cells are 400 world units wide
+const cams = (id) => [
+  { cell: 0, name: `LP${id}C03` },
+  { cell: 1, name: `LP${id}C01` },
+  { cell: 2, name: `LP${id}C02` },
+];
+const room = (id, tlvs) => path(id, tlvs, cams(id), 3, 1);
+const inCell = (t, cell) => at(t, cell * 400 + 60, 40);
+// a door into path `pa`, landing on the door numbered `n` in camera `ca` there
+const doorTo = (pa, ca, n) =>
+  tlv("Door", { to_level: "L", to_path: pa, to_cam: ca, "door#": 90 + n, "target_door#": n });
+const door = (n, cell) => inCell(tlv("Door", { "door#": n }), cell);
+const cellOf = (levels, P) => entryCell(dataset(levels), P);
+
+test("a path is entered where the first path before it to lead in lands", () => {
+  const P2 = room(2, [door(7, 2)]);
+  const L = level("L", room(1, [tlv("AbeStart"), doorTo(2, 2, 7)]), P2);
+  assert.equal(cellOf([L], P2), 2);
+});
+
+test("the way in from the path before it beats a start marker", () => {
+  // Annex 8's shape: an AbeStart deep inside a path the walk enters by a door
+  const P2 = room(2, [inCell(tlv("AbeStart"), 0), door(7, 2)]);
+  const L = level("L", room(1, [tlv("AbeStart"), doorTo(2, 2, 7)]), P2);
+  assert.equal(cellOf([L], P2), 2);
+});
+
+test("with nothing leading in from before it, a path is entered at its start marker", () => {
+  // the opening path's shape: the only way in is the door back from the path after it
+  const P1 = room(1, [inCell(tlv("AbeStart"), 2), door(4, 0)]);
+  const L = level("L", P1, room(2, [doorTo(1, 3, 4)]));
+  assert.equal(cellOf([L], P1), 2);
+});
+
+test("a demo copy is entered where its demo starts", () => {
+  const P2 = room(2, [inCell(tlv("DemoSpawnPoint"), 0)]);
+  const L = level("L", room(1, [tlv("AbeStart")]), P2);
+  assert.equal(cellOf([L], P2), 0);
+});
+
+test("with no start marker either, where a path listed after it leads in", () => {
+  // the Bonewerkz office's shape: reached only from a path the level lists behind it
+  const P1 = room(1, [door(4, 2)]);
+  const L = level("L", P1, room(2, [doorTo(1, 2, 4)]));
+  assert.equal(cellOf([L], P1), 2);
+});
+
+test("a path nothing leads into and nothing starts in is entered on its lowest-numbered screen", () => {
+  const P1 = room(1, []);
+  assert.equal(cellOf([level("L", P1)], P1), 1);
+});
+
+test("several ways in from one path: the lowest-numbered screen they land on, however they are stored", () => {
+  const ways = [doorTo(2, 3, 7), doorTo(2, 2, 8)];
+  for (const stored of [ways, [...ways].reverse()]) {
+    const P2 = room(2, [door(7, 0), door(8, 2)]);
+    const L = level("L", room(1, [tlv("AbeStart"), ...stored]), P2);
+    assert.equal(cellOf([L], P2), 2);
+  }
+});
+
+test("only the first path to lead in is asked, whatever a later one lands on", () => {
+  const P3 = room(3, [door(7, 0), door(8, 1)]);
+  const L = level(
+    "L",
+    room(1, [tlv("AbeStart"), doorTo(2, 1, 1), doorTo(3, 3, 7)]),
+    room(2, [door(1, 1), doorTo(3, 1, 8)]),
+    P3,
+  );
+  assert.equal(cellOf([L], P3), 0);
+});
+
+test("the first path to lead in is the first in play order, not the first the level stores", () => {
+  // stored 2, 1, 3 and walked 1, 2, 3: both lead into 3, onto different screens
+  const P3 = room(3, [door(7, 0), door(8, 2)]);
+  const L = level(
+    "L",
+    room(2, [door(1, 1), doorTo(3, 2, 8)]),
+    room(1, [tlv("AbeStart"), doorTo(2, 1, 1), doorTo(3, 3, 7)]),
+    P3,
+  );
+  assert.equal(cellOf([L], P3), 0);
+});
+
+test("a partner standing in the grid's first cell is where the way in lands", () => {
+  const P2 = room(2, [door(7, 0)]);
+  const L = level("L", room(1, [tlv("AbeStart"), doorTo(2, 2, 7)]), P2);
+  assert.equal(cellOf([L], P2), 0);
+});
+
+test("start markers on several screens: the lowest-numbered of them", () => {
+  const P1 = room(1, [inCell(tlv("AbeStart"), 2), inCell(tlv("AbeStart"), 1)]);
+  assert.equal(cellOf([level("L", P1)], P1), 1);
+});
+
+test("a path transition lands on the camera its archive names", () => {
+  const P2 = room(2, []);
+  const way = { ...tlv("PathTransition", { to_level: "L", to_path: 2 }), fields: { camera: 2 } };
+  const L = level("L", room(1, [tlv("AbeStart"), way]), P2);
+  assert.equal(cellOf([L], P2), 2);
+});
+
+test("a way in landing on no screen the path holds is no way in", () => {
+  const P2 = room(2, []);
+  const way = { ...tlv("PathTransition", { to_level: "L", to_path: 2 }), fields: { camera: 9 } };
+  const L = level("L", room(1, [tlv("AbeStart"), way]), P2);
+  assert.equal(cellOf([L], P2), 1);
+});
+
+test("a partner found outside the camera its link names is where the way in lands", () => {
+  // the follow centres on the partner wherever it is found, and so does this
+  const P2 = room(2, [door(7, 2)]);
+  const L = level("L", room(1, [tlv("AbeStart"), doorTo(2, 3, 7)]), P2);
+  assert.equal(cellOf([L], P2), 2);
+});
+
+test("an object standing where the path holds no screen names none", () => {
+  // a 3x1 grid with its last cell empty: the marker there falls through to the
+  // lowest-numbered screen, and the door there to the camera its link names
+  const two = (id, tlvs) => path(id, tlvs, cams(id).slice(0, 2), 3, 1);
+  const P1 = two(1, [inCell(tlv("AbeStart"), 2)]);
+  assert.equal(cellOf([level("L", P1)], P1), 1);
+  const P2 = two(2, [door(7, 2)]);
+  const L = level("L", two(1, [tlv("AbeStart"), doorTo(2, 3, 7)]), P2);
+  assert.equal(cellOf([L], P2), 0);
+});
+
+test("a level's way in is entered from the level before it", () => {
+  const P1 = room(1, [inCell(tlv("AbeStart"), 0), door(7, 2)]);
+  const way = { ...doorTo(1, 2, 7), extra: { ...doorTo(1, 2, 7).extra, to_level: "M" } };
+  const data = dataset([level("L", room(1, [tlv("AbeStart"), way])), level("M", P1)]);
+  assert.equal(entryCell(data, P1), 2);
+});
+
+test("a demo copy leads nowhere", () => {
+  // the copy sits ahead of the path its door names; the real way in is behind it
+  const P3 = room(3, [door(7, 0), door(8, 2)]);
+  const L = level(
+    "L",
+    room(1, [tlv("AbeStart"), doorTo(2, 1, 1), doorTo(4, 1, 2)]),
+    room(2, [tlv("DemoSpawnPoint"), door(1, 1), doorTo(3, 3, 7)]),
+    P3,
+    room(4, [door(2, 1), doorTo(3, 2, 8)]),
+  );
+  assert.equal(cellOf([L], P3), 2);
+});
+
+test("an edit's invalidation moves the entrance with the door", () => {
+  const P2 = room(2, [door(7, 0), door(8, 2)]);
+  const data = dataset([level("L", room(1, [tlv("AbeStart"), doorTo(2, 3, 7)]), P2)]);
+  assert.equal(entryCell(data, P2), 0);
+  data.levels[0] = level("L", room(1, [tlv("AbeStart"), doorTo(2, 2, 8)]), P2);
+  assert.equal(entryCell(data, P2), 0); // memoized
+  invalidateEntry(data);
+  assert.equal(entryCell(data, P2), 2);
+});
+
+// ---- the shipped data -----------------------------------------------------
+
+// the camera every path is entered on, by level and path id: where the way in
+// from the path before it lands, or its start marker stands
+// prettier-ignore
+const ENTERED = {
+  AO: {
+    R1: { 15: 1, 16: 1, 18: 10, 19: 1, 20: 1 },
+    E1: { 1: 1, 2: 1, 3: 1, 4: 1, 6: 6 },
+    L1: { 1: 14, 2: 8, 3: 1, 5: 1, 6: 1 },
+    F1: { 1: 1, 2: 1, 5: 9, 6: 1, 7: 1, 8: 1, 9: 1 },
+    F2: { 1: 1, 2: 6, 3: 1, 4: 9, 5: 1, 6: 1, 7: 1, 8: 1 },
+    F4: { 9: 1 },
+    D1: { 1: 1, 2: 1, 3: 1, 4: 1, 6: 9, 7: 1, 8: 5, 9: 2 },
+    D2: { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 3, 7: 6, 8: 2, 9: 1, 10: 1 },
+    D7: { 11: 1 },
+    E2: { 2: 4, 3: 6, 4: 7 },
+    R2: { 1: 4, 2: 1, 3: 1, 4: 1, 5: 1, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 5, 14: 5, 15: 8, 16: 7, 18: 4, 19: 3, 20: 1 },
+    R6: { 6: 1 },
+    C1: { 1: 1 },
+    S1: { 1: 1 },
+  },
+  AE: {
+    MI: { 1: 4, 2: 16, 3: 1, 4: 1, 5: 27, 6: 10, 7: 11, 8: 6, 9: 18, 10: 18, 11: 22, 12: 2 },
+    NE: { 1: 5, 2: 1, 3: 1, 4: 1, 5: 6, 6: 1, 7: 1 },
+    PV: { 1: 1, 2: 13, 3: 1, 4: 1, 5: 1, 6: 8, 7: 6, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 14: 10, 15: 6 },
+    SV: { 1: 1, 2: 2, 3: 6, 4: 1, 5: 2, 6: 23, 7: 1, 8: 1, 9: 4, 10: 1, 11: 2, 12: 2, 13: 5, 14: 1 },
+    FD: { 1: 1, 2: 8, 3: 1, 4: 1, 5: 1, 6: 3, 7: 1, 8: 1, 9: 2, 10: 4, 11: 1, 12: 1, 13: 1, 14: 2 },
+    BA: { 1: 3, 2: 1, 3: 9, 4: 6, 5: 1, 7: 7, 9: 4, 10: 1, 11: 5, 13: 14, 14: 2, 15: 1, 16: 2 },
+    BW: { 1: 18, 2: 17, 3: 15, 4: 24, 7: 5, 9: 9, 11: 7, 12: 2, 13: 9, 14: 10 },
+    BR: { 1: 1, 2: 16, 3: 1, 4: 5, 5: 10, 6: 1, 7: 1, 8: 4, 9: 14, 10: 19, 11: 1, 12: 1, 13: 10, 14: 8, 15: 1, 16: 1, 17: 1, 18: 2, 19: 1, 20: 1, 21: 1, 23: 1, 24: 1, 25: 1, 26: 4, 27: 7, 28: 4, 29: 1 },
+    BM: { 1: 1 },
+    CR: { 1: 1, 2: 1 },
+    ST: { 1: 1 },
+  },
+};
+const cameraOf = (P, cell) => camIdOf(P.cams.find((c) => c.cell === cell)?.name);
+
+for (const [id, data] of GAMES) {
+  test(`${id}: every path is entered on a screen it holds`, () => {
+    for (const L of data.levels)
+      for (const P of L.paths)
+        assert.ok(P.cams.some((c) => c.cell === entryCell(data, P)), `${L.short} P${P.id}`); // prettier-ignore
+  });
+
+  test(`${id}: the screen every path is entered on`, () => {
+    const got = {};
+    for (const L of data.levels)
+      got[L.short] = Object.fromEntries(
+        L.paths.map((P) => [P.id, cameraOf(P, entryCell(data, P))]),
+      );
+    assert.deepEqual(got, ENTERED[id]);
+  });
+}
+
+test("AE: Bonewerkz, where each link of the chain decides a path", () => {
+  const data = GAMES.find(([id]) => id === "AE")[1];
+  const BW = data.levels.find((L) => L.short === "BW");
+  const camera = (pa) => {
+    const P = BW.paths.find((p) => p.id === pa);
+    return cameraOf(P, entryCell(data, P));
+  };
+  assert.equal(camera(4), 24); // the door the walk comes in by, not the start marker on C01
+  assert.equal(camera(7), 5); // two doors in from one path: the lower-numbered screen
+  assert.equal(camera(9), 9); // reached only from a path the level lists after it
 });

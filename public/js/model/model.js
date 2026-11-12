@@ -153,6 +153,11 @@ export function wayThrough(t, data, lvl, path) {
   return d && destTrusted(d, data, lvl) ? d : null;
 }
 
+// the camera a way through lands on: the one its destination names, which a
+// path transition keeps in the archive alone
+export const landingCam = (t, d) =>
+  d.ca ?? (t.name === "PathTransition" ? t.fields?.camera : undefined);
+
 // every artwork file a game ships, background and foreground alike: what a
 // copy of it held on the device has to hold
 export const camFiles = (data) =>

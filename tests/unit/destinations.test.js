@@ -5,6 +5,7 @@ import {
   destOf,
   destTrusted,
   isLoopback,
+  landingCam,
   resolveTarget,
   wayThrough,
 } from "../../public/js/model/model.js";
@@ -330,6 +331,18 @@ test("resolveTarget: no paired target -> null", () => {
   const P = path(1, [at(tlv("Door", { "door#": 1 }), 50, 20)], [], 1, 1);
   assert.equal(resolveTarget({ ca: 1, target: null }, P, SYNTH_GEOMETRY), null);
   assert.equal(resolveTarget(null, P, SYNTH_GEOMETRY), null);
+});
+
+test("landingCam: the camera a destination names, a path transition's off its archive", () => {
+  const door = tlv("Door", { to_level: "R2", to_path: 1, to_cam: 3 });
+  assert.equal(landingCam(door, destOf(door, ...HERE)), 3);
+  // a transition's destination names no camera; its archive carries the word
+  const way = { ...tlv("PathTransition", { to_level: "R2", to_path: 1 }), fields: { camera: 7 } };
+  assert.equal(destOf(way, ...HERE).ca, undefined);
+  assert.equal(landingCam(way, destOf(way, ...HERE)), 7);
+  // no other type's archive is read: a door's own camera word says where it stands
+  const bare = { ...tlv("Door", { to_level: "R2", to_path: 1 }), fields: { camera: 5 } };
+  assert.equal(landingCam(bare, destOf(bare, ...HERE)), undefined);
 });
 
 test("isLoopback: a door whose destination resolves to itself", () => {
