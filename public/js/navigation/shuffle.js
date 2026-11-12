@@ -11,24 +11,27 @@ import { jumpToPlace } from "./navigate.js";
 import { SHUFFLE_SVG } from "../ui/icons.js";
 
 const btn = $("shuffleBtn");
-btn.innerHTML = SHUFFLE_SVG;
 
-btn.onclick = () => {
-  releaseGames();
-  const pool = [];
-  for (const G of state.games)
-    for (const L of G.levels)
-      for (const P of L.paths) {
-        if (!pathVisible(P)) continue;
-        for (const c of P.cams) {
-          const cam = camIdOf(c.name);
-          if (cam != null && c.png) pool.push({ G, L, P, cam });
+export function initShuffle() {
+  btn.innerHTML = SHUFFLE_SVG;
+
+  btn.onclick = () => {
+    releaseGames();
+    const pool = [];
+    for (const G of state.games)
+      for (const L of G.levels)
+        for (const P of L.paths) {
+          if (!pathVisible(P)) continue;
+          for (const c of P.cams) {
+            const cam = camIdOf(c.name);
+            if (cam != null && c.png) pool.push({ G, L, P, cam });
+          }
         }
-      }
-  const s = pool[Math.floor(Math.random() * pool.length)];
-  if (s) jumpToPlace(s.G, s.L.short, s.P.id, s.cam);
-};
+    const s = pool[Math.floor(Math.random() * pool.length)];
+    if (s) jumpToPlace(s.G, s.L.short, s.P.id, s.cam);
+  };
 
-window.addEventListener("selection-changed", () => {
-  btn.hidden = !state.path;
-});
+  window.addEventListener("selection-changed", () => {
+    btn.hidden = !state.path;
+  });
+}

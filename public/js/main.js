@@ -34,13 +34,14 @@ import "./ui/anchortip.js";
 import "./panels/whatsnew.js";
 import "./panels/about.js";
 import "./panels/typecard.js";
-import "./navigation/shuffle.js";
+import { initShuffle } from "./navigation/shuffle.js";
 import { initNumbers } from "./panels/numbers.js";
 import "./panels/editpanel.js";
 import { initMinimap } from "./navigation/minimap.js";
 import "./panels/graphview.js";
 import { initOffline } from "./chrome/offline.js";
 
+initShuffle();
 initNumbers();
 initMinimap();
 initOffline();
