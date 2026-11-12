@@ -607,47 +607,9 @@ function addHere(name) {
   });
 }
 
-btn.hidden = !allowed();
-btn.onclick = () => setEditMode(!state.edit);
-window.addEventListener("settings-changed", (e) => {
-  if (e.detail.key !== "editObjects") return;
-  btn.hidden = !allowed();
-  if (!allowed()) setEditMode(false);
-});
-$("editClose").onclick = () => selectObject(null);
-
-window.addEventListener("data-changed", () => {
-  if (panel.hidden || view === "picker") return;
-  if (state.sel) render();
-  else selectObject(null);
-});
-
-// the selection belongs to its path, and the mode's level map to its game
-window.addEventListener("selection-changed", () => {
-  if (!panel.hidden && here() !== selectedAt) selectObject(null);
-  if (state.edit && state.data && state.data.id !== armedFor)
-    arm(state.data.id).then((ok) => {
-      if (ok) return;
-      toast("editing needs the editor data, which did not load");
-      setEditMode(false);
-    });
-});
-
-window.addEventListener("graph-changed", () => {
-  if (state.graph) setEditMode(false);
-});
-
-// the numbers panel shares this corner at every width; a bottom sheet shares
-// the whole bottom on narrow
-window.addEventListener("float-opened", (e) => {
-  if (panel.hidden) return;
-  if (e.detail.id === "numbersPanel" || (narrowMQ.matches && e.detail.id !== "editPanel"))
-    selectObject(null);
-});
-
 // a form field keeps its own keys: Escape there is the field's, and the undo
 // chord is the browser's own undo of the typing
-window.addEventListener("keydown", (e) => {
+function onKey(e) {
   const inField = typingIn(e.target);
   // Escape leaves the picker for the selection's form where one stands, else closes
   if (e.key === "Escape" && !panel.hidden && !inField)
@@ -680,7 +642,7 @@ window.addEventListener("keydown", (e) => {
   e.preventDefault();
   if (k === "y" || e.shiftKey) redoHere();
   else undoHere();
-});
+}
 
 // the settings row counting what the device holds, with a two-press way to
 // forget all of it; the second press is asked for afresh whenever the dialog opens
@@ -701,14 +663,57 @@ function renderEditsRow() {
   editsForget.textContent = "forget all";
   forgetArmed = false;
 }
-editsForget.onclick = () => {
-  if (!forgetArmed) {
-    forgetArmed = true;
-    editsForget.textContent = "press again to forget";
-    return;
-  }
-  forgetAll();
-  renderEditsRow();
-};
-window.addEventListener("settings-opened", renderEditsRow);
-window.addEventListener("data-changed", renderEditsRow);
+
+export function initEditPanel() {
+  btn.hidden = !allowed();
+  btn.onclick = () => setEditMode(!state.edit);
+  window.addEventListener("settings-changed", (e) => {
+    if (e.detail.key !== "editObjects") return;
+    btn.hidden = !allowed();
+    if (!allowed()) setEditMode(false);
+  });
+  $("editClose").onclick = () => selectObject(null);
+
+  window.addEventListener("data-changed", () => {
+    if (panel.hidden || view === "picker") return;
+    if (state.sel) render();
+    else selectObject(null);
+  });
+
+  // the selection belongs to its path, and the mode's level map to its game
+  window.addEventListener("selection-changed", () => {
+    if (!panel.hidden && here() !== selectedAt) selectObject(null);
+    if (state.edit && state.data && state.data.id !== armedFor)
+      arm(state.data.id).then((ok) => {
+        if (ok) return;
+        toast("editing needs the editor data, which did not load");
+        setEditMode(false);
+      });
+  });
+
+  window.addEventListener("graph-changed", () => {
+    if (state.graph) setEditMode(false);
+  });
+
+  // the numbers panel shares this corner at every width; a bottom sheet shares
+  // the whole bottom on narrow
+  window.addEventListener("float-opened", (e) => {
+    if (panel.hidden) return;
+    if (e.detail.id === "numbersPanel" || (narrowMQ.matches && e.detail.id !== "editPanel"))
+      selectObject(null);
+  });
+
+  window.addEventListener("keydown", onKey);
+
+  editsForget.onclick = () => {
+    if (!forgetArmed) {
+      forgetArmed = true;
+      editsForget.textContent = "press again to forget";
+      return;
+    }
+    forgetAll();
+    renderEditsRow();
+  };
+  window.addEventListener("settings-opened", renderEditsRow);
+  window.addEventListener("data-changed", renderEditsRow);
+}

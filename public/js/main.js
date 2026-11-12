@@ -36,7 +36,7 @@ import { initAbout } from "./panels/about.js";
 import { initTypeCard } from "./panels/typecard.js";
 import { initShuffle } from "./navigation/shuffle.js";
 import { initNumbers } from "./panels/numbers.js";
-import "./panels/editpanel.js";
+import { initEditPanel } from "./panels/editpanel.js";
 import { initMinimap } from "./navigation/minimap.js";
 import { initGraphView } from "./panels/graphview.js";
 import { initOffline } from "./chrome/offline.js";
@@ -44,6 +44,7 @@ import { initRoute } from "./navigation/route.js";
 import { initPlace } from "./panels/place.js";
 import { initCamPanel } from "./panels/campanel.js";
 
+initEditPanel();
 initSidebar();
 initAnchorTip();
 initCamPanel();
