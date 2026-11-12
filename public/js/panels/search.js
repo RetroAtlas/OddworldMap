@@ -90,7 +90,6 @@ function updateScopeBar() {
   }
   if (held >= 0) scopeBar.children[held].focus();
 }
-window.addEventListener("selection-changed", updateScopeBar);
 
 // mark every occurrence of every term, merging overlaps, escaping each segment
 function highlight(text, terms) {
@@ -284,40 +283,6 @@ function runSearch(q) {
   searchResults.appendChild(more);
 }
 
-searchInput.addEventListener("input", () => {
-  searchClear.hidden = !searchInput.value;
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => runSearch(searchInput.value), 160);
-});
-
-// a dataset landing behind the boot one brings hits of its own, which the
-// summary has been promising were still coming. The boot game is announced
-// before anything is selected, and runSearch groups its hits around a selection
-window.addEventListener("games-changed", () => {
-  if (state.path && searchInput.value.trim().length >= 2) runSearch(searchInput.value);
-});
-// the mark turned on or off adds or takes away the release's words on a hit
-window.addEventListener("show-changed", (e) => {
-  if (e.detail.key === "release" && state.path && searchInput.value.trim().length >= 2)
-    runSearch(searchInput.value);
-});
-// an edit stands a path as new objects, whose text the index has yet to read
-window.addEventListener("data-changed", () => {
-  if (state.path && searchInput.value.trim().length >= 2) runSearch(searchInput.value);
-});
-
-// field-display settings change what result rows show or how values render (raw
-// vs prettified, the show-more mode, per-type picks), and the demo setting which
-// paths are searched at all; re-render an active search
-window.addEventListener("settings-changed", (e) => {
-  const key = e.detail?.key;
-  if (
-    (key === "rawValues" || key === "fieldPrefs" || key === "fieldPicks" || key === "demoPaths") &&
-    searchInput.value.trim().length >= 2
-  )
-    runSearch(searchInput.value);
-});
-
 // keyboard: "/" focuses search, Esc clears, arrows walk results, Enter jumps
 let activeHit = -1;
 function visibleHits() {
@@ -339,13 +304,7 @@ function clearSearch() {
   setActiveHit(-1);
 }
 
-searchClear.innerHTML = CLOSE_SVG;
-searchClear.onclick = () => {
-  clearSearch();
-  searchInput.focus();
-};
-
-window.addEventListener("keydown", (e) => {
+function onKey(e) {
   if (e.key === "/" && !typingIn(e.target)) {
     e.preventDefault();
     window.dispatchEvent(new CustomEvent("menu-toggle", { detail: { open: true } }));
@@ -369,4 +328,53 @@ window.addEventListener("keydown", (e) => {
   } else {
     activeHit = -1;
   }
-});
+}
+
+export function initSearch() {
+  window.addEventListener("selection-changed", updateScopeBar);
+
+  searchInput.addEventListener("input", () => {
+    searchClear.hidden = !searchInput.value;
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => runSearch(searchInput.value), 160);
+  });
+
+  // a dataset landing behind the boot one brings hits of its own, which the
+  // summary has been promising were still coming. The boot game is announced
+  // before anything is selected, and runSearch groups its hits around a selection
+  window.addEventListener("games-changed", () => {
+    if (state.path && searchInput.value.trim().length >= 2) runSearch(searchInput.value);
+  });
+  // the mark turned on or off adds or takes away the release's words on a hit
+  window.addEventListener("show-changed", (e) => {
+    if (e.detail.key === "release" && state.path && searchInput.value.trim().length >= 2)
+      runSearch(searchInput.value);
+  });
+  // an edit stands a path as new objects, whose text the index has yet to read
+  window.addEventListener("data-changed", () => {
+    if (state.path && searchInput.value.trim().length >= 2) runSearch(searchInput.value);
+  });
+
+  // field-display settings change what result rows show or how values render (raw
+  // vs prettified, the show-more mode, per-type picks), and the demo setting which
+  // paths are searched at all; re-render an active search
+  window.addEventListener("settings-changed", (e) => {
+    const key = e.detail?.key;
+    if (
+      (key === "rawValues" ||
+        key === "fieldPrefs" ||
+        key === "fieldPicks" ||
+        key === "demoPaths") &&
+      searchInput.value.trim().length >= 2
+    )
+      runSearch(searchInput.value);
+  });
+
+  searchClear.innerHTML = CLOSE_SVG;
+  searchClear.onclick = () => {
+    clearSearch();
+    searchInput.focus();
+  };
+
+  window.addEventListener("keydown", onKey);
+}
