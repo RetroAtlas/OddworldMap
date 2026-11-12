@@ -47,6 +47,22 @@ test("Patrols needs the objects shown: greyed and refusing its key until they ar
   expect(errors).toEqual([]);
 });
 
+test("Patrols boots greyed for a visitor who keeps the animation off", async ({ page }) => {
+  const errors = trackErrors(page);
+  await page.addInitScript(() =>
+    localStorage.setItem("owm:settings", JSON.stringify({ animate: false })),
+  );
+  await seedView(page, { show: { objects: true, patrols: true }, cats: ALL_CATS });
+  await page.goto(`/#AE/MI/1/${SLIG.x1}/${SLIG.y1}/1.00`);
+  await settle(page, SLIG);
+  await expect(page.locator("#tPatrols")).toBeDisabled();
+  await expect(page.locator("label:has(#tPatrols)")).toHaveAttribute(
+    "title",
+    "“Patrols” needs “Animate the objects” on in Settings.",
+  );
+  expect(errors).toEqual([]);
+});
+
 test("a creature on patrol is hovered where it stands, not where its marker was placed", async ({
   page,
 }) => {
