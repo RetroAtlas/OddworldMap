@@ -4,6 +4,13 @@
    "date": "2026-11-12",
    "tag": "fixed",
    "tiny": true,
+   "title": "A search result on a same-numbered path opens it at once",
+   "detail": "Picking a search result on a path that shares its number with the one you were on, Necrum's P1 from the Mines' P1 say, switched the level and only then the path, by way of the address bar. On a phone it also left the menu open over the map. The result now opens its path straight away and the menu closes, as for any other result."
+  },
+  {
+   "date": "2026-11-12",
+   "tag": "fixed",
+   "tiny": true,
    "title": "On a wide screen, a path opens whole, the same size every visit",
    "detail": "On a wide screen the sidebar slid into place as the map opened. When the map loaded quickly, from the cache or over a fast connection, a path was fitted to the map while the slide was still under way: a little too large, with its ends cut off. The sidebar now stands in place from the start, so a path opens whole and the same link opens the same view each time."
   },

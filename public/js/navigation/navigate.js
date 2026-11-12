@@ -419,9 +419,10 @@ export function navigateToDest(d) {
 // the level, path and object a caller kept name places, not the objects now
 // standing for them
 export function jumpToTlv(G, L, P, t) {
+  const moved = state.data !== G || state.lvl?.short !== L.short; // another level's path can share the id
   if (state.data !== G) selectGame(G, true);
   if (state.lvl?.short !== L.short) setLevel(L);
-  if (state.path?.id !== P.id) selectPathById(P.id);
+  if (moved || state.path?.id !== P.id) selectPathById(P.id);
   focusOn(...markerCentre(currentOf(t, state.path) ?? t, LAYOUT));
 }
 

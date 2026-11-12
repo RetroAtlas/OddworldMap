@@ -57,3 +57,24 @@ test("a path change with the gear button focused closes the drawer onto the menu
   expect(await page.evaluate(() => document.activeElement?.id)).toBe("menuBtn");
   expect(errors).toEqual([]);
 });
+
+test("a search hit on another level's path of the same number closes the drawer on that path", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await page.goto("/#AE/MI/1/1412/712/1.00");
+  await settle(page, { game: "AE", level: "MI", path: 1 });
+  await page.keyboard.press("/");
+  await page.fill("#searchInput", "brewmachine");
+  const hit = page.locator("#searchResults .hit", {
+    has: page.locator(".loc", { hasText: /^FD P1$/ }),
+  });
+  await hit.first().click();
+  await page.waitForFunction(() => !document.body.classList.contains("menu-open"), null, POLL);
+  const place = await page.evaluate(async () => {
+    const { state } = await import(new URL("js/data/state.js", location.href).href);
+    return `${state.lvl.short} P${state.path.id}`;
+  });
+  expect(place).toBe("FD P1");
+  expect(errors).toEqual([]);
+});
