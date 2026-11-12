@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { seedView, trackErrors, settle } from "./helpers.js";
+import { POLL, seedView, trackErrors, settle } from "./helpers.js";
 
 // The view below is window-interior on both axes, so its hash reproduces
 // exactly; every release shares the base's geometry, so it is the same place
@@ -279,5 +279,50 @@ test("a patched screen paints the base's picture with the release's patches over
   expect(seen.offWant).toBe(0);
   expect(seen.offBase).toBeGreaterThan(0);
   expect(seen.offWhole).toBe(0);
+  expect(errors).toEqual([]);
+});
+
+test("a release swapped in over a path's screens asks for its patches as the view needs them", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  // a patch is named for its screen and its place on it
+  const PATCH = /\/cams\/ae\/de\/MI\/MIP04C\d+_\d+_\d+\.[0-9a-f]+\.png$/;
+  const asked = [];
+  page.on("request", (q) => PATCH.test(q.url()) && asked.push(q.url()));
+  let held = false,
+    release;
+  const open = new Promise((r) => (release = r));
+  await page.route(PATCH, async (r) => {
+    const first = !held;
+    held = true;
+    if (first) await open;
+    await r.continue();
+  });
+  await page.goto("/?embed=1#AE/MI/4/934/650/1.00");
+  await settle(page, { game: "AE", level: "MI", path: 4 });
+  await page.evaluate(() => (location.hash = "#AE/MI/4/934/650/1.00/de"));
+  await expect.poll(() => held, POLL).toBe(true);
+  await page.waitForTimeout(400);
+  // the patches of the screens showing in the view, and of the whole path
+  const patches = await page.evaluate(async () => {
+    const u = (m) => new URL("js/" + m, location.href).href;
+    const st = await import(u("data/state.js"));
+    const order = await import(u("painter/artorder.js"));
+    const cv = document.getElementById("cv");
+    const { x, y, z } = st.state.cam;
+    const view = { x, y, w: cv.clientWidth / z, h: cv.clientHeight / z };
+    const of = (cams) =>
+      cams.flatMap((c) => (c.patches ?? []).map(([, , src]) => new URL(src, location.href).href));
+    const { path } = st.state;
+    return {
+      showing: of(path.cams.filter((c) => order.showing(c.cell, path, st.LAYOUT, view))),
+      all: of(path.cams),
+    };
+  });
+  expect(patches.showing.length).toBeLessThan(patches.all.length);
+  expect([...asked].sort()).toEqual([...patches.showing].sort());
+  release();
+  await expect.poll(() => asked.length, POLL).toBe(patches.all.length);
   expect(errors).toEqual([]);
 });

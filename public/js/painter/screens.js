@@ -4,6 +4,7 @@
 
 import { scheduleDraw } from "../ui/redraw.js";
 import { COLOR } from "../ui/dom.js";
+import { showing } from "./artorder.js";
 
 export const images = {}; // png -> Image
 export function img(src) {
@@ -63,6 +64,16 @@ export function screenOf(c) {
   const im = img(c.png);
   return im.complete && im.naturalWidth ? im : null;
 }
+
+// a camera's files, its screen and a release's patches over it: whether all of
+// them have been asked for, and whether all have arrived or failed
+const filesOf = (c) => [c.png, ...(c.patches ?? []).map(([, , src]) => src)];
+export const asked = (c) => filesOf(c).every((src) => images[src]);
+export const arrived = (c) => filesOf(c).every((src) => images[src]?.complete);
+
+// whether every screen showing in a view has arrived or failed
+export const viewSettled = (path, layout, view) =>
+  path.cams.every((c) => !c.png || !showing(c.cell, path, layout, view) || arrived(c));
 
 export const tintCache = {};
 // the foreground masks under Dim: the mask's pixels dimmed the way the screens

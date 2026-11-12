@@ -34,11 +34,13 @@ import {
   paintWires,
 } from "./overlays.js";
 import { pathRelease, releaseNotes } from "../data/release.js";
-import { screenOf, tintedMasks } from "./screens.js";
+import { wanted } from "./artorder.js";
+import { arrived, asked, screenOf, tintedMasks } from "./screens.js";
 import {
   artOf,
   setOf,
   setPainted,
+  spriteArtSettled,
   spriteRecords,
   spriteSet,
   spritesDrawn,
@@ -304,13 +306,15 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   ctx.restore();
 }
 
-function paintScreens({ ctx, path, layout }, dim) {
+function paintScreens({ ctx, path, layout, view }, dim) {
+  const want = wanted(path, layout, view, { asked, arrived, settled: spriteArtSettled });
   for (const c of path.cams) {
     const cx = (c.cell % path.w) * layout.cellW,
       cy = Math.floor(c.cell / path.w) * layout.cellH;
     // a screen is its window, never the whole cell: (cx, cy) is where the
     // transform puts the window's corner at either pitch, so the slack stays bare
     if (c.png) {
+      if (!want.has(c) && !asked(c)) continue;
       const im = screenOf(c);
       if (im) {
         ctx.globalAlpha = dim ? 0.35 : 1;

@@ -4,14 +4,16 @@
 
 import { scheduleDraw } from "../ui/redraw.js";
 import { CACHE_MAX_IMAGES, SPRITE_ZOOM } from "../config.js";
+import { cv } from "../ui/dom.js";
 import { loadSprites } from "../data/data.js";
+import { artSettled } from "./artorder.js";
 import { drawnAs, resetKept } from "./kept.js";
 import { resetScene, setMotionRunning, setPatrolsRunning } from "../engine/motion.js";
 import { releaseSprites } from "../data/release.js";
-import { compose, composed, dimCache, images, img, tintCache } from "./screens.js";
+import { compose, composed, dimCache, images, img, tintCache, viewSettled } from "./screens.js";
 import { getSettings } from "../data/settings.js";
 import { ownSheet, recordSheets, spriteDraws } from "../rules/sprites.js";
-import { state } from "../data/state.js";
+import { LAYOUT, state } from "../data/state.js";
 
 // game id -> sidecar, null while it is coming, false once a fetch failed. A
 // failure is asked again only from a deliberate point, never by the paint it
@@ -128,10 +130,12 @@ const placeShown = () => !!state.path && shownPlaces.has(place());
 // the places where the objects were turned on, which asks for them at any zoom
 const askedPlaces = new Set();
 
+const gated = () => state.cam.z < SPRITE_ZOOM && !state.edit && !askedPlaces.has(place());
+
 // a place yet to draw its sprites asks for their art a frame after the paint
 // that wants it, against the view as it stands then, since a view waiting on
-// the canvas's layout is placed after its path's first paint; below SPRITE_ZOOM
-// it waits, unless the objects were turned on there or the mode is editing them
+// the canvas's layout is placed after its path's first paint; and once the
+// screens showing in that view are in, each of which repaints as it lands
 let asking = false;
 function askSoon() {
   if (asking) return;
@@ -139,9 +143,24 @@ function askSoon() {
   requestAnimationFrame(() => {
     asking = false;
     const set = state.show.objects && state.data && setOf(state.data);
-    if (!set || !state.path) return;
-    if (state.cam.z < SPRITE_ZOOM && !state.edit && !askedPlaces.has(place())) return;
+    if (!set || !state.path || gated()) return;
+    const { x, y, z } = state.cam;
+    const view = { x, y, w: cv.clientWidth / z, h: cv.clientHeight / z };
+    if (!viewSettled(state.path, LAYOUT, view)) return;
     for (const src of spriteArt(set)) img(src);
+  });
+}
+
+// whether the standing path's sprite art holds none of its other screens back
+export function spriteArtSettled() {
+  if (!state.data || !state.path) return true;
+  const set = setOf(state.data);
+  return artSettled({
+    objects: !!state.show.objects,
+    gated: gated(),
+    sidecar: set ? "in" : spritesFailed(state.data.id) ? "failed" : "coming",
+    shown: placeShown(),
+    artIn: !!set && spriteArt(set).every(settled),
   });
 }
 

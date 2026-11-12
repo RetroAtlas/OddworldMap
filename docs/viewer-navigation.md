@@ -13,7 +13,7 @@
 
 ## How a path opens
 
-- A selection places its view through `selectPath`'s `place`, ahead of its first paint: `fitView` by default, `null` to keep the camera (a release swapped in), and the point a selection is headed for where it has one (a link's own view or object, a follow's partner or camera, a search hit, a jump to a screen), which the jumps centre again through `focusOn` after the selection, for the flash and the hash. No path is painted at a view it does not stay on, and every `selection-changed` listener reads the view the selection rests on.
+- A selection places its view through `selectPath`'s `place`, ahead of its first paint: `fitView` by default, `null` to keep the camera (a release swapped in), and the point a selection is headed for where it has one (a link's own view or object, a follow's partner or camera, a search hit, a jump to a screen), which the jumps centre again through `focusOn` after the selection, for the flash and the hash. No path is painted at a view it does not stay on, which the order its artwork is asked for in leans on ([docs/viewer-geometry.md](viewer-geometry.md#the-one-painter-and-the-whole-path-export)), and every `selection-changed` listener reads the view the selection rests on.
 
 ## Routes
 

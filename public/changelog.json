@@ -2,6 +2,12 @@
  "entries": [
   {
    "date": "2026-11-12",
+   "tag": "improved",
+   "title": "The screens you are looking at load first",
+   "detail": "A path asked for all of its screens at once, so on a slow connection the screen in front of you could be among the last to arrive, and the sprites could turn up before the scenery they stand on. The map now fetches the screens in view first, then the path's sprites, then the rest of its screens, nearest first: where a link or a door takes you fills in before what lies off to the side."
+  },
+  {
+   "date": "2026-11-12",
    "tag": "fixed",
    "tiny": true,
    "title": "By the numbers counts the screen you land on",

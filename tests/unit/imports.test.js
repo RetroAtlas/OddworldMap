@@ -98,7 +98,13 @@ function importGraph() {
 // these files beside them, must never touch the DOM at import time, or nothing
 // but a browser session would catch it.
 const PURE_FOLDERS = ["engine", "model", "rules", "data"];
-const PURE_FILES = ["config.js", "ui/redraw.js", "ui/searchquery.js", "painter/kept.js"];
+const PURE_FILES = [
+  "config.js",
+  "ui/redraw.js",
+  "ui/searchquery.js",
+  "painter/artorder.js",
+  "painter/kept.js",
+];
 
 test("the pure folders and files import in bare Node", async () => {
   const files = modules();

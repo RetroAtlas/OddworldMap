@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ALL_CATS, POLL, SLIG, TALLY, seedView, settle, trackErrors } from "./helpers.js";
+import { ALL_CATS, POLL, SLIG, TALLY, seedView, settle, spotOf, trackErrors } from "./helpers.js";
 
 // MI P1's families, every one of which lands but the held one before a probe reads
 const MI_P1_FAMILIES = [
@@ -115,6 +115,161 @@ for (const [held, route, families] of [
     expect(after.tick).toBeLessThan(90);
     expect(errors).toEqual([]);
   });
+
+// the Mines' mouth at the art's own size, with what the page asks for as it comes: the
+// path's screens by address, and how many sheets and masks
+const MOUTH = `/?embed=1#AE/MI/1/${SLIG.x1 + 12}/${SLIG.y1 - 10}/1.00`;
+const MI_P1_SCREENS = 31;
+function asking(page) {
+  const asked = { screens: [], art: 0 };
+  page.on("request", (q) => {
+    const url = q.url();
+    if (/\/sprites\/|_fg\d+\.png$/.test(url)) asked.art++;
+    else if (/\/cams\/ae\/MI\/MIP01C\d+\.png$/.test(url)) asked.screens.push(url);
+  });
+  return asked;
+}
+// the addresses of the screens showing in the view
+const showingNow = (page) =>
+  page.evaluate(async () => {
+    const u = (m) => new URL("js/" + m, location.href).href;
+    const st = await import(u("data/state.js"));
+    const order = await import(u("painter/artorder.js"));
+    const cv = document.getElementById("cv");
+    const { x, y, z } = st.state.cam;
+    const view = { x, y, w: cv.clientWidth / z, h: cv.clientHeight / z };
+    return st.state.path.cams
+      .filter((c) => order.showing(c.cell, st.state.path, st.LAYOUT, view))
+      .map((c) => new URL(c.png, location.href).href)
+      .sort();
+  });
+
+// requests matching a route held back until let go: the first to come, or every one
+function hold(page, route, every = false) {
+  const h = { reached: false };
+  const open = new Promise((r) => (h.release = r));
+  page.route(route, async (r) => {
+    const held = every || !h.reached;
+    h.reached = true;
+    if (held) await open;
+    await r.continue();
+  });
+  return h;
+}
+
+test("a view asks for the screens showing in it, then the sprite art, then the rest of its path", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  const asked = asking(page);
+  // the first screen asked for is held, and after it the Slig's sheet
+  const screen = hold(page, /\/MIP01C\d+\.png$/);
+  const sheet = hold(page, /\/cams\/ae\/sprites\/Slig\./);
+  await seedView(page, { show: { objects: true }, cats: ALL_CATS });
+  await page.goto(MOUTH);
+  await expect.poll(() => screen.reached, POLL).toBe(true);
+  await page.waitForTimeout(400);
+  const showing = await showingNow(page);
+  expect(showing.length).toBeLessThan(MI_P1_SCREENS);
+  expect([...asked.screens].sort()).toEqual(showing);
+  expect(asked.art).toBe(0);
+  screen.release();
+  await expect.poll(() => sheet.reached, POLL).toBe(true);
+  await page.waitForTimeout(400);
+  expect([...asked.screens].sort()).toEqual(showing);
+  sheet.release();
+  await expect.poll(() => asked.screens.length, POLL).toBe(MI_P1_SCREENS);
+  expect(errors).toEqual([]);
+});
+
+test("with the objects off the rest of a path follows the screens in view", async ({ page }) => {
+  const errors = trackErrors(page);
+  const asked = asking(page);
+  const screen = hold(page, /\/MIP01C\d+\.png$/);
+  await seedView(page, { show: { objects: false }, cats: ALL_CATS });
+  await page.goto(MOUTH);
+  await expect.poll(() => screen.reached, POLL).toBe(true);
+  await page.waitForTimeout(400);
+  expect([...asked.screens].sort()).toEqual(await showingNow(page));
+  screen.release();
+  await expect.poll(() => asked.screens.length, POLL).toBe(MI_P1_SCREENS);
+  expect(asked.art).toBe(0);
+  expect(errors).toEqual([]);
+});
+
+test("with the sprite table lost the rest of a path still follows the screens in view", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  const asked = asking(page);
+  await page.route(/\/sprites_ae\.json$/, (r) => r.fulfill({ status: 404 }));
+  await seedView(page, { show: { objects: true }, cats: ALL_CATS });
+  await page.goto(MOUTH);
+  await expect.poll(() => asked.screens.length, POLL).toBe(MI_P1_SCREENS);
+  expect(asked.art).toBe(0);
+  expect(errors.filter((e) => !/404|Failed to load/.test(e))).toEqual([]);
+});
+
+test("a screen of the view that fails holds nothing back", async ({ page }) => {
+  const errors = trackErrors(page);
+  const asked = asking(page);
+  let failed = false;
+  await page.route(/\/MIP01C\d+\.png$/, (r) => {
+    const first = !failed;
+    failed = true;
+    return first ? r.fulfill({ status: 404 }) : r.continue();
+  });
+  await seedView(page, { show: { objects: true }, cats: ALL_CATS });
+  await page.goto(MOUTH);
+  await expect.poll(() => asked.screens.length, POLL).toBe(MI_P1_SCREENS);
+  expect(errors.filter((e) => !/404|Failed to load/.test(e))).toEqual([]);
+});
+
+test("with the clock stopped the rest of a path still follows its sprite art", async ({ page }) => {
+  const errors = trackErrors(page);
+  const asked = asking(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await seedView(page, { show: { objects: true }, cats: ALL_CATS });
+  await page.goto(MOUTH);
+  await expect.poll(() => asked.screens.length, POLL).toBe(MI_P1_SCREENS);
+  expect(errors).toEqual([]);
+});
+
+// from the door of Rupture Farms' first path that leads to its second, what a way there
+// asks for of the second's nine screens while every one of them is held
+async function landing(page, go) {
+  const errors = trackErrors(page);
+  const asked = [];
+  page.on("request", (q) => /\/R1P16C\d+\.png$/.test(q.url()) && asked.push(q.url()));
+  const screens = hold(page, /\/R1P16C\d+\.png$/, true);
+  await page.goto("/#AO/R1/15/9781/786/1.00");
+  await settle(page, { game: "AO", level: "R1", path: 15 });
+  await go();
+  await expect.poll(() => screens.reached, POLL).toBe(true);
+  await page.waitForTimeout(400);
+  const showing = await showingNow(page);
+  expect(showing.length).toBeLessThan(9);
+  expect([...asked].sort()).toEqual(showing);
+  screens.release();
+  expect(errors).toEqual([]);
+}
+
+test("a followed door asks first for the screens showing where it lands", async ({ page }) => {
+  await landing(page, async () => {
+    const pt = await spotOf(page, { name: "Door", world: [9769, 774] });
+    await page.mouse.click(pt.x, pt.y);
+  });
+});
+
+test("a search hit asks first for the screens showing where it lands", async ({ page }) => {
+  await landing(page, async () => {
+    await page.fill("#searchInput", "MeatSaw");
+    const hit = page.locator("#searchResults .hit", {
+      has: page.locator(".loc", { hasText: /R1 P16$/ }),
+    });
+    await hit.first().click();
+  });
+});
 
 test("an edit that brings a family in leaves the path's sprites drawn while its sheet comes", async ({
   page,
@@ -283,6 +438,23 @@ test.describe("below the zoom a creature reads at", () => {
       );
       render.draw();
     }, z);
+
+  test.describe("in a box the path outgrows there", () => {
+    test.use({ viewport: { width: 400, height: 300 } });
+
+    test("the rest of a path follows the screens in view, no sprite art being waited for", async ({
+      page,
+    }) => {
+      const errors = trackErrors(page);
+      const asked = asking(page);
+      await seedView(page, { show: { objects: true }, cats: ALL_CATS });
+      await page.goto(`/?embed=1#AE/MI/1/${SLIG.x1 + 12}/${SLIG.y1 - 10}/0.11`);
+      await expect.poll(() => asked.screens.length, POLL).toBe(MI_P1_SCREENS);
+      expect((await showingNow(page)).length).toBeLessThan(MI_P1_SCREENS);
+      expect(asked.art).toBe(0);
+      expect(errors).toEqual([]);
+    });
+  });
 
   test("a path asks for no sprites or masks until the view reaches it, and keeps them after", async ({
     page,
