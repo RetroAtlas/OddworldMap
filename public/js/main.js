@@ -41,7 +41,9 @@ import { initMinimap } from "./navigation/minimap.js";
 import { initGraphView } from "./panels/graphview.js";
 import { initOffline } from "./chrome/offline.js";
 import { initRoute } from "./navigation/route.js";
+import { initPlace } from "./panels/place.js";
 
+initPlace();
 initGraphView();
 initRoute();
 initInteraction();

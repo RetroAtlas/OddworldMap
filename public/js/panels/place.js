@@ -79,44 +79,46 @@ function syncPlace() {
   if (!panel.hidden && state.path && here() !== shown) fill();
 }
 
-btn.onclick = () => togglePlace();
+export function initPlace() {
+  btn.onclick = () => togglePlace();
 
-window.addEventListener("selection-changed", () => {
-  const { data, lvl, path } = state;
-  if (!path) {
-    btn.hidden = true;
-    setOpen(false);
-    return;
-  }
-  codeEl.textContent = `${lvl.short} P${path.id}`;
-  nameEl.textContent = pathDisplayName(data.id, lvl.short, path) || "";
-  btn.classList.toggle("hasnote", !!pathNote(data.id, lvl.short, path));
-  editedEl.hidden = !pathEdited(path);
-  tagRelease();
-  btn.hidden = false;
-  syncPlace();
-});
+  window.addEventListener("selection-changed", () => {
+    const { data, lvl, path } = state;
+    if (!path) {
+      btn.hidden = true;
+      setOpen(false);
+      return;
+    }
+    codeEl.textContent = `${lvl.short} P${path.id}`;
+    nameEl.textContent = pathDisplayName(data.id, lvl.short, path) || "";
+    btn.classList.toggle("hasnote", !!pathNote(data.id, lvl.short, path));
+    editedEl.hidden = !pathEdited(path);
+    tagRelease();
+    btn.hidden = false;
+    syncPlace();
+  });
 
-// an edit marks the chip, and can move the entry mark the panel carries
-window.addEventListener("data-changed", () => {
-  if (!state.path) return;
-  editedEl.hidden = !pathEdited(state.path);
-  tagRelease();
-  if (!panel.hidden) fill();
-});
+  // an edit marks the chip, and can move the entry mark the panel carries
+  window.addEventListener("data-changed", () => {
+    if (!state.path) return;
+    editedEl.hidden = !pathEdited(state.path);
+    tagRelease();
+    if (!panel.hidden) fill();
+  });
 
-window.addEventListener("show-changed", (e) => {
-  if (e.detail.key !== "release" || !state.path) return;
-  tagRelease();
-  if (!panel.hidden) fill();
-});
+  window.addEventListener("show-changed", (e) => {
+    if (e.detail.key !== "release" || !state.path) return;
+    tagRelease();
+    if (!panel.hidden) fill();
+  });
 
-// the world graph stands over the chip that opens this, and names the place in
-// its own boxes
-window.addEventListener("graph-changed", () => {
-  if (state.graph) togglePlace(false);
-});
+  // the world graph stands over the chip that opens this, and names the place in
+  // its own boxes
+  window.addEventListener("graph-changed", () => {
+    if (state.graph) togglePlace(false);
+  });
 
-window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !panel.hidden && !typingIn(e.target)) togglePlace(false);
-});
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !panel.hidden && !typingIn(e.target)) togglePlace(false);
+  });
+}
