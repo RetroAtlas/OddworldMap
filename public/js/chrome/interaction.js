@@ -113,17 +113,7 @@ function syncMenu() {
   if (!open) hideAnchorTip(); // a tap that closes the drawer takes its own anchor off-screen
   sidebar.inert = !open; // sliding it off-screen leaves its controls focusable
 }
-// the boot stands the sidebar open with no slide, so the map's box is at rest
-// before a view is placed by its size; narrow and an embed start with it away
-if (!isNarrow() && !embedded) {
-  sidebar.style.transition = "none";
-  document.body.classList.add("menu-open");
-  void sidebar.offsetWidth;
-  sidebar.style.transition = "";
-}
 let keyInput = false; // the last input was a key rather than a pointer
-window.addEventListener("keydown", () => (keyInput = true), true);
-window.addEventListener("pointerdown", () => (keyInput = false), true);
 function toggleMenu(open) {
   const was = document.body.classList.contains("menu-open");
   document.body.classList.toggle("menu-open", open ?? !was);
@@ -140,34 +130,7 @@ function toggleMenu(open) {
       if (sidebar.contains(a) || (a === document.body && keyInput)) menuBtn.focus();
     });
 }
-syncMenu();
-menuBtn.onclick = () => toggleMenu();
-scrim.onclick = () => toggleMenu(false);
-window.addEventListener("menu-toggle", (e) => toggleMenu(e.detail.open));
-// the sidebar's way to the picker; the sheet it opens would land under the drawer on narrow
-$("editAddBtn").onclick = () => {
-  if (isNarrow()) toggleMenu(false);
-  openAddPicker();
-};
-window.addEventListener("selection-changed", (e) => {
-  if (isNarrow() && !e.detail.fromHash) toggleMenu(false); // reveal the map after picking
-});
 
-// the mode acts on the map, so on narrow the drawer comes off it
-window.addEventListener("edit-changed", () => {
-  if (state.edit && isNarrow()) toggleMenu(false);
-  else if (!state.edit) cancelMove();
-});
-
-// the graph takes the whole surface, so the drawer has to come off it
-window.addEventListener("graph-changed", () => {
-  if (state.graph && isNarrow()) toggleMenu(false);
-  // clicking a box closes the diagram, which hands the rest of that gesture to
-  // the canvas underneath: the second click of a double-click would land on the
-  // map, adding a route waypoint or opening a screen list nobody asked for. The
-  // next press that begins its own sequence clears it, so nothing is timed
-  else graphHandover = true;
-});
 let graphHandover = false;
 
 // ---- page zoom -----------------------------------------------------------
@@ -178,11 +141,6 @@ let pageZoomed = false;
 function syncPageZoom() {
   pageZoomed = vv.scale > PAGE_ZOOM_MIN;
   document.body.classList.toggle("page-zoomed", pageZoomed);
-}
-if (vv) {
-  vv.addEventListener("resize", syncPageZoom);
-  vv.addEventListener("scroll", syncPageZoom);
-  syncPageZoom(); // a reload can come back at the scale it left
 }
 
 // ---- pointers: one pointer pans (or measures), two pinch-zoom, click follows ----
@@ -209,7 +167,7 @@ function cancelMove() {
   cv.style.cursor = modeCursor();
 }
 
-cv.addEventListener("pointerdown", (e) => {
+function onPointerDown(e) {
   if (e.detail <= 1) graphHandover = false; // a press of its own, not a gesture's tail
   const p = ptrXY(e);
   pointers.set(e.pointerId, p);
@@ -265,9 +223,9 @@ cv.addEventListener("pointerdown", (e) => {
     const [a, b] = pointers.values();
     pinchDist = Math.hypot(a.x - b.x, a.y - b.y);
   }
-});
+}
 
-cv.addEventListener("pointermove", (e) => {
+function onPointerMove(e) {
   const p = ptrXY(e);
   if (pointers.has(e.pointerId)) pointers.set(e.pointerId, p);
   if (pointers.size === 2) {
@@ -320,7 +278,7 @@ cv.addEventListener("pointermove", (e) => {
   }
   if (e.pointerType !== "touch" || !panning) updateHover(); // no tooltips under a panning finger
   scheduleDraw();
-});
+}
 
 function endPointer(e) {
   if (!pointers.delete(e.pointerId)) return;
@@ -353,55 +311,19 @@ function endPointer(e) {
     cv.classList.remove("panning");
   }
 }
-cv.addEventListener("pointerup", endPointer);
-// a pointer the browser takes away lets the object go where it was
-cv.addEventListener("pointercancel", (e) => {
-  cancelMove();
-  endPointer(e);
-});
 
 // a move in progress is let go before anything else hears Escape
-window.addEventListener(
-  "keydown",
-  (e) => {
-    if (!moving || e.key !== "Escape") return;
-    cancelMove();
-    e.stopImmediatePropagation();
-    e.preventDefault();
-  },
-  { capture: true },
-);
-
-// measurements don't outlive their path
-window.addEventListener("selection-changed", () => {
-  if (!state.ruler) return;
-  state.ruler = null;
-  scheduleDraw();
-});
+function letGoOnEscape(e) {
+  if (!moving || e.key !== "Escape") return;
+  cancelMove();
+  e.stopImmediatePropagation();
+  e.preventDefault();
+}
 
 // an armed tool owns the cursor; hover writes must not overwrite it
 const modeCursor = () => (state.edit || state.show.ruler || state.show.route ? "crosshair" : "");
 
-cv.addEventListener("pointerleave", () => {
-  if (pointers.size) return; // a captured drag only leaves after release
-  hoverTlvs = [];
-  tip.style.display = "none";
-  cv.style.cursor = modeCursor();
-  setHighlight(null);
-  setConnFocus(null);
-  setWireFocus(null);
-  setPatrol(null);
-});
-
-// the pointed-at objects are the path's old ones after an edit
-window.addEventListener("data-changed", () => {
-  hoverTlvs = [];
-  tip.style.display = "none";
-  // an object that left the path mid-drag is let go, a swap it survived carries on
-  if (moving && !currentOf(moving.t, state.path)) cancelMove();
-});
-
-cv.addEventListener("click", () => {
+function onClick() {
   if (panMoved || graphHandover || state.show.ruler) return;
   if (state.show.route) {
     updateHover(); // taps arrive without a preceding hover move
@@ -439,11 +361,11 @@ cv.addEventListener("click", () => {
   if (!getSettings().screenList) return;
   const pt = drawAtMouse(); // nothing to follow: list the screen's objects
   openCamPanel(pt.x, pt.y, hoverTlvs[0] ?? null);
-});
+}
 
 // right-click (long-press on touch) copies a permalink to the object under
 // the pointer; over empty map the native menu stays available
-cv.addEventListener("contextmenu", (e) => {
+function onContextMenu(e) {
   const r = cv.getBoundingClientRect();
   mouse.x = e.clientX - r.left;
   mouse.y = e.clientY - r.top;
@@ -462,7 +384,7 @@ cv.addEventListener("contextmenu", (e) => {
     () => toast(copied),
     () => toast("copy failed"),
   );
-});
+}
 
 // the full-site permalink to the current view. viewHash(), not location.href:
 // the hash write is debounced and can lag a pan
@@ -473,37 +395,13 @@ function fullSiteUrl(exact) {
   return url.href;
 }
 
-// the top-right chain button copies that permalink — the address bar
-// equivalent, which phones and installed/standalone mode may hide
-copyLinkBtn.innerHTML = LINK_SVG;
-copyLinkBtn.onclick = () => {
-  if (!state.path) return;
-  (navigator.clipboard?.writeText(fullSiteUrl()) ?? Promise.reject()).then(
-    () => toast("link copied"),
-    () => toast("copy failed"),
-  );
-};
-
-// in embeds the chain button gives way to this link out to the full site at
-// the same view; the href is seeded at boot (an <a> without one isn't even
-// focusable) and refreshed on pointerdown/click, before navigation reads it
-openSiteBtn.innerHTML = EXTERNAL_SVG;
-openSiteBtn.href = fullSiteUrl(true);
-openSiteBtn.onpointerdown = openSiteBtn.onclick = () => {
-  openSiteBtn.href = fullSiteUrl(true);
-};
-
-cv.addEventListener(
-  "wheel",
-  (e) => {
-    e.preventDefault();
-    Object.assign(state.cam, zoomAt(state.cam, Math.exp(-e.deltaY * 0.0015), mouse.x, mouse.y));
-    updateHover();
-    scheduleDraw();
-    scheduleHash(false);
-  },
-  { passive: false },
-);
+function onWheel(e) {
+  e.preventDefault();
+  Object.assign(state.cam, zoomAt(state.cam, Math.exp(-e.deltaY * 0.0015), mouse.x, mouse.y));
+  updateHover();
+  scheduleDraw();
+  scheduleHash(false);
+}
 
 // draw space, not world units; wX/wY convert where world units are wanted
 function drawAtMouse() {
@@ -532,7 +430,7 @@ const SHOW_KEY = {
   m: "ruler",
   r: "route",
 };
-window.addEventListener("keydown", (e) => {
+function onKey(e) {
   if (e.ctrlKey || e.metaKey || typingIn(e.target)) return;
   // brackets before the Alt guard: several layouts type them via Option/AltGr
   if (e.key === "[" || e.key === "]") {
@@ -612,7 +510,7 @@ window.addEventListener("keydown", (e) => {
   updateHover();
   scheduleDraw();
   scheduleHash(false);
-});
+}
 
 // the selection one world unit along, or a grid square with Alt, kept on the
 // grid; every press of a run joins the one undo step
@@ -640,11 +538,6 @@ function openShortcuts() {
   $("shortcutsClose").focus();
 }
 const closeShortcuts = () => closeDialog(shortcutsOverlay);
-$("shortcutsClose").onclick = closeShortcuts;
-shortcutsOverlay.onclick = (e) => {
-  if (e.target === e.currentTarget) closeShortcuts();
-};
-trapDialogKeys(() => shortcutsOverlay.classList.contains("open"), $("shortcuts"), closeShortcuts);
 
 // where an object may be said to lead: destOf's answer, less the links whose
 // named partner isn't at the destination to receive them. Deliberately not
@@ -886,4 +779,121 @@ function updateHover() {
   const wx = wX(pt.x),
     wy = wY(pt.y);
   hud.textContent = `world x ${Math.round(wx)}  y ${Math.round(wy)}  ·  grid ${gX(wx).toFixed(1)}, ${gY(wy).toFixed(1)}  ·  zoom ${state.cam.z.toFixed(2)}`;
+}
+
+export function initInteraction() {
+  // the boot stands the sidebar open with no slide, so the map's box is at rest
+  // before a view is placed by its size; narrow and an embed start with it away
+  if (!isNarrow() && !embedded) {
+    sidebar.style.transition = "none";
+    document.body.classList.add("menu-open");
+    void sidebar.offsetWidth;
+    sidebar.style.transition = "";
+  }
+  window.addEventListener("keydown", () => (keyInput = true), true);
+  window.addEventListener("pointerdown", () => (keyInput = false), true);
+  syncMenu();
+  menuBtn.onclick = () => toggleMenu();
+  scrim.onclick = () => toggleMenu(false);
+  window.addEventListener("menu-toggle", (e) => toggleMenu(e.detail.open));
+  // the sidebar's way to the picker; the sheet it opens would land under the drawer on narrow
+  $("editAddBtn").onclick = () => {
+    if (isNarrow()) toggleMenu(false);
+    openAddPicker();
+  };
+  window.addEventListener("selection-changed", (e) => {
+    if (isNarrow() && !e.detail.fromHash) toggleMenu(false); // reveal the map after picking
+  });
+
+  // the mode acts on the map, so on narrow the drawer comes off it
+  window.addEventListener("edit-changed", () => {
+    if (state.edit && isNarrow()) toggleMenu(false);
+    else if (!state.edit) cancelMove();
+  });
+
+  // the graph takes the whole surface, so the drawer has to come off it
+  window.addEventListener("graph-changed", () => {
+    if (state.graph && isNarrow()) toggleMenu(false);
+    // clicking a box closes the diagram, which hands the rest of that gesture to
+    // the canvas underneath: the second click of a double-click would land on the
+    // map, adding a route waypoint or opening a screen list nobody asked for. The
+    // next press that begins its own sequence clears it, so nothing is timed
+    else graphHandover = true;
+  });
+
+  if (vv) {
+    vv.addEventListener("resize", syncPageZoom);
+    vv.addEventListener("scroll", syncPageZoom);
+    syncPageZoom(); // a reload can come back at the scale it left
+  }
+
+  cv.addEventListener("pointerdown", onPointerDown);
+  cv.addEventListener("pointermove", onPointerMove);
+  cv.addEventListener("pointerup", endPointer);
+  // a pointer the browser takes away lets the object go where it was
+  cv.addEventListener("pointercancel", (e) => {
+    cancelMove();
+    endPointer(e);
+  });
+
+  window.addEventListener("keydown", letGoOnEscape, { capture: true });
+
+  // measurements don't outlive their path
+  window.addEventListener("selection-changed", () => {
+    if (!state.ruler) return;
+    state.ruler = null;
+    scheduleDraw();
+  });
+
+  cv.addEventListener("pointerleave", () => {
+    if (pointers.size) return; // a captured drag only leaves after release
+    hoverTlvs = [];
+    tip.style.display = "none";
+    cv.style.cursor = modeCursor();
+    setHighlight(null);
+    setConnFocus(null);
+    setWireFocus(null);
+    setPatrol(null);
+  });
+
+  // the pointed-at objects are the path's old ones after an edit
+  window.addEventListener("data-changed", () => {
+    hoverTlvs = [];
+    tip.style.display = "none";
+    // an object that left the path mid-drag is let go, a swap it survived carries on
+    if (moving && !currentOf(moving.t, state.path)) cancelMove();
+  });
+
+  cv.addEventListener("click", onClick);
+  cv.addEventListener("contextmenu", onContextMenu);
+
+  // the top-right chain button copies the view's permalink — the address bar
+  // equivalent, which phones and installed/standalone mode may hide
+  copyLinkBtn.innerHTML = LINK_SVG;
+  copyLinkBtn.onclick = () => {
+    if (!state.path) return;
+    (navigator.clipboard?.writeText(fullSiteUrl()) ?? Promise.reject()).then(
+      () => toast("link copied"),
+      () => toast("copy failed"),
+    );
+  };
+
+  // in embeds the chain button gives way to this link out to the full site at
+  // the same view; the href is seeded at boot (an <a> without one isn't even
+  // focusable) and refreshed on pointerdown/click, before navigation reads it
+  openSiteBtn.innerHTML = EXTERNAL_SVG;
+  openSiteBtn.href = fullSiteUrl(true);
+  openSiteBtn.onpointerdown = openSiteBtn.onclick = () => {
+    openSiteBtn.href = fullSiteUrl(true);
+  };
+
+  cv.addEventListener("wheel", onWheel, { passive: false });
+
+  window.addEventListener("keydown", onKey);
+
+  $("shortcutsClose").onclick = closeShortcuts;
+  shortcutsOverlay.onclick = (e) => {
+    if (e.target === e.currentTarget) closeShortcuts();
+  };
+  trapDialogKeys(() => shortcutsOverlay.classList.contains("open"), $("shortcuts"), closeShortcuts);
 }
