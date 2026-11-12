@@ -107,6 +107,8 @@ const PURE_FILES = [
   "painter/kept.js",
 ];
 
+const isPure = (f) => PURE_FOLDERS.includes(posix.dirname(f)) || PURE_FILES.includes(f);
+
 test("the pure folders and files import in bare Node", async () => {
   const files = modules();
   for (const d of PURE_FOLDERS)
@@ -115,10 +117,53 @@ test("the pure folders and files import in bare Node", async () => {
       `${d}/ holds a module`,
     );
   for (const f of PURE_FILES) assert.ok(files.includes(f), `${f} is a module`);
-  const pure = files.filter(
-    (f) => PURE_FOLDERS.includes(posix.dirname(f)) || PURE_FILES.includes(f),
+  for (const f of files.filter(isPure)) await import(new URL(f, dir));
+});
+
+// Import defines, init acts: every other module but the boot wires the page in
+// the init it exports, so the order the page is wired in is the boot's call list
+// and never the order an import graph happens to be evaluated in.
+const ACTS =
+  "Program > :not(ImportDeclaration, ExportNamedDeclaration, ExportDefaultDeclaration, " +
+  "ExportAllDeclaration, FunctionDeclaration, VariableDeclaration, ClassDeclaration)";
+const source = (f) => readFileSync(new URL(f, dir), "utf8");
+const MODULE = { ecmaVersion: "latest", sourceType: "module" };
+
+test("a module that touches the page declares as it is imported and wires in its init", () => {
+  const linter = new Linter();
+  const acting = (f) =>
+    linter
+      .verify(source(f), {
+        languageOptions: MODULE,
+        rules: { "no-restricted-syntax": ["error", ACTS] },
+      })
+      .map((e) => `${f}:${e.line}`);
+  assert.ok(acting("main.js").length, "the sweep sees the boot's own statements");
+  assert.deepEqual(
+    modules()
+      .filter((f) => f !== "main.js" && !isPure(f))
+      .flatMap(acting),
+    [],
+    "a statement at a module's top level runs as the module is imported; it goes in the init",
   );
-  for (const f of pure) await import(new URL(f, dir));
+});
+
+test("the boot calls every init once", () => {
+  const linter = new Linter();
+  // every name a module exports of its own, declared at the export or listed by it
+  const exported = (f) => {
+    linter.verify(source(f), { languageOptions: MODULE });
+    return linter.getSourceCode().ast.body.flatMap((n) => {
+      if (n.type !== "ExportNamedDeclaration" || n.source) return [];
+      const d = n.declaration;
+      if (!d) return n.specifiers.map((s) => s.exported.name);
+      return d.declarations ? d.declarations.map((v) => v.id.name) : [d.id.name];
+    });
+  };
+  const inits = modules().flatMap((f) => exported(f).filter((name) => /^init[A-Z]/.test(name)));
+  const called = [...source("main.js").matchAll(/^(init[A-Z]\w*)\(\);/gm)].map((m) => m[1]);
+  assert.ok(inits.length, "the sweep found the inits");
+  assert.deepEqual([...called].sort(), [...inits].sort());
 });
 
 // A cycle between ES modules links and runs without complaint for as long as no

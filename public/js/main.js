@@ -1,4 +1,4 @@
-// Boot: fetch the map data, then hand over to the modules.
+// Boot: wire the modules to the page, fetch the map data, then hand over to them.
 
 import { GAMES_HOLD_MS } from "./config.js";
 import { $, embedded } from "./ui/dom.js";
@@ -44,6 +44,8 @@ import { initOffline } from "./chrome/offline.js";
 import { initSettings } from "./chrome/settingsdialog.js";
 import { initFieldPanel } from "./panels/fieldpanel.js";
 
+// the page is wired here, a module at a time; listeners hear an event in the
+// order they were registered, which is the order of this list
 initSpriteArt();
 initRender();
 initNavigate();
@@ -66,7 +68,7 @@ initNumbers();
 initMinimap();
 initOffline();
 initSettings();
-syncNeeds();
+syncNeeds(); // a toggle may need a Settings row, seeded by now
 initFieldPanel();
 
 // the first view to stand complete lets the rest of the map go

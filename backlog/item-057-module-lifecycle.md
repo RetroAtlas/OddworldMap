@@ -1,6 +1,6 @@
 # 57. One module lifecycle: explicit `init()` everywhere
 
-**Status:** open · **Effort:** medium (viewer refactor) · **Where:** anywhere, viewer-only · **Filed:** 2026-07-24/25 review
+**Status:** shipped 2026-11-12 · **Effort:** medium (viewer refactor) · **Where:** anywhere, viewer-only · **Filed:** 2026-07-24/25 review
 
 ## The question asked: which convention is best?
 
@@ -56,3 +56,14 @@ Only two orderings inside the first phase are real, and both are worth a comment
 ## Ships with
 
 A CLAUDE.md edit — it says "`js/main.js` is the boot entry", which extends to stating the convention and the `dom.js` exception. No changelog entry.
+
+## Shipped
+
+Landed 2026-11-12 on a tree of 85 modules in nine folders, where the count above found 43 in one: 22 of them wired the page at import, `editpanel`, `spriteart` and `keycap` having joined the 19. Twenty-one now do it in an exported `init` that [js/main.js](../public/js/main.js) calls, one module a commit as sketched, each a move of the module's top-level statements into the init in the order they were written, and `keycap` needed none: its keyup and blur have nothing to put out until a cap is lit, so they are registered on the first one, as `dialog.js` registers its popstate on the first dialog it opens; a handler that ran to twenty lines or carried listener options kept its place under a name, as did the five exports as a set, which is also what held `interaction.js` under its row of the size table.
+
+- The order of the calls is the order the import graph evaluated the modules in, kept exactly, and the series ran from the last module evaluated to the first so that every commit kept it: a module converted ahead of one evaluated before it would have registered its listeners behind that one's. Each commit was held to its parent by a trace of the boot, every listener registered, handler set, event dispatched, fetch started and DOM mutation made, in order, over seven boots (a desktop, a phone, an embed, a permalink, a returning visitor at both widths and one with the offline cache on), beside both suites, and the series to its base by the pixel and the style proofs.
+- Of the sketch's two real orderings one was not one. `initSidebar` needs no `initSettings` ahead of it: it reads the kept view through `getSettings`, which loads on first use by design. The dependency that exists runs the other way: the sidebar greys the toggles by their needs, one of which is a Settings row that `initSettings` seeds later, so `main.js` reads the needs again behind it. That second read was the accident: with it removed both suites passed, and `tests/browser/motion.spec.js` now boots a visitor who keeps the animation off to find Patrols greyed. Calling `initSettings` first instead would move its key trap ahead of every capture listener on the window, a change of behaviour and not this item's.
+- The import test could not be widened to import every module in bare Node, the element handles going through `dom.js` at import as the exception above keeps them. What it holds instead is the rule's own shape: no module outside the pure folders and files but the boot has a top-level statement, and `main.js` calls every exported `init` exactly once, so an init nobody calls fails, where a module that wired itself could not be forgotten.
+- [69](item-069-browser-smoke-tests.md) shipped first and without this, so the fourth reason fell away and the order under *Verify* was the one taken: the browser suite it began ran at every commit.
+- `main.js` gained imports of `campanel`, `route` and `place`, as the note above says, and its import list follows the call list, the order of imports deciding nothing once no module is evaluated for effect.
+- The convention is stated in [CLAUDE.md](../CLAUDE.md) and [docs/viewer-boot.md](../docs/viewer-boot.md), which says what a module may still do as it is imported and what the order is known to decide.

@@ -46,7 +46,6 @@ Item-specific reasoning and cross-references stay inside this folder. An item ma
 ## Code and build
 
 - [**105.** Purge the edge's copies of the code after each deploy](item-105-purge-edge-at-deploy.md): Cloudflare keeps the modules and the partials for the origin's 600 s, so a deploy is seen as a mix of two until every file has expired, which broke the live page twice on 2026-11-10; one step after the Pages deploy purges the `.js` and `.css` files by URL, skipped without the two secrets, the artwork left where it is. _Small; needs the zone id and a purge token as secrets._
-- [**57.** One module lifecycle: explicit `init()`](item-057-module-lifecycle.md) — the current boot order is a load-bearing accident. _Medium._
 
 ## Moonshot
 
@@ -82,6 +81,7 @@ Rejected or disproved, kept so they are not re-proposed.
 
 Newest first, and a finished item is worth reading for the same reason an open one is: whether shipped or retired, each records what was decided, what was ruled out and where its own sketch turned out wrong.
 
+- [**57.** One module lifecycle: explicit `init()`](item-057-module-lifecycle.md): twenty-two modules wired the page as they were imported, in whatever order the import graph evaluated them; twenty-one now do it in an `init` that `main.js` calls, the calls in that same order and every commit held to it by a trace of the boot, the key cap wires on its first use, and the import test fails a top-level statement outside the pure folders and an init the boot does not call once. _2026-11-12._
 - [**107.** Open a path where it reads](item-107-open-a-path-where-it-reads.md): a phone opened every path fitted whole, Rupture Farms' first at 0.08 with its twenty screens 29 px wide; a path now opens whole only where its screens read at the fit, else on the screen it is entered on at the artwork's own size, the floor set by the map's box and judged with the screens edge to edge, a paint asks for the screens in view ahead of the sprite art and the rest of the path, and the other game's dataset waits for the first view to stand complete. _2026-11-12._
 - [**95.** A bare link's fit zoom is read off the canvas mid-slide](item-095-fit-zoom-boot-slide.md): the sidebar slid in as the map opened and a fast load fitted its path to the box mid-slide, a fifth too large with its ends cut off; the boot now stands the sidebar open with no slide, where both of the item's sketches lose to the boot's own hash write or to a later toggle of the menu. _2026-11-12._
 - [**103.** Give the Settings dialog a home of its own](item-103-settings-dialog-home.md): the dialog's wiring in `chrome/settingsdialog.js` and the store in `data/settings.js`, a clear of the view added, so `data/` names one primitive, the query grammar. _2026-11-11._
