@@ -27,7 +27,11 @@ test("the focus zoom fits a few screens and clamps at both ends", () => {
   const zoom = (cw, ch) => focusZoom(cw, ch, SYNTH_GEOMETRY);
   assert.equal(zoom(1040, 520), 1.6); // large canvas: clamps at FOCUS_ZOOM_MAX
   assert.equal(zoom(260, 130), 0.5); // small canvas: clamps at FOCUS_ZOOM_MIN
-  assert.equal(zoom(520, 260), 1); // in between: exactly FOCUS_SCREENS across
+  assert.equal(zoom(676, 338), 1.3); // in between: exactly FOCUS_SCREENS across
+  // a canvas too narrow for a few screens across, with room for one at its own
+  // size: the size a path's one screen opens at there, not half of it
+  assert.equal(zoom(216, 600), 1);
+  assert.equal(zoom(166, 600), 0.75);
   // a jump to a point puts it at the middle of the canvas whichever zoom won
   assert.deepEqual(centerCam({ x: 500, y: 300, z: zoom(260, 130) }, 260, 130), {
     x: 240,

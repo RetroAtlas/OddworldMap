@@ -22,7 +22,7 @@ The view alone does not mend the visit. The painter asks for every screen of the
 ## Ruled out
 
 - **A quarter-scale tier of the artwork for zoomed-out views.** About 7 KB a screen where a screen is 100 KB (measured 2026-09-28), but a disc rebuild and a second copy of every camera in history, past the floor [73](item-073-repo-size-trajectory.md) closed on, for a view the rule stops opening on.
-- **The focus zoom for the entry screen.** A box 390 px wide clamps it at 0.5, where object labels crowd and a top-row screen centred leaves 43% of the page black; one screen across reads as the game does.
+- **A few screens across, the focus zoom's own measure, for the entry screen.** In a box 390 px wide that comes to 0.5, where object labels crowd and a top-row screen centred leaves 43% of the page black; one screen across reads as the game does, and a jump lands at that size as well.
 - **The narrow layout as the key to the higher floor.** The fit reads the map's box and the layout reads the window: beside the sidebar a tablet held upright has a box of 518 px and a phone on its side one of 594, and under the lower floor they would keep 129 and 142 of the 191 paths whole, 76 and 98 of them fitted under 0.3.
 - **The path's grid as what the view is held over.** 115 of the 191 grids hold an edge row or column with no camera in it, and a view kept inside the grid gives those their share of the page.
 
@@ -64,6 +64,7 @@ Left as it is:
 - **No control fits a path whole.** On a small box the whole is a pinch away and the minimap is the overview; a path's own button opens it on its entry screen again.
 - **The room above the minimap** is the narrow layout's on every layout, 14 px more than the minimap needs beside the sidebar, which costs a phone on its side a few hundredths of its zoom.
 - **What the canvas shows outside what is clear**, beside the minimap or under the help line, holds no view at an edge, so a screen two rows from the entry can be left as a strip at the page's foot.
+- **A jump's size** leaves the minimap out, so where passing it costs the opening its size, on a phone on its side, a jump lands a little larger than the path opened.
 - **The route planner's bar** takes the chip row's place and drops the row onto the entry screen's top, and on a canvas under some 330 px wide the help line's mouse wording wraps to a second line, over the screen's foot.
 - **A label above the top row.** Rupture Farms' `AbeStart` stands partly in the slack above its screen, so its label is drawn into the chip row of the very first view.
 - **The level pages** picture each level by a pinned screen, else the first its entry path stores, on 13 of the 25 another screen than the one their link opens on.

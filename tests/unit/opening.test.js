@@ -1,7 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { minimapScale, opensWhole, pathFit, screenView } from "../../public/js/model/opening.js";
+import {
+  minimapScale,
+  opensWhole,
+  pathFit,
+  screenView,
+  screenZoom,
+} from "../../public/js/model/opening.js";
 import { ENTRY_CLEAR, FIT_ZOOM_MIN, FIT_ZOOM_NARROW, ZOOM_MIN } from "../../public/js/config.js";
 import { SYNTH_GEOMETRY, path, pitches } from "./fixtures.js";
 
@@ -73,6 +79,12 @@ test("one screen is shown whole inside the canvas clear of the furniture, at its
   assert.equal(z(800, 25 + TOP + BOTTOM), 0.25); // the height decides
   assert.equal(z(2000, 1200), 1); // room to spare still stops at the art's own size
   assert.equal(z(2 * SIDE, 800), ZOOM_MIN); // and no room at all at the manual floor
+});
+
+test("with no minimap to pass, one screen's zoom is the canvas's clear of the chip row and the help line", () => {
+  const [cw, ch] = [300, 100 + TOP + BOTTOM];
+  assert.equal(screenZoom(cw, ch, PACKED), 1);
+  assert.equal(screenView(grid(5, 5), 12, cw, ch, PACKED).z, 0.47); // beside a minimap 180 wide
 });
 
 test("the minimap's scale is the tighter of its box's two sides", () => {

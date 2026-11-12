@@ -36,6 +36,12 @@ const zoomIn = ({ left, right, top, bottom }, cw, ch, geo) =>
     ENTRY_ZOOM_MAX,
   );
 
+// that zoom clear of the chip row and the help line, with no minimap to pass
+export const screenZoom = (cw, ch, geo) => {
+  const { top, side, bottom } = ENTRY_CLEAR;
+  return zoomIn({ left: side, right: side, top, bottom }, cw, ch, geo);
+};
+
 // what a canvas has clear of the map's furniture for one screen of a path, and
 // that zoom there: below the chip row, above the help line, and above or
 // beside the minimap, whichever leaves the screen larger

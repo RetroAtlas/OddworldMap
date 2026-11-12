@@ -23,6 +23,7 @@ import {
 } from "../config.js";
 import { isDemoPath } from "./demo.js";
 import { drawAt, drawX, drawY, worldX, worldY } from "./geometry.js";
+import { screenZoom } from "./opening.js";
 
 export function computeEntryPaths(data) {
   const entries = {};
@@ -703,13 +704,17 @@ export const centerCam = (v, cw, ch) => ({
   z: v.z,
 });
 
-// zoom for jumping to a point: a few screens across, within the focus clamp.
-// Screens rather than cells, so it holds still when the pitch around them moves
+// zoom for jumping to a point: a few screens across, within the focus clamp,
+// and never smaller than a path's one screen opens at. Screens rather than
+// cells, so it holds still when the pitch around them moves
 export const focusZoom = (cw, ch, geo) =>
-  clamp(
-    Math.min(cw / (FOCUS_SCREENS * geo.visW), ch / (FOCUS_SCREENS * geo.visH)),
-    FOCUS_ZOOM_MIN,
-    FOCUS_ZOOM_MAX,
+  Math.max(
+    clamp(
+      Math.min(cw / (FOCUS_SCREENS * geo.visW), ch / (FOCUS_SCREENS * geo.visH)),
+      FOCUS_ZOOM_MIN,
+      FOCUS_ZOOM_MAX,
+    ),
+    screenZoom(cw, ch, geo),
   );
 
 // - permalinks: #GAME/LEVEL/PATH/cx/cy/zoom[/Name@x1,y1][/code][/graph][/route=…] -
