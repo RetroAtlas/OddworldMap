@@ -10,8 +10,6 @@ import {
   state,
   GEO,
   LAYOUT,
-  CELL_W,
-  CELL_H,
   cellOrigin,
   setGeometry,
   setSpacing,
@@ -38,6 +36,7 @@ import {
 import { pathDisplayName, pathNickname } from "../model/annotations.js";
 import { isDemoPath } from "../model/demo.js";
 import { pathVisible, revealPath } from "../data/pathvisible.js";
+import { pathFit } from "../model/opening.js";
 import { orderPaths } from "../model/pathorder.js";
 import { displayLabel, getSettings, rememberLocation } from "../data/settings.js";
 import {
@@ -327,14 +326,8 @@ function fitView() {
       return;
     }
     settleView();
-    const [ox, oy] = cellOrigin();
-    const w = state.path.w * CELL_W,
-      h = state.path.h * CELL_H;
-    const zx = cv.clientWidth / (w + 200),
-      zy = cv.clientHeight / (h + 200);
-    state.cam.z = Math.max(ZOOM_MIN, Math.min(zx, zy));
-    state.cam.x = ox - (cv.clientWidth / state.cam.z - w) / 2;
-    state.cam.y = oy - (cv.clientHeight / state.cam.z - h) / 2;
+    const fit = pathFit(state.path, cv.clientWidth, cv.clientHeight, LAYOUT, cellOrigin());
+    Object.assign(state.cam, fit);
     draw();
   };
   attempt();
