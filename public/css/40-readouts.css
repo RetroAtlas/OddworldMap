@@ -92,6 +92,18 @@
 #graphHelp {
   left: 10px;
 }
+/* the help line speaks for the pointer in hand: one that hovers, or a touch */
+#help .by-touch {
+  display: none;
+}
+@media (hover: none) {
+  #help .by-mouse {
+    display: none;
+  }
+  #help .by-touch {
+    display: inline;
+  }
+}
 /* the minimap: the path's grid in a corner with the viewport on it, for the
    paths that outgrow the window; the numbers panel owns the same corner and
    wins while open */

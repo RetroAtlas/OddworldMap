@@ -3,6 +3,13 @@
   {
    "date": "2026-11-12",
    "tag": "improved",
+   "tiny": true,
+   "title": "The map's help line speaks touch on a touch screen",
+   "detail": "The line at the foot of the map told a phone about arrow keys, a mouse wheel, hovering and the ? key, none of which it has. On a phone or a tablet it now says what a touch does: drag to pan, pinch to zoom, tap to inspect."
+  },
+  {
+   "date": "2026-11-12",
+   "tag": "improved",
    "title": "A link to a path you have not moved suits the screen it opens on",
    "detail": "The address bar took on your view the moment a path opened, so a link copied from a wide screen carried that screen's whole-path view to a phone, which opened it as a strip in the middle of the path. A path you have not moved since it opened is now linked by its level and path alone. Whoever follows the link sees it open as it would for them: whole on a wide screen, on its entry screen on a phone. Pan or zoom and the link carries your view, as before."
   },

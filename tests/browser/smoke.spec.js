@@ -280,6 +280,20 @@ test.describe("in a box under two screens wide", () => {
   });
 });
 
+test.describe("on a touch screen", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+  test("the help line says what a touch does", async ({ page }) => {
+    const errors = trackErrors(page);
+    await page.goto(`/${TRIP_HASH}`);
+    await settle(page, { game: "AO", level: "R1", path: 15 });
+    expect(await page.locator("#help").innerText()).toBe(
+      "drag = pan · pinch = zoom · tap = inspect",
+    );
+    expect(errors).toEqual([]);
+  });
+});
+
 test("?embed=1 hides the chrome and offers the way to the full site", async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto("/?embed=1#AO/R2/1/554/287/1.00");
