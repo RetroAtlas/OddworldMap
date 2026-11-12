@@ -147,20 +147,22 @@ function close() {
   openedBy = null;
 }
 
-window.addEventListener("typecard-open", (e) => open(e.detail.type));
-// the counts are per game, so a dataset landing behind the boot one changes
-// what an open card is claiming. The rebuild empties the scroller, so where the
-// reader had got to, and the keyboard if it was inside, are put back
-window.addEventListener("games-changed", () => {
-  if (!shown) return;
-  const top = body.scrollTop,
-    held = body.contains(document.activeElement);
-  render(shown);
-  body.scrollTop = top;
-  if (held) body.querySelector(".tc-find")?.focus();
-});
-closeBtn.onclick = close;
-overlay.onclick = (e) => {
-  if (e.target === overlay) close();
-};
-trapDialogKeys(() => overlay.classList.contains("open"), panel, close);
+export function initTypeCard() {
+  window.addEventListener("typecard-open", (e) => open(e.detail.type));
+  // the counts are per game, so a dataset landing behind the boot one changes
+  // what an open card is claiming. The rebuild empties the scroller, so where the
+  // reader had got to, and the keyboard if it was inside, are put back
+  window.addEventListener("games-changed", () => {
+    if (!shown) return;
+    const top = body.scrollTop,
+      held = body.contains(document.activeElement);
+    render(shown);
+    body.scrollTop = top;
+    if (held) body.querySelector(".tc-find")?.focus();
+  });
+  closeBtn.onclick = close;
+  overlay.onclick = (e) => {
+    if (e.target === overlay) close();
+  };
+  trapDialogKeys(() => overlay.classList.contains("open"), panel, close);
+}
