@@ -12,7 +12,7 @@ import { toast } from "../ui/toast.js";
 
 // the switches the visitor has set (kept across visits when "remember" is on)
 // override the HTML/config defaults
-const chosen = getViewSnapshot();
+let chosen;
 
 function choose(set, key, value, fallback) {
   if (value === fallback) delete set[key];
@@ -23,31 +23,6 @@ function choose(set, key, value, fallback) {
 // filters
 const catDefaults = new Map(CATS.map((c) => [c.key, c.on])); // config defaults, captured before the snapshot merge
 const catUI = new Map(); // category -> its checkbox and count elements
-CATS.forEach((c) => {
-  if (c.key in chosen.cats) c.on = chosen.cats[c.key];
-  const lab = document.createElement("label");
-  lab.className = "checkrow";
-  if (c.tip) lab.dataset.tip = c.tip;
-  lab.innerHTML = `<span class="sw" style="background:${c.color}"></span>
-    <input type="checkbox" autocomplete="off" ${c.on ? "checked" : ""}>
-    <span>${c.label}</span><span class="cnt"></span>`;
-  const cb = lab.querySelector("input");
-  cb.onchange = () => {
-    c.on = cb.checked;
-    choose(chosen.cats, c.key, c.on, catDefaults.get(c.key));
-    draw();
-  };
-  catUI.set(c, { cb, cnt: lab.querySelector(".cnt") });
-  filterBox.appendChild(lab);
-});
-// an object put into a hidden category brings the category back, as a click would
-window.addEventListener("reveal-category", (e) => {
-  const c = CATS.find((c) => c.key === e.detail.key);
-  const ui = c && catUI.get(c);
-  if (!ui || ui.cb.checked) return;
-  ui.cb.checked = true;
-  ui.cb.onchange();
-});
 function setFilters(onFor) {
   CATS.forEach((c) => {
     c.on = onFor(c);
@@ -56,9 +31,6 @@ function setFilters(onFor) {
   });
   draw();
 }
-$("fAll").onclick = () => setFilters(() => true);
-$("fNone").onclick = () => setFilters(() => false);
-$("fReset").onclick = () => setFilters((c) => catDefaults.get(c.key));
 
 // display toggles: state.show mirrors the sidebar checkboxes (initial state comes from the HTML)
 const showUI = new Map(); // show key -> its checkbox
@@ -86,40 +58,6 @@ function syncShow(key, cb) {
   cv.style.cursor = state.edit || state.show.ruler || state.show.route ? "crosshair" : "";
   if (key === "route") window.dispatchEvent(new CustomEvent("route-changed"));
 }
-// one tool owns the click at a time, from this side too
-window.addEventListener("edit-changed", () => {
-  if (!state.edit) return;
-  for (const k of ["ruler", "route"]) if (showUI.get(k).checked) toggleShow(k);
-});
-for (const [key, id] of Object.entries({
-  spaced: "tSpaced",
-  grid: "tGrid",
-  labels: "tLabels",
-  conn: "tConn",
-  wires: "tWires",
-  pens: "tPens",
-  coll: "tColl",
-  fg: "tFg",
-  dim: "tDim",
-  objects: "tObjects",
-  patrols: "tPatrols",
-  markers: "tMarkers",
-  release: "tRelease",
-  ruler: "tRuler",
-  route: "tRoute",
-})) {
-  const cb = $(id);
-  if (key in chosen.show) cb.checked = chosen.show[key];
-  state.show[key] = cb.checked;
-  cb.onchange = () => {
-    syncShow(key, cb);
-    if (SHOW_KEYS.includes(key)) choose(chosen.show, key, cb.checked, cb.defaultChecked);
-    draw();
-  };
-  showUI.set(key, cb);
-}
-PENS.on = state.show.pens; // ahead of the first draw
-syncMotion();
 // a toggle's wording, without the key badge or the default mark beside it
 function nameOf(label) {
   const copy = label.cloneNode(true);
@@ -144,14 +82,6 @@ export function syncNeeds() {
     label.title = why;
   }
 }
-for (const label of document.querySelectorAll("#toggles label[data-needs]"))
-  label.addEventListener("click", () => {
-    if (label.querySelector("input").disabled) toast(label.title);
-  });
-syncNeeds();
-window.addEventListener("settings-changed", (e) => {
-  if (e.detail?.key === "animate") syncNeeds();
-});
 // the g/c/f shortcuts flip the same checkboxes the pointer does
 export function toggleShow(key) {
   const cb = showUI.get(key);
@@ -165,24 +95,6 @@ export function toggleShow(key) {
   draw();
 }
 
-$("tReset").onclick = () => {
-  for (const [key, cb] of showUI) {
-    cb.checked = cb.defaultChecked; // the HTML checked attribute is the source of the defaults
-    syncShow(key, cb);
-    delete chosen.show[key];
-  }
-  syncNeeds();
-  viewChanged();
-  draw();
-};
-
-// feedback mail: attach the current permalink so reports carry their location
-const fb = $("feedbackLink");
-fb.onclick = () => {
-  const addr = ["feedback", "oddworldmap.com"].join("@");
-  fb.href = `mailto:${addr}?subject=${encodeURIComponent("Oddworld Map feedback")}&body=${encodeURIComponent(`\n\nViewing: ${location.href}`)}`;
-};
-
 function updateCounts() {
   const counts = {};
   state.path.tlvs.forEach((t) => {
@@ -191,4 +103,98 @@ function updateCounts() {
   });
   CATS.forEach((c) => (catUI.get(c).cnt.textContent = counts[c.key] || ""));
 }
-window.addEventListener("selection-changed", updateCounts);
+
+export function initSidebar() {
+  chosen = getViewSnapshot();
+  CATS.forEach((c) => {
+    if (c.key in chosen.cats) c.on = chosen.cats[c.key];
+    const lab = document.createElement("label");
+    lab.className = "checkrow";
+    if (c.tip) lab.dataset.tip = c.tip;
+    lab.innerHTML = `<span class="sw" style="background:${c.color}"></span>
+    <input type="checkbox" autocomplete="off" ${c.on ? "checked" : ""}>
+    <span>${c.label}</span><span class="cnt"></span>`;
+    const cb = lab.querySelector("input");
+    cb.onchange = () => {
+      c.on = cb.checked;
+      choose(chosen.cats, c.key, c.on, catDefaults.get(c.key));
+      draw();
+    };
+    catUI.set(c, { cb, cnt: lab.querySelector(".cnt") });
+    filterBox.appendChild(lab);
+  });
+  // an object put into a hidden category brings the category back, as a click would
+  window.addEventListener("reveal-category", (e) => {
+    const c = CATS.find((c) => c.key === e.detail.key);
+    const ui = c && catUI.get(c);
+    if (!ui || ui.cb.checked) return;
+    ui.cb.checked = true;
+    ui.cb.onchange();
+  });
+  $("fAll").onclick = () => setFilters(() => true);
+  $("fNone").onclick = () => setFilters(() => false);
+  $("fReset").onclick = () => setFilters((c) => catDefaults.get(c.key));
+
+  // one tool owns the click at a time, from this side too
+  window.addEventListener("edit-changed", () => {
+    if (!state.edit) return;
+    for (const k of ["ruler", "route"]) if (showUI.get(k).checked) toggleShow(k);
+  });
+  for (const [key, id] of Object.entries({
+    spaced: "tSpaced",
+    grid: "tGrid",
+    labels: "tLabels",
+    conn: "tConn",
+    wires: "tWires",
+    pens: "tPens",
+    coll: "tColl",
+    fg: "tFg",
+    dim: "tDim",
+    objects: "tObjects",
+    patrols: "tPatrols",
+    markers: "tMarkers",
+    release: "tRelease",
+    ruler: "tRuler",
+    route: "tRoute",
+  })) {
+    const cb = $(id);
+    if (key in chosen.show) cb.checked = chosen.show[key];
+    state.show[key] = cb.checked;
+    cb.onchange = () => {
+      syncShow(key, cb);
+      if (SHOW_KEYS.includes(key)) choose(chosen.show, key, cb.checked, cb.defaultChecked);
+      draw();
+    };
+    showUI.set(key, cb);
+  }
+  PENS.on = state.show.pens; // ahead of the first draw
+  syncMotion();
+  for (const label of document.querySelectorAll("#toggles label[data-needs]"))
+    label.addEventListener("click", () => {
+      if (label.querySelector("input").disabled) toast(label.title);
+    });
+  syncNeeds();
+  window.addEventListener("settings-changed", (e) => {
+    if (e.detail?.key === "animate") syncNeeds();
+  });
+
+  $("tReset").onclick = () => {
+    for (const [key, cb] of showUI) {
+      cb.checked = cb.defaultChecked; // the HTML checked attribute is the source of the defaults
+      syncShow(key, cb);
+      delete chosen.show[key];
+    }
+    syncNeeds();
+    viewChanged();
+    draw();
+  };
+
+  // feedback mail: attach the current permalink so reports carry their location
+  const fb = $("feedbackLink");
+  fb.onclick = () => {
+    const addr = ["feedback", "oddworldmap.com"].join("@");
+    fb.href = `mailto:${addr}?subject=${encodeURIComponent("Oddworld Map feedback")}&body=${encodeURIComponent(`\n\nViewing: ${location.href}`)}`;
+  };
+
+  window.addEventListener("selection-changed", updateCounts);
+}

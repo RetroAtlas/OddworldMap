@@ -23,7 +23,7 @@ import { setMessages } from "./model/messages.js";
 import { setTypeInfo } from "./model/typeinfo.js";
 import { storedLocationHash, clearStoredLocation } from "./data/settings.js";
 import { initSettings } from "./chrome/settingsdialog.js";
-import { syncNeeds } from "./chrome/sidebar.js";
+import { syncNeeds, initSidebar } from "./chrome/sidebar.js";
 import { state } from "./data/state.js";
 import { initInteraction } from "./chrome/interaction.js";
 import { initSearch } from "./panels/search.js";
@@ -44,6 +44,7 @@ import { initRoute } from "./navigation/route.js";
 import { initPlace } from "./panels/place.js";
 import { initCamPanel } from "./panels/campanel.js";
 
+initSidebar();
 initAnchorTip();
 initCamPanel();
 initPlace();
