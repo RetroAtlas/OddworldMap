@@ -1,6 +1,6 @@
 // "About this map": what the project is, whose trademarks it uses, and where
-// its source lives. Wires itself up at import time; the prose is static markup
-// so the notice is in the page source with scripting off.
+// its source lives. The prose is static markup, so the notice is in the page
+// source with scripting off.
 
 import { $ } from "../ui/dom.js";
 import { closeDialog, openDialog, trapDialogKeys } from "../ui/dialog.js";
@@ -18,9 +18,11 @@ const close = () => {
   btn.focus();
 };
 
-btn.onclick = open;
-closeBtn.onclick = close;
-overlay.onclick = (e) => {
-  if (e.target === overlay) close();
-};
-trapDialogKeys(() => overlay.classList.contains("open"), $("about"), close);
+export function initAbout() {
+  btn.onclick = open;
+  closeBtn.onclick = close;
+  overlay.onclick = (e) => {
+    if (e.target === overlay) close();
+  };
+  trapDialogKeys(() => overlay.classList.contains("open"), $("about"), close);
+}
