@@ -79,35 +79,37 @@ function clearRoute() {
   edited(true); // a push: the previous history entry keeps the route, so Back restores it
 }
 
-undoBtn.onclick = undoRoutePoint;
-clearBtn.onclick = clearRoute;
+export function initRoute() {
+  undoBtn.onclick = undoRoutePoint;
+  clearBtn.onclick = clearRoute;
 
-// one sync point for every mutation source (edits, mode toggle, applyHash)
-window.addEventListener("route-changed", () => {
-  bar.hidden = !(state.show.route || state.route);
-  undoBtn.disabled = clearBtn.disabled = !state.route;
-  const n = countPts();
-  // distinct paths, not segments: a same-path door pair seams two segments
-  // without leaving the path
-  const paths = new Set(state.route?.map((s) => `${s.lv}/${s.pa}`)).size;
-  const across = paths > 1 ? ` across ${paths} paths` : "";
-  const total = state.route?.reduce((sum, s) => sum + routeTotal(s.pts), 0) ?? 0;
-  stats.textContent = n
-    ? `${n} pt${n === 1 ? "" : "s"}${across} · ${formatDist(total)}`
-    : "click the map to add waypoints";
-  scheduleDraw();
-});
+  // one sync point for every mutation source (edits, mode toggle, applyHash)
+  window.addEventListener("route-changed", () => {
+    bar.hidden = !(state.show.route || state.route);
+    undoBtn.disabled = clearBtn.disabled = !state.route;
+    const n = countPts();
+    // distinct paths, not segments: a same-path door pair seams two segments
+    // without leaving the path
+    const paths = new Set(state.route?.map((s) => `${s.lv}/${s.pa}`)).size;
+    const across = paths > 1 ? ` across ${paths} paths` : "";
+    const total = state.route?.reduce((sum, s) => sum + routeTotal(s.pts), 0) ?? 0;
+    stats.textContent = n
+      ? `${n} pt${n === 1 ? "" : "s"}${across} · ${formatDist(total)}`
+      : "click the map to add waypoints";
+    scheduleDraw();
+  });
 
-// a route lives while you stand on any of its segments' paths — the person a
-// link was shared with can walk it, by button, door or the back button —
-// and clears only when the selection wanders somewhere the route never
-// visits. The armed follow appends its destination segment before
-// navigating, so a seam into fresh territory passes the rule too.
-window.addEventListener("selection-changed", () => {
-  if (state.route && !state.route.some(onSeg)) {
-    // no hash write: the selection's own push serializes the cleared state
-    // (its debounced timer runs after this synchronous listener)
-    state.route = null;
-    window.dispatchEvent(new CustomEvent("route-changed"));
-  }
-});
+  // a route lives while you stand on any of its segments' paths — the person a
+  // link was shared with can walk it, by button, door or the back button —
+  // and clears only when the selection wanders somewhere the route never
+  // visits. The armed follow appends its destination segment before
+  // navigating, so a seam into fresh territory passes the rule too.
+  window.addEventListener("selection-changed", () => {
+    if (state.route && !state.route.some(onSeg)) {
+      // no hash write: the selection's own push serializes the cleared state
+      // (its debounced timer runs after this synchronous listener)
+      state.route = null;
+      window.dispatchEvent(new CustomEvent("route-changed"));
+    }
+  });
+}
