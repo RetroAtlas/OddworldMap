@@ -38,10 +38,11 @@ import { initShuffle } from "./navigation/shuffle.js";
 import { initNumbers } from "./panels/numbers.js";
 import "./panels/editpanel.js";
 import { initMinimap } from "./navigation/minimap.js";
-import "./panels/graphview.js";
+import { initGraphView } from "./panels/graphview.js";
 import { initOffline } from "./chrome/offline.js";
 import { initRoute } from "./navigation/route.js";
 
+initGraphView();
 initRoute();
 initInteraction();
 initSearch();

@@ -197,94 +197,18 @@ function refresh(land) {
 // so an opener behind one hands the keyboard to the button that opens the drawer
 const reachable = (el) => el?.offsetParent && !el.closest("[inert]");
 
-window.addEventListener("graph-changed", () => {
-  // hiding a subtree holding the focus drops it to <body>, and the next Tab
-  // restarts at the top of the page
-  const held = view.contains(document.activeElement);
-  const back = [openedBy, openBtn, menuBtn].find(reachable);
-  view.hidden = !state.graph;
-  cv.setAttribute("aria-hidden", String(state.graph));
-  document.body.classList.toggle("graph", state.graph);
-  openBtn.setAttribute("aria-expanded", String(state.graph));
-  openBtn.classList.toggle("on", state.graph);
-  if (state.graph) {
-    openedBy = document.activeElement;
-    refresh(true);
-    return;
-  }
-  openedBy = null;
-  hideAnchorTip(); // a tap on a node shows one and then takes the node away
-  if (held) back?.focus();
-});
-window.addEventListener("selection-changed", () => state.graph && refresh(false));
-// the demo copies are nodes like any other while the setting lists them, so the
-// flip makes a different diagram — and the one already built is wrong from that
-// moment whether or not anyone is looking at it
-window.addEventListener("settings-changed", (e) => {
-  if (e.detail.key !== "demoPaths") return;
-  drawn = null;
-  if (!state.graph) return;
-  build();
-  markHere(false);
-});
-// an edit can move a transition, and with it an edge or a column's order
-window.addEventListener("data-changed", () => {
-  drawn = null;
-  if (!state.graph) return;
-  build();
-  markHere(false);
-});
-window.addEventListener("resize", () => {
-  if (state.graph && fitted) applyScale();
-});
-
-plane.onclick = (e) => {
-  const b = e.target.closest(".gv-node");
-  // a drag that ended on a box was a pan, not a click on it. Asked of the
-  // pointer's own click (detail counts its presses), so a keyboard Enter on a
-  // node is never the one that gets swallowed
-  if (!b || (panned && e.detail)) return;
-  const L = state.data.levels.find((l) => l.short === b.dataset.lv);
-  const P = L?.paths.find((p) => p.id === +b.dataset.pa);
-  if (!P) return;
-  toggleGraph(false);
-  jumpToPlace(state.data, L.short, P.id, null);
-};
-
 // Drag to pan, as the map does: a plain mouse can reach the bottom of a diagram
 // with the scrollbar and never the right of one, and the horizontal scroll a
 // trackpad has is not a gesture a wheel offers. Touch is left to the scroller's
 // own panning, which is already one finger.
 let drag = null,
   panned = false;
-scroller.addEventListener("pointerdown", (e) => {
-  panned = false;
-  if (e.pointerType === "touch" || e.button !== 0) return;
-  drag = { x: e.clientX, y: e.clientY, l: scroller.scrollLeft, t: scroller.scrollTop };
-});
-window.addEventListener("pointermove", (e) => {
-  if (!drag) return;
-  const dx = e.clientX - drag.x,
-    dy = e.clientY - drag.y;
-  if (!panned && Math.hypot(dx, dy) < 4) return; // a click travels a pixel or two
-  panned = true;
-  scroller.classList.add("panning");
-  scroller.scrollLeft = drag.l - dx;
-  scroller.scrollTop = drag.t - dy;
-});
-window.addEventListener("pointerup", () => {
-  drag = null;
-  scroller.classList.remove("panning");
-});
 
-openBtn.onclick = () => toggleGraph();
-$("graphClose").onclick = () => toggleGraph(false);
 function setFit(on) {
   if (on === fitted) return;
   fitted = on;
   applyScale();
 }
-fitBtn.onclick = () => setFit(!fitted);
 
 // keys that aim at the map: over a diagram each is a keypress with nothing to
 // show for it, so they stop here
@@ -294,30 +218,108 @@ const ZOOM = { "+": false, "=": false, "-": true, _: true };
 // driven from here rather than left to the browser: the scroller only answers
 // the arrows while it holds the focus, and the bar's own buttons are outside it
 const PAN = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
-window.addEventListener(
-  "keydown",
-  (e) => {
-    if (!state.graph || e.ctrlKey || e.metaKey || typingIn(e.target)) return;
-    // a dialog opened from the sidebar stands over the diagram, and its own trap
-    // registers after this one, so Escape has to be left to it
-    if (document.querySelector(".overlay.open")) return;
-    if (e.key === "Escape") {
-      toggleGraph(false);
-      // one Escape closes one thing, so it stops here rather than reaching the
-      // Escape handlers of surfaces the mode is standing over; the tooltip's own
-      // is the one this owes, since it may be showing an edge's
-      hideAnchorTip();
-      e.stopImmediatePropagation();
+function onKey(e) {
+  if (!state.graph || e.ctrlKey || e.metaKey || typingIn(e.target)) return;
+  // a dialog opened from the sidebar stands over the diagram, and its own trap
+  // registers after this one, so Escape has to be left to it
+  if (document.querySelector(".overlay.open")) return;
+  if (e.key === "Escape") {
+    toggleGraph(false);
+    // one Escape closes one thing, so it stops here rather than reaching the
+    // Escape handlers of surfaces the mode is standing over; the tooltip's own
+    // is the one this owes, since it may be showing an edge's
+    hideAnchorTip();
+    e.stopImmediatePropagation();
+    return;
+  }
+  const pan = PAN[e.key];
+  if (pan) {
+    scroller.scrollBy({ left: pan[0] * KEY_PAN_PX, top: pan[1] * KEY_PAN_PX });
+    e.preventDefault();
+  } else if (e.key in ZOOM) {
+    setFit(ZOOM[e.key]);
+  }
+  if (pan || e.key in ZOOM || MAP_KEYS.has(e.key)) e.stopImmediatePropagation();
+}
+
+export function initGraphView() {
+  window.addEventListener("graph-changed", () => {
+    // hiding a subtree holding the focus drops it to <body>, and the next Tab
+    // restarts at the top of the page
+    const held = view.contains(document.activeElement);
+    const back = [openedBy, openBtn, menuBtn].find(reachable);
+    view.hidden = !state.graph;
+    cv.setAttribute("aria-hidden", String(state.graph));
+    document.body.classList.toggle("graph", state.graph);
+    openBtn.setAttribute("aria-expanded", String(state.graph));
+    openBtn.classList.toggle("on", state.graph);
+    if (state.graph) {
+      openedBy = document.activeElement;
+      refresh(true);
       return;
     }
-    const pan = PAN[e.key];
-    if (pan) {
-      scroller.scrollBy({ left: pan[0] * KEY_PAN_PX, top: pan[1] * KEY_PAN_PX });
-      e.preventDefault();
-    } else if (e.key in ZOOM) {
-      setFit(ZOOM[e.key]);
-    }
-    if (pan || e.key in ZOOM || MAP_KEYS.has(e.key)) e.stopImmediatePropagation();
-  },
-  { capture: true },
-);
+    openedBy = null;
+    hideAnchorTip(); // a tap on a node shows one and then takes the node away
+    if (held) back?.focus();
+  });
+  window.addEventListener("selection-changed", () => state.graph && refresh(false));
+  // the demo copies are nodes like any other while the setting lists them, so the
+  // flip makes a different diagram — and the one already built is wrong from that
+  // moment whether or not anyone is looking at it
+  window.addEventListener("settings-changed", (e) => {
+    if (e.detail.key !== "demoPaths") return;
+    drawn = null;
+    if (!state.graph) return;
+    build();
+    markHere(false);
+  });
+  // an edit can move a transition, and with it an edge or a column's order
+  window.addEventListener("data-changed", () => {
+    drawn = null;
+    if (!state.graph) return;
+    build();
+    markHere(false);
+  });
+  window.addEventListener("resize", () => {
+    if (state.graph && fitted) applyScale();
+  });
+
+  plane.onclick = (e) => {
+    const b = e.target.closest(".gv-node");
+    // a drag that ended on a box was a pan, not a click on it. Asked of the
+    // pointer's own click (detail counts its presses), so a keyboard Enter on a
+    // node is never the one that gets swallowed
+    if (!b || (panned && e.detail)) return;
+    const L = state.data.levels.find((l) => l.short === b.dataset.lv);
+    const P = L?.paths.find((p) => p.id === +b.dataset.pa);
+    if (!P) return;
+    toggleGraph(false);
+    jumpToPlace(state.data, L.short, P.id, null);
+  };
+
+  scroller.addEventListener("pointerdown", (e) => {
+    panned = false;
+    if (e.pointerType === "touch" || e.button !== 0) return;
+    drag = { x: e.clientX, y: e.clientY, l: scroller.scrollLeft, t: scroller.scrollTop };
+  });
+  window.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x,
+      dy = e.clientY - drag.y;
+    if (!panned && Math.hypot(dx, dy) < 4) return; // a click travels a pixel or two
+    panned = true;
+    scroller.classList.add("panning");
+    scroller.scrollLeft = drag.l - dx;
+    scroller.scrollTop = drag.t - dy;
+  });
+  window.addEventListener("pointerup", () => {
+    drag = null;
+    scroller.classList.remove("panning");
+  });
+
+  openBtn.onclick = () => toggleGraph();
+  $("graphClose").onclick = () => toggleGraph(false);
+  fitBtn.onclick = () => setFit(!fitted);
+
+  window.addEventListener("keydown", onKey, { capture: true });
+}
