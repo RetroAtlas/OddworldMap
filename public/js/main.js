@@ -4,7 +4,7 @@ import { GAMES_HOLD_MS } from "./config.js";
 import { $, embedded } from "./ui/dom.js";
 import { resize } from "./painter/render.js";
 import { warmSprites } from "./painter/spriteart.js";
-import { addGame, selectGame, applyHash } from "./navigation/navigate.js";
+import { addGame, selectGame, applyHash, initNavigate } from "./navigation/navigate.js";
 import {
   GAME_IDS,
   bootGame,
@@ -44,6 +44,7 @@ import { initRoute } from "./navigation/route.js";
 import { initPlace } from "./panels/place.js";
 import { initCamPanel } from "./panels/campanel.js";
 
+initNavigate();
 initEditPanel();
 initSidebar();
 initAnchorTip();

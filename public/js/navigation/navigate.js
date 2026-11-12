@@ -65,11 +65,6 @@ function setLabel(b) {
   b.innerHTML = nick ? `${label} <span class="nickname">· ${esc(nick)}</span>` : label;
 }
 
-window.addEventListener("settings-changed", (e) => {
-  if (e.detail.key !== "fullNames") return;
-  for (const box of [gameBtns, levelBtns, pathBtns]) for (const b of box.children) setLabel(b);
-});
-
 // the dataset that landed, or null where it did not: a game that never arrives
 // leaves no button behind to click, and either way the settle is announced,
 // since a wait reported to the reader has ended. Buttons are appended as their
@@ -108,10 +103,6 @@ function sayReport(G) {
 
 // ---- releases ------------------------------------------------------------
 let releaseIndex = null;
-loadReleaseIndex().then((d) => {
-  releaseIndex = d;
-  buildReleaseButtons();
-});
 const releaseCode = (G) => G?.release?.code ?? "";
 const carried = (id, code) => !!releaseIndex?.[id]?.releases.some((r) => r.code === code);
 
@@ -141,11 +132,6 @@ function buildReleaseButtons() {
   $("releaseName").textContent = chosen ? label(chosen) : "";
   $("releaseRow").hidden = !G?.release;
 }
-
-// the mark turned on or off relabels the path buttons it tags
-window.addEventListener("show-changed", (e) => {
-  if (e.detail?.key === "release" && state.lvl) buildPathButtons();
-});
 
 // a game's release in hand, or the base: the game keeps the place and the
 // view, every release sharing the base's geometry and places
@@ -277,17 +263,6 @@ function selectLevel(L) {
   const first = visiblePaths(L)[0] ?? L.paths[0];
   if (first) selectPathById(first.id);
 }
-
-window.addEventListener("settings-changed", (e) => {
-  if (e.detail.key !== "demoPaths" || !state.lvl) return;
-  if (state.path) revealPath(state.path); // hiding the class must not unlist the path in hand
-  buildPathButtons();
-});
-
-window.addEventListener("settings-changed", (e) => {
-  if (e.detail.key !== "playOrder" || !state.lvl) return;
-  buildPathButtons();
-});
 
 // `place` puts the camera where the selection is headed, ahead of its first
 // paint; null keeps the view
@@ -473,14 +448,6 @@ export function jumpToPlace(G, lv, pa, cam) {
   if (p) focusOn(p[0], p[1]);
 }
 
-// an edit stands a rebuilt level in the dataset: the entry set is game-wide,
-// and the level in hand lists its paths again from the objects now standing
-window.addEventListener("data-changed", (e) => {
-  if (!state.data || e.detail.game !== state.data.id) return;
-  state.entry = computeEntryPaths(state.data);
-  if (state.lvl?.short === e.detail.lv) buildPathButtons();
-});
-
 // ---- permalinks ---------------------------------------------------------
 let applyingHash = false,
   hashTimer = null,
@@ -576,10 +543,6 @@ export function flushHash() {
   writeHash(hashPush);
 }
 
-// the entry a dialog leaves behind has to hold the settled view, or the back
-// press that closes it would undo a pan as well
-window.addEventListener("dialog-opened", flushHash);
-
 export async function applyHash() {
   const p = parseHash(location.hash);
   if (!p) return false;
@@ -673,10 +636,50 @@ export async function applyHash() {
   return true;
 }
 
-window.addEventListener("hashchange", () => {
-  if (applyingHash) return;
-  applyHash().then((ok) => {
-    // back/forward retraces update the remembered spot; a rejected hash must not
-    if (ok && !inEmbed()) rememberLocation(location.hash);
+export function initNavigate() {
+  window.addEventListener("settings-changed", (e) => {
+    if (e.detail.key !== "fullNames") return;
+    for (const box of [gameBtns, levelBtns, pathBtns]) for (const b of box.children) setLabel(b);
   });
-});
+
+  loadReleaseIndex().then((d) => {
+    releaseIndex = d;
+    buildReleaseButtons();
+  });
+
+  // the mark turned on or off relabels the path buttons it tags
+  window.addEventListener("show-changed", (e) => {
+    if (e.detail?.key === "release" && state.lvl) buildPathButtons();
+  });
+
+  window.addEventListener("settings-changed", (e) => {
+    if (e.detail.key !== "demoPaths" || !state.lvl) return;
+    if (state.path) revealPath(state.path); // hiding the class must not unlist the path in hand
+    buildPathButtons();
+  });
+
+  window.addEventListener("settings-changed", (e) => {
+    if (e.detail.key !== "playOrder" || !state.lvl) return;
+    buildPathButtons();
+  });
+
+  // an edit stands a rebuilt level in the dataset: the entry set is game-wide,
+  // and the level in hand lists its paths again from the objects now standing
+  window.addEventListener("data-changed", (e) => {
+    if (!state.data || e.detail.game !== state.data.id) return;
+    state.entry = computeEntryPaths(state.data);
+    if (state.lvl?.short === e.detail.lv) buildPathButtons();
+  });
+
+  // the entry a dialog leaves behind has to hold the settled view, or the back
+  // press that closes it would undo a pan as well
+  window.addEventListener("dialog-opened", flushHash);
+
+  window.addEventListener("hashchange", () => {
+    if (applyingHash) return;
+    applyHash().then((ok) => {
+      // back/forward retraces update the remembered spot; a rejected hash must not
+      if (ok && !inEmbed()) rememberLocation(location.hash);
+    });
+  });
+}
