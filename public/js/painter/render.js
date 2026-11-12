@@ -57,14 +57,6 @@ import { CELL_H, CELL_W, GEO, LAYOUT, cellOrigin, state } from "../data/state.js
 let flash = null; // {x, y, t0, hold}
 let flashInteracted = false;
 let flashRaf = null;
-for (const ev of ["pointerdown", "pointermove", "wheel", "keydown"])
-  window.addEventListener(
-    ev,
-    () => {
-      flashInteracted = true;
-    },
-    { capture: true, passive: true },
-  );
 
 export function flashAt(x, y, hold = false) {
   flash = { x, y, t0: performance.now(), hold };
@@ -98,7 +90,6 @@ export function setConnFocus(t) {
   connFocus = t;
   scheduleDraw();
 }
-window.addEventListener("selection-changed", () => setConnFocus(null));
 
 // hovered wired object: same spotlight for the wiring overlay
 let wireFocus = null;
@@ -107,7 +98,6 @@ export function setWireFocus(t) {
   wireFocus = t;
   scheduleDraw();
 }
-window.addEventListener("selection-changed", () => setWireFocus(null));
 
 // pointed-at object: a dashed outline around one TLV, for hover affordances
 // that reference an object without selecting it (camera-panel rows, a hovered
@@ -118,7 +108,6 @@ export function setHighlight(t) {
   highlight = t;
   scheduleDraw();
 }
-window.addEventListener("selection-changed", () => setHighlight(null)); // TLVs don't outlive their path
 
 // hovered Slig's patrol pen: a shaded band between its own pair of bounds
 let patrol = null;
@@ -129,7 +118,6 @@ export function setPatrol(z) {
   patrol = z;
   scheduleDraw();
 }
-window.addEventListener("selection-changed", () => setPatrol(null));
 
 // the rect a drag would commit, where the selection stands while the pointer carries it
 let carriedRect = null;
@@ -138,7 +126,6 @@ export function setCarried(rect) {
   carriedRect = rect;
   scheduleDraw();
 }
-window.addEventListener("selection-changed", () => setCarried(null));
 
 // the carried object: a copy standing at the carried rect, in a copy of the
 // path holding it in the original's place, with the records its rule draws
@@ -167,15 +154,6 @@ function heldRecords(path, sprites) {
   return out;
 }
 
-// an edit stands the path as new objects, which none of these point at any more
-window.addEventListener("data-changed", () => {
-  setConnFocus(null);
-  setWireFocus(null);
-  setHighlight(null);
-  setPatrol(null);
-  scheduleDraw();
-});
-
 // the camera holds a corner, so a viewport that changes size would slide the view;
 // the middle is held instead, the spot a permalink names. The observer reports a
 // size only after the frame's layout, so whatever reads or places the camera by
@@ -200,8 +178,6 @@ export function resize() {
   cv.height = cv.clientHeight * devicePixelRatio;
   draw();
 }
-window.addEventListener("resize", resize); // catches devicePixelRatio changes, which leave the map box untouched
-new ResizeObserver(resize).observe($("main")); // the sidebar slide resizes the map without a window resize
 
 // a barrier post: dashed vertical on the boundary the engine enforces — the
 // stamp's top-left x, which is also the edge a hovered pen band ends on —
@@ -251,7 +227,6 @@ function sayComplete() {
   said = true;
   window.dispatchEvent(new CustomEvent("view-complete"));
 }
-window.addEventListener("frame-due", draw);
 
 // one frame of the map into any canvas: the live one at the view's zoom, or an
 // offscreen one sized to a whole path. The hover, navigation and selection
@@ -550,4 +525,35 @@ function paintMinimap(cam, path) {
     (cv.clientWidth / cam.z) * s,
     (cv.clientHeight / cam.z) * s,
   );
+}
+
+export function initRender() {
+  for (const ev of ["pointerdown", "pointermove", "wheel", "keydown"])
+    window.addEventListener(
+      ev,
+      () => {
+        flashInteracted = true;
+      },
+      { capture: true, passive: true },
+    );
+
+  window.addEventListener("selection-changed", () => setConnFocus(null));
+  window.addEventListener("selection-changed", () => setWireFocus(null));
+  window.addEventListener("selection-changed", () => setHighlight(null)); // TLVs don't outlive their path
+  window.addEventListener("selection-changed", () => setPatrol(null));
+  window.addEventListener("selection-changed", () => setCarried(null));
+
+  // an edit stands the path as new objects, which none of these point at any more
+  window.addEventListener("data-changed", () => {
+    setConnFocus(null);
+    setWireFocus(null);
+    setHighlight(null);
+    setPatrol(null);
+    scheduleDraw();
+  });
+
+  window.addEventListener("resize", resize); // catches devicePixelRatio changes, which leave the map box untouched
+  new ResizeObserver(resize).observe($("main")); // the sidebar slide resizes the map without a window resize
+
+  window.addEventListener("frame-due", draw);
 }
