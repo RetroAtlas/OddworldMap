@@ -4,6 +4,13 @@
    "date": "2026-11-13",
    "tag": "fixed",
    "tiny": true,
+   "title": "The keys raise no tooltip where the pointer left the map",
+   "detail": "Panning or zooming with the keys while the pointer was off the map, over the sidebar say, could pop up the tooltip of whatever had come to lie where the pointer last was. The keys now leave the tooltip down until the pointer is back on the map."
+  },
+  {
+   "date": "2026-11-13",
+   "tag": "fixed",
+   "tiny": true,
    "title": "The hint flies beat their wings where the game puts them",
    "detail": "Oddysee's hint flies hung fifteen pixels above their spot, each frozen on one frame of its wings. They now swarm where the PlayStation game draws them and beat their wings together, on loops stepped off the game's own sine table."
   },

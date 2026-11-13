@@ -39,7 +39,7 @@ import {
   scheduleHash,
   viewHash,
 } from "../navigation/navigate.js";
-import { clearHover, followableDest, hovered, modeCursor, updateHover } from "./hover.js";
+import { clearHover, followableDest, hovered, modeCursor, readout, updateHover } from "./hover.js";
 import { toggleShow } from "./sidebar.js";
 import { lightCap } from "../ui/keycap.js";
 import { getSettings } from "../data/settings.js";
@@ -61,6 +61,7 @@ import { closeDialog, openDialog, trapDialogKeys } from "../ui/dialog.js";
 import { HAMBURGER_SVG, CLOSE_SVG, LINK_SVG, EXTERNAL_SVG } from "../ui/icons.js";
 
 const mouse = { x: 0, y: 0 };
+let onMap = false; // the pointer is over the canvas
 let panMoved = false;
 let measuring = false;
 
@@ -274,6 +275,17 @@ function endPointer(e) {
   }
 }
 
+// nothing is under the pointer: the tooltip goes, with the overlays' focus on
+// what it named
+function dropHover() {
+  clearHover();
+  cv.style.cursor = modeCursor();
+  setHighlight(null);
+  setConnFocus(null);
+  setWireFocus(null);
+  setPatrol(null);
+}
+
 // a move in progress is let go before anything else hears Escape
 function letGoOnEscape(e) {
   if (!moving || e.key !== "Escape") return;
@@ -466,7 +478,12 @@ function onKey(e) {
     Object.assign(state.cam, zoomAt(state.cam, f, cv.clientWidth / 2, cv.clientHeight / 2));
   } else return;
   e.preventDefault();
-  updateHover(mouse, panning);
+  // off the map the pointer rests on nothing a key could bring under it
+  if (onMap) updateHover(mouse, panning);
+  else {
+    dropHover();
+    readout(mouse);
+  }
   scheduleDraw();
   scheduleHash(false);
 }
@@ -562,14 +579,15 @@ export function initInteraction() {
     scheduleDraw();
   });
 
+  // a pointer an overlay uncovers arrives without a move
+  cv.addEventListener("pointerenter", (e) => {
+    Object.assign(mouse, ptrXY(e));
+    onMap = true;
+  });
   cv.addEventListener("pointerleave", () => {
     if (pointers.size) return; // a captured drag only leaves after release
-    clearHover();
-    cv.style.cursor = modeCursor();
-    setHighlight(null);
-    setConnFocus(null);
-    setWireFocus(null);
-    setPatrol(null);
+    onMap = false;
+    dropHover();
   });
 
   // the pointed-at objects are the path's old ones after an edit

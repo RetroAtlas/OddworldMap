@@ -280,8 +280,36 @@ test.describe("in a box under two screens wide", () => {
   });
 });
 
+// the Mines board under the pointer, wide enough to lie under one spot through a key's pan
+async function onTheBoard(page) {
+  await page.goto("/#AE/MI/1/1260/635/1.00");
+  await settle(page, { game: "AE", level: "MI", path: 1 });
+  return spotOf(page, { name: "LCD", world: [1159, 625] });
+}
+const viewX = (page) =>
+  page.evaluate(async () => {
+    const st = await import(new URL("js/data/state.js", location.href).href);
+    return st.state.cam.x;
+  });
+async function panByKey(page) {
+  const before = await viewX(page);
+  await page.keyboard.press("ArrowLeft");
+  await expect.poll(() => viewX(page), POLL).toBeLessThan(before);
+}
+
 test.describe("on a touch screen", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+  test("a key's pan takes down the tooltip a tap raised", async ({ page }) => {
+    const errors = trackErrors(page);
+    const spot = await onTheBoard(page);
+    const tip = page.locator("#tip");
+    await page.touchscreen.tap(spot.x, spot.y);
+    await expect(tip).toContainText("LCD (1159,625)");
+    await panByKey(page);
+    await expect(tip).toBeHidden();
+    expect(errors).toEqual([]);
+  });
 
   test("the help line says what a touch does", async ({ page }) => {
     const errors = trackErrors(page);
@@ -292,6 +320,47 @@ test.describe("on a touch screen", () => {
     );
     expect(errors).toEqual([]);
   });
+});
+
+test("a key that moves the map keeps the tooltip of what still lies under a resting pointer", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  const spot = await onTheBoard(page);
+  const tip = page.locator("#tip");
+  await page.mouse.move(spot.x, spot.y);
+  await expect(tip).toContainText("LCD (1159,625)");
+  await panByKey(page);
+  await expect(tip).toBeVisible();
+  await expect(tip).toContainText("LCD (1159,625)");
+  expect(errors).toEqual([]);
+});
+
+test("a key that moves the map raises no tooltip once the pointer has left it", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  const spot = await onTheBoard(page);
+  const tip = page.locator("#tip");
+  await page.mouse.move(spot.x, spot.y);
+  await expect(tip).toContainText("LCD (1159,625)");
+  await page.mouse.move(40, 300);
+  await expect(tip).toBeHidden();
+  // the board is still under where the pointer last was on the map
+  await panByKey(page);
+  await expect(tip).toBeHidden();
+  expect(errors).toEqual([]);
+});
+
+test("a key's zoom reaches the corner's readout with the pointer off the map", async ({ page }) => {
+  const errors = trackErrors(page);
+  const spot = await onTheBoard(page);
+  await page.mouse.move(spot.x, spot.y);
+  await expect(page.locator("#hud")).toContainText("zoom 1.00");
+  await page.mouse.move(40, 300);
+  await page.keyboard.press("+");
+  await expect(page.locator("#hud")).toContainText("zoom 1.25");
+  expect(errors).toEqual([]);
 });
 
 test("?embed=1 hides the chrome and offers the way to the full site", async ({ page }) => {

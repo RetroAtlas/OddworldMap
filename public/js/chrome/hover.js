@@ -282,8 +282,12 @@ export function updateHover(mouse, panning) {
     tip.style.display = "none";
     if (!panning) cv.style.cursor = modeCursor();
   }
-  const wx = wX(pt.x),
-    wy = wY(pt.y);
+  readout(mouse);
+}
+
+export function readout(mouse) {
+  const wx = wX(state.cam.x + mouse.x / state.cam.z),
+    wy = wY(state.cam.y + mouse.y / state.cam.z);
   hud.textContent = `world x ${Math.round(wx)}  y ${Math.round(wy)}  ·  grid ${gX(wx).toFixed(1)}, ${gY(wy).toFixed(1)}  ·  zoom ${state.cam.z.toFixed(2)}`;
 }
 
