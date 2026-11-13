@@ -5,6 +5,7 @@
 import {
   CONN_COLORS,
   FLASH_MS,
+  LABEL_LIFT,
   PENS,
   WIRE_COLOR,
   barrierDir,
@@ -58,7 +59,7 @@ export function paintMarkerNotes(f, t, label, edited, released) {
   if (released) outline(f, box.x, box.y, w, h, edited ? 6 : 3, COLOR.releaseRgb);
   if (label) {
     ctx.fillStyle = catOf(t).color;
-    ctx.fillText(t.name, box.x, box.y - 3 / cam.z);
+    ctx.fillText(t.name, box.x, box.y - (LABEL_LIFT[t.name] ?? 0) - 3 / cam.z);
   }
 }
 

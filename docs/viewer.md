@@ -61,7 +61,7 @@ What the map under [public/](../public/) does for whoever is looking at it, cont
 
 Every toggle in the Display section explains itself, as do the sidebar's own buttons: hover one for a short note on what it does (on a phone, the note appears as you tap it). The toggles with a keyboard key wear it at the row's edge, and it lights while the key is held.
 
-- **Object labels**: names each object beside its marker, from about half zoom in
+- **Object labels**: names each object beside its marker, from about half zoom in; a hint fly drawn as itself wears its name above the letters it spells
 - **Connection arrows**: draws the path's whole circulation — every door, express well, bird portal, teleporter and path transition linked to where it leads
   - a double-headed arrow is a two-way pair; a dashed arrow points at the arrival camera when the exact arrival object isn't resolvable; a labelled stub (`→ MI P7`) leads to another path: a path transition's stub points out of the screen the way it leads, running to the edge of its marker toward the neighbouring screen, while the other kinds' stubs keep a short 45° diagonal, since the map cannot know which way an off-path door leads (stub labels appear zoomed in with object labels on)
   - colours tell the kinds apart: doors and the level loader yellow, wells pink, bird portals lavender, teleporters teal, path transitions white

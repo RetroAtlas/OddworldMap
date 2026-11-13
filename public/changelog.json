@@ -2,6 +2,13 @@
  "entries": [
   {
    "date": "2026-11-13",
+   "tag": "improved",
+   "tiny": true,
+   "title": "A hint fly's label stands above its words",
+   "detail": "With \"Object labels\" on, the HintFly label sat on the very spot its flies spell at, across the middle of each word. It now stands just above the letters."
+  },
+  {
+   "date": "2026-11-13",
    "tag": "new",
    "title": "The hint flies spell their messages",
    "detail": "Rest the pointer on one of Oddysee's hint-fly swarms, or tap it on a touch screen, and it spells its message in mid-air a word at a time, as it does in the game while Abe chants at it. The swarm grows or shrinks to each word, a fly settles on every dot of the game's own letters while a dozen circle beside them, the word hangs a moment and breaks up into the next. Once the message is spelled the flies go home and start over, for as long as the pointer stays; move away and they scatter back to their swarm. The whole swarm answers the pointer, so you can follow a word along. It needs \"Objects as themselves\" on and animating, and for now it spells in the English and Spanish releases; the French, German, Italian and Japanese flies wait for their own letters."

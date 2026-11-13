@@ -69,6 +69,12 @@ CATS.forEach(c => c.names.forEach(n => NAME_CAT[n] = c));
 const META_CAT = CATS[CATS.length - 1];
 export const catOf = t => NAME_CAT[t.name] || META_CAT;
 
+// how far above its rect an object's label stands (world units), where what
+// the object draws rises over the rect
+export const LABEL_LIFT = {
+  HintFly: 9, // a word's letters stand eight above the hint's point
+};
+
 // the invisible posts that pen enemies in — tiny stamps in the data, rendered as
 // barriers and shown whenever Enemies is, whatever bucket holds them. The value
 // is the side the pen lies on (+1 right of the post, -1 left, 0 unclaimed);

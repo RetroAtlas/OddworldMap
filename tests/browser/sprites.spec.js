@@ -193,6 +193,35 @@ test("the scenery carries no label until the setting asks, then it does", async 
   expect(errors).toEqual([]);
 });
 
+test("a hint fly's label stands above the cell its letters take", async ({ page }) => {
+  const errors = trackErrors(page);
+  await seedView(page, { show: { objects: true, labels: true }, cats: { screen: true } });
+  await page.goto("/?embed=1#AO/E1/1/5464/174/2.00");
+  await settle(page, { game: "AO", level: "E1", path: 1 });
+  await settleArtwork(page);
+  // every label one paint writes, read off the canvas's own text call
+  const drawn = await page.evaluate(async () => {
+    const u = (m) => new URL("js/" + m, location.href).href;
+    const st = await import(u("data/state.js"));
+    const render = await import(u("painter/render.js"));
+    const model = await import(u("model/model.js"));
+    const t = st.state.path.tlvs.find((o) => o.name === "HintFly" && o.x1 === 5464);
+    const box = model.drawBox(t, st.LAYOUT);
+    const written = [];
+    const fillText = CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText = function (text, x, y) {
+      written.push({ text, x, y });
+      fillText.call(this, text, x, y);
+    };
+    render.draw();
+    CanvasRenderingContext2D.prototype.fillText = fillText;
+    return { labels: written.filter((w) => w.text === "HintFly" && w.x === box.x), box };
+  });
+  // the letters stand from eight units above the hint's point, the rect's corner
+  expect(drawn.labels).toEqual([{ text: "HintFly", x: drawn.box.x, y: drawn.box.y - 9 - 3 / 2 }]);
+  expect(errors).toEqual([]);
+});
+
 test("Dim backgrounds dims the foreground masks drawn over the sprites too", async ({ page }) => {
   const errors = trackErrors(page);
   // no categories on: with the objects off every marker draws, and one could cover the pixel
