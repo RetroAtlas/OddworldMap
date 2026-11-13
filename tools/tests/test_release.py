@@ -223,6 +223,84 @@ class Messages(unittest.TestCase):
         self.assertEqual(per_path, {"E1/3": {"lcd": {"2": "Press /013"}}})
         self.assertEqual(lead, 0x20)
 
+    LOADS = {("R1", 1): "R1.OVL", ("R1", 2): "R1.OVL", ("E1", 3): "E3.OVL"}
+
+    def lettered(self, tables):
+        original = release.overlay_tables
+        release.overlay_tables = lambda *a: tables
+        try:
+            return release.release_messages(self.Fake(self.LOADS), self.Base(), range(0x08, 0x14))
+        finally:
+            release.overlay_tables = original
+
+    def test_an_overlay_the_reader_refuses_is_refused_under_its_release(self):
+        def refuse(*a):
+            raise RuntimeError("AO: E1.OVL: the alphabet at 0x1f0 names 3 letters and leaves 1 of its records unnamed")
+        original = release.overlay_tables
+        release.overlay_tables = refuse
+        try:
+            with self.assertRaisesRegex(SystemExit, "^AO fr: E1.OVL: the alphabet at 0x1f0 names 3 letters"):
+                release.release_messages(self.Fake(self.LOADS), self.Base(), range(0x08, 0x14))
+        finally:
+            release.overlay_tables = original
+
+    def test_the_alphabet_goes_with_the_tables(self):
+        main, per_path, _lead = self.lettered({"alphabet": {"R1.OVL": ["0f", "11"], "E3.OVL": ["0f", "11"]},
+                                               "hintfly": {"R1.OVL": ["AB A"], "E3.OVL": ["AB A"]}})
+        self.assertEqual((main["alphabet"], per_path), (["0f", "11"], {}))
+
+    def test_overlays_carrying_different_alphabets_are_refused(self):
+        with self.assertRaisesRegex(SystemExit, "AO fr: 2 overlays carry 2 alphabets"):
+            self.lettered({"alphabet": {"R1.OVL": ["0f", "11"], "E3.OVL": ["0f", "13"]},
+                           "hintfly": {"R1.OVL": ["AB A"], "E3.OVL": ["AB A"]}})
+
+    def test_a_path_s_own_entry_spelling_past_the_alphabet_is_refused(self):
+        with self.assertRaisesRegex(SystemExit, "'ABC' spells 0x43, past the 2 letters of its alphabet"):
+            self.lettered({"alphabet": {"R1.OVL": ["0f", "11"], "E3.OVL": ["0f", "11"]},
+                           "hintfly": {"R1.OVL": ["AB A"], "E3.OVL": ["ABC"]}})
+
+    def test_the_table_most_paths_read_spelling_past_the_alphabet_is_refused(self):
+        with self.assertRaisesRegex(SystemExit, "'ABC' spells 0x43, past the 2 letters of its alphabet"):
+            self.lettered({"alphabet": {"R1.OVL": ["0f", "11"], "E3.OVL": ["0f", "11"]},
+                           "hintfly": {"R1.OVL": ["ABC"], "E3.OVL": ["ABC"]}})
+
+    def test_a_code_below_the_first_letter_is_no_letter_past_the_last(self):
+        main, _per_path, _lead = self.lettered({"alphabet": {"R1.OVL": ["0f", "11"], "E3.OVL": ["0f", "11"]},
+                                                "hintfly": {"R1.OVL": ["AB, A"], "E3.OVL": ["AB, A"]}})
+        self.assertEqual(main["hintfly"], ["AB, A"])
+
+    def test_the_alphabet_is_kept_in_the_table_s_order(self):
+        main, _per_path, _lead = self.lettered({"alphabet": {"R1.OVL": ["2f", "11"], "E3.OVL": ["2f", "11"]},
+                                                "hintfly": {"R1.OVL": ["AB"], "E3.OVL": ["AB"]}})
+        self.assertEqual(main["alphabet"], ["2f", "11"])
+
+    BASE_TABLES = {"alphabet": ["0f", "11"], "hintfly": ["AB"], "lcd": ["", "Work!"]}
+
+    def test_an_overlay_carries_no_table_that_is_the_base_s(self):
+        changed, counts, texts = release.overlay_messages(dict(self.BASE_TABLES), self.BASE_TABLES)
+        self.assertEqual((changed, counts), ({}, {}))
+        self.assertEqual(sorted(texts), ["hintfly", "lcd"], "the alphabet is no table of messages")
+
+    def test_an_overlay_carries_an_alphabet_of_its_own_whole_and_counts_it_apart(self):
+        own = {**self.BASE_TABLES, "alphabet": ["0f", "11", "22"]}
+        changed, counts, texts = release.overlay_messages(own, self.BASE_TABLES)
+        self.assertEqual(changed, {"alphabet": ["0f", "11", "22"]})
+        self.assertEqual(counts, {"alphabet": "3 letters"})
+        self.assertEqual(sorted(texts), ["hintfly", "lcd"])
+        own["hintfly"] = ["AC"]
+        changed, counts, texts = release.overlay_messages(own, self.BASE_TABLES)
+        self.assertEqual(sorted(changed), ["alphabet", "hintfly"])
+        self.assertEqual(counts, {"alphabet": "3 letters", "message tables": 1})
+        self.assertEqual(texts["hintfly"], ["AC"], "the release's own table is what its font is read against")
+
+    def test_the_census_reports_an_alphabet_as_letters(self):
+        overlay = {"game": "AO", "code": "fr", "name": "France", "executable": "SLES_008.38", "hz": 25,
+                   "code_page": "cp437", "paths": {}, "messages": {"alphabet": ["0f", "11", "22"], "hintfly": ["AC", ""]}}
+        lines = release.census_lines(overlay, {"alphabet": "3 letters", "message tables": 1})
+        self.assertIn("  alphabet: 3 letters", lines)
+        self.assertIn("  hintfly messages: 1 of 2 filled", lines)
+        self.assertEqual([line for line in lines if "alphabet messages" in line], [])
+
 
 class OwnCodePage(unittest.TestCase):
     """a release reading through its own font: code 0x41 draws glyph 2, 0x42

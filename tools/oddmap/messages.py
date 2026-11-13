@@ -1,5 +1,5 @@
-"""The games' own LCD and hint-fly message tables, lifted from the level
-overlays."""
+"""The games' own LCD and hint-fly message tables, and the alphabet the hint
+flies spell in, lifted from the level overlays."""
 import json
 import re
 import struct
@@ -23,6 +23,12 @@ MESSAGE_TABLES = {
     "AE": {"lcd": (101, True)},
 }
 LEAD = len(MESSAGE_LEAD)
+
+# The table whose messages are spelled in letters of the overlay's own, each a
+# pattern of dots, and the name its alphabet is lifted under.
+LETTERED = {"AO": "hintfly"}
+ALPHABET = "alphabet"
+LETTER_FIRST = 0x41  # the engine spells a message with the letter each code less this names
 
 def _locate(blob, anchor, lead, count):
     """(the table's first word, the overlay's load address) of a pointer table
@@ -119,8 +125,68 @@ def pointer_tables(blob, count, base):
         run = 0
     return found
 
+def _record(blob, off):
+    """the dots of the letter record at `off`: a count, that many dots and
+    zeros to the next word, or None"""
+    if off % 4 or not 0 <= off < len(blob) or not blob[off]:
+        return None
+    end = off + 1 + blob[off]
+    pad = -end % 4
+    if end + pad > len(blob) or any(blob[end:end + pad]):
+        return None
+    return blob[off + 1:end]
+
+def _chain(blob, off, end):
+    """the offsets of the records lying end to end from `off` to exactly `end`,
+    or None"""
+    starts = []
+    while off < end:
+        dots = _record(blob, off)
+        if dots is None:
+            return None
+        starts.append(off)
+        off += (len(dots) + 4) & ~3
+    return starts if off == end else None
+
+def letter_tables(blob, base):
+    """every alphabet in an overlay loaded at `base`, each letter its dots as
+    hex in the table's order.
+
+    A letter is a record, the count of its dots and then the dots, and the
+    records lie end to end with the table opening where the last one ends: its
+    first word names the record they run from, and it runs on for as long as
+    each word names one of them, in whatever order and however often. That is
+    what proves a length no release states, so a table that leaves one of its
+    records unnamed, or stops at a word naming a record that lies before them,
+    is refused rather than read short. A record lying past the table goes
+    unseen, and a table of pointers to the letters that follows straight on
+    reads as more of this one."""
+    words = struct.unpack_from(f"<{len(blob) // 4}I", blob, 0)
+    found, q = [], 0
+    while q < len(words):
+        first = words[q] - base
+        records = _chain(blob, first, 4 * q) if 0 <= first < 4 * q else None
+        if not records:
+            q += 1
+            continue
+        known, entries = set(records), []
+        while q + len(entries) < len(words) and words[q + len(entries)] - base in known:
+            entries.append(words[q + len(entries)] - base)
+        unnamed = known - set(entries)
+        if unnamed:
+            raise RuntimeError(f"the alphabet at {4 * q:#x} names {len(entries)} letters and leaves "
+                               f"{len(unnamed)} of its records unnamed, the first at {min(unnamed):#x}")
+        after = words[q + len(entries)] - base if q + len(entries) < len(words) else -1
+        if 0 <= after < records[0] and _chain(blob, after, records[0]):
+            raise RuntimeError(f"the alphabet at {4 * q:#x} names {len(entries)} letters and stops at a word "
+                               f"naming a record before them, at {after:#x}")
+        found.append([_record(blob, off).hex() for off in entries])
+        q += len(entries)
+    return found
+
 def overlay_tables(game_key, discs, overlays=None):
-    """{table: {overlay: its strings}} over every overlay carrying a table.
+    """{table: {overlay: its strings}} over every overlay carrying a table,
+    with the alphabet of every overlay carrying the table spelled in one.
 
     `overlays` limits the sweep to the overlays the game's paths load, where the
     executable names them: a disc can carry an overlay no path loads, built
@@ -155,7 +221,28 @@ def overlay_tables(game_key, discs, overlays=None):
                     raise RuntimeError(f"{game_key}: {ovl} holds {len(tables)} candidate {name} tables")
                 if tables:
                     found[name][ovl] = tables[0]
+    lettered = LETTERED.get(game_key)
+    if found.get(lettered):
+        found[ALPHABET] = {}
+        for ovl, blob in blobs:
+            if ovl not in found[lettered]:
+                continue
+            try:
+                tables = [t for base in bases for t in letter_tables(blob, base)]
+            except RuntimeError as e:
+                raise RuntimeError(f"{game_key}: {ovl}: {e}") from None
+            if len(tables) != 1:
+                raise RuntimeError(f"{game_key}: {ovl} holds {len(tables)} alphabets beside its {lettered} table")
+            found[ALPHABET][ovl] = tables[0]
     return found
+
+def check_letters(where, table, alphabet):
+    """fail a message spelling a letter past the end of its alphabet"""
+    for msg in table:
+        past = sorted({c for c in msg if ord(c) - LETTER_FIRST >= len(alphabet)})
+        if past:
+            raise RuntimeError(f"{where}: {msg!r} spells {', '.join(f'{ord(c):#04x}' for c in past)}, "
+                               f"past the {len(alphabet)} letters of its alphabet")
 
 def clean_table(game_key, name, table, controls=MESSAGE_BUTTONS):
     """a table's messages without the scroll-in lead, every code below a space
@@ -179,19 +266,25 @@ def extract_messages(game_key, discs, overlays=None, controls=MESSAGE_BUTTONS):
     means the tables are per-level and nothing here holds."""
     out = {}
     for name, copies in sorted(overlay_tables(game_key, discs, overlays).items()):
-        count = MESSAGE_TABLES[game_key][name][0]
         variants = {}
         for ovl, table in copies.items():
             variants.setdefault(tuple(table), []).append(ovl)
         if not variants:
-            raise RuntimeError(f"{game_key}: no overlay carries the {name} message table")
+            raise RuntimeError(f"{game_key}: no overlay carries the {name} table")
         if len(variants) > 1:
-            raise RuntimeError(f"{game_key}: overlays disagree on the {name} message table: "
+            raise RuntimeError(f"{game_key}: overlays disagree on the {name} table: "
                                + "; ".join(",".join(v) for v in variants.values()))
-        table = clean_table(game_key, name, list(next(iter(variants))), controls)
-        out[name] = table
-        print(f"  {name}: {sum(1 for s in table if s)} of {count} messages, "
+        table = list(next(iter(variants)))
+        if name == ALPHABET:
+            out[name] = table
+            print(f"  {name}: {len(table)} letters, {len(copies)} identical copies")
+            continue
+        count = MESSAGE_TABLES[game_key][name][0]
+        out[name] = clean_table(game_key, name, table, controls)
+        print(f"  {name}: {sum(1 for s in out[name] if s)} of {count} messages, "
               f"{len(copies)} identical copies")
+    if ALPHABET in out:
+        check_letters(game_key, out[LETTERED[game_key]], out[ALPHABET])
     return out
 
 SHORTHAND = re.compile(r"(?<!\\)((?:\\\\)*)\\([btnfr])")

@@ -265,6 +265,7 @@ for (const [game, { releases }] of Object.entries(index))
       const sprites = load(`sprites_${g}.json`);
       const font = overlay.font ?? sprites.font;
       const tables = { ...load(`messages_${g}.json`), ...overlay.messages };
+      delete tables.alphabet;
       // each glyph the run draws beside the byte it was read from, an escape
       // byte and its second byte reading as one; only a space may draw none
       for (const [name, table] of Object.entries(tables))

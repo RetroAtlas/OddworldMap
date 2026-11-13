@@ -18,7 +18,8 @@ from oddmap.disc import Disc, Lvl, parse_chunks
 from oddmap.exe import (Image, code_differences, executable, frame_rate, lcd_glyph_table, path_overlays,
                         path_records, text, text_codes)
 from oddmap.image import cam_masks, cam_pixels, read_png, write_png
-from oddmap.messages import MESSAGE_BUTTONS, MESSAGE_TABLES, clean_table, message_json, overlay_tables
+from oddmap.messages import (ALPHABET, LETTER_FIRST, LETTERED, MESSAGE_BUTTONS, MESSAGE_TABLES, check_letters,
+                             clean_table, message_json, overlay_tables)
 from oddmap.paths import HERE, SITE
 from oddmap.sprites import (FONT_FAMILY, SHEETS_DIR, build_sprites, family_sheet, font_chunks, font_texture,
                             glyph_index, index_map_rgba, read_dice, sheet_name)
@@ -390,9 +391,22 @@ def release_messages(release, base, controls):
     into the overlay it loads, and a release may carry different copies (the
     French Oddysee's menu and Stockyards overlays spell a button out in one
     message); where the executable names no overlay per path, every copy must
-    agree. The release's table is the one most paths read."""
+    agree. The release's table is the one most paths read. Its alphabet goes
+    with the tables, and every copy of that must agree."""
     tables, per_path, lead = {}, {}, None
-    for name, copies in sorted(overlay_tables(release.game_key, release.discs, release.overlays).items()):
+    where = f"{release.game_key} {release.code}"
+    try:
+        found = overlay_tables(release.game_key, release.discs, release.overlays)
+    except RuntimeError as e:
+        refusal = str(e)
+        raise SystemExit(f"{where}: {refusal[len(release.game_key) + 2:]}") from None
+    for name, copies in sorted(found.items()):
+        if name == ALPHABET:
+            if len({tuple(t) for t in copies.values()}) != 1:
+                raise SystemExit(f"{where}: {len(copies)} overlays carry {len({tuple(t) for t in copies.values()})} "
+                                 "alphabets")
+            tables[name] = next(iter(copies.values()))
+            continue
         if MESSAGE_TABLES[release.game_key][name][1] and copies:
             lead = ord(next(iter(copies.values()))[1][0])
         cleaned = {ovl: clean_table(release.game_key, name, t, controls) for ovl, t in copies.items()}
@@ -416,6 +430,13 @@ def release_messages(release, base, controls):
         for key, t in reads.items():
             if t != main:
                 per_path.setdefault(key, {})[name] = {str(i): m for i, (m, n) in enumerate(zip(t, main)) if m != n}
+    if ALPHABET in tables:
+        lettered = LETTERED[release.game_key]
+        spelled = tables[lettered] + [m for p in per_path.values() for m in p.get(lettered, {}).values()]
+        try:
+            check_letters(where, spelled, tables[ALPHABET])
+        except RuntimeError as e:
+            raise SystemExit(str(e))
     return tables, per_path, lead
 
 
@@ -458,6 +479,21 @@ def compare_sprites(release, base):
                         "frames": [[family, *spots[i], *frames[i][1:3], xoff, yoff, *bound]
                                    for i, xoff, yoff, bound in e["frames"]]}
     return sorted(differ), sheets, anims
+
+
+def overlay_messages(messages, base_messages):
+    """(the tables a release's overlay carries, what the census counts of
+    them, the message tables its font and its code page are read against): a
+    table goes in whole where it differs from the base's at all, the alphabet
+    like any, and the alphabet is letters and no message table"""
+    changed = {name: table for name, table in messages.items() if base_messages.get(name) != table}
+    counts = {}
+    if set(changed) - {ALPHABET}:
+        counts["message tables"] = len(set(changed) - {ALPHABET})
+    if ALPHABET in changed:
+        counts["alphabet"] = f"{len(changed[ALPHABET])} letters"
+    texts = {name: table for name, table in {**base_messages, **messages}.items() if name != ALPHABET}
+    return changed, counts, texts
 
 
 def message_codes(tables, escapes):
@@ -518,7 +554,6 @@ def compare_font(release, base, messages):
     return out or None
 
 
-HINT_FIRST = 0x41  # the engine spells a hint fly's message with the letter its code less this names
 HINT_LAST = 0x5A  # Z, the base's last letter: past it a standard code page names no letter a fly draws
 
 
@@ -549,7 +584,7 @@ def own_chars(game_key, code, code_page, font, tables, per_path, data_dir=HERE /
     def letters(msg):
         for b in msg.encode("latin1"):
             if b != 0x20:
-                yield b - HINT_FIRST
+                yield b - LETTER_FIRST
 
     walks = {"lcd": glyphs, "hintfly": letters} if own else {"hintfly": letters}
     reached = {name: set() for name in walks}
@@ -561,13 +596,13 @@ def own_chars(game_key, code, code_page, font, tables, per_path, data_dir=HERE /
     if not path.is_file():
         if own:
             raise SystemExit(f"{where}: no {path.name} names its glyphs")
-        past = sorted(i + HINT_FIRST for i in reached["hintfly"] if i + HINT_FIRST > HINT_LAST)
+        past = sorted(i + LETTER_FIRST for i in reached["hintfly"] if i + LETTER_FIRST > HINT_LAST)
         if past:
             raise SystemExit(f"{where}: its hint flies spell {', '.join(f'{c:#04x}' for c in past)}, past Z, "
                              f"letters {code_page} cannot name; no {path.name} names them")
         return {}
     if reached["hintfly"] and min(reached["hintfly"]) < 0:
-        raise SystemExit(f"{where}: a hint fly spells {min(reached['hintfly']) + HINT_FIRST:#04x}, below its letters")
+        raise SystemExit(f"{where}: a hint fly spells {min(reached['hintfly']) + LETTER_FIRST:#04x}, below its letters")
     page = json.loads(path.read_text())
     if own:
         sheet = f"{FONT_FAMILY}.{sheet_name(font['w'], font['h'], font['rgba'])}"
@@ -665,10 +700,10 @@ def compare(game_key, game, code, entry, images, base=None, workers=None):
     overlay["paths"] = {k: paths[k] for k in sorted(paths)}
     controls = MESSAGE_BUTTONS if entry["code_page"] == "cp437" else range(1, 0x20)
     messages, per_path, lead = release_messages(release, base, controls)
-    changed = {name: table for name, table in messages.items() if base.messages.get(name) != table}
+    changed, tallies, texts = overlay_messages(messages, base.messages)
     if changed:
         overlay["messages"] = changed
-        counts["message tables"] = len(changed)
+    counts.update(tallies)
     for key, tables in per_path.items():
         overlay["paths"].setdefault(key, {})["messages"] = tables
         counts["paths reading other messages"] = counts.get("paths reading other messages", 0) + 1
@@ -677,14 +712,14 @@ def compare(game_key, game, code, entry, images, base=None, workers=None):
     if differ:
         overlay["sprites"] = {"anims": anims}
         counts["sprite animations"] = len(differ)
-    font = compare_font(release, base, {**base.messages, **messages})
+    font = compare_font(release, base, texts)
     if font:
         overlay["font"] = {k: v for k, v in font.items() if k != "rgba"}
         if "codes" in font:
             overlay["font"]["lead"] = lead
         sheets[FONT_FAMILY] = (font["w"], font["h"], font["rgba"])
         counts["font"] = 1 if "codes" not in font else "its own glyphs and codes"
-    chars = own_chars(game_key, code, entry["code_page"], font, {**base.messages, **messages}, per_path)
+    chars = own_chars(game_key, code, entry["code_page"], font, texts, per_path)
     if chars:
         overlay["chars"] = chars
         counts["characters named"] = sum(1 for named in chars.values() for c in named if c is not None)
@@ -803,7 +838,8 @@ def census_lines(overlay, counts, code=None):
     if dropped:
         out.append(f"  cameras dropped: {', '.join(dropped)}")
     for name, table in sorted(overlay.get("messages", {}).items()):
-        out.append(f"  {name} messages: {sum(1 for m in table if m)} of {len(table)} filled")
+        if name != ALPHABET:
+            out.append(f"  {name} messages: {sum(1 for m in table if m)} of {len(table)} filled")
     if code:
         out.append(f"  code: {code['executable blocks']} executable blocks, "
                    f"{code['overlay functions'][0]} to {code['overlay functions'][1]} functions an overlay, "

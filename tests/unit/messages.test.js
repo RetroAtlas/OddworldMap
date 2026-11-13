@@ -17,6 +17,10 @@ const SHIPPED = { AO, AE };
 // the tables as the discs hold them: a length is the engine's own, so a rebuild
 // that changes one is a finding rather than a detail
 const LENGTHS = { AO: { lcd: 90, hintfly: 36 }, AE: { lcd: 101 } };
+// the letters of the alphabet a game spells its hint flies' messages in
+const LETTERS = { AO: 26 };
+const messageTables = (game) =>
+  Object.entries(SHIPPED[game]).filter(([name]) => name in LENGTHS[game]);
 
 const eachTlv = function* (game) {
   for (const lv of load(`map_data_${game.toLowerCase()}.json`).levels)
@@ -25,23 +29,44 @@ const eachTlv = function* (game) {
 
 test("messages: shape is a table of strings, at the length the game carries", () => {
   for (const [game, tables] of Object.entries(SHIPPED)) {
-    assert.deepEqual(Object.keys(tables).sort(), Object.keys(LENGTHS[game]).sort(), game);
-    for (const [name, table] of Object.entries(tables)) {
+    const names = [...Object.keys(LENGTHS[game]), ...(game in LETTERS ? ["alphabet"] : [])];
+    assert.deepEqual(Object.keys(tables).sort(), names.sort(), game);
+    for (const [name, table] of messageTables(game)) {
       assert.equal(table.length, LENGTHS[game][name], `${game} ${name} length`);
       for (const msg of table) assert.equal(typeof msg, "string", `${game} ${name}`);
     }
   }
 });
 
+test("messages: an alphabet is its game's letters, each a run of dots none of them twice", () => {
+  for (const [game, count] of Object.entries(LETTERS)) {
+    const { alphabet } = SHIPPED[game];
+    assert.equal(alphabet.length, count, game);
+    for (const [i, letter] of alphabet.entries()) {
+      assert.match(letter, /^([0-9a-f]{2})+$/, `${game} letter ${i}`);
+      const dots = letter.match(/../g);
+      assert.equal(new Set(dots).size, dots.length, `${game} letter ${i} repeats a dot`);
+    }
+  }
+});
+
+test("messages: every letter a hint fly's message spells is one its alphabet holds", () => {
+  for (const msg of AO.hintfly)
+    for (const ch of msg.replaceAll(" ", "")) {
+      const letter = ch.charCodeAt(0) - 0x41;
+      assert.ok(letter >= 0 && letter < AO.alphabet.length, `${msg}: ${ch}`);
+    }
+});
+
 test("messages: the scroll-in lead is stripped, so no message opens or closes on space", () => {
-  for (const [game, tables] of Object.entries(SHIPPED))
-    for (const [name, table] of Object.entries(tables))
+  for (const game of Object.keys(SHIPPED))
+    for (const [name, table] of messageTables(game))
       for (const msg of table) assert.equal(msg, msg.trim(), `${game} ${name}: ${msg}`);
 });
 
 test("messages: every button code in a shipped message resolves a name", () => {
-  for (const [game, tables] of Object.entries(SHIPPED))
-    for (const [name, table] of Object.entries(tables))
+  for (const game of Object.keys(SHIPPED))
+    for (const [name, table] of messageTables(game))
       for (const msg of table)
         for (const ch of msg)
           if (ch.codePointAt(0) < 0x20)
