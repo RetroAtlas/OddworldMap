@@ -27,7 +27,6 @@ const KINDS = [
 // a row a commit may lower and none may raise.
 const OVER = {
   "public/js/data/edits.js": 900,
-  "public/js/chrome/interaction.js": 900,
   "public/js/model/model.js": 900,
 };
 

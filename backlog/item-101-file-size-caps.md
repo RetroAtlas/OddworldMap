@@ -26,3 +26,7 @@ A file is read whole, by a session as by a reader, and the largest had outgrown 
 ## Shipped
 
 The test landed on 2026-11-08 with the table at eleven rows, and the series that followed took eight out: `render.js` into the painter and the modules it draws from and with, `redraw.js`, `screens.js` (its canvas colours in `dom.js`), `spriteart.js`, `spritepaint.js`, `overlays.js` and `kept.js` with a unit test of its own; `sprites.js` into `spritekit.js` and four rule modules, `furniturerules.js`, `hazardrules.js`, `creaturerules.js` and `mudokonrules.js`; the motion and editing specs into five and four specs by what each test proves on the page, with `edithelpers.js` beside them; the motion, model and edits unit tests along the modules and subjects they exercise; and the builder's tests along the package's modules. The three rows left are the ratcheted modules above. Measured 2026-11-09 and cheap to recount with `wc -l`: the largest module is `interaction.js` at 869 lines, `render.js` is 542 and `sprites.js` 65.
+
+## Grown since filing
+
+- **`interaction.js` took its cut** on 2026-11-13, when the hint flies' chant would have carried it past its row: the hover inspection went into [hover.js](../public/js/chrome/hover.js) with what it shares with the click, the destination helpers and the armed tool's cursor, the pointer's place and the pan in progress handed to `updateHover` and the objects under the pointer read back through `hovered`. `interaction.js` came out of the cut at 614 lines, and the table stands at two rows.

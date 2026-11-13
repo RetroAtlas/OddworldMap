@@ -1,28 +1,13 @@
-// Pointer input on the map (mouse, touch, pen), hover inspection, and the menu toggle.
+// Pointer input on the map (mouse, touch, pen), its keys, and the menu toggle.
 
-import { esc, formatDist, segDist } from "../model/util.js";
-import { fieldEntries, onBackgroundPlane } from "../model/fields.js";
+import { onBackgroundPlane } from "../model/fields.js";
 import { gridSize } from "../engine/collide.js";
 import { hideAnchorTip } from "../ui/anchortip.js";
-import {
-  KEY_PAN_PX,
-  KEY_ZOOM_STEP,
-  EDITED_NOTE,
-  OFFSCREEN_NOTE,
-  PAGE_ZOOM_MIN,
-  PENS,
-  LINE_COLORS,
-  LINE_NAMES,
-  ADDED_NOTE,
-  REMOVED_NOTE,
-  WIRE_COLOR,
-  markerShown,
-} from "../config.js";
+import { KEY_PAN_PX, KEY_ZOOM_STEP, PAGE_ZOOM_MIN } from "../config.js";
 import {
   $,
   cv,
   tip,
-  hud,
   sidebar,
   menuBtn,
   scrim,
@@ -33,7 +18,7 @@ import {
   typingIn,
 } from "../ui/dom.js";
 import { toast } from "../ui/toast.js";
-import { state, GEO, LAYOUT, wX, wY, gX, gY } from "../data/state.js";
+import { state, GEO, LAYOUT, wX, wY } from "../data/state.js";
 import {
   draw,
   setConnFocus,
@@ -45,25 +30,7 @@ import {
 } from "../painter/render.js";
 import { scheduleDraw } from "../ui/redraw.js";
 import { objectShown } from "../painter/spriteart.js";
-import { hitBoxes } from "../painter/spritepaint.js";
-import {
-  camCenter,
-  computeWiring,
-  destOf,
-  destTrusted,
-  drawBox,
-  isLoopback,
-  levelWiring,
-  lineRuns,
-  markerCentre,
-  offScreen,
-  pathIn,
-  patrolZone,
-  resolveTarget,
-  snapTarget,
-  wireEnds,
-  zoomAt,
-} from "../model/model.js";
+import { camCenter, isLoopback, markerCentre, snapTarget, zoomAt } from "../model/model.js";
 import {
   cyclePath,
   flushHash,
@@ -72,33 +39,28 @@ import {
   scheduleHash,
   viewHash,
 } from "../navigation/navigate.js";
-import { typeSummary } from "../model/typeinfo.js";
-import { DARK_NOTE, objectMessages } from "../model/messages.js";
+import { clearHover, followableDest, hovered, modeCursor, updateHover } from "./hover.js";
 import { toggleShow } from "./sidebar.js";
 import { lightCap } from "../ui/keycap.js";
-import { getSettings, fieldPrefsFor } from "../data/settings.js";
+import { getSettings } from "../data/settings.js";
 import { focusCamPanel, openCamPanel, openCamPanelNear } from "../panels/campanel.js";
 import { togglePlace } from "../panels/place.js";
 import { openAddPicker, selectObject, setEditMode } from "../panels/editpanel.js";
 import {
   applyRectEdit,
   currentOf,
-  editNotes,
   fitRect,
   isAdded,
   isEdited,
   isRemoved,
-  removedObjects,
   snapRect,
 } from "../data/edits.js";
-import { releaseNote } from "../data/release.js";
 import { toggleGraph } from "../panels/graphview.js";
 import { addRoutePoint, routeArrive, routeSeam, undoRoutePoint } from "../navigation/route.js";
 import { closeDialog, openDialog, trapDialogKeys } from "../ui/dialog.js";
 import { HAMBURGER_SVG, CLOSE_SVG, LINK_SVG, EXTERNAL_SVG } from "../ui/icons.js";
 
-let hoverTlvs = [],
-  mouse = { x: 0, y: 0 };
+const mouse = { x: 0, y: 0 };
 let panMoved = false;
 let measuring = false;
 
@@ -196,8 +158,8 @@ function onPointerDown(e) {
       !isRemoved(state.sel) &&
       (e.pointerType !== "mouse" || e.button === 0)
     ) {
-      updateHover();
-      if (hoverTlvs[0] === state.sel) {
+      updateHover(mouse, panning);
+      if (hovered()[0] === state.sel) {
         const t = state.sel,
           pt = drawAtMouse();
         moving = {
@@ -276,7 +238,7 @@ function onPointerMove(e) {
     state.cam.x = panStart.cx - (p.x - panStart.x) / state.cam.z;
     state.cam.y = panStart.cy - (p.y - panStart.y) / state.cam.z;
   }
-  if (e.pointerType !== "touch" || !panning) updateHover(); // no tooltips under a panning finger
+  if (e.pointerType !== "touch" || !panning) updateHover(mouse, panning); // no tooltips under a panning finger
   scheduleDraw();
 }
 
@@ -320,17 +282,14 @@ function letGoOnEscape(e) {
   e.preventDefault();
 }
 
-// an armed tool owns the cursor; hover writes must not overwrite it
-const modeCursor = () => (state.edit || state.show.ruler || state.show.route ? "crosshair" : "");
-
 function onClick() {
   if (panMoved || graphHandover || state.show.ruler) return;
   if (state.show.route) {
-    updateHover(); // taps arrive without a preceding hover move
+    updateHover(mouse, panning); // taps arrive without a preceding hover move
     // a followed object seams the route: the segment closes on it, the ride
     // happens, and the next opens where it lands. Hand stones only show a
     // camera and loopbacks travel nowhere, so both stay plain waypoints
-    const seam = hoverTlvs.find(
+    const seam = hovered().find(
       (t) =>
         (t.extra || {}).view1_cam == null &&
         !isLoopback(t, state.data, state.lvl, state.path) &&
@@ -346,12 +305,12 @@ function onClick() {
     } else addRoutePoint(snapAtMouse()); // click-to-add: pan/pinch/wheel gestures stay live
     return;
   }
-  updateHover(); // taps arrive without a preceding hover move
+  updateHover(mouse, panning); // taps arrive without a preceding hover move
   if (state.edit) {
-    selectObject(hoverTlvs[0] ?? null);
+    selectObject(hovered()[0] ?? null);
     return;
   }
-  for (const t of hoverTlvs) {
+  for (const t of hovered()) {
     const d = followableDest(t);
     if (d) {
       navigateToDest(d, t);
@@ -360,7 +319,7 @@ function onClick() {
   }
   if (!getSettings().screenList) return;
   const pt = drawAtMouse(); // nothing to follow: list the screen's objects
-  openCamPanel(pt.x, pt.y, hoverTlvs[0] ?? null);
+  openCamPanel(pt.x, pt.y, hovered()[0] ?? null);
 }
 
 // right-click (long-press on touch) copies a permalink to the object under
@@ -369,10 +328,10 @@ function onContextMenu(e) {
   const r = cv.getBoundingClientRect();
   mouse.x = e.clientX - r.left;
   mouse.y = e.clientY - r.top;
-  updateHover();
-  if (!hoverTlvs.length) return;
+  updateHover(mouse, panning);
+  if (!hovered().length) return;
   e.preventDefault();
-  const t = hoverTlvs[0];
+  const t = hovered()[0];
   const url = location.href.split("#")[0] + objectHash(t);
   // the link names the shipped object, the one a recipient can resolve
   const copied = isAdded(t)
@@ -398,7 +357,7 @@ function fullSiteUrl(exact) {
 function onWheel(e) {
   e.preventDefault();
   Object.assign(state.cam, zoomAt(state.cam, Math.exp(-e.deltaY * 0.0015), mouse.x, mouse.y));
-  updateHover();
+  updateHover(mouse, panning);
   scheduleDraw();
   scheduleHash(false);
 }
@@ -507,7 +466,7 @@ function onKey(e) {
     Object.assign(state.cam, zoomAt(state.cam, f, cv.clientWidth / 2, cv.clientHeight / 2));
   } else return;
   e.preventDefault();
-  updateHover();
+  updateHover(mouse, panning);
   scheduleDraw();
   scheduleHash(false);
 }
@@ -538,248 +497,6 @@ function openShortcuts() {
   $("shortcutsClose").focus();
 }
 const closeShortcuts = () => closeDialog(shortcutsOverlay);
-
-// where an object may be said to lead: destOf's answer, less the links whose
-// named partner isn't at the destination to receive them. Deliberately not
-// wayThrough, which is this with a hand stone's view excluded as well: that
-// guard is the level graph's, and a click is not the level graph — clicking a
-// stone follows it to the camera it shows.
-const shownDest = (t) => {
-  const { data, lvl, path } = state;
-  const d = destOf(t, data, lvl, path);
-  return d && destTrusted(d, data, lvl) ? d : null;
-};
-
-// a destination is followable only when its level AND path are on the map:
-// dozens of Exoddus one-way links name a placeholder path their level does not
-// hold, and a link naming no partner has nothing for destTrusted to check
-function followableDest(t) {
-  const d = shownDest(t);
-  return d && pathIn(state.data, d.lv, d.pa) ? d : null;
-}
-
-// ---- hover inspection ----------------------------------------------------
-let tipHtml = "",
-  tipSpaceW = 0,
-  tipSpaceH = 0,
-  tipW = 0,
-  tipH = 0;
-
-function updateHover() {
-  if (!state.path) return;
-  const pt = drawAtMouse();
-  let hoverLines = [];
-  if (state.show.coll) {
-    const tol = 6 / state.cam.z;
-    // a line is pointed at where it is drawn: the packing bends it at every
-    // window edge it crosses, so the straight run between its two ends is
-    // ground it may never cover
-    hoverLines = state.path.lines
-      .filter(([x1, y1, x2, y2]) =>
-        lineRuns(x1, y1, x2, y2, LAYOUT).some(
-          (r) => segDist(pt.x, pt.y, r.x1, r.y1, r.x2, r.y2) <= tol,
-        ),
-      )
-      .slice(0, 4);
-  }
-  // each object under the point by the smallest of its boxes the point fell
-  // in, ranked what the eye sees first, then the smaller box, then the one
-  // placed later (painted on top) among equals
-  const under = [];
-  state.path.tlvs.forEach((t, i) => {
-    if (!objectShown(t)) return;
-    let best = null;
-    for (const b of hitBoxes(t, LAYOUT)) {
-      const w = Math.max(b.w, 10),
-        h = Math.max(b.h, 10);
-      if (pt.x < b.x - 4 || pt.x > b.x + w + 4 || pt.y < b.y - 4 || pt.y > b.y + h + 4) continue;
-      const area = w * h;
-      if (!best || (b.drawn && !best.drawn) || (b.drawn === best.drawn && area < best.area))
-        best = { drawn: b.drawn, area };
-    }
-    if (best) under.push({ t, i, ...best });
-  });
-  // the mode's ghosts after everything standing, at the rects they were removed with
-  if (state.edit)
-    removedObjects(state.path).forEach((g, i) => {
-      if (!markerShown(g)) return;
-      const b = drawBox(g, LAYOUT);
-      const w = Math.max(b.w, 10),
-        h = Math.max(b.h, 10);
-      if (pt.x < b.x - 4 || pt.x > b.x + w + 4 || pt.y < b.y - 4 || pt.y > b.y + h + 4) return;
-      under.push({ t: g, i: -1 - i, drawn: false, area: Number.MAX_SAFE_INTEGER });
-    });
-  under.sort((a, b) => b.drawn - a.drawn || a.area - b.area || b.i - a.i);
-  hoverTlvs = under.map((u) => u.t);
-  // partner preview: hovering a linked object outlines its counterpart when
-  // the destination resolves within the current path
-  let partner = null;
-  for (const t of hoverTlvs) {
-    const d = destOf(t, state.data, state.lvl, state.path);
-    if (!d || d.lv !== state.lvl.short || d.pa !== state.path.id) continue;
-    const tgt = resolveTarget(d, state.path, GEO);
-    if (tgt) {
-      partner = tgt;
-      break;
-    }
-  }
-  setHighlight(partner);
-  // a hovered Slig (or its spawner) shades the pen its own bounds pair pens it into
-  const pen = (t) => patrolZone(t, state.path, LAYOUT, state.data.id);
-  setPatrol(PENS.on ? (hoverTlvs.map(pen).find(Boolean) ?? null) : null);
-  // arrows overlay: spotlight the hovered object's own edges
-  setConnFocus(state.show.conn ? (hoverTlvs.find((t) => shownDest(t)) ?? null) : null);
-  // wiring overlay: the same, for the hovered object's own drawn wires
-  const wiring = state.show.wires ? computeWiring(state.path, state.data.id) : null;
-  const wireDrawn = (e) => objectShown(e.src) && objectShown(e.dst);
-  setWireFocus(
-    wiring
-      ? (hoverTlvs.find((t) =>
-          wiring.edges.some((e) => (e.src === t || e.dst === t) && wireDrawn(e)),
-        ) ?? null)
-      : null,
-  );
-  if (hoverTlvs.length || hoverLines.length) {
-    tip.style.display = "block";
-    const html =
-      hoverTlvs
-        .slice(0, 8)
-        .map((t) => {
-          const about = typeSummary(t.name);
-          const ex = fieldEntries(t, fieldPrefsFor(state.data.id))
-            .map(([k, v]) => `<span>${esc(k)}=<span class="v">${esc(String(v))}</span></span>`)
-            .join(" ");
-          // what the sign says, capped: a tooltip has no room for a whole
-          // rotation. A board that can only ever run dark says so, since
-          // silence would read as the map not knowing
-          const says = objectMessages(state.data, t, state.path);
-          const said = (says ?? []).map(
-            ({ text, note }) =>
-              `<br><span class="said">${note ? `<span class="note">${esc(note)}</span> ` : ""}${esc(`“${text}”`)}</span>`,
-          );
-          const messages =
-            says?.length === 0
-              ? `<br><span class="e">${esc(DARK_NOTE)}</span>`
-              : said.slice(0, 3).join("") +
-                (said.length > 3 ? `<br><span class="e">+${said.length - 3} more</span>` : "");
-          const edited = editNotes(t);
-          const released = state.show.release && releaseNote(state.data, t);
-          const d = shownDest(t);
-          let follow = "";
-          if (state.edit) {
-            const hint = isRemoved(t)
-              ? t === state.sel
-                ? "restore it from the panel"
-                : "click to select"
-              : t === state.sel
-                ? "drag to move · ⇧ arrows nudge · Del removes"
-                : "click to select";
-            follow = `<br><span class="f">${hint}</span>`;
-          } else if (d && isLoopback(t, state.data, state.lvl, state.path)) {
-            follow = `<br><span class="f loop">⟳ loops back to itself</span>`;
-          } else if (d && !followableDest(t)) {
-            follow = `<br><span class="f loop">→ leads to ${esc(`${d.lv} P${d.pa}`)} — not on the map</span>`;
-          } else if (d) {
-            follow = `<br><span class="f">➜ click to follow to ${esc(`${d.lv} P${d.pa}${d.ca != null ? " C" + d.ca : ""}`)}</span>`;
-          }
-          // wiring lines describe the drawn wires — a local partner in a
-          // hidden category is neither drawn nor named, while a cross-path
-          // note names a path rather than a marker — and state only what
-          // exists: a shown partner, or the other paths of the level holding
-          // one when this path holds none at all. Silence is never a claim,
-          // since an id can drive things the wire table has no evidence for
-          let wireInfo = "";
-          if (wiring) {
-            const lines = [];
-            const remote = levelWiring(state.lvl, state.data.id);
-            const others = (paths) =>
-              [...(paths ?? [])].filter((pa) => pa !== state.path.id).map((pa) => "P" + pa);
-            const ends = wireEnds(t, state.data.id);
-            const wired = (m, id) => (m.get(id) ?? []).filter((o) => o !== t);
-            for (const id of ends.out) {
-              const local = wired(wiring.cons, id);
-              const shown = local.filter(objectShown);
-              if (shown.length === 1) lines.push(`sets ${id} → ${shown[0].name}`);
-              else if (shown.length) lines.push(`sets ${id} → ${shown.length} objects`);
-              else if (!local.length) {
-                const paths = others(remote.cons.get(id));
-                if (paths.length) lines.push(`sets ${id} — answered in ${paths.join(", ")}`);
-              }
-            }
-            for (const id of ends.in) {
-              const local = wired(wiring.prod, id);
-              const shown = local.filter(objectShown);
-              const names = new Set(shown.map((o) => o.name));
-              if (shown.length === 1) lines.push(`answers ${id} ← ${shown[0].name}`);
-              else if (names.size === 1)
-                lines.push(`answers ${id} ← ${shown.length}× ${[...names][0]}`);
-              else if (shown.length) lines.push(`answers ${id} ← ${shown.length} producers`);
-              else if (!local.length) {
-                const paths = others(remote.prod.get(id));
-                if (paths.length) lines.push(`answers ${id} — set in ${paths.join(", ")}`);
-              }
-            }
-            wireInfo = lines
-              .map((l) => `<br><span class="f" style="color:${WIRE_COLOR}">↯ ${esc(l)}</span>`)
-              .join("");
-          }
-          return (
-            `<div><span class="t">${esc(t.name)}</span> <span class="e">(${t.x1},${t.y1})–(${t.x2},${t.y2})</span>` +
-            (offScreen(t, LAYOUT)
-              ? `<br><span class="e offscreen">${esc(OFFSCREEN_NOTE)}</span>`
-              : "") +
-            (isRemoved(t) ? `<br><span class="e edited">${esc(REMOVED_NOTE)}</span>` : "") +
-            (isAdded(t)
-              ? `<br><span class="e edited">${esc(ADDED_NOTE)}</span>`
-              : edited.length
-                ? `<br><span class="e edited">${esc(`${EDITED_NOTE}: ${edited.join(", ")}`)}</span>`
-                : "") +
-            (released ? `<br><span class="e released">${esc(released)}</span>` : "") +
-            (about ? `<br><span class="e about">${esc(about)}</span>` : "") +
-            messages +
-            (ex ? `<br><span class="kv">${ex}</span>` : "") +
-            wireInfo +
-            follow +
-            `</div>`
-          );
-        })
-        .concat(
-          hoverLines.map(([x1, y1, x2, y2, t]) => {
-            const len = Math.round(Math.hypot(x2 - x1, y2 - y1));
-            return (
-              `<div><span class="t" style="color:${LINE_COLORS[t] || "#999"}">${LINE_NAMES[t] || "Line type " + t}</span>` +
-              ` <span class="e">(${x1},${y1})→(${x2},${y2}) · ${formatDist(len)}</span></div>`
-            );
-          }),
-        )
-        .join("<hr>") +
-      (hoverTlvs.length > 8 ? `<div class="e">+${hoverTlvs.length - 8} more…</div>` : "");
-    if (html !== tipHtml || tipSpaceW !== cv.clientWidth || tipSpaceH !== cv.clientHeight) {
-      tip.innerHTML = html;
-      tipHtml = html;
-      tipSpaceW = cv.clientWidth;
-      tipSpaceH = cv.clientHeight;
-      tip.style.left = "0px"; // the width it wraps to given the whole canvas to grow into
-      tipW = tip.offsetWidth;
-      tipH = tip.offsetHeight;
-    }
-    const below = mouse.y + 16;
-    tip.style.left = Math.max(6, Math.min(mouse.x + 16, cv.clientWidth - tipW - 10)) + "px";
-    tip.style.top =
-      (below + tipH > cv.clientHeight ? Math.max(6, mouse.y - tipH - 12) : below) + "px";
-    if (!panning)
-      cv.style.cursor =
-        state.edit && hoverTlvs[0] === state.sel && !isRemoved(state.sel)
-          ? "move"
-          : modeCursor() || (hoverTlvs.some((t) => followableDest(t)) ? "pointer" : "");
-  } else {
-    tip.style.display = "none";
-    if (!panning) cv.style.cursor = modeCursor();
-  }
-  const wx = wX(pt.x),
-    wy = wY(pt.y);
-  hud.textContent = `world x ${Math.round(wx)}  y ${Math.round(wy)}  ·  grid ${gX(wx).toFixed(1)}, ${gY(wy).toFixed(1)}  ·  zoom ${state.cam.z.toFixed(2)}`;
-}
 
 export function initInteraction() {
   // the boot stands the sidebar open with no slide, so the map's box is at rest
@@ -847,8 +564,7 @@ export function initInteraction() {
 
   cv.addEventListener("pointerleave", () => {
     if (pointers.size) return; // a captured drag only leaves after release
-    hoverTlvs = [];
-    tip.style.display = "none";
+    clearHover();
     cv.style.cursor = modeCursor();
     setHighlight(null);
     setConnFocus(null);
@@ -858,8 +574,7 @@ export function initInteraction() {
 
   // the pointed-at objects are the path's old ones after an edit
   window.addEventListener("data-changed", () => {
-    hoverTlvs = [];
-    tip.style.display = "none";
+    clearHover();
     // an object that left the path mid-drag is let go, a swap it survived carries on
     if (moving && !currentOf(moving.t, state.path)) cancelMove();
   });
