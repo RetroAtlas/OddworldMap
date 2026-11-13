@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
   ALL_CATS,
+  POLL,
   SLIG,
   TALLY,
   pixels,
@@ -18,6 +19,61 @@ const LCD = { game: "AE", level: "MI", path: 1, x1: 1159, y1: 625, x2: 1362, y2:
 
 // the Free-Fire Zone hint fly, which spells SNEAK IN AND OUT OF SHADOWS
 const HINT = { game: "AO", level: "E1", path: 1, x1: 5464, y1: 174, x2: 5488, y2: 198 };
+
+// the hint fly as the page has it: its point, the box its flies were last drawn in and the box
+// about the sprites of the flies its brain has out, on the page, how many are out, and whether
+// the brain hears a chant
+const hintFly = (page) =>
+  page.evaluate(async (h) => {
+    const u = (m) => new URL("js/" + m, location.href).href;
+    const st = await import(u("data/state.js"));
+    const spriteart = await import(u("painter/spriteart.js"));
+    const spritepaint = await import(u("painter/spritepaint.js"));
+    const motion = await import(u("engine/motion.js"));
+    const t = st.state.path.tlvs.find((o) => o.name === "HintFly" && o.x1 === h.x1);
+    const [r] = spriteart.paintedSprites.get(t);
+    const cv = document.getElementById("cv").getBoundingClientRect();
+    const { cam } = st.state;
+    const onPage = (b) =>
+      b && {
+        x: cv.left + (b.x - cam.x) * cam.z,
+        y: cv.top + (b.y - cam.y) * cam.z,
+        w: b.w * cam.z,
+        h: b.h * cam.z,
+      };
+    const set = spriteart.setOf(st.state.data);
+    const brain = motion.brainAt(r, set, motion.motionRunning() ? motion.sceneTick() : 0).state;
+    const [wide, tall] = set.anims.HintFly.frames[0].slice(3);
+    const xs = brain.fx.map((f) => st.dX(f.x)),
+      ys = brain.fx.map((f) => st.dY(f.y));
+    const x = Math.min(...xs),
+      y = Math.min(...ys);
+    return {
+      point: onPage({ x: st.dX(t.x1), y: st.dY(t.y1), w: 0, h: 0 }),
+      box: onPage(spritepaint.spriteBoxes.get(t)),
+      flies: onPage({ x, y, w: Math.max(...xs) + wide - x, h: Math.max(...ys) + tall - y }),
+      out: brain.fx.length,
+      chant: brain.chant,
+    };
+  }, HINT);
+// the Free-Fire Zone with its hint fly drawn, the Displays alone shown
+async function atHint(page, zoom) {
+  await seedView(page, { show: { objects: true }, cats: { screen: true } });
+  await page.goto(`/#AO/E1/1/${HINT.x1}/${HINT.y1}/${zoom}`);
+  await settle(page, HINT);
+  await settleArtwork(page);
+}
+const ticksOn = async (page, ticks) => {
+  await page.evaluate(async () => {
+    window.__motion ??= await import(new URL("js/engine/motion.js", location.href).href);
+  });
+  const from = await page.evaluate(() => window.__motion.sceneTick());
+  await page.waitForFunction(
+    ([from, ticks]) => window.__motion.sceneTick() >= from + ticks,
+    [from, ticks],
+    POLL,
+  );
+};
 
 test("Patrols needs the objects shown: greyed and refusing its key until they are, then following them", async ({
   page,
@@ -292,4 +348,123 @@ test("a hint fly's sprites hang from their flies' points, corner to point", asyn
   expect(flies.length).toBeGreaterThan(20);
   expect(sorted(changed)).toEqual(sorted(flies));
   expect(errors).toEqual([]);
+});
+
+test("a hint fly hears a chant while the pointer rests on it, and sends out its first word's flies", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await atHint(page, "2.00");
+  const resting = await hintFly(page);
+  expect([resting.out, resting.chant]).toEqual([20, false]);
+  await page.mouse.move(resting.point.x + 2, resting.point.y + 2);
+  // sixteen ticks of pause from the step that hears it, then the first word's flies join
+  await ticksOn(page, 22);
+  const spelling = await hintFly(page);
+  expect(spelling.chant).toBe(true);
+  expect(spelling.out).toBeGreaterThan(20);
+  expect(errors).toEqual([]);
+});
+
+test("a hint fly's chant ends once the pointer has left the map", async ({ page }) => {
+  const errors = trackErrors(page);
+  await atHint(page, "2.00");
+  const { point } = await hintFly(page);
+  await page.mouse.move(point.x + 2, point.y + 2);
+  await ticksOn(page, 2);
+  expect((await hintFly(page)).chant).toBe(true);
+  await page.mouse.move(40, 300);
+  await ticksOn(page, 2);
+  expect((await hintFly(page)).chant).toBe(false);
+  expect(errors).toEqual([]);
+});
+
+test("a hint fly is pointed at over the box about its flies, past its rect", async ({ page }) => {
+  const errors = trackErrors(page);
+  // a standing clock, so the swarm keeps the box it was read with
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await atHint(page, "2.00");
+  const { box, flies, point } = await hintFly(page);
+  expect(box).toEqual(flies);
+  // the rect's corner is the hint's point, and it answers four units past it
+  expect(box.x).toBeLessThan(point.x - 12);
+  const tip = page.locator("#tip");
+  await page.mouse.move(box.x + 3, box.y + box.h / 2);
+  await expect(tip).toContainText("HintFly (5464,174)");
+  await page.mouse.move(box.x - 12, box.y + box.h / 2);
+  // a hidden tip keeps its last text
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const el = document.getElementById("tip");
+          return el.style.display === "none" || !el.textContent.includes("HintFly");
+        }),
+      POLL,
+    )
+    .toBe(true);
+  expect(errors).toEqual([]);
+});
+
+test.describe("on a touch screen", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+  // a finger put down away from the swarm, dragged and lifted, and how far it moved the view
+  async function pan(page, from) {
+    const view = () =>
+      page.evaluate(async () => {
+        const st = await import(new URL("js/data/state.js", location.href).href);
+        return st.state.cam.y;
+      });
+    const before = await view();
+    const touch = await page.context().newCDPSession(page);
+    const at = (dy) => ({ touchPoints: [{ x: from.x, y: from.y - 200 + dy }] });
+    await touch.send("Input.dispatchTouchEvent", { type: "touchStart", ...at(0) });
+    for (const dy of [10, 20, 30, 40])
+      await touch.send("Input.dispatchTouchEvent", { type: "touchMove", ...at(dy) });
+    await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    return (await view()) - before;
+  }
+
+  test("a tap on a hint fly is a chant that outlasts the finger, and a pan of the map after it", async ({
+    page,
+  }) => {
+    const errors = trackErrors(page);
+    await atHint(page, "1.00");
+    const { point } = await hintFly(page);
+    await page.touchscreen.tap(point.x + 2, point.y + 2);
+    // the finger's leaving comes before the tap's click
+    await ticksOn(page, 4);
+    expect((await hintFly(page)).chant).toBe(true);
+    expect(await pan(page, point)).not.toBe(0);
+    await ticksOn(page, 4);
+    expect((await hintFly(page)).chant).toBe(true);
+    expect(errors).toEqual([]);
+  });
+
+  test("a tapped hint fly's chant outlasts a key's pan of the map", async ({ page }) => {
+    const errors = trackErrors(page);
+    await atHint(page, "1.00");
+    const { point } = await hintFly(page);
+    await page.touchscreen.tap(point.x + 2, point.y + 2);
+    await ticksOn(page, 2);
+    expect((await hintFly(page)).chant).toBe(true);
+    await page.keyboard.press("ArrowLeft");
+    await ticksOn(page, 2);
+    expect((await hintFly(page)).chant).toBe(true);
+    expect(errors).toEqual([]);
+  });
+
+  test("a tap elsewhere on the map ends a tapped hint fly's chant", async ({ page }) => {
+    const errors = trackErrors(page);
+    await atHint(page, "1.00");
+    const { point } = await hintFly(page);
+    await page.touchscreen.tap(point.x + 2, point.y + 2);
+    await ticksOn(page, 2);
+    expect((await hintFly(page)).chant).toBe(true);
+    await page.touchscreen.tap(point.x + 2, point.y - 200);
+    await ticksOn(page, 2);
+    expect((await hintFly(page)).chant).toBe(false);
+    expect(errors).toEqual([]);
+  });
 });

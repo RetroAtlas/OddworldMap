@@ -277,8 +277,8 @@ function endPointer(e) {
 
 // nothing is under the pointer: the tooltip goes, with the overlays' focus on
 // what it named
-function dropHover() {
-  clearHover();
+function dropHover(lifted) {
+  clearHover(lifted);
   cv.style.cursor = modeCursor();
   setHighlight(null);
   setConnFocus(null);
@@ -481,7 +481,7 @@ function onKey(e) {
   // off the map the pointer rests on nothing a key could bring under it
   if (onMap) updateHover(mouse, panning);
   else {
-    dropHover();
+    dropHover(true);
     readout(mouse);
   }
   scheduleDraw();
@@ -584,10 +584,10 @@ export function initInteraction() {
     Object.assign(mouse, ptrXY(e));
     onMap = true;
   });
-  cv.addEventListener("pointerleave", () => {
+  cv.addEventListener("pointerleave", (e) => {
     if (pointers.size) return; // a captured drag only leaves after release
     onMap = false;
-    dropHover();
+    dropHover(e.pointerType === "touch");
   });
 
   // the pointed-at objects are the path's old ones after an edit

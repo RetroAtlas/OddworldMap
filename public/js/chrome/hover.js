@@ -17,7 +17,8 @@ import {
 import { cv, tip, hud } from "../ui/dom.js";
 import { state, GEO, LAYOUT, wX, wY, gX, gY } from "../data/state.js";
 import { setConnFocus, setHighlight, setPatrol, setWireFocus } from "../painter/render.js";
-import { objectShown } from "../painter/spriteart.js";
+import { objectShown, paintedSprites } from "../painter/spriteart.js";
+import { setChanted } from "../engine/motion.js";
 import { hitBoxes } from "../painter/spritepaint.js";
 import {
   computeWiring,
@@ -117,6 +118,7 @@ export function updateHover(mouse, panning) {
     });
   under.sort((a, b) => b.drawn - a.drawn || a.area - b.area || b.i - a.i);
   hoverTlvs = under.map((u) => u.t);
+  chantAtHovered();
   // partner preview: hovering a linked object outlines its counterpart when
   // the destination resolves within the current path
   let partner = null;
@@ -291,8 +293,13 @@ export function readout(mouse) {
   hud.textContent = `world x ${Math.round(wx)}  y ${Math.round(wy)}  ·  grid ${gX(wx).toFixed(1)}, ${gY(wy).toFixed(1)}  ·  zoom ${state.cam.z.toFixed(2)}`;
 }
 
-// nothing is pointed at
-export function clearHover() {
+// nothing is pointed at; a finger's lift leaves its chant standing, for the
+// next tap's hover test to keep or let go
+export function clearHover(lifted = false) {
   hoverTlvs = [];
   tip.style.display = "none";
+  if (!lifted) chantAtHovered();
 }
+
+// the pointer stands in for Abe's chant at whatever it rests on
+const chantAtHovered = () => setChanted(hoverTlvs.flatMap((t) => paintedSprites?.get(t) ?? []));

@@ -51,12 +51,13 @@ export function paintSprites(f, sprites, set, tick, patrolAt, dim) {
   }
   // the carried object stands in its first frame
   const still = (t) => t === f.held?.to;
-  // what the brains give off joins the records, on layers of its own
+  // what the brains give off joins the records, on layers of its own; where a
+  // record draws nothing itself, its effects are what its object is pointed at
   const fx = [];
   for (const [r, order, k, t] of recs)
     if (r.cycle?.kind === "brain")
       resolveEffects(r, set, still(t) ? 0 : tick, still(t) ? 0 : patrolAt).forEach((e, i) =>
-        fx.push([e, order, k + 1 + i / 1000, t, true]),
+        fx.push([e, order, k + 1 + i / 1000, t, true, r.anim === null]),
       );
   recs.push(...fx);
   recs.sort((a, b) => a[0].layer - b[0].layer || b[1] - a[1] || a[2] - b[2]);
@@ -67,10 +68,11 @@ export function paintSprites(f, sprites, set, tick, patrolAt, dim) {
     .sort((a, b) => a[0] - b[0]);
   let m = 0;
   const ae = data.id === "AE";
-  for (const [r, , , t, isFx] of recs) {
+  for (const [r, , , t, isFx, isBody] of recs) {
     for (; m < masks.length && masks[m][0] <= r.layer; m++) paintMask(f, masks[m], dim);
     if (isFx) {
-      paintEffect(ctx, layout, set, r, ae, f.view);
+      const drawn = paintEffect(ctx, layout, set, r, ae, f.view);
+      if (drawn && isBody) noteBox(t, drawn.box, drawn.cam, layout);
       continue;
     }
     const shown = resolveRecord(r, set, still(t) ? 0 : tick, still(t) ? 0 : patrolAt);
@@ -251,7 +253,7 @@ function paintText(ctx, layout, cam, set, e, view) {
 
 // an effect a brain gave off, drawn additively unless it says otherwise, any
 // lines as the engine's gouraud lines, and clipped to the camera it names or
-// else the one its point falls in
+// else the one its point falls in; a sprite's answer is where it was drawn
 function paintEffect(ctx, layout, set, e, ae, view) {
   const cam = e.cam
     ? cameraAt(layout, e.cam.x, e.cam.y)
@@ -261,12 +263,13 @@ function paintEffect(ctx, layout, set, e, ae, view) {
   ctx.rect(cam.dx, cam.dy, layout.visW, layout.visH);
   ctx.clip();
   ctx.globalCompositeOperation = e.kind === "sprite" && e.blend === 0 ? "source-over" : "lighter";
+  let box = null;
   if (e.kind === "sprite") {
     const frame = e.anim.frames[e.frame];
     const tile = processedFrame(set.sheets[frame[0]], frame, e.semi ?? true, e.rgb);
     if (tile) {
       const r = { scale: e.scale, flipY: false, swap: false, copy: !!e.copy, bare: !!e.bare };
-      drawFrame(ctx, cam, tile, frame, r, { flip: false }, ae, e.x, e.y);
+      box = drawFrame(ctx, cam, tile, frame, r, { flip: false }, ae, e.x, e.y);
     }
   } else if (e.kind === "text") paintText(ctx, layout, cam, set, e, view);
   else {
@@ -300,6 +303,7 @@ function paintEffect(ctx, layout, set, e, ae, view) {
     }
   }
   ctx.restore();
+  return box && { box, cam };
 }
 // the six rays of a Z's burst, inner end to outer
 const Z_BURST = [
