@@ -1,6 +1,6 @@
 import { raycastDiag, raycastDown } from "../engine/collide.js";
 import { filedCell, sligBounds, tlvCell } from "../model/model.js";
-import { lcdMessages } from "../model/messages.js";
+import { hintWords, lcdMessages } from "../model/messages.js";
 import { AE_MUDOKONS_IN_LEVEL, AO_MUDOKONS, TALLY_EDGE, lcdIds } from "../engine/lcd.js";
 import {
   FLOOR,
@@ -286,8 +286,8 @@ rule("AO", "Bat", (c) => {
   ];
 });
 
-// the flies hover about the hint's point, on the screen it lies in; the hint
-// itself waits on Abe's chant
+// the flies hover about the hint's point, on the screen it lies in, and spell
+// its message at Abe's chant
 rule("AO", "HintFly", (c) => {
   const { t, geo } = c;
   const p = {
@@ -295,6 +295,7 @@ rule("AO", "HintFly", (c) => {
       Math.floor(t.x1 / geo.worldW) * geo.worldW + geo.winX,
       Math.floor(t.y1 / geo.worldH) * geo.worldH + geo.winY,
     ],
+    words: hintWords(c.data, t, c.path),
   };
   return [draw(c, null, t.x1, t.y1, { cycle: brain(c, "hintfly", false, p), yOff: 0 })];
 });

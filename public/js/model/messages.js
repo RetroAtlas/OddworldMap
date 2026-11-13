@@ -93,6 +93,19 @@ function ownText(raw, release, table) {
     .join("");
 }
 
+// the words a hint fly spells, each letter the dots its flies take, in the
+// order they take them and as the alphabet holds them, a byte a dot; a code
+// the alphabet has no letter for is a letter of no dots. A release that names
+// letters of its own spells in an alphabet of its own or not at all
+export function hintWords(G, t, P = null) {
+  const tables = tablesOf(G, P);
+  const raw = tables?.hintfly?.[t.fields?.[READERS.HintFly.fixed[0]]];
+  const alphabet = G.release?.chars?.hintfly ? G.release.messages?.alphabet : tables?.alphabet;
+  if (!raw || !alphabet) return [];
+  const dots = (ch) => alphabet[ch.charCodeAt(0) - HINT_FIRST]?.match(/../g) ?? [];
+  return raw.split(" ").map((word) => [...word].map((ch) => dots(ch).map((d) => parseInt(d, 16))));
+}
+
 // a stored message as words, read through its code page: button codes become
 // the command they name
 export function messageText(raw, page = "cp437") {

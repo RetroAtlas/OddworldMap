@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { ownSheet, recordSheets, spriteDraws, spriteTypes } from "../../public/js/rules/sprites.js";
 import { armFieldData } from "../../public/js/model/fields.js";
+import { setMessages } from "../../public/js/model/messages.js";
 import { brainAt, resolveEffects, resolveRecord } from "../../public/js/engine/motion.js";
 import { raycast } from "../../public/js/engine/collide.js";
 import { patrolZone, sligBounds } from "../../public/js/model/model.js";
@@ -284,6 +285,30 @@ test("every hint fly is handed the corner of the screen its point lies in", () =
         flies++;
       }
   assert.equal(flies, 28);
+});
+
+test("every hint fly is handed the words of its message, each letter its dots", () => {
+  const messages = pub("messages_ao.json");
+  setMessages({ AO: messages });
+  try {
+    let flies = 0;
+    for (const lvl of data.AO.levels)
+      for (const path of lvl.paths)
+        for (const t of path.tlvs.filter((o) => o.name === "HintFly")) {
+          const [r] = spriteDraws(data.AO, lvl, path, t, sheets.AO);
+          const text = messages.hintfly[t.fields.message_id];
+          assert.deepEqual(
+            r.cycle.p.words.map((word) => word.length),
+            text.split(" ").map((word) => word.length),
+            text,
+          );
+          for (const letter of r.cycle.p.words.flat()) assert.ok(letter.length > 0, text);
+          flies++;
+        }
+    assert.equal(flies, 28);
+  } finally {
+    setMessages(null);
+  }
 });
 
 test("the LCD font names a listed sheet and its glyphs sit inside it, the gap and the space first", () => {

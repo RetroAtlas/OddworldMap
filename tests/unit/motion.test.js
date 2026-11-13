@@ -9,10 +9,12 @@ import {
   resetScene,
   resolveRecord,
   sceneTick,
+  setChanted,
   setMotionRunning,
   setPatrolsRunning,
 } from "../../public/js/engine/motion.js";
-import { PATROL_ANIMS, anim, tlv, walker, world } from "./creatures.js";
+import { BRAINS, STARTS } from "../../public/js/engine/brains.js";
+import { PATROL_ANIMS, anim, creature, tlv, walker, world } from "./creatures.js";
 
 test("frameAt: frame 0 stands at construction and the first tick decodes it again", () => {
   const a = anim(4, 2, true);
@@ -370,4 +372,102 @@ test("brainAt: a new clock generation replaces a cached state, and a tick behind
     walked,
     "and a patrol too, its clock restarting with the scene",
   );
+});
+
+// a brain that keeps what it hears of the chant, a character a step
+STARTS.ear = (st) => {
+  st.heard = "";
+};
+BRAINS.ear = (st) => {
+  st.heard += st.chant ? "o" : ".";
+};
+const earSet = { anims: {}, dice: new Array(256).fill(0) };
+const heard = (r, tick) => brainAt(r, earSet, tick).state.heard;
+// a clock of the test's own, past any the tests above ran the engine's to
+let wall = 0;
+function pass(ticks) {
+  const to = motionTick() + ticks;
+  while (motionTick() < to) advance((wall += 1));
+}
+function quiet() {
+  if (!wall) advance((wall = performance.now() + 1e6));
+  setChanted([]);
+  resetScene();
+  return creature(null, "ear");
+}
+
+test("chant: a brain hears it from the step after it came on, and a replay hears what the run heard", () => {
+  const r = quiet();
+  pass(3);
+  setChanted([r]);
+  pass(1);
+  setChanted([r]);
+  pass(2);
+  setChanted([]);
+  pass(2);
+  assert.equal(heard(r, 8), "...ooo..", "handed over again while held, it stays on");
+  assert.equal(heard(r, 5), "...oo", "a tick behind is replayed, and hears the same");
+  assert.equal(heard(creature(null, "ear"), 8), "........", "a record not handed over hears none");
+});
+
+test("chant: flips within one tick are heard as they stand at its end", () => {
+  const r = quiet();
+  setChanted([r]);
+  pass(2);
+  assert.equal(
+    heard(r, 2),
+    ".o",
+    "one held from the scene's first tick is heard from its second step",
+  );
+  setChanted([]);
+  setChanted([r]);
+  pass(2);
+  assert.equal(heard(r, 4), ".ooo", "off and on again is never let go");
+  setChanted([]);
+  setChanted([r]);
+  setChanted([]);
+  pass(2);
+  assert.equal(heard(r, 6), ".ooo..");
+});
+
+test("chant: a scene that starts over keeps the chant still held and drops one let go", () => {
+  const r = quiet();
+  pass(5);
+  setChanted([r]);
+  pass(2);
+  resetScene();
+  pass(3);
+  assert.equal(heard(r, 3), ".oo");
+  setChanted([r]);
+  pass(2);
+  assert.equal(
+    heard(r, 5),
+    ".oooo",
+    "handed over again in the new scene, it is still the one chant",
+  );
+  setChanted([]);
+  resetScene();
+  pass(3);
+  assert.equal(heard(r, 3), "...");
+});
+
+test("chant: handed from one record to another, the first is let go", () => {
+  const a = quiet(),
+    b = creature(null, "ear");
+  pass(1);
+  setChanted([a]);
+  pass(2);
+  setChanted([b]);
+  pass(2);
+  assert.equal(heard(a, 5), ".oo..");
+  assert.equal(heard(b, 5), "...oo");
+});
+
+test("chant: a brain on patrol hears none", () => {
+  const r = quiet();
+  r.cycle.patrol = true;
+  setPatrolsRunning(true);
+  setChanted([r]);
+  pass(3);
+  assert.equal(heard(r, 3), "...");
 });

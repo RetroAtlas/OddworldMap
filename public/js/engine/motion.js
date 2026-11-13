@@ -80,6 +80,34 @@ export function resetScene() {
   patrolEpoch = 0;
   sceneGen++;
   patrolGen++;
+  chants = new WeakMap();
+  for (const r of chanted) chants.set(r, [1]);
+}
+
+// Abe's chant, held over the records handed here by whoever stands in for
+// him. A record's log is the scene ticks its chant came on and went off at, on
+// first, and its brain hears the chant as of its own tick, from the step after
+// a flip's, so a replay hears what the run heard. A scene that starts over
+// keeps the chants still held
+let chants = new WeakMap(),
+  chanted = new Set();
+export function setChanted(recs) {
+  const at = Math.max(sceneTick(), 1);
+  const held = new Set(recs);
+  const flip = (r) => {
+    if (!chants.has(r)) chants.set(r, []);
+    chants.get(r).push(at);
+  };
+  for (const r of held) if (!chanted.has(r)) flip(r);
+  for (const r of chanted) if (!held.has(r)) flip(r);
+  chanted = held;
+}
+function chantedAt(r, T) {
+  const log = chants.get(r);
+  if (!log) return false;
+  let n = log.length;
+  while (n > 0 && log[n - 1] >= T) n--;
+  return n % 2 === 1;
 }
 
 // the patrols count from the scene tick their toggle last came on
@@ -193,6 +221,7 @@ function stepTo(st, r, set, want) {
     const frame = a ? frameAt(a, T - st.set) : 0;
     const last = !!a && frame === a.frames.length - 1;
     st.m = { last, frame };
+    st.chant = !cy.patrol && chantedAt(r, T);
     const now = SPAWN_FRAME + T;
     BRAINS[cy.brain](st, now, rnd);
     MOTIONS[st.cur]?.(st, last, frame, rnd, now);

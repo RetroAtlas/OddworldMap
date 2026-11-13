@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import {
   DARK_NOTE,
+  hintWords,
   messageText,
   objectMessages,
   setMessages,
@@ -416,4 +417,75 @@ test("objectMessages: a release reads its own tables, a path's overlay entries a
   assert.deepEqual(objectMessages({ id: "AO" }, board), [
     { text: messageText(AO.lcd[2]), note: "" },
   ]);
+});
+
+const hintFly = (id) => ({ name: "HintFly", fields: { message_id: id } });
+
+test("hintWords: a hint's words are its letters, each the dots its flies take in their order", () => {
+  setMessages(SHIPPED);
+  const words = hintWords({ id: "AO" }, hintFly(6));
+  assert.deepEqual(
+    words.map((word) => word.length),
+    [4, 1, 4],
+    "SEEK A ROCK",
+  );
+  // the A, a dot's high digit its column and its low its row
+  const [[a]] = words.slice(1);
+  const grid = Array.from({ length: 16 }, () => Array(16).fill("."));
+  for (const dot of a) grid[dot & 15][dot >> 4] = "#";
+  assert.deepEqual(
+    grid.map((row) => row.join("")),
+    [
+      "................",
+      ".......#........",
+      "................",
+      "......#.#.......",
+      "................",
+      ".....#...#......",
+      "................",
+      "....#.....#.....",
+      "................",
+      "...#.......#....",
+      "................",
+      "..#.#.#.#.#.#...",
+      "................",
+      ".#...........#..",
+      "................",
+      "#.............#.",
+    ],
+  );
+  assert.deepEqual(a.slice(0, 4), [0x0f, 0x1d, 0x2b, 0x39], "from the foot of its left leg up");
+});
+
+test("hintWords: a code the alphabet has no letter for keeps its place and takes no fly", () => {
+  setMessages({ AO: { hintfly: ["AB, AC", ""], alphabet: ["0f", "111f"] } });
+  assert.deepEqual(hintWords({ id: "AO" }, hintFly(0)), [
+    [[0x0f], [0x11, 0x1f], []],
+    [[0x0f], []],
+  ]);
+  assert.deepEqual(hintWords({ id: "AO" }, hintFly(1)), [], "a blank message is no words");
+  assert.deepEqual(hintWords({ id: "AO" }, hintFly(7)), [], "nor is an id past the table");
+  assert.deepEqual(hintWords({ id: "AE" }, hintFly(0)), [], "nor a game with no hint flies");
+  setMessages({ AO: { hintfly: ["AB"] } });
+  assert.deepEqual(hintWords({ id: "AO" }, hintFly(0)), [], "nor a message with no alphabet");
+});
+
+test("hintWords: a release spells in its own alphabet, and a path in its overlay's words", () => {
+  setMessages({ AO: { hintfly: ["A", "B"], alphabet: ["0f", "11"] } });
+  const G = { id: "AO", release: { messages: { hintfly: ["B", "B"], alphabet: ["22", "33"] } } };
+  assert.deepEqual(hintWords(G, hintFly(0)), [[[0x33]]]);
+  const P = { release: { messages: { hintfly: { 0: "AB" } } } };
+  assert.deepEqual(hintWords(G, hintFly(0), P), [[[0x22], [0x33]]]);
+  // a release whose own words read through the base's letters spells in them
+  const es = { id: "AO", release: { messages: { hintfly: ["BA"] } } };
+  assert.deepEqual(hintWords(es, hintFly(0)), [[[0x11], [0x0f]]]);
+  // one naming letters of its own has them in its own alphabet or spells nothing
+  const jp = {
+    id: "AO",
+    release: { chars: { hintfly: ["あ", "い"] }, messages: { hintfly: ["BA"] } },
+  };
+  assert.deepEqual(hintWords(jp, hintFly(0)), []);
+  jp.release.messages.alphabet = ["44", "55"];
+  assert.deepEqual(hintWords(jp, hintFly(0)), [[[0x55], [0x44]]]);
+  setMessages(SHIPPED);
 });

@@ -1,4 +1,5 @@
-// The brains the game runs without a player, ported from the decomp: each a
+// The brains the game runs without a player, and the one that answers Abe's
+// chant, ported from the decomp or read off the PlayStation's overlays: each a
 // sub-state machine over the engine's frame counter, rolling the game's own
 // dice (its 256-byte table, walked from a seed), and the motions that chain one
 // animation into the next at its last frame. A step is one engine tick: the
