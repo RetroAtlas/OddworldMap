@@ -286,10 +286,18 @@ rule("AO", "Bat", (c) => {
   ];
 });
 
-// the flies hover about the hint's point; the hint itself waits on Abe's chant
-rule("AO", "HintFly", (c) => [
-  draw(c, null, c.t.x1, c.t.y1, { cycle: brain(c, "hintfly"), yOff: 0 }),
-]);
+// the flies hover about the hint's point, on the screen it lies in; the hint
+// itself waits on Abe's chant
+rule("AO", "HintFly", (c) => {
+  const { t, geo } = c;
+  const p = {
+    screen: [
+      Math.floor(t.x1 / geo.worldW) * geo.worldW + geo.winX,
+      Math.floor(t.y1 / geo.worldH) * geo.worldH + geo.winY,
+    ],
+  };
+  return [draw(c, null, t.x1, t.y1, { cycle: brain(c, "hintfly", false, p), yOff: 0 })];
+});
 
 // an LCD screen scrolls its messages in the game's font, by the lcd brain; one
 // whose fixed message and whole random range are blank runs dark and draws

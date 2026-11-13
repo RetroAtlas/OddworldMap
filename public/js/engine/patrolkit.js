@@ -51,6 +51,23 @@ export function fpDiv(a, b) {
   return a < 0 !== b < 0 ? -q : q;
 }
 
+// the engine's sine: a quarter wave in 16.16, read four ways round its
+// 256-step circle
+const QUARTER_SINE = [
+  0, 1633, 3266, 4897, 6525, 8148, 9767, 11380, 12985, 14582, 16171, 17749, 19316, 20872, 22414,
+  23942, 25456, 26953, 28434, 29897, 31342, 32767, 34172, 35555, 36917, 38255, 39570, 40860, 42125,
+  43363, 44575, 45758, 46914, 48040, 49136, 50202, 51237, 52240, 53210, 54147, 55051, 55920, 56754,
+  57554, 58317, 59044, 59735, 60388, 61004, 61582, 62122, 62623, 63085, 63508, 63891, 64235, 64539,
+  64803, 65026, 65209, 65351, 65453, 65514, 65535,
+];
+export function sine16(a) {
+  a &= 255;
+  if (a < 64) return QUARTER_SINE[a];
+  if (a < 128) return QUARTER_SINE[127 - a];
+  return a < 192 ? -QUARTER_SINE[a - 128] : -QUARTER_SINE[255 - a];
+}
+export const cosine16 = (a) => sine16(a + 64);
+
 // ---- the creatures on patrol -------------------------------------------------
 // A patrol brain owns a position on the path's collision lines and walks it
 // with PathLine::MoveOnLine, handing over to the linked line; its world is the

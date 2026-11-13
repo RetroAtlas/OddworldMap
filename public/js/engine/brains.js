@@ -20,4 +20,5 @@ import "./bat.js";
 import "./glukkon.js";
 import "./flyingslig.js";
 import "./fallingitem.js";
+import "./hintfly.js";
 import "./lcd.js";

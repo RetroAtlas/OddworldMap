@@ -21,6 +21,7 @@ const VIEWS = [
   { hash: R1, show: { objects: true, coll: true, conn: true } },
   { hash: MI, show: { objects: true, fg: true, wires: true, pens: true } },
   { hash: "#AO/R2/14/515/234/1.00", show: { objects: true, patrols: true, grid: true } },
+  { hash: "#AO/E1/1/5464/174/1.00", show: { objects: true } },
   { hash: "#AE/NE/2/662/452/0.50", show: { objects: false, markers: true, labels: true } },
   { hash: `${R1}/jp`, show: { objects: true } },
   { hash: "#AO/R1/15/5554/728/0.15", show: { objects: true } },

@@ -180,11 +180,7 @@ export function stepEffects(st, now, rnd) {
         }
       }
     } else if (p.kind === "fly") {
-      p.angle = (p.angle + p.speed) & 255;
-      const th = (p.angle * Math.PI) / 128;
-      p.x += 5 * Math.cos(th);
-      p.y -= 2 * Math.sin(th);
-      keep.push(p);
+      keep.push(p); // its hint's brain moves it
     } else if (p.kind === "burst") {
       // Oddysee carries a piece over the void between screens; a piece turned
       // back from the eye plays its sound, rolling for it, a meat chunk only
@@ -268,28 +264,3 @@ BRAINS.chant = (st, now, rnd) => {
     s === 0.5 ? 17 : 36,
   );
 };
-// hint flies: twenty, each on its own loop about the point, walking the dice
-// from a cursor of their own
-STARTS.hintfly = (st) => {
-  const own = () => st.dice[st.seed2++ & 255];
-  for (let i = 0; i < 20; i++) {
-    const x = st.ax - 16 + (own() & 31);
-    const y = st.ay - 16 + (own() & 31);
-    const angle = own();
-    let speed = 12 + (own() % 4);
-    if (own() & 1) speed = -speed;
-    st.fx.push({
-      kind: "fly",
-      anim: "HintFly",
-      x,
-      y,
-      angle,
-      speed,
-      layer: 39,
-      scale: 1,
-      blend: 1,
-      rgb: PARTICLE_RGB,
-    });
-  }
-};
-BRAINS.hintfly = () => {};

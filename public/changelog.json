@@ -1,6 +1,13 @@
 {
  "entries": [
   {
+   "date": "2026-11-13",
+   "tag": "fixed",
+   "tiny": true,
+   "title": "The hint flies beat their wings where the game puts them",
+   "detail": "Oddysee's hint flies hung fifteen pixels above their spot, each frozen on one frame of its wings. They now swarm where the PlayStation game draws them and beat their wings together, on loops stepped off the game's own sine table."
+  },
+  {
    "date": "2026-11-12",
    "tag": "improved",
    "tiny": true,

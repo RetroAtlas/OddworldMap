@@ -5,6 +5,7 @@
 
 import { LOGIC_FPS } from "../config.js";
 import { BRAINS, MOTIONS, SPAWN_FRAME, STARTS, burstParts, stepEffects } from "./brains.js";
+import { sine16 } from "./patrolkit.js";
 
 // an animation holds each frame `fps` ticks: at construction frame 0 stands
 // with its counter at 1, so the first tick decodes frame 0 again and loads the
@@ -230,15 +231,8 @@ export function brainAt(r, set, tick) {
 
 // the door lights share one timer: at rest between windows and, in each,
 // brightening and dimming on a half sine over the window, the rest and the
-// window rolled from the dice. The engine's quarter-sine table, 16.16 fixed
-const SINE = [
-  0, 1633, 3266, 4897, 6525, 8148, 9767, 11380, 12985, 14582, 16171, 17749, 19316, 20872, 22414,
-  23942, 25456, 26953, 28434, 29897, 31342, 32767, 34172, 35555, 36917, 38255, 39570, 40860, 42125,
-  43363, 44575, 45758, 46914, 48040, 49136, 50202, 51237, 52240, 53210, 54147, 55051, 55920, 56754,
-  57554, 58317, 59044, 59735, 60388, 61004, 61582, 62122, 62623, 63085, 63508, 63891, 64235, 64539,
-  64803, 65026, 65209, 65351, 65453, 65514, 65535,
-];
-const halfSine = (a) => (a < 64 ? SINE[a] : a < 128 ? SINE[127 - a] : 0) / 65536;
+// window rolled from the dice
+const halfSine = (a) => (a < 128 ? sine16(a) : 0) / 65536;
 const LIGHT_REST = 32;
 const pulses = new WeakMap();
 export function lightLevel(set, tick) {
@@ -350,7 +344,9 @@ export function resolveEffects(r, set, tick, patrolAt = tick) {
     if (p.kind === "sprite" || p.kind === "fly") {
       const a = set.anims[p.anim];
       if (!a || (p.born !== undefined && p.born > at)) continue;
-      const frame = p.kind === "fly" ? 0 : frameAt(a, at - p.born + 1);
+      // a fly is a bare sprite showing the frame its hint's animation stands on
+      const fly = p.kind === "fly";
+      const frame = fly ? frameAt(a, at) : frameAt(a, at - p.born + 1);
       out.push({
         kind: "sprite",
         anim: a,
@@ -363,6 +359,7 @@ export function resolveEffects(r, set, tick, patrolAt = tick) {
         blend: p.blend,
         rgb: p.rgb,
         cam: p.cam ?? null,
+        bare: fly,
       });
     } else if (p.kind === "burst") {
       // the pieces draw the burst's own frame, opaque and unmodulated

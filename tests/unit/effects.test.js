@@ -8,7 +8,6 @@ const FX_ANIMS = {
   Mudokon_CrouchChant: anim(8, 4, true),
   ChantOrb_Particle: anim(8, 2, true),
   Zap_Sparks: anim(2, 1, true),
-  HintFly: anim(12, 2, true),
   Slog_Sleeping: anim(4, 4, true),
   Fleech_SleepingWithTongue: anim(9, 4, true),
 };
@@ -103,25 +102,6 @@ test("effects: a Zzz spawner breathes out on its interval while its switch is of
   assert.equal(resolveEffects(r, set, 62).length, 1);
   const quiet = fxCreature(null, "zzz", { switchId: 1, interval: 60, layer: 39, scale: 1 }, "AE");
   assert.deepEqual(resolveEffects(quiet, set, 100), [], "the always-on switch silences it");
-});
-
-test("effects: twenty hint flies hover about their point, each on its own loop", () => {
-  const r = fxCreature(null, "hintfly");
-  const set = { anims: FX_ANIMS, dice: Array.from({ length: 256 }, (_, i) => (i * 97 + 13) & 255) };
-  const flies = resolveEffects(r, set, 1);
-  assert.equal(flies.length, 20);
-  assert.ok(flies.every((f) => f.name === "HintFly" && f.frame === 0 && f.layer === 39));
-  const later = resolveEffects(r, set, 200);
-  assert.ok(
-    later.some((f, i) => f.x !== flies[i].x),
-    "they move",
-  );
-  for (const f of later)
-    assert.ok(Math.abs(f.x) < 60 && Math.abs(f.y) < 40, `stays about the point: ${f.x},${f.y}`);
-  // a constant angle step closes the loop: after 256/step ticks a fly is back near its start
-  const a = resolveEffects(r, set, 1)[0],
-    b = resolveEffects(r, set, 1 + 64)[0];
-  assert.ok(Math.abs(a.x - b.x) < 6 && Math.abs(a.y - b.y) < 3, `${a.x},${a.y} vs ${b.x},${b.y}`);
 });
 
 test("effects: a hanging fleech swings two steps a tick from the angle its roll gave it", () => {

@@ -265,7 +265,7 @@ function paintEffect(ctx, layout, set, e, ae, view) {
     const frame = e.anim.frames[e.frame];
     const tile = processedFrame(set.sheets[frame[0]], frame, e.semi ?? true, e.rgb);
     if (tile) {
-      const r = { scale: e.scale, flipY: false, swap: false, copy: !!e.copy };
+      const r = { scale: e.scale, flipY: false, swap: false, copy: !!e.copy, bare: !!e.bare };
       drawFrame(ctx, cam, tile, frame, r, { flip: false }, ae, e.x, e.y);
     }
   } else if (e.kind === "text") paintText(ctx, layout, cam, set, e, view);
@@ -315,14 +315,20 @@ const Z_BURST = [
 // frame's own offset scaled, a half-scale frame's y offset a unit less and
 // Exoddus's a pixel larger, every rounding a truncation of v + 0.499; a copy
 // of another's frame is placed as AnimationUnknown places it, its offset and
-// size scaled and truncated toward zero
+// size scaled and truncated toward zero; a bare sprite has its corner at the
+// point and reads no offset
 function drawFrame(ctx, cam, tile, frame, r, shown, ae, wx, wy) {
   const [, , , w, h, xoff, yoff] = frame;
   const s = r.scale;
   const xpos = cam.dx + (Math.trunc(wx) - cam.wx),
     ypos = cam.dy + (Math.trunc(wy) - cam.wy);
   let x0, y0, dw, dh;
-  if (r.copy) {
+  if (r.bare) {
+    dw = w;
+    dh = h;
+    x0 = xpos;
+    y0 = ypos;
+  } else if (r.copy) {
     dw = Math.trunc(w * s);
     dh = Math.trunc(h * s);
     const ox = Math.trunc(xoff * s),

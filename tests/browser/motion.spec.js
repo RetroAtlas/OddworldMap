@@ -1,11 +1,23 @@
 import { expect, test } from "@playwright/test";
-import { ALL_CATS, SLIG, TALLY, pixels, seedView, settle, trackErrors } from "./helpers.js";
+import {
+  ALL_CATS,
+  SLIG,
+  TALLY,
+  pixels,
+  seedView,
+  settle,
+  settleArtwork,
+  trackErrors,
+} from "./helpers.js";
 
 // a Zulag 4 slig whose beat spans two screens, walking from its first tick
 const WALKER = { game: "AO", level: "R2", path: 14, x1: 503, y1: 194, x2: 527, y2: 218 };
 
 // the Mines board above the slig, a panel 203 wide the lcd brain writes across
 const LCD = { game: "AE", level: "MI", path: 1, x1: 1159, y1: 625, x2: 1362, y2: 645 };
+
+// the Free-Fire Zone hint fly, which spells SNEAK IN AND OUT OF SHADOWS
+const HINT = { game: "AO", level: "E1", path: 1, x1: 5464, y1: 174, x2: 5488, y2: 198 };
 
 test("Patrols needs the objects shown: greyed and refusing its key until they are, then following them", async ({
   page,
@@ -219,5 +231,65 @@ test("the o key flips the toggle and the shortcuts dialog lists it", async ({ pa
   await page.keyboard.press("o");
   await expect(page.locator("#tObjects")).not.toBeChecked();
   await expect(page.locator("#shortcutsBody")).toContainText("objects as themselves");
+  expect(errors).toEqual([]);
+});
+
+test("a hint fly's sprites hang from their flies' points, corner to point", async ({ page }) => {
+  const errors = trackErrors(page);
+  // a standing clock, so the swarm is drawn as its brain's first step leaves it
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await seedView(page, { show: { objects: true } });
+  await page.goto(`/#AO/E1/1/${HINT.x1}/${HINT.y1}/1.00`);
+  await settle(page, HINT);
+  await settleArtwork(page);
+  const AROUND = { x1: HINT.x1 - 48, y1: HINT.y1 - 48, x2: HINT.x1 + 48, y2: HINT.y1 + 48 };
+  // the view on whole pixels, so a texel is a pixel
+  const redraw = (displays) =>
+    page.evaluate(async (displays) => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("data/state.js"));
+      const { CATS } = await import(u("config.js"));
+      const render = await import(u("painter/render.js"));
+      CATS.find((c) => c.key === "screen").on = displays;
+      st.state.cam.x = Math.round(st.state.cam.x);
+      st.state.cam.y = Math.round(st.state.cam.y);
+      render.draw();
+    }, displays);
+  await redraw(false);
+  const bare = await pixels(page, AROUND);
+  // the Displays come on, and with them the hint fly alone
+  await redraw(true);
+  const lit = await pixels(page, AROUND);
+  // where each fly's sprite should have lit a pixel: its corner, and the texels its frame holds
+  const flies = await page.evaluate(
+    async ([h, around]) => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("data/state.js"));
+      const spriteart = await import(u("painter/spriteart.js"));
+      const motion = await import(u("engine/motion.js"));
+      const t = st.state.path.tlvs.find((o) => o.name === "HintFly" && o.x1 === h.x1);
+      const [r] = spriteart.paintedSprites.get(t);
+      const set = spriteart.setOf(st.state.data);
+      const [fly] = motion.resolveEffects(r, set, 0);
+      const frame = fly.anim.frames[fly.frame];
+      const tile = spriteart.processedFrame(set.sheets[frame[0]], frame, true, fly.rgb);
+      const { data } = tile.getContext("2d").getImageData(0, 0, tile.width, tile.height);
+      const texels = [];
+      for (let i = 0; i < data.length; i += 4)
+        if (data[i + 3]) texels.push([(i / 4) % tile.width, Math.floor(i / 4 / tile.width)]);
+      return motion
+        .resolveEffects(r, set, 0)
+        .flatMap((f) => texels.map(([x, y]) => [f.x - around.x1 + x, f.y - around.y1 + y]));
+    },
+    [HINT, AROUND],
+  );
+  const across = AROUND.x2 - AROUND.x1;
+  const changed = [];
+  for (let i = 0; i < lit.length; i += 4)
+    if (lit.slice(i, i + 4).some((v, k) => v !== bare[i + k]))
+      changed.push([(i / 4) % across, Math.floor(i / 4 / across)]);
+  const sorted = (points) => [...new Set(points.map(([x, y]) => `${x},${y}`))].sort();
+  expect(flies.length).toBeGreaterThan(20);
+  expect(sorted(changed)).toEqual(sorted(flies));
   expect(errors).toEqual([]);
 });

@@ -271,6 +271,21 @@ test("a record with no animation of its own names the sheet its brain draws from
   }
 });
 
+test("every hint fly is handed the corner of the screen its point lies in", () => {
+  const { worldW, worldH, winX, winY, visW, visH } = data.AO.geometry;
+  let flies = 0;
+  for (const lvl of data.AO.levels)
+    for (const path of lvl.paths)
+      for (const t of path.tlvs.filter((o) => o.name === "HintFly")) {
+        const [r] = spriteDraws(data.AO, lvl, path, t, sheets.AO);
+        const [sx, sy] = r.cycle.p.screen;
+        assert.deepEqual([sx % worldW, sy % worldH], [winX, winY], `${lvl.short} P${path.id}`);
+        assert.ok(t.x1 >= sx && t.x1 < sx + visW && t.y1 >= sy && t.y1 < sy + visH);
+        flies++;
+      }
+  assert.equal(flies, 28);
+});
+
 test("the LCD font names a listed sheet and its glyphs sit inside it, the gap and the space first", () => {
   for (const g of GAMES) {
     const f = sheets[g].font;
