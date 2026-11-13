@@ -34,6 +34,19 @@ function noteBox(t, b, cam, layout) {
   u.h = uy2 - u.y;
 }
 
+// the walks and boxes as the last frame left them, to put back after a paint
+// that is no frame of the live view
+export function keptBoxes() {
+  const walks = [...movedBy],
+    boxes = [...spriteBoxes];
+  return () => {
+    movedBy.clear();
+    spriteBoxes.clear();
+    for (const [t, by] of walks) movedBy.set(t, by);
+    for (const [t, box] of boxes) spriteBoxes.set(t, box);
+  };
+}
+
 // the objects as the game draws them, back to front by layer and, within a
 // layer, the later-constructed under the earlier; each clipped to its own
 // camera's window, where the game clips too, so a frame reaching past it

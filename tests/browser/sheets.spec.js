@@ -584,16 +584,22 @@ test.describe("below the zoom a creature reads at", () => {
     await screensIn(page);
     expect(asked).toEqual({ sheets: 0, masks: 0 });
     // no live paint till the read, as in a hidden tab: an image is complete before its load event
-    const exported = await page.evaluate(async (s) => {
+    const exported = await page.evaluate(async () => {
       const u = (m) => new URL("js/" + m, location.href).href;
       const st = await import(u("data/state.js"));
       const render = await import(u("painter/render.js"));
       const spriteart = await import(u("painter/spriteart.js"));
-      const spritepaint = await import(u("painter/spritepaint.js"));
       const motion = await import(u("engine/motion.js"));
       const frame = window.requestAnimationFrame;
       const held = [];
       window.requestAnimationFrame = (cb) => held.push(cb);
+      // a sprite's frame is drawn from a tile cut for it, a screen from its image
+      const drawImage = CanvasRenderingContext2D.prototype.drawImage;
+      let tiles = 0;
+      CanvasRenderingContext2D.prototype.drawImage = function (source, ...rest) {
+        if (source instanceof HTMLCanvasElement && rest.length === 4) tiles++;
+        drawImage.call(this, source, ...rest);
+      };
       try {
         await spriteart.preloadPath(st.state.path);
         const ready = spriteart.artworkReady(st.state.path);
@@ -601,19 +607,13 @@ test.describe("below the zoom a creature reads at", () => {
         oc.width = 640;
         oc.height = 480;
         render.paint(oc.getContext("2d"), { ...st.state.cam }, 640, 480, 1, false);
-        const t = st.state.path.tlvs.find(
-          (o) => o.name === "Slig" && o.x1 === s.x1 && o.y1 === s.y1,
-        );
-        return {
-          ready,
-          painted: spritepaint.hitBoxes(t, st.LAYOUT).length > 1,
-          running: motion.motionRunning(),
-        };
+        return { ready, painted: tiles > 0, running: motion.motionRunning() };
       } finally {
+        CanvasRenderingContext2D.prototype.drawImage = drawImage;
         window.requestAnimationFrame = frame;
         for (const cb of held) frame(cb);
       }
-    }, SLIG);
+    });
     expect(exported).toEqual({ ready: true, painted: true, running: false });
     expect(asked.sheets).toBeGreaterThan(0);
     expect(errors).toEqual([]);

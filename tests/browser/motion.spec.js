@@ -175,6 +175,39 @@ test("a creature on patrol is hovered where it stands, not where its marker was 
   expect(errors).toEqual([]);
 });
 
+test("a paint that is no frame of the live view leaves the hover its boxes", async ({ page }) => {
+  const errors = trackErrors(page);
+  await seedView(page, { show: { objects: true, patrols: true }, cats: ALL_CATS });
+  await page.goto(`/?embed=1#AO/R2/14/${WALKER.x1 + 12}/${WALKER.y1 + 40}/1.00`);
+  await settle(page, WALKER);
+  await page.evaluate(async () => {
+    window.__motion = await import(new URL("js/engine/motion.js", location.href).href);
+  });
+  // far enough for the slig to stand off the mark a first frame draws it on
+  await page.waitForFunction(() => window.__motion.patrolTick() > 20, null, POLL);
+  const boxes = await page.evaluate(async (w) => {
+    const u = (m) => new URL("js/" + m, location.href).href;
+    const st = await import(u("data/state.js"));
+    const render = await import(u("painter/render.js"));
+    const spritepaint = await import(u("painter/spritepaint.js"));
+    const model = await import(u("model/model.js"));
+    const t = st.state.path.tlvs.find((o) => o.name === "Slig" && o.x1 === w.x1 && o.y1 === w.y1);
+    const read = () => ({
+      sprite: { ...spritepaint.spriteBoxes.get(t) },
+      standing: spritepaint.standingBox(t, st.LAYOUT),
+    });
+    const live = read();
+    // an export's paint, into a canvas of its own
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 64;
+    render.paint(canvas.getContext("2d"), { x: 0, y: 0, z: 1 }, 64, 64, 1, false);
+    return { live, after: read(), placed: model.drawBox(t, st.LAYOUT) };
+  }, WALKER);
+  expect(boxes.live.standing.x).not.toBe(boxes.placed.x);
+  expect(boxes.after).toEqual(boxes.live);
+  expect(errors).toEqual([]);
+});
+
 test("the clock runs with the objects shown, stops with the setting, and the patrols count from their turn", async ({
   page,
 }) => {

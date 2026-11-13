@@ -47,7 +47,7 @@ import {
   spritesDrawn,
   spritesReady,
 } from "./spriteart.js";
-import { movedBy, paintSprites, spriteBoxes } from "./spritepaint.js";
+import { keptBoxes, movedBy, paintSprites, spriteBoxes } from "./spritepaint.js";
 import { spriteDraws } from "../rules/sprites.js";
 import { CELL_H, CELL_W, GEO, LAYOUT, cellOrigin, state } from "../data/state.js";
 
@@ -234,6 +234,7 @@ function sayComplete() {
 // marks on the map
 export function paint(ctx, cam, w, h, dpr, transients = true) {
   const { data, lvl, path, show, ruler, route, sel } = state;
+  const putBack = transients ? null : keptBoxes();
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = COLOR.mapBg;
   ctx.fillRect(0, 0, w, h);
@@ -292,6 +293,7 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   if (route) paintRoute(f, route);
   if (transients && flash) paintFlash(f, flash);
   ctx.restore();
+  putBack?.();
 }
 
 function paintScreens({ ctx, path, layout, view }, dim) {
