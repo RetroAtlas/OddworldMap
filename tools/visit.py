@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Start Abe's Oddysee (PS1 NTSC-U) at a place an Oddworld Map permalink names.
+Start Abe's Oddysee or Abe's Exoddus (PS1 NTSC-U) at a place an Oddworld Map
+permalink names.
 
 Writes a memory card holding one save per permalink: loading it starts the
 path the way the game starts one from a save, every object back at its own
@@ -9,7 +10,7 @@ object, else its view's centre, else --at; Abe stands on the first floor at or
 below it.
 
   python3 tools/visit.py 'http://localhost:8471/#AO/D1/7/4637/1709/1.60/ContinuePoint@4625,1638'
-  python3 tools/visit.py --launch '#AO/D1/7/4637/1709/1.60'
+  python3 tools/visit.py --launch '#AE/BR/23/598/404/1'
 
 The card is written to visit.mcd under --out ($ODDWORLD_VISITS, else
 OddworldMap/visits in your home folder). --launch boots the game in a
@@ -18,7 +19,8 @@ of your DuckStation settings with that card in slot 1, so nothing in
 DuckStation's own folder is written (delete the profile folder to remake it);
 load the save from the game's main menu. It runs on macOS and Linux, where
 DuckStation takes its folder from a variable, and not with a portable install.
---disc defaults to $ODDWORLD_DISC_AO.
+--disc defaults to $ODDWORLD_DISC_AO or $ODDWORLD_DISC_AE, the latter holding
+both discs.
 """
 import argparse
 import configparser
@@ -34,17 +36,31 @@ import subprocess
 import sys
 import zlib
 from pathlib import Path
+from typing import NamedTuple
 from urllib.parse import unquote
 
-from oddmap import memcard, savegame
+from oddmap import memcard, quicksave, savegame
 from oddmap.disc import Disc, Lvl, parse_chunks
+from oddmap.exe import executable
 from oddmap.games import GAMES, game_setup
 from oddmap.paths import SITE
+from oddmap.tables import AE_LEVEL_DISPLAY
 from oddmap.tlv import resolve_path_meta
 
 DEFAULT_OUT = Path.home() / "OddworldMap" / "visits"
 FLOOR_TYPES = (0, 4)  # floor, background floor
-SPAWN_REACH = 60  # how far above and below its saved position the game looks for Abe's floor
+SPAWN_REACH = {"AO": 60, "AE": 20}  # how far above and below his saved height a load looks for Abe's floor
+ENDERS = {name: level for level, name in AE_LEVEL_DISPLAY.items()}
+
+
+class Spot(NamedTuple):
+    level: int
+    path: int
+    camera: int
+    x: int
+    y: int
+    line_type: int
+    tlv: dict  # the permalink's object, where the place is one
 
 
 def parse_permalink(text):
@@ -72,10 +88,10 @@ def parse_permalink(text):
             "view": view, "obj": obj}
 
 
-def floor_under(lines, x, y):
+def floor_under(lines, x, y, reach):
     """the first floor at or below (x, y) as (y, line type), and any floor of
-    its type within the game's reach above it, which a spawn there would land
-    on instead"""
+    its type within `reach` above it, which a spawn there would land on
+    instead"""
     hits = []
     for x1, y1, x2, y2, t in lines:
         if t in FLOOR_TYPES and min(x1, x2) <= x <= max(x1, x2):
@@ -85,11 +101,12 @@ def floor_under(lines, x, y):
     if not below:
         return None, []
     fy, t = below[0]
-    return below[0], [h for h in hits if h[1] == t and fy - SPAWN_REACH <= h[0] < fy]
+    return below[0], [h for h in hits if h[1] == t and fy - reach <= h[0] < fy]
 
 
-def resolve_place(link, data, at=None, face=None):
-    """the save's Place for one permalink, and what the choice should mention"""
+def resolve_spot(link, data, at=None):
+    """where one permalink puts Abe, the names to report it by, and what the
+    choice should mention"""
     level = next((L for L in data["levels"] if L["short"] == link["level"]), None)
     path = level and next((P for P in level["paths"] if P["id"] == link["path"]), None)
     if not path:
@@ -108,7 +125,7 @@ def resolve_place(link, data, at=None, face=None):
         x, y = round(link["view"][0]), round(link["view"][1])
     else:
         raise ValueError("the permalink names no object or view; pass --at X,Y")
-    floor, above = floor_under(path["lines"], x, y)
+    floor, above = floor_under(path["lines"], x, y, SPAWN_REACH[link["game"]])
     if not floor:
         raise ValueError(f"no floor at or below {x},{y} on {link['level']} P{link['path']}")
     fy, line_type = floor
@@ -121,27 +138,71 @@ def resolve_place(link, data, at=None, face=None):
     wx, wy = x - cx * geo["worldW"] - geo["winX"], fy - cy * geo["worldH"] - geo["winY"]
     if not (0 <= wx < geo["visW"] and 0 <= wy < geo["visH"]):
         notes.append(f"{x},{fy} is outside {cam['name']}'s visible screen")
-    fields = (tlv or {}).get("fields", {})
-    if tlv and tlv["name"] == "ContinuePoint":
-        zone = savegame.Zone(fields["zone_number"], fields["clear_from_id"], fields["clear_to_id"],
+    # a path only an ender level reaches is saved under that level's id
+    spot = Spot(ENDERS.get(path.get("section"), level["id"]), path["id"],
+                int(re.search(r"C(\d+)$", cam["name"]).group(1)), x, fy, line_type, tlv)
+    return spot, path.get("section") or level["name"], cam["name"], notes
+
+
+def ao_place(spot, face=None):
+    """an Oddysee save's place: a continue point brings its zone, clear range,
+    rectangle and facing, and any other place respawns Abe where he lands"""
+    tlv = spot.tlv or {}
+    if tlv.get("name") == "ContinuePoint":
+        f = tlv["fields"]
+        zone = savegame.Zone(f["zone_number"], f["clear_from_id"], f["clear_to_id"],
                              (tlv["x1"], tlv["y1"], tlv["x2"], tlv["y2"]))
-        flip = fields["abe_spawn_direction"]
+        flip = f["abe_spawn_direction"]
     else:
-        zone = savegame.Zone(0, 0, 0, (x - 12, fy - 72, x + 12, fy + 6))
+        zone = savegame.Zone(0, 0, 0, (spot.x - 12, spot.y - 72, spot.x + 12, spot.y + 6))
         flip = 0
     if face:
         flip = int(face == "left")
-    place = savegame.Place(level["id"], path["id"], int(re.search(r"C(\d+)$", cam["name"]).group(1)),
-                           x, fy, line_type, flip, zone)
-    return place, level["name"], cam["name"], notes
+    return savegame.Place(spot.level, spot.path, spot.camera, spot.x, spot.y, spot.line_type, flip, zone)
 
 
-def level_flags(disc, game, short):
+def ae_place(spot, face=None):
+    """an Exoddus save's place, numbered as the continue point it stands on
+    numbers its saves"""
+    tlv = spot.tlv or {}
+    save_num = tlv["fields"]["save_file_id"] if tlv.get("name") == "ContinuePoint" else 0
+    return quicksave.Place(spot.level, spot.path, spot.camera, spot.x, spot.y, spot.line_type,
+                           int(face == "left"), save_num)
+
+
+def ao_save(header, spot, name, face, flags):
+    place = ao_place(spot, face)
+    title = f"Abe: {name[:20]} P{place.path:02d}C{place.camera:02d}"
+    zone = f", respawning in zone {place.zone.number}" if place.zone.number else ""
+    return place, title, zone, savegame.ao_save(header, title, place, savegame.flag_block(flags))
+
+
+def ae_save(header, spot, name, face, flags):
+    place = ae_place(spot, face)
+    title = quicksave.title(place, f"P{place.path:02d}C{place.camera:02d}")
+    return place, title, "", quicksave.ae_save(header, title, place, b"".join(flags))
+
+
+SAVES = {"AO": (ao_save, savegame.AO_NAME_PREFIX, lambda record_type: True),
+         "AE": (ae_save, quicksave.AE_NAME_PREFIX, quicksave.kept)}
+
+
+def archive(discs, short):
+    """the disc carrying a level's archive whole, and the archive: the largest
+    copy, the other disc of a pair holding the level's paths alone"""
+    name = f"{short}.LVL"
+    having = [(path, d) for path, d in discs if name in d.files]
+    if not having:
+        raise ValueError(f"no {name} on the disc")
+    path, disc = max(having, key=lambda pd: pd[1].files[name][1])
+    return path, Lvl(disc, name)
+
+
+def level_flags(discs, game, short, kept):
     """the object flags of every path the level's table names, as a fresh level holds them"""
     if not game["tables"].get(short):
         raise ValueError(f"{short} has no path table, so no save can start there")
-    lvl = Lvl(disc, f"{short}.LVL")
-    chunks = parse_chunks(lvl.read(f"{short}PATH.BND"))
+    chunks = parse_chunks(archive(discs, short)[1].read(f"{short}PATH.BND"))
     geo = game["geometry"]
     out = []
     for pid, row in sorted(game["tables"][short].items()):
@@ -149,11 +210,11 @@ def level_flags(disc, game, short):
         with contextlib.redirect_stdout(io.StringIO()):  # the builder's audit notes
             meta = resolve_path_meta(blob, pid, row, game["tlv"], geo["worldW"], geo["worldH"])
         cells = (meta["w_units"] // geo["worldW"]) * (meta["h_units"] // geo["worldH"])
-        out.append(savegame.tlv_flags(blob, meta, cells))
+        out.append(savegame.tlv_flags(blob, meta, cells, kept))
     return out
 
 
-def save_name(place, taken):
+def save_name(place, prefix, taken):
     """a card file name in the game's own pattern, the prefix then five
     characters from the range its own names draw on, unique on the card"""
     n = zlib.crc32(struct.pack("<7i", *place[:7]))
@@ -162,7 +223,7 @@ def save_name(place, taken):
         for _ in range(5):
             v, d = divmod(v, 85)
             digits += chr(33 + d)
-        name = savegame.NAME_PREFIX + digits
+        name = prefix + digits
         if name not in taken:
             return name
         n = (n + 1) % 85 ** 5
@@ -251,9 +312,10 @@ def main():
     ap.add_argument("permalinks", nargs="+", help="Oddworld Map permalinks, or just their #fragments")
     ap.add_argument("--at", type=point, help="place Abe at X,Y (world units) instead of the permalink's "
                     "object or view")
-    ap.add_argument("--face", choices=("left", "right"), help="which way Abe faces (default: the "
+    ap.add_argument("--face", choices=("left", "right"), help="which way Abe faces (default: an Oddysee "
                     "continue point's own direction, else right)")
-    ap.add_argument("--disc", help="the game's raw disc image (default $ODDWORLD_DISC_AO)")
+    ap.add_argument("--disc", nargs="+", help="the game's raw disc images, both of Exoddus "
+                    "(default $ODDWORLD_DISC_AO or $ODDWORLD_DISC_AE)")
     ap.add_argument("--out", type=Path, default=Path(os.environ.get("ODDWORLD_VISITS") or DEFAULT_OUT))
     ap.add_argument("--launch", action="store_true", help="boot the game in the visit profile")
     ap.add_argument("--app", type=Path, help="the DuckStation program (default /Applications/DuckStation.app "
@@ -264,35 +326,36 @@ def main():
         links = [parse_permalink(p) for p in args.permalinks]
     except ValueError as ex:
         sys.exit(str(ex))
-    if any(L["game"] != "AO" for L in links):
-        sys.exit("only Abe's Oddysee permalinks (#AO/...) can be visited so far")
+    game_key = links[0]["game"]
+    if game_key not in SAVES or any(L["game"] != game_key for L in links):
+        sys.exit("give permalinks of one game, #AO/... or #AE/...")
     if args.at and len(links) > 1:
         sys.exit("--at places one save; give one permalink with it")
-    disc_path = args.disc or os.environ.get(GAMES["AO"]["env"])
-    if not disc_path:
-        sys.exit(f"no disc image: pass --disc or set ${GAMES['AO']['env']}")
-    disc_path = Path(disc_path)
+    env = GAMES[game_key]["env"]
+    disc_paths = args.disc or [p for p in os.environ.get(env, "").split(os.pathsep) if p]
+    if not disc_paths:
+        sys.exit(f"no disc image: pass --disc or set ${env}")
+    discs = [(Path(p), Disc(p)) for p in disc_paths]
 
-    game = game_setup("AO")
+    build, prefix, kept = SAVES[game_key]
+    game = game_setup(game_key)
     data = json.loads((SITE / game["data_file"]).read_text())
-    disc = Disc(disc_path)
-    header = savegame.save_header(disc.read(*disc.files["SLUS_001.90"]))
-    flags_by_level, saves = {}, []
+    header = savegame.save_header(executable(discs[0][1])[1])
+    flags_by_level, saves, boot = {}, [], None
     for link in links:
         short = link["level"]
         try:
-            place, level_name, cam_name, notes = resolve_place(link, data, args.at, args.face)
+            spot, name, cam_name, notes = resolve_spot(link, data, args.at)
             if short not in flags_by_level:
-                flags_by_level[short] = savegame.flag_block(level_flags(disc, game, short))
+                flags_by_level[short] = level_flags(discs, game, short, kept)
+            boot = boot or archive(discs, short)[0]
         except ValueError as ex:
             sys.exit(str(ex))
-        title = f"Abe: {level_name[:20]} P{place.path:02d}C{place.camera:02d}"
-        name = save_name(place, {n for n, _ in saves})
-        saves.append((name, savegame.ao_save(header, title, place, flags_by_level[short])))
+        place, title, remark, save = build(header, spot, name, args.face, flags_by_level[short])
+        saves.append((save_name(place, prefix, {n for n, _ in saves}), save))
         facing = "left" if place.flip else "right"
         print(f"{cam_name}: Abe at {place.x},{place.y} facing {facing}"
-              f"{' on a background floor' if place.line_type == 4 else ''}"
-              f"{f', respawning in zone {place.zone.number}' if place.zone.number else ''} ({title})")
+              f"{' on a background floor' if place.line_type == 4 else ''}{remark} ({title.strip()})")
         for note in notes:
             print(f"  ! {note}")
 
@@ -303,10 +366,9 @@ def main():
     if args.launch:
         default = Path("/Applications/DuckStation.app") if platform.system() == "Darwin" \
             else shutil.which("duckstation-qt")
-        home = launch(args.app or (default and Path(default)), args.out, card, disc_path)
-        print(f"booting {disc_path.stem} in the profile at {home}: choose Load on the main menu, "
+        home = launch(args.app or (default and Path(default)), args.out, card, boot)
+        print(f"booting {boot.stem} in the profile at {home}: choose Load on the main menu, "
               "then Load again and the save")
-
 
 if __name__ == "__main__":
     main()

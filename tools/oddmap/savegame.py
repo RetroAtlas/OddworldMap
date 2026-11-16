@@ -1,6 +1,8 @@
-"""Oddysee's saved game: the 8 KiB `SaveData` (AliveLibAO/SaveGame.hpp) the
-PlayStation game writes to one memory card block, PS1 file header included,
-and restores a place from. Loading one runs the game's own path start: it
+"""The saved game the PlayStation games write to one memory card block: 8 KiB
+opening on the PS1 file header, the word after it a checksum of the rest. The
+header, its title, the checksum and the walk of a level's object records are
+the same in both games; the body here is Oddysee's `SaveData`
+(AliveLibAO/SaveGame.hpp). Loading one runs the game's own path start: it
 moves to the saved camera, puts Abe at the saved position on the floor within
 60 units of it, and rewrites every switch and every object record of the
 level from the block at the end, so what that block holds decides which
@@ -13,10 +15,10 @@ HEADER_SIZE = 0x200
 FLAGS_OFF = 0x2B0
 FLAGS_CAP = 7501  # the struct's byte array; the save ends in padding after it
 SWITCHES = 256
-NAME_PREFIX = "BASLUS-00190ABE"  # the game lists the card's files by this prefix
+AO_NAME_PREFIX = "BASLUS-00190ABE"  # the game lists the card's files by this prefix
 FP_ONE = 0x10000
 
-_FULLWIDTH = {" ": "\u3000", "-": "\u2212"}  # the two Shift-JIS spells outside the +0xFEE0 block
+_FULLWIDTH = {" ": "\u3000", "-": "\u2212", '"': "\u201c"}  # as the games spell them
 
 
 class Zone(NamedTuple):
@@ -57,18 +59,19 @@ def sjis_title(text):
     return raw
 
 
-def tlv_flags(blob, meta, cells):
-    """every object record's flag and state bytes in the order the save holds
-    them: camera by camera through the index table, each camera's list to the
-    record carrying the end-of-list bit"""
+def tlv_flags(blob, meta, cells, kept=lambda record_type: True):
+    """the flag and state bytes of every object record whose type is `kept`, in
+    the order the save holds them: camera by camera through the index table,
+    each camera's list to the record carrying the end-of-list bit"""
     pairs = []
     for entry in struct.unpack_from(f"<{cells}i", blob, meta["idx_off"]):
         if entry == -1 or entry >= 0x100000:
             continue
         pos = meta["obj_off"] + entry
         while True:
-            flags, state, length = struct.unpack_from("<BBh", blob, pos)
-            pairs += (flags, state)
+            flags, state, length, record_type = struct.unpack_from("<BBhH", blob, pos)
+            if kept(record_type):
+                pairs += (flags, state)
             if flags & 4:
                 break
             if length <= 0:

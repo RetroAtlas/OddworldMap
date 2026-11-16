@@ -47,7 +47,7 @@ python3 tools/build_map.py --game AE --disc "/path/to/Exoddus (Disc 1).bin" "/pa
 
 `--disc` can be omitted when `$ODDWORLD_DISC_AO` / `$ODDWORLD_DISC_AE` point at the images. Everything a build writes is generated **and committed**, so regenerate it rather than hand-editing; what a build needs, the oxipng release it pins and how to check one against the last are in [docs/builder.md](docs/builder.md).
 
-Beside the builder, [tools/visit.py](tools/visit.py) writes a PlayStation memory card whose saves start Abe's Oddysee at the place a permalink names, so what the map shows can be checked against the game itself, and [tools/relive_export.py](tools/relive_export.py) and its siblings write every path as the level editor's JSON and run each document through the editor's own reader.
+Beside the builder, [tools/visit.py](tools/visit.py) writes a PlayStation memory card whose saves start either game at the place a permalink names, so what the map shows can be checked against the game itself, and [tools/relive_export.py](tools/relive_export.py) and its siblings write every path as the level editor's JSON and run each document through the editor's own reader.
 
 ## Where the rest is
 
@@ -56,7 +56,7 @@ Beside the builder, [tools/visit.py](tools/visit.py) writes a PlayStation memory
 - [docs/builder.md](docs/builder.md): what a build needs and writes, the PNG recompression pin, the level pages and the sitemap, and the static files beside the data.
 - [docs/decomp.md](docs/decomp.md): the pinned decompilation checkout, the caches parsed from it, the field-type and enum-label sidecars, and the override and correction tables.
 - [docs/relive.md](docs/relive.md): the level editor's JSON export, the caches it draws on, and the oracle it answers to.
-- [docs/visit.md](docs/visit.md): what an Oddysee save holds and how loading one starts a path, where a permalink puts Abe, and the emulator profile the visit tool launches.
+- [docs/visit.md](docs/visit.md): what each game's save holds and how loading one starts a path, where a permalink puts Abe, and the emulator profile the visit tool launches.
 - [docs/curated-data.md](docs/curated-data.md): how the path names, the field glossary and the type encyclopedia are curated, which source each name follows, and the tests that hold each file to its shape.
 - [docs/testing.md](docs/testing.md): the four suites, what each spec pins, where a check lives and how a test is added, the size caps and the browser budget.
 - [CLAUDE.md](CLAUDE.md): the rules for changing any of it and the checks a commit passes, with the index of every topic doc, the viewer's area docs and the stylesheet among them.
