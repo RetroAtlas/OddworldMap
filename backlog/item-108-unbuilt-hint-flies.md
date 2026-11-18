@@ -19,7 +19,7 @@ Read off the base disc, the third US pressing, and not from a run of the game.
 - Built, 15 on ten paths: Stock Yards `E1` P1 (two), P3 (two), P4 (two), P6; Stock Yards Return `E2` P4; Paramonian Temple `F2` P1, P6 (two), P7; Monsaic Lines `L1` P5 (two); Scrabania Escape `D7` P11.
 - The camera of each of the 28 holds the fly's animation, resource 62, so the art was placed with the objects and the overlays' code left them out.
 
-Not read: any other release. The Spanish edition's one message with a comma, a code its alphabet has no letter for, is FIND BELLSONG's, placed on `L1` P2 alone.
+Every other release reads the same, read off its disc on 2026-11-18: the first two US pressings and the European, French, German, Italian, Spanish and Japanese editions each give entry 92 the factory on the same 30 paths and the bare return on the same 44, carry the hint fly messages and the alphabet in the same 11 overlays and no other, and place the same 28 hint flies on the same paths, so the 13 go unbuilt in every release. The Spanish edition's one message with a comma, a code its alphabet has no letter for, is FIND BELLSONG's, placed on `L1` P2 alone, so the PlayStation never spells it.
 
 ## To decide
 
@@ -34,4 +34,3 @@ The builder knows the overlay each Oddysee path loads (`path_overlays`) and whic
 ## Verify
 
 - A run of the game settles what the code only implies: `tools/visit.py` writes a save that starts a path where a permalink stands ([docs/visit.md](../docs/visit.md)); chant on `D1` P3 where RUN ELUM RUN is placed, and on `E1` P1 beside SNEAK IN AND OUT OF SHADOWS for the control.
-- The other releases' discs: the same table read off each, since a later build may have given the three overlays their hint flies.
