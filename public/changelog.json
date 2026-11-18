@@ -1,6 +1,12 @@
 {
  "entries": [
   {
+   "date": "2026-11-18",
+   "tag": "improved",
+   "title": "The hint flies spell in every release",
+   "detail": "In the French, German, Italian and Japanese editions of Oddysee, the hint-fly swarms now spell out their messages too. They use the letters their own discs carry: capitals with the accents and apostrophes their words need, and kana in Abe a GoGo."
+  },
+  {
    "date": "2026-11-13",
    "tag": "improved",
    "tiny": true,

@@ -8,6 +8,7 @@ import { readFileSync } from "node:fs";
 
 import { deriveExtra } from "../../public/js/model/extra.js";
 import { glyphRun } from "../../public/js/engine/lcd.js";
+import { hintWords, setMessages } from "../../public/js/model/messages.js";
 import {
   baseObject,
   isRegional,
@@ -284,6 +285,30 @@ for (const [game, { releases }] of Object.entries(index))
           });
         }
     });
+
+// a letter of no dots is a code below the alphabet, which the engine has no
+// letter for
+const UNLETTERED = { es: ["L1 P2 word 4 letter 8"] }; // CAMPANA,
+for (const { code } of index.AO.releases)
+  test(`AO ${code}: every hint fly spells its message in the alphabet the release reads`, () => {
+    setMessages({ AO: load("messages_ao.json") });
+    const shorts = load("relive_export_ao.json").level_short;
+    const R = materializeRelease(load("map_data_ao.json"), load(`release_ao_${code}.json`), shorts);
+    const unlettered = [];
+    for (const L of R.levels)
+      for (const P of L.paths)
+        for (const t of P.tlvs.filter((t) => t.name === "HintFly")) {
+          const where = `${L.short} P${P.id}`;
+          const words = hintWords(R, t, P);
+          assert.ok(words.length > 0, `${where}: spells nothing`);
+          words.forEach((word, i) =>
+            word.forEach((dots, j) => {
+              if (!dots.length) unlettered.push(`${where} word ${i + 1} letter ${j + 1}`);
+            }),
+          );
+        }
+    assert.deepEqual(unlettered, UNLETTERED[code] ?? []);
+  });
 
 test("a release's sprite sidecar is the base's with the release's own parts over it", () => {
   const base = load("map_data_ao.json");
