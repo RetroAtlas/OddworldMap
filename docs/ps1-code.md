@@ -1,0 +1,14 @@
+# The PlayStation's own code
+
+- The decomp is the PC build's source, so where the viewer has to move as the console does, the routine is read off the disc ([format-gotchas.md](format-gotchas.md) records what differed). A reading is a claim until the disc's code has run, and the interpreter here is what runs it: a routine called on memory laid out as the game would have it, and what it leaves there read back. Running a disc's code needs the disc; the interpreter's own tests need none.
+
+## The interpreter
+
+- [tools/oddmap/r3000.py](../tools/oddmap/r3000.py) is the console's two megabytes of RAM at `0x80000000`, its registers and the instructions compiled code is made of. `load` puts bytes where the console loads them, `call` runs a function with up to four arguments to its return and gives what it leaves in `v0`, and the readers and writers (`r8` to `s32`, `w8` to `w32`) lay out and read back whatever the function works on.
+- An executable's text loads at the address its header names and an overlay at the one its message table gives. An Oddysee overlay opens 0x68 bytes before the executable's file ends, over its padding, so the executable is loaded first.
+- It runs compiled code and nothing else, which is what lets it leave out the load delay (a compiler never reads a register in the instruction after its load), the overflow traps and a branch in another's delay slot. There are no coprocessors, no hardware registers, no interrupts and no BIOS: an instruction or an address it does not have is a `Fault` naming the instruction's address, as are a word off its boundary and a run past `limit` instructions.
+- `stubs` cuts a routine off from the rest of the game: where the code calls or jumps to an address named there, the caller's own function answers, given the machine once the delay slot has run, and what it returns is `v0`, or `RUN` to let the function run after all, its arguments seen. The function `call` is handed always runs, the stubs are the ones set as the call begins, and a stub may not call in its turn. Which callees run as the disc's code and which are answered is the port's decision: the engine's arithmetic runs, and what reaches for the hardware or the objects around it is answered.
+- A set in `stores` gathers every address the code stores to, which is how the globals a routine writes are found without reading for them.
+- An instruction is decoded once, into a function, and decoded again if anything is stored or loaded over it. A run is a few million instructions a second.
+- `text_codes` in exe.py keeps a reader of its own for the fonts' measuring routines: a leaf run over the memory it is handed, refusing any read beyond it, which a whole machine of zeroed RAM would let through.
+- `tools/tests/test_r3000.py` holds every instruction to what the console does with it, bar the load delay and the trap left out, over hand-assembled code.
