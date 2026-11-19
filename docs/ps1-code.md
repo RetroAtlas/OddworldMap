@@ -1,6 +1,6 @@
 # The PlayStation's own code
 
-- The decomp is the PC build's source, so where the viewer has to move as the console does, the routine is read off the disc ([format-gotchas.md](format-gotchas.md) records what differed). A reading is a claim until the disc's code has run beside it, and the tools here are that run: an interpreter of the console's processor, and a model of the routine in Python that the interpreter's run of the disc's code is compared with. The comparison needs a disc and is run by hand; the unit suites need none.
+- The decomp is the PC build's source, so where the viewer has to move as the console does, the routine is read off the disc ([format-gotchas.md](format-gotchas.md) records what differed). A reading is a claim until the disc's code has run beside it, and the tools here are that run, in three links: an interpreter of the console's processor, a model of the routine in Python that the interpreter's run of the disc's code is compared with, and the model's runs, which the viewer's unit test holds the JavaScript port to. The comparison needs a disc and is run by hand; the unit suites need none, and hold the port's numbers to the model's over the tables the viewer ships.
 
 ## The interpreter
 
@@ -25,6 +25,13 @@
 - What it does not hold: that a path's overlay builds the object at all, which is its factory table's matter; where the constructor puts the point; the event that marks the object dead, which the update asks for before all else and the check answers with none; a sprite's frame, layer and blend, the render being compared by its corners alone; what the voices do with a sound; and that the tables the viewer ships are the disc's, which is the build's.
 - `tools/tests/test_hintfly.py` holds the model to hand-worked runs over a three-letter alphabet, and `code` to a synthetic overlay and executable and their refusals. They guard the model against a slip; only the disc proves it.
 
+## The runs the port is held to
+
+- [tools/hintfly_trace.py](../tools/hintfly_trace.py) prints a run of the model as JSON, over the tables the viewer ships for the base game or, with `--disc`, a disc's own. `tests/unit/hintfly.test.js` holds the viewer's brain to such runs: the test's `run(hint(id, at, screen, seed), ticks, flips, shots)` is `hintfly_trace.py <id> <ticks> --chant <flips> --shots <shots> --seed <seed>`, with `--at` the hint's point less its screen's corner; `line`, `sum`, `rolls`, `own`, `dice` and `shots` mean the same on both sides and the test's `words` are the ticks of the tool's; and the two swarms at rest are `--shots` with no `--chant`, under any message.
+- The chant it runs under is the map's and lives in the tool, not the model: a hint with no message hears none, and one that has spelled every word of its message lets go by itself as the last word's hold ends and is heard again once the swarm is at rest, where the console's goes on while Abe chants. The frame a fly's sprite shows, its layer and its blend are the viewer's own too, and come from no run.
+- `PortLiterals` in `tools/tests/test_hintfly.py` makes every run the JavaScript test makes, the hint of no message over a table of one empty message, and looks for each number in the test's source, where it has to stand once and whole, so the Python suite fails when the model and the test's literals part, with no disc. The test's `run` calls are counted against its `RUNS`, which a run added to the test joins. `rolls` folds both dice cursors after every tick because where they end hides a roll that differs and is made up later.
+- A change to how the console's hint fly is read goes model first, then the check against the disc, then the runs printed and the test's literals replaced, and the port last.
+
 ## The next port
 
 - Read the routine off its overlay or the executable: the load address falls out of the message table's pointers, a function runs to its `jr ra`, and what the decomp calls the object's functions are the slots of its table of virtual functions.
@@ -33,3 +40,4 @@
 - Decide callee by callee what runs and what is answered, and run whatever rolls the dice: a call answered at its entry hides every roll beneath it, as the engine's player rolls a pitch for a sound given none. Find the globals a routine writes with `stores`.
 - Compare every field after every tick under inputs that reach every branch, counting what was reached, and put the state a run cannot be relied on to reach there by hand.
 - Change the model one line at a time and see the check fail on each before believing a pass, and ask of each change it passes whether a run could have reached it.
+- Print the model's runs over the tables the viewer ships and hold the port's unit test to them, with a test in the builder's suite that makes the same runs and looks its numbers up in the port's test, so the two cannot part unseen.

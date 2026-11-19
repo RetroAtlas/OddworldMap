@@ -86,13 +86,14 @@ test("hintfly: every fly is a bare sprite on the frame its hint's animation stan
 
 // a run of the scene's clock with the chant coming on and going off at the
 // steps given: the hint's states and fly counts by the ticks each lasts, the
-// steps its words form on, a sum over every corner of every tick, where the
-// two dice cursors end, and the corners at the ticks asked for
+// steps its words form on, a sum over every corner of every tick, another over
+// the two dice cursors after every tick, where they end, and the corners at the
+// ticks asked for
 let clock = 0;
 function run(r, ticks, flips, shots = []) {
   setChanted([]);
   resetScene();
-  const out = { line: [], words: [], sum: 0, shots: {} };
+  const out = { line: [], words: [], sum: 0, rolls: 0, shots: {} };
   let was = 1;
   for (let T = 1; T <= ticks; T++) {
     // a flip is heard from the step after its tick
@@ -105,10 +106,11 @@ function run(r, ticks, flips, shots = []) {
     if (st.sub === 4 && was === 2) out.words.push(T);
     was = st.sub;
     st.fx.forEach((f, i) => {
-      const x = (f.x - AT[0]) & 0xffff,
-        y = (f.y - AT[1]) & 0xffff;
+      const x = (f.x - r.x) & 0xffff,
+        y = (f.y - r.y) & 0xffff;
       out.sum = (out.sum * 31 + x * 7 + y + i) % 2 ** 32;
     });
+    out.rolls = (out.rolls * 31 + (st.seed2 & 255) * 256 + (st.seed & 255)) % 2 ** 32;
     if (shots.includes(T)) out.shots[T] = corners(r, T);
     if (T === ticks) Object.assign(out, { own: st.seed2 & 255, dice: st.seed & 255 });
   }
@@ -140,14 +142,17 @@ test("hintfly: a chant spells the message a word at a time, as the PlayStation s
 test("hintfly: a chant that has spelled its message lets go, and is heard again from the swarm at rest", () => {
   const two = run(hint(10), 400, [10]);
   assert.deepEqual(two.words, [37, 91, 175, 229, 313, 367], "DROP IN, three times round");
-  assert.deepEqual([two.sum, two.own, two.dice], [2286931692, 122, 10]);
+  assert.deepEqual([two.sum, two.rolls, two.own, two.dice], [2286931692, 644002028, 122, 10]);
   const eight = run(hint(14), 900, [5]);
   assert.deepEqual(
     eight.words,
     [27, 75, 127, 178, 235, 285, 340, 390, 482, 530, 582, 633, 690, 740, 795, 845],
     "YOU CAN HOIST WHERE YOU SEE FALLING DEBRIS, twice",
   );
-  assert.deepEqual([eight.sum, eight.own, eight.dice], [503013414, 240, 24]);
+  assert.deepEqual(
+    [eight.sum, eight.rolls, eight.own, eight.dice],
+    [503013414, 1577590175, 240, 24],
+  );
 });
 
 test("hintfly: a chant that breaks sends the word's flies circling and the swarm home", () => {
@@ -170,7 +175,7 @@ test("hintfly: a chant that breaks sends the word's flies circling and the swarm
     got.shots[110],
     "15,10 11,-3 35,-14 -16,-3 15,-19 -26,13 21,-12 37,11 -1,-9 15,12 -22,-20 37,15 23,-7 -36,-7 -9,15 -4,-15 -27,12 -3,11 -4,-9 -6,-15",
   );
-  assert.deepEqual([got.sum, got.own, got.dice], [1236569267, 171, 210]);
+  assert.deepEqual([got.sum, got.rolls, got.own, got.dice], [1236569267, 1880603292, 171, 210]);
 });
 
 test("hintfly: a chant that comes back is heard once the swarm has unwound to twenty", () => {
@@ -179,21 +184,24 @@ test("hintfly: a chant that comes back is heard once the swarm has unwound to tw
     got.line,
     "1:20x9 3:20x16 2:20x1 2:28x1 2:36x1 2:44x1 2:52x1 2:60x1 2:68x1 2:76x1 2:84x1 2:92x1 2:100x1 2:108x1 2:116x1 4:121x31 5:121x21 5:113x1 5:105x1 5:97x1 5:89x1 5:81x1 5:73x1 5:65x1 5:57x1 5:49x1 5:41x1 5:33x1 5:25x1 5:20x1 1:20x1 3:20x16 2:20x1 2:28x1 2:36x1 2:44x1 2:52x1 2:60x1 2:68x1 2:76x1 2:84x1 2:92x1 2:100x1 2:108x1 2:116x1 4:121x31 3:121x16 2:121x1 2:113x1 2:105x1 2:97x1 2:89x1 2:81x1 2:73x1 2:65x1 2:57x1 4:54x11",
   );
-  assert.deepEqual([got.words, got.sum, got.own, got.dice], [[39, 134, 190], 3114638940, 209, 79]);
+  assert.deepEqual(
+    [got.words, got.sum, got.rolls, got.own, got.dice],
+    [[39, 134, 190], 3114638940, 1753730376, 209, 79],
+  );
 });
 
 test("hintfly: a fly a whole pixel from its dot, across or down, has yet to arrive", () => {
   // RUN ELUM RUN sends flies that come to rest exactly a pixel short across
   const across = run(hint(29), 150, [10]);
   assert.deepEqual(
-    [across.words, across.sum, across.own, across.dice],
-    [[34, 83, 132], 2673651914, 12, 211],
+    [across.words, across.sum, across.rolls, across.own, across.dice],
+    [[34, 83, 132], 2673651914, 3665449045, 12, 211],
   );
   // and ABE WAS HERE, from another cursor, one a pixel short down
   const down = run(hint(1, AT, [0, 0], 136), 200, [2]);
   assert.deepEqual(
-    [down.words, down.sum, down.own, down.dice],
-    [[27, 76, 128], 298840216, 198, 166],
+    [down.words, down.sum, down.rolls, down.own, down.dice],
+    [[27, 76, 128], 298840216, 2532699415, 198, 166],
   );
 });
 
@@ -201,7 +209,10 @@ test("hintfly: a chant that breaks on the tick its message is spelled is a broke
   // DROP IN's last hold is over at 122, the tick the chant goes; back at 130,
   // it waits out the swarm at twenty for a tick as any chant does
   const got = run(hint(10), 220, [10, 122, 130]);
-  assert.deepEqual([got.words, got.sum, got.own, got.dice], [[37, 91, 176], 4147548954, 155, 81]);
+  assert.deepEqual(
+    [got.words, got.sum, got.rolls, got.own, got.dice],
+    [[37, 91, 176], 4147548954, 2184228737, 155, 81],
+  );
 });
 
 test("hintfly: a hint with no message hears no chant", () => {

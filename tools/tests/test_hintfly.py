@@ -1,7 +1,10 @@
 """The hint fly's model over tables of its own, its routines found in a
-synthetic overlay, and what the check adds to the model: stdlib only, no
-disc."""
+synthetic overlay, what the two tools add to the model, and the numbers the
+viewer's test holds its port to: stdlib only, no disc."""
 
+import contextlib
+import io
+import json
 import math
 import re
 import struct
@@ -12,10 +15,12 @@ from unittest import mock
 
 sys.path[:0] = [str(Path(__file__).resolve().parents[1])]
 
+import hintfly_trace  # noqa: E402
 import hintfly_verify  # noqa: E402
 from oddmap import hintfly, messages  # noqa: E402
 from oddmap.exe import Image  # noqa: E402
 from oddmap.hintfly import FP, HOLD, IDLE, LOOPING, ON_DOT, PAUSE, QUARTER, RESIZE, TO_DOT, UNWIND  # noqa: E402
+from oddmap.paths import ROOT  # noqa: E402
 
 # letters of two dots, of one and of twelve
 A, B, C = bytes([0x00, 0x44]), bytes([0x12]), bytes(range(12))
@@ -458,6 +463,101 @@ class Routines(unittest.TestCase):
 
 
 class Tools(unittest.TestCase):
+    def test_a_trace_is_the_model_under_the_maps_chant(self):
+        got = hintfly_trace.trace(tables(), 0, 125, flips=[3])
+        self.assertEqual(got["line"], "1:20x2 3:20x16 2:20x1 4:15x31 3:15x16 2:15x1 4:14x31 5:14x21 1:20x1 3:20x5")
+        self.assertEqual((got["message"], got["words"], got["dice"]), ("AB A", [[20, "AB"], [68, "A"]], 37 + 125 + 5))
+
+    def test_a_chant_that_goes_as_the_last_hold_ends_is_a_broken_one_heard_again_from_twenty(self):
+        got = hintfly_trace.trace(tables(), 4, 78, flips=[2, 51, 61])
+        self.assertEqual(got["line"], "1:20x1 3:20x16 2:20x1 2:28x1 4:36x31 5:36x21 5:28x1 5:20x1 1:20x1 3:20x4")
+        got = hintfly_trace.trace(tables(), 0, 60, flips=[3, 30])
+        self.assertEqual(got["line"], "1:20x2 3:20x16 2:20x1 4:15x10 5:15x21 1:20x10")
+
+    def test_a_message_spelled_comes_round_again_from_its_first_word(self):
+        got = hintfly_trace.trace(tables(), 0, 175, flips=[3])
+        self.assertEqual(got["line"], "1:20x2 3:20x16 2:20x1 4:15x31 3:15x16 2:15x1 4:14x31 5:14x21 1:20x1 "
+                                      "3:20x16 2:20x1 4:15x31 3:15x7")
+        self.assertEqual(got["words"], [[20, "AB"], [68, "A"], [138, "AB"]])
+
+    def test_a_hint_with_no_message_hears_no_chant_and_one_ending_on_a_space_forms_the_nothing_after_it(self):
+        self.assertEqual(hintfly_trace.trace(tables(), 1, 60, flips=[3])["line"], "1:20x60")
+        spaced = hintfly.Tables([0x55] * 256, [A, B, C], ["AB "])
+        got = hintfly_trace.trace(spaced, 0, 110, flips=[3])
+        self.assertEqual((got["line"], got["words"]),
+                         ("1:20x2 3:20x16 2:20x1 4:15x31 3:15x16 2:15x1 4:12x31 5:12x12", [[20, "AB"], [68, ""]]))
+
+    def test_the_cursors_start_at_the_seed_and_end_where_the_setups_and_rolls_leave_them(self):
+        got = hintfly_trace.trace(tables(), 0, 30, flips=[3])
+        self.assertEqual((got["own"], got["dice"]), (37 + 20 * 5 + 5 * 5, 37 + 30 + 3))
+        got = hintfly_trace.trace(hintfly.Tables(list(range(256)), [A, B, C], MESSAGES), 0, 1, seed=7)
+        self.assertEqual((got["own"], got["dice"]), (107, 10))
+        got = hintfly_trace.trace(tables(), 0, 2)
+        self.assertEqual(got["rolls"], (137 * 256 + 38) * 31 + 137 * 256 + 39)
+
+    def test_a_shot_is_each_corner_about_the_hints_point_in_fly_order(self):
+        got = hintfly_trace.trace(tables(), 0, 40, flips=[3], shots=[1, 40], at=(60, 40))
+        self.assertEqual(got["shots"][1], " ".join(["4,3"] * 20))
+        self.assertEqual(got["shots"][40].split(" ")[:3], ["-17,-9", "-13,-5", "1,-6"])
+        self.assertEqual(len(got["shots"][40].split(" ")), 15)
+        self.assertEqual(got, hintfly_trace.trace(tables(), 0, 40, flips=[3], shots=[1, 40]))
+        cut = hintfly_trace.trace(tables(), 0, 1, shots=[1], at=(-6, -6))
+        self.assertEqual(cut["shots"][1], " ".join(["5,4"] * 20))
+
+    def test_the_sum_folds_every_corner_of_every_tick(self):
+        got = hintfly_trace.trace(tables(), 0, 40, flips=[3], shots=range(1, 41))
+        total = 0
+        for tick in range(1, 41):
+            for i, corner in enumerate(got["shots"][tick].split(" ")):
+                x, y = (int(v) for v in corner.split(","))
+                total = (total * 31 + (x & 0xFFFF) * 7 + (y & 0xFFFF) + i) % 2 ** 32
+        self.assertEqual(got["sum"], total)
+        self.assertEqual(hintfly_trace.trace(tables(), 0, 40, flips=[3])["shots"], {})
+
+    def refused(self, *argv):
+        """what the trace says of arguments it will not take"""
+        said = io.StringIO()
+        with contextlib.redirect_stderr(said), self.assertRaises(SystemExit) as stopped:
+            hintfly_trace.main(list(argv))
+        return f"{said.getvalue()}{stopped.exception.code}"
+
+    def test_the_trace_refuses_what_is_no_run_of_the_maps(self):
+        for argv, why in [
+            (("10", "0"), "ticks is at least one"),
+            (("10", "50", "--chant", "1"), "--chant takes ticks that rise from 2"),
+            (("10", "50", "--chant", "9,5"), "--chant takes ticks that rise from 2"),
+            (("10", "50", "--chant", "5,5"), "--chant takes ticks that rise from 2"),
+            (("10", "50", "--chant", "a"), "--chant takes whole numbers between commas"),
+            (("10", "50", "--shots", "51"), "--shots takes ticks of the run"),
+            (("10", "50", "--shots", "0"), "--shots takes ticks of the run"),
+            (("10", "50", "--seed", "256"), "--seed is a byte"),
+            (("10", "50", "--seed=-1"), "--seed is a byte"),
+            (("10", "50", "--at", "6"), "--at takes a point as x,y"),
+            (("10", "50", "--at", "6,4,2"), "--at takes a point as x,y"),
+            (("10", "50", "--at", "40000,4"), "--at takes a point as x,y"),
+            (("10", "50", "--overlay", "E3.OVL"), "--overlay names an overlay of the disc"),
+            (("36", "50"), "there is no message 36"),
+            (("-1", "50"), "there is no message -1"),
+        ]:
+            with self.subTest(argv=argv):
+                self.assertIn(why, self.refused(*argv))
+
+    def printed(self, *argv):
+        """what the trace prints for its arguments, read back"""
+        said = io.StringIO()
+        with contextlib.redirect_stdout(said):
+            hintfly_trace.main(list(argv))
+        return json.loads(said.getvalue())
+
+    def test_the_trace_prints_the_run_its_arguments_name(self):
+        shipped = hintfly_trace.committed()
+        want = hintfly_trace.trace(shipped, 1, 40, [2, 30], [5, 40], 136, [-6, 4])
+        got = self.printed("1", "40", "--chant", "2,30", "--shots", "5,40", "--seed", "136", "--at=-6,4")
+        self.assertEqual(got, json.loads(json.dumps(want)))
+        self.assertEqual((got["message"], sorted(got["shots"]), got["words"]), ("ABE WAS HERE", ["40", "5"], [[27, "ABE"]]))
+        self.assertEqual(self.printed("1", "40"), json.loads(json.dumps(hintfly_trace.trace(shipped, 1, 40))))
+        self.assertEqual(list(got), ["message", "line", "words", "sum", "rolls", "own", "dice", "shots"])
+
     def test_the_verifiers_chant_is_drawn_from_its_seed_and_opens_unheard(self):
         heard = hintfly_verify.chants(7, 2000)
         self.assertEqual((len(heard), heard[0], heard), (2000, False, hintfly_verify.chants(7, 2000)))
@@ -487,6 +587,51 @@ class Tools(unittest.TestCase):
                          ("E1.OVL: message 3, tick 9: fly 2's x", False))
         self.assertEqual(hintfly_verify.report("E1.OVL", [], 36),
                          ("E1.OVL: its alphabet spells none of its messages", False))
+
+
+class PortLiterals(unittest.TestCase):
+    """the numbers tests/unit/hintfly.test.js holds the viewer's hint flies to
+    are the model's, over the tables the viewer ships"""
+    # a run the test makes: its message, ticks, flips, shots, seed and point, and what of it the test holds
+    RUNS = [
+        (5, 300, [], [1, 64, 300], 37, (180, 120), "shots"),
+        (5, 300, [], [1, 64, 300], 37, (6, 4), "shots"),
+        (10, 150, [10], [54, 120], 37, (180, 120), "line words shots"),
+        (10, 400, [10], [], 37, (180, 120), "words ends"),
+        (14, 900, [5], [], 37, (180, 120), "words ends"),
+        (5, 220, [10, 70], [60, 75, 110], 37, (180, 120), "line shots ends"),
+        (5, 200, [10, 70, 95], [], 37, (180, 120), "line words ends"),
+        (29, 150, [10], [], 37, (180, 120), "words ends"),
+        (1, 200, [2], [], 136, (180, 120), "words ends"),
+        (10, 220, [10, 122, 130], [], 37, (180, 120), "words ends"),
+        (None, 100, [10], [], 37, (180, 120), "line"),
+    ]
+
+    def test_every_run_the_ports_test_makes_is_the_models(self):
+        source = " ".join((ROOT / "tests" / "unit" / "hintfly.test.js").read_text().split())
+        source = source.replace("[ ", "[").replace(", ]", "]")
+        shipped = hintfly_trace.committed()
+        silent = hintfly.Tables(shipped.dice, shipped.alphabet, [""])
+        self.assertEqual(len(re.findall(r"\brun\(hint\(", source)), sum(1 for run in self.RUNS if run[2]))
+        seen = []
+        for message, ticks, flips, shots, seed, at, held in self.RUNS:
+            got = hintfly_trace.trace(*((silent, 0) if message is None else (shipped, message)), ticks, flips, shots,
+                                      seed, at)
+            literals = {"line": [f'"{got["line"]}"'], "words": [str([tick for tick, _ in got["words"]])],
+                        "shots": [f'"{corners}"' for corners in got["shots"].values()],
+                        "ends": [f'{got["sum"]}, {got["rolls"]}, {got["own"]}, {got["dice"]}']}
+            self.assertEqual(len(got["shots"]), len(shots))
+            for part in held.split():
+                for literal in literals[part]:
+                    found = len(re.findall(r"(?<!\d)" + re.escape(literal) + r"(?!\d)", source))
+                    with self.subTest(message=message, ticks=ticks, flips=flips, seed=seed, at=at, part=part):
+                        self.assertEqual((found, literal in seen), (1, False), f"{literal[:70]} in the test's source")
+                    seen.append(literal)
+
+    def test_the_shipped_tables_are_a_game_of_letters_and_messages(self):
+        shipped = hintfly_trace.committed()
+        self.assertEqual((sorted(shipped.dice), len(shipped.alphabet), len(shipped.messages), shipped.messages[10]),
+                         (list(range(256)), 26, 36, "DROP IN"))
 
 
 if __name__ == "__main__":
