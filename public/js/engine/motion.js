@@ -123,7 +123,7 @@ export function setPatrolsRunning(on) {
 }
 export const patrolTick = () => (patrolsOn ? sceneTick() - patrolEpoch : null);
 
-// the engine's 256-step angle tables
+// angles in the engine's 256 steps to a turn, not read off its sine table
 const sin256 = (a) => Math.sin(((a & 255) * Math.PI) / 128);
 const cos256 = (a) => Math.cos(((a & 255) * Math.PI) / 128);
 
