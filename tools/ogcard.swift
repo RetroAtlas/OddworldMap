@@ -45,7 +45,7 @@ func text(_ str: String,_ x: CGFloat,_ y: CGFloat,_ sizePt: CGFloat,_ hex: UInt3
   CTLineDraw(line, ctx)
 }
 text("ODDWORLD MAP", 470, 250, 74, 0xe8a33d, bold: true)
-text("Interactive map — Abe's Oddysee & Exoddus", 472, 322, 30, 0xd8dbe2)
+text("Interactive map | Abe's Oddysee & Exoddus", 472, 322, 30, 0xd8dbe2)
 text("Every camera, object and collision line,", 472, 372, 27, 0x8a8f9c)
 text("extracted straight from the game discs.", 472, 408, 27, 0x8a8f9c)
 text("oddworldmap.com", 472, 500, 30, 0xe8a33d, bold: true)

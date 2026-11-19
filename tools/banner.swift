@@ -157,7 +157,7 @@ struct Line {
 
 let lines = [
     Line(text: "ODDWORLD MAP", size: 104, colour: ink.title, bold: true, gapAfter: 26),
-    Line(text: "Interactive map — Abe's Oddysee & Exoddus", size: 42, colour: ink.body, bold: false, gapAfter: 18),
+    Line(text: "Interactive map | Abe's Oddysee & Exoddus", size: 42, colour: ink.body, bold: false, gapAfter: 18),
     Line(text: "Every camera, object and collision line, extracted straight from the game discs.",
          size: 30, colour: ink.dim, bold: false, gapAfter: 36),
     Line(text: "oddworldmap.com", size: 40, colour: ink.title, bold: true, gapAfter: 0),

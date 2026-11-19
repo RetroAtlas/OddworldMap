@@ -248,7 +248,7 @@ function levelPage(data, L, canonical, pins) {
 ${lists}${demo ? `\n${demoFootnote(demo)}` : ""}`;
 
   return page({
-    title: `${L.name} — ${gameShort(data)} level map — Oddworld Map`,
+    title: `${L.name} | ${gameShort(data)} level map | Oddworld Map`,
     description,
     canonical,
     main,
@@ -305,9 +305,9 @@ function indexPage(games) {
 ${sections}`;
 
   return page({
-    title: "All levels — Oddworld Map",
+    title: "All levels | Oddworld Map",
     description:
-      `Every level of Oddworld: Abe's Oddysee and Abe's Exoddus — ${count(all.levels, "level")}, ` +
+      `Every level of Oddworld: Abe's Oddysee and Abe's Exoddus. ${count(all.levels, "level")}, ` +
       `${count(all.paths, "path")}, ${count(all.screens, "screen")} and ${count(all.objects, "object")}, ` +
       `each level on a page of its own, opening in the interactive map.`,
     canonical: `${ORIGIN}/levels/`,
