@@ -148,9 +148,9 @@ def _chain(blob, off, end):
         off += (len(dots) + 4) & ~3
     return starts if off == end else None
 
-def letter_tables(blob, base):
-    """every alphabet in an overlay loaded at `base`, each letter its dots as
-    hex in the table's order.
+def alphabets(blob, base):
+    """(where its table opens, the record each entry names) of every alphabet in
+    an overlay loaded at `base`.
 
     A letter is a record, the count of its dots and then the dots, and the
     records lie end to end with the table opening where the last one ends: its
@@ -180,9 +180,14 @@ def letter_tables(blob, base):
         if 0 <= after < records[0] and _chain(blob, after, records[0]):
             raise RuntimeError(f"the alphabet at {4 * q:#x} names {len(entries)} letters and stops at a word "
                                f"naming a record before them, at {after:#x}")
-        found.append([_record(blob, off).hex() for off in entries])
+        found.append((4 * q, entries))
         q += len(entries)
     return found
+
+def letter_tables(blob, base):
+    """every alphabet in an overlay loaded at `base`, each letter its dots as
+    hex in the table's order"""
+    return [[_record(blob, off).hex() for off in entries] for _, entries in alphabets(blob, base)]
 
 def overlay_tables(game_key, discs, overlays=None):
     """{table: {overlay: its strings}} over every overlay carrying a table,

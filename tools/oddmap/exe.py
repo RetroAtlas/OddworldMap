@@ -19,20 +19,21 @@ def executable(disc):
 
 
 class Image:
-    """an executable's words by address"""
-    def __init__(self, data):
+    """an executable's words by address, or those of code that loads at `load`"""
+    def __init__(self, data, load=None):
         self.data = data
-        self.load = struct.unpack_from("<I", data, 0x18)[0]
-        self.end = self.load + len(data) - 0x800
+        self.head = 0x800 if load is None else 0
+        self.load = struct.unpack_from("<I", data, 0x18)[0] if load is None else load
+        self.end = self.load + len(data) - self.head
 
     def holds(self, addr):
         return self.load <= addr < self.end
 
     def offset(self, addr):
-        return addr - self.load + 0x800
+        return addr - self.load + self.head
 
     def addr(self, offset):
-        return offset - 0x800 + self.load
+        return offset - self.head + self.load
 
     def word(self, addr):
         return struct.unpack_from("<I", self.data, self.offset(addr))[0]
@@ -45,7 +46,7 @@ class Image:
         """the addresses of every aligned word equal to value"""
         packed = struct.pack("<I", value)
         return [self.addr(m.start()) for m in re.finditer(re.escape(packed), self.data)
-                if m.start() >= 0x800 and m.start() % 4 == 0]
+                if m.start() >= self.head and m.start() % 4 == 0]
 
 
 # --- the few instructions the readers below recognize ---
@@ -79,7 +80,7 @@ def references(img, value):
     pair that builds value in a register"""
     hi, lo = (value + 0x8000) >> 16 & 0xFFFF, value & 0xFFFF
     out = []
-    for at in range(0x800, len(img.data) - 3, 4):
+    for at in range(img.head, len(img.data) - 3, 4):
         w = struct.unpack_from("<I", img.data, at)[0]
         if _op(w) != 15 or _imm(w) != hi:
             continue

@@ -159,6 +159,10 @@ class LettersByShape(unittest.TestCase):
         blob = self.overlay(order=[0, 3, 0, 2, 1])
         self.assertEqual(messages.letter_tables(blob, self.BASE), [[self.HEX[i] for i in (0, 3, 0, 2, 1)]])
 
+    def test_an_alphabet_is_placed_by_its_table_and_the_record_each_entry_names(self):
+        blob = self.overlay(before=struct.pack("<2I", 0, 0x25), order=[0, 3, 0, 2, 1])
+        self.assertEqual(messages.alphabets(blob, self.BASE), [(32, [8, 24, 8, 20, 12])])
+
     def test_a_table_may_end_its_overlay(self):
         self.assertEqual(messages.letter_tables(self.overlay(after=b""), self.BASE), [self.HEX])
 

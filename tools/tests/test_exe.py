@@ -88,6 +88,22 @@ class VideoMode(unittest.TestCase):
             exe.video_mode(p.image())
 
 
+class LoadedCode(unittest.TestCase):
+    """code with no header, read by the address it loads at"""
+    BASE = 0x800A0000
+
+    def test_an_overlay_is_read_from_its_first_word_as_an_executable_past_its_header(self):
+        target = self.BASE + 0x1234
+        hi, lo = split(target)
+        words = [jal(self.BASE + 8), NOP, lui(V0, hi), addiu(V0, V0, lo), JR_RA, NOP, target]
+        img = exe.Image(struct.pack(f"<{len(words)}I", *words), self.BASE)
+        self.assertEqual((img.load, img.end, img.word(self.BASE + 16)), (self.BASE, self.BASE + 28, JR_RA))
+        self.assertEqual((img.holds(self.BASE), img.holds(self.BASE + 28)), (True, False))
+        self.assertEqual(exe.references(img, target), [self.BASE + 12])
+        self.assertEqual(exe.callers(img, self.BASE + 8), [self.BASE])
+        self.assertEqual(img.words_equal(target), [self.BASE + 24])
+
+
 class FrameRate(unittest.TestCase):
     def test_every_vsync_call_reads_its_argument(self):
         p = Program()
