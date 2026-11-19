@@ -156,7 +156,7 @@ function placeButton(c, terms) {
   const codeTerms = terms.filter((term) => c.tokens.includes(term));
   const ex = [c.pa != null && c.levelName, c.nickname, c.section].filter(Boolean).join(" · ");
   b.innerHTML =
-    `<span class="loc">${c.G.id} · ${highlight(c.code, codeTerms)}</span>` +
+    `<span class="loc">${c.G.id} · ${highlight(c.label, codeTerms)}</span>` +
     (c.name ? ` ${highlight(c.name, terms)}` : "") +
     (ex ? ` <span class="ex">${highlight(ex, terms)}</span>` : "");
   b.onclick = () => jumpToPlace(c.G, c.lv, c.pa, c.cam);

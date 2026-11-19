@@ -633,6 +633,19 @@ test("a place found by search opens its path whole", async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
+test("a camera name half typed labels a screen it finds with the name, what is typed marked", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await page.goto(`/${TRIP_HASH}`);
+  await settle(page, { game: "AO", level: "R1", path: 15 });
+  await page.fill("#searchInput", "r1p15c0");
+  const place = page.locator("#searchResults .hit").first();
+  await expect(place.locator(".loc")).toHaveText("AO · R1P15C01");
+  await expect(place.locator("mark")).toHaveText("R1P15C0");
+  expect(errors).toEqual([]);
+});
+
 test("a follow that lands nowhere on the path in hand leaves the view where it is", async ({
   page,
 }) => {

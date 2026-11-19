@@ -2,6 +2,13 @@
  "entries": [
   {
    "date": "2026-11-19",
+   "tag": "improved",
+   "tiny": true,
+   "title": "Search finds a screen while you are still typing its name",
+   "detail": "A camera name off the grid overlay, PVP05C05 say, found its screen only once it was typed whole. The Places group now answers as you go: pvp lists Mudomo Vault's paths, pvp05 the one, pvp05c its screens in the order of their numbers, and pvp05c05 the screen itself. Each of those rows carries the name you are typing toward, with what you have typed so far highlighted."
+  },
+  {
+   "date": "2026-11-19",
    "tag": "fixed",
    "tiny": true,
    "title": "A Greeter's laser stays with its Greeter",
