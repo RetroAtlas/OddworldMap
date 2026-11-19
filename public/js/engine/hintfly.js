@@ -84,11 +84,14 @@ function unwind(st) {
 }
 
 // one tick of every fly out: on its way to a dot, jittering on it or looping.
-// The swarm's sound is its first fly's to roll for: whether, then how loud
+// The swarm's sound is its first fly's to roll for: whether, then how loud,
+// and its pitch where the fly gives it none, which the engine's player rolls
 function stepFlies(st, rnd) {
   const own = () => st.dice[st.seed2++ & 255];
-  const hum = (i, odds, volume) => {
-    if (i === 0 && randomRange(st, rnd, 0, 100) < odds) randomRange(st, rnd, volume, volume + 6);
+  const hum = (i, odds, volume, pitched = true) => {
+    if (i !== 0 || randomRange(st, rnd, 0, 100) >= odds) return;
+    randomRange(st, rnd, volume, volume + 6);
+    if (!pitched) randomRange(st, rnd, -127, 127);
   };
   for (let i = 0; i < st.count; i++) {
     const p = st.flies[i];
@@ -106,7 +109,7 @@ function stepFlies(st, rnd) {
       p.angle = (p.angle + p.speed) & 255;
       p.rx += 5 * cosine16(p.angle);
       p.ry -= 2 * sine16(p.angle);
-      hum(i, 20, 18);
+      hum(i, 20, 18, false);
     }
   }
 }
