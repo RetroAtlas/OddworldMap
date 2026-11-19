@@ -10,6 +10,7 @@ STARTS.greeter = (st, r) => {
   standOn(st, st.w.spawn.x, st.w.spawn.y, 24);
   st.part = st.p.part;
   st.own = r.anim;
+  st.right = st.p.flip; // FlipX: set means rolling toward +x
   st.cur = "Greeter_Moving";
   st.body = "Greeter_Moving";
   st.state = "patrol";
@@ -29,7 +30,7 @@ BRAINS.greeter = (st, now, rnd) => {
   if (st.line === null) return;
   const s = scaleOf(st);
   if (st.state === "patrol") {
-    st.velx = st.flip ? 3 * s : -3 * s;
+    st.velx = st.right ? 3 * s : -3 * s;
     st.body = "Greeter_Moving";
     if (now > st.speakT) {
       st.state = "speak";
@@ -45,21 +46,21 @@ BRAINS.greeter = (st, now, rnd) => {
   } else if (st.m.last) {
     st.state = "patrol";
     st.body = "Greeter_Moving";
-    st.flip = !st.flip;
+    st.right = !st.right;
   }
   if (st.velx !== 0) {
     const px = st.x + 4 * st.velx;
     const at = (name) => tlvAt(st.w.tlvs, px, st.y, px, st.y, name);
     if (
-      (!st.flip && at("ScrabLeftBound")) ||
-      (st.flip && at("ScrabRightBound")) ||
+      (!st.right && at("ScrabLeftBound")) ||
+      (st.right && at("ScrabRightBound")) ||
       at("EnemyStopper")
     )
       greeterTurn(st);
     else if (
-      (st.flip && onEndOfLine(st.w.game, st.w.lines, st.x, st.y, st.w.half, false, 1)) ||
+      (st.right && onEndOfLine(st.w.game, st.w.lines, st.x, st.y, st.w.half, false, 1)) ||
       wall(st, 40 * s, st.velx * 3) ||
-      (!st.flip && onEndOfLine(st.w.game, st.w.lines, st.x, st.y, st.w.half, true, 1))
+      (!st.right && onEndOfLine(st.w.game, st.w.lines, st.x, st.y, st.w.half, true, 1))
     )
       greeterTurn(st);
     st.x += st.velx;
@@ -89,7 +90,8 @@ BRAINS.greeter = (st, now, rnd) => {
       if (now > st.sweepT) st.sweep = "right";
   }
   st.cur = st.body;
-  if (st.part !== "body") {
+  if (st.part === "body") st.flip = st.right;
+  else {
     st.show = st.own;
     st.hidden = st.state === "speak";
   }

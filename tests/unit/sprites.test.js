@@ -727,6 +727,57 @@ test("patrols: a patrolling slig's pen is the zone it walks, wherever both its b
   assert.ok(penned > 200, `${penned} penned`);
 });
 
+test("patrols: a Greeter rolls toward +x while mirrored, its flare on it and its laser within its sweep's reach, neither of them mirrored, through its turns and its words", () => {
+  const set = sheets.AE;
+  // the game sets FlipX for a start_direction of left, and a mirrored Greeter rolls toward +x
+  const pinned = { "FD P2 (1625,1739)": [0, true, 1], "BR P11 (1700,460)": [1, false, -1] };
+  const step = (r) => Math.sign(resolveRecord(r, set, 1).x - r.x);
+  const met = {};
+  let greeters = 0;
+  for (const lvl of data.AE.levels)
+    for (const path of lvl.paths)
+      for (const t of path.tlvs.filter((o) => o.name === "Greeter")) {
+        const where = `${lvl.short} P${path.id} (${t.x1},${t.y1})`;
+        const [body, flare, laser] = spriteDraws(data.AE, lvl, path, t, set);
+        if (pinned[where]) met[where] = [t.fields.start_direction, body.flip, step(body)];
+        // the sweep ends on the first two-unit step to reach either end
+        const reach = 75 * laser.scale;
+        let was = null,
+          turns = 0,
+          words = 0,
+          lo = 0,
+          hi = 0;
+        for (let tick = 0; tick <= PATROL_MINUTE; tick++) {
+          const b = resolveRecord(body, set, tick);
+          if (!was) assert.equal(b.flip, body.flip, `${where} sets out mirrored as it is placed`);
+          else if (b.x !== was.x)
+            assert.equal(b.x > was.x, b.flip, `${where} rolls against its mirroring at ${tick}`);
+          if (b.name !== was?.name && b.name === "Greeter_Turn") turns++;
+          if (b.name !== was?.name && b.name === "Greeter_Speak") words++;
+          was = b;
+          const f = resolveRecord(flare, set, tick);
+          if (f)
+            assert.deepEqual(
+              [f.x, f.y, f.flip],
+              [b.x, b.y - 20 * flare.scale, false],
+              `${where} flare at ${tick}`,
+            );
+          const l = resolveRecord(laser, set, tick);
+          if (!l) continue;
+          const off = l.x - b.x;
+          assert.ok(Math.abs(off) < reach + 2, `${where} laser ${off} from its body at ${tick}`);
+          assert.deepEqual([l.y, l.flip], [b.y, false], `${where} laser at ${tick}`);
+          lo = Math.min(lo, off);
+          hi = Math.max(hi, off);
+        }
+        assert.ok(turns > 2 && words > 0, `${where} turns ${turns} times and speaks ${words}`);
+        assert.ok(lo <= -reach && hi >= reach, `${where} laser sweeps ${lo}..${hi}`);
+        greeters++;
+      }
+  assert.equal(greeters, 21);
+  assert.deepEqual(met, pinned, "start_direction, mirror and first step");
+});
+
 // stranded: ending the minute far from its spawn, after standing longer than
 // any pause a shipped field rolls
 const STRANDED_FAR = 200;

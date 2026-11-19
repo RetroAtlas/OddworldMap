@@ -1,6 +1,13 @@
 {
  "entries": [
   {
+   "date": "2026-11-19",
+   "tag": "fixed",
+   "tiny": true,
+   "title": "A Greeter's laser stays with its Greeter",
+   "detail": "With \"Patrols\" on, sixteen of Exoddus's twenty-one Greeters, the ones whose start_direction is left, rolled one way while their laser and its red glow set off the other and kept a beat of their own from there. Every Greeter now carries its glow and sweeps its laser to either side of itself, as the other five already did. The glow and the laser no longer flip over when a Greeter turns, either: the game mirrors the body alone."
+  },
+  {
    "date": "2026-11-18",
    "tag": "improved",
    "title": "The hint flies spell in every release",

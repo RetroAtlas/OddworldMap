@@ -254,12 +254,13 @@ rule("AE", "Greeter", (c) => {
   const x = mid(t);
   const hit = raycastDown(c.lines, x, t.y1, t.y1 + 24, planeTypes(c.half, FLOOR));
   const y = hit ?? t.y1;
+  const flip = f.start_direction === 0;
   // the three records run one brain, each reading its own part of it
-  const part = (name) => patrol(c, "greeter", { part: name }, { x, y: t.y1 });
+  const part = (name) => patrol(c, "greeter", { part: name, flip }, { x, y: t.y1 });
   return [
     draw(c, "Greeter_Moving", x, y, {
       layer: c.half ? 14 : 33,
-      flip: f.start_direction === 0,
+      flip,
       cycle: part("body"),
     }),
     draw(c, "MotionDetector_Flare", x, y - 20 * s, {

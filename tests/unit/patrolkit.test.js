@@ -481,8 +481,9 @@ test("roam: a greeter rolls three units a tick, turns at bounds, stops to speak 
   ];
   const w = world("AE", floor, bounds, { x: 500, y: 90 });
   // facing right (start_direction Right_1) it moves toward -x
-  const body = walker("Greeter_Moving", "greeter", { part: "body" }, w, 500, 100, false);
-  const laser = walker("MotionDetector_Laser", "greeter", { part: "laser" }, w, 500, 100, false);
+  const part = (name) => ({ part: name, flip: false });
+  const body = walker("Greeter_Moving", "greeter", part("body"), w, 500, 100, false);
+  const laser = walker("MotionDetector_Laser", "greeter", part("laser"), w, 500, 100, false);
   const set = roamSet(0);
   assert.equal(resolveRecord(body, set, 1).x, 497);
   assert.equal(resolveRecord(body, set, 2).x, 494);
