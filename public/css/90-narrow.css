@@ -87,26 +87,54 @@
   }
 }
 
-/* last in the file, so it outranks the narrow drawer's transition written later
-   at the same weight */
+/* reduced motion, one list under two keys: the system's own request while the
+   root carries no choice, and the visitor's choice where it asks for it. The
+   What's New foil is colour and stays; only its sweep and the sheen are motion */
 @media (prefers-reduced-motion: reduce) {
-  #sidebar,
-  .overlay,
-  .overlay.open, /* two classes: a lone .overlay cannot outrank it */
-  .dialog,
-  .toast {
+  :root:not([data-motion]) #sidebar,
+  :root:not([data-motion]) .fold > summary::before,
+  :root:not([data-motion]) #toggles kbd,
+  :root:not([data-motion]) .toast,
+  :root:not([data-motion]) .iconbtn,
+  :root:not([data-motion]) #placeBtn,
+  :root:not([data-motion]) .overlay,
+  :root:not([data-motion]) .overlay.open,
+  :root:not([data-motion]) .dialog,
+  :root:not([data-motion]) .ofl-bar i {
     transition: none;
   }
-  .toast-bar {
+  :root:not([data-motion]) .toast-bar {
     display: none;
   }
-  /* the foil is colour and stays; only its sweep and the sheen are motion */
-  .wn-tags .wn-tag-flagship,
-  .wn-chip.wn-tag-flagship[aria-pressed="true"],
-  .wn-entry.wn-flagship::before {
+  :root:not([data-motion]) .wn-tags .wn-tag-flagship,
+  :root:not([data-motion]) .wn-chip.wn-tag-flagship[aria-pressed="true"],
+  :root:not([data-motion]) .wn-entry.wn-flagship::before {
     animation: none;
   }
-  .wn-entry.wn-flagship::after {
+  :root:not([data-motion]) .wn-entry.wn-flagship::after {
     display: none;
   }
+}
+:root[data-motion="reduce"] #sidebar,
+:root[data-motion="reduce"] .fold > summary::before,
+:root[data-motion="reduce"] #toggles kbd,
+:root[data-motion="reduce"] .toast,
+:root[data-motion="reduce"] .iconbtn,
+:root[data-motion="reduce"] #placeBtn,
+:root[data-motion="reduce"] .overlay,
+:root[data-motion="reduce"] .overlay.open,
+:root[data-motion="reduce"] .dialog,
+:root[data-motion="reduce"] .ofl-bar i {
+  transition: none;
+}
+:root[data-motion="reduce"] .toast-bar {
+  display: none;
+}
+:root[data-motion="reduce"] .wn-tags .wn-tag-flagship,
+:root[data-motion="reduce"] .wn-chip.wn-tag-flagship[aria-pressed="true"],
+:root[data-motion="reduce"] .wn-entry.wn-flagship::before {
+  animation: none;
+}
+:root[data-motion="reduce"] .wn-entry.wn-flagship::after {
+  display: none;
 }

@@ -8,9 +8,12 @@ import {
   clearStoredLocation,
   clearStoredView,
   getSettings,
+  motionChoice,
+  offDefault,
   persistSettings,
   rememberLocation,
   viewChanged,
+  watchSystemMotion,
 } from "../data/settings.js";
 import { GEAR_SVG } from "../ui/icons.js";
 import { closeDialog, openDialog, trapDialogKeys } from "../ui/dialog.js";
@@ -19,14 +22,22 @@ import { closeDialog, openDialog, trapDialogKeys } from "../ui/dialog.js";
 export const MARKER_CACHE = "cams-on";
 
 // a row whose value isn't the default says so
-function markDefault(cb, dflt) {
+function markDefault(cb, dflt, where) {
   let mark = cb.parentElement.querySelector(".st-def");
   if (!mark) {
     mark = document.createElement("span");
     mark.className = "st-def";
     cb.parentElement.append(mark);
   }
-  mark.textContent = cb.checked === dflt ? "" : dflt ? "on by default" : "off by default";
+  mark.textContent = offDefault(cb.checked, dflt, where);
+}
+
+// the visitor's choice on motion keys the stylesheet from the root; where there
+// is none, the system's own query does
+function keyMotion() {
+  const choice = motionChoice();
+  if (choice) document.documentElement.dataset.motion = choice;
+  else delete document.documentElement.dataset.motion;
 }
 
 export function initSettings() {
@@ -54,15 +65,19 @@ export function initSettings() {
   trapDialogKeys(() => overlay.classList.contains("open"), $("settings"), close);
 
   // seed each checkbox from the stored settings, then persist + apply on change
-  const bind = (id, key, apply) => {
+  const bind = (id, key, apply, where) => {
     const cb = $(id);
-    cb.checked = s[key];
-    markDefault(cb, SETTINGS_DEFAULTS[key]);
+    const seed = () => {
+      cb.checked = s[key];
+      markDefault(cb, SETTINGS_DEFAULTS[key], where);
+    };
+    seed();
     cb.onchange = () => {
       chooseSetting(key, cb.checked);
-      markDefault(cb, SETTINGS_DEFAULTS[key]);
+      markDefault(cb, SETTINGS_DEFAULTS[key], where);
       apply(cb.checked);
     };
+    return seed;
   };
 
   bind("sRememberView", "rememberView", (on) => {
@@ -100,6 +115,12 @@ export function initSettings() {
   };
 
   document.body.classList.toggle("fullnames", s.fullNames);
+  keyMotion();
+  const motionSet = () => {
+    keyMotion();
+    window.dispatchEvent(new CustomEvent("settings-changed", { detail: { key: "reduceMotion" } }));
+  };
+  watchSystemMotion(bind("sReduceMotion", "reduceMotion", motionSet, "in your system"));
   bind("sAnimate", "animate", () =>
     window.dispatchEvent(new CustomEvent("settings-changed", { detail: { key: "animate" } })),
   );

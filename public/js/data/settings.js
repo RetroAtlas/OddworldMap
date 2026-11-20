@@ -9,6 +9,14 @@ const SETTINGS_KEY = "owm:settings";
 const VIEW_KEY = "owm:view";
 const LOC_KEY = "owm:lastloc";
 
+// what the visitor's system asks of motion, as a media query asked once and
+// kept; where there is no system to ask, it asks for nothing
+let motionQuery;
+const systemMotion = () =>
+  (motionQuery ??=
+    typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null);
+export const watchSystemMotion = (heard) => systemMotion()?.addEventListener("change", heard);
+
 export const SETTINGS_DEFAULTS = {
   rememberView: true,
   rememberLoc: false,
@@ -21,6 +29,9 @@ export const SETTINGS_DEFAULTS = {
   editObjects: false,
   animate: true,
   labelScenery: false,
+  get reduceMotion() {
+    return systemMotion()?.matches ?? false;
+  },
 };
 // fieldPrefs (not a boolean; added by sanitizeSettings) — which object fields
 // to show: mode "default" (the notable ones) or "more" (per-game, per-type
@@ -147,6 +158,12 @@ export function getSettings() {
     const raw = store.get(SETTINGS_KEY);
     settings = sanitizeSettings(raw);
     chosen = sanitizeChosen(raw);
+    // a setting that follows the system reads through to it for as long as it is unset
+    Object.defineProperty(settings, "reduceMotion", {
+      enumerable: true,
+      get: () => chosen.reduceMotion ?? SETTINGS_DEFAULTS.reduceMotion,
+      set() {},
+    });
   }
   return settings;
 }
@@ -161,6 +178,17 @@ export function chooseSetting(key, value) {
   else chosen[key] = value;
   persistSettings();
 }
+
+// the visitor's own answer on motion by name, none while the setting follows the system
+export function motionChoice() {
+  getSettings();
+  if (!("reduceMotion" in chosen)) return null;
+  return chosen.reduceMotion ? "reduce" : "allow";
+}
+
+// what a row says of a setting that stands away from its default, nothing of one at it
+export const offDefault = (value, dflt, where = "by default") =>
+  value === dflt ? "" : `${dflt ? "on" : "off"} ${where}`;
 
 export function persistSettings() {
   const { fieldPrefs } = getSettings();

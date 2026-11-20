@@ -3,6 +3,12 @@
   {
    "date": "2026-11-20",
    "tag": "new",
+   "title": "\"Reduce motion\" is a setting of the map's own",
+   "detail": "The map already held still for a system that asks for reduced motion. Settings now has a \"Reduce motion\" switch of its own, under Motion beside \"Animate the objects\". It starts out as your system has it and follows it until you flip it. From then on your choice stands on this device whatever the system asks, so you can still the map alone, or let it move on a device that stills everything else. Set it back to what your system asks and it follows the system again. A few things that had kept moving with motion reduced now hold still or change at once: the ring that marks where a link or a followed door lands no longer pulses and fades. The little arrows of the sidebar's menus and the Fields picker turn at once, the offline download's bar steps instead of gliding, and the buttons in the map's corner and the Display toggles' key caps change colour at once."
+  },
+  {
+   "date": "2026-11-20",
+   "tag": "new",
    "title": "Wells shed their leaves",
    "detail": "With \"Objects as themselves\" on, the wells that shed leaves in the games shed them on the map: 49 in Oddysee and 170 in Exoddus, the ones a fresh game leaves switched on. About once a second a leaf pops out of a well's mouth, flutters up and drifts back down, settles on the floor for a moment, then sinks through it and off the foot of its screen. The leaves fly by the game's own numbers, as the PlayStation runs them. Wells that share a screen share the dice, as they do in the game: of two, one sheds seven leaves to its neighbour's three."
   },

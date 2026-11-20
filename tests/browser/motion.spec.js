@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { FLASH_MS } from "../../public/js/config.js";
 import {
   ALL_CATS,
   POLL,
@@ -10,6 +11,7 @@ import {
   seedView,
   settle,
   settleArtwork,
+  spotOf,
   trackErrors,
 } from "./helpers.js";
 
@@ -257,6 +259,216 @@ test("the clock runs with the objects shown, stops with the setting, and the pat
   await page.keyboard.press("]");
   await page.waitForFunction(() => location.hash.startsWith("#AE/MI/7"));
   await page.waitForFunction((was) => window.__motion.sceneTick() < was, before.scene);
+  expect(errors).toEqual([]);
+});
+
+// whether the engine's clock is running on the page
+const running = (page) =>
+  page.evaluate(async () => {
+    const motion = await import(new URL("js/engine/motion.js", location.href).href);
+    return motion.motionRunning();
+  });
+// what the device holds of the settings, there before the page's first script
+const keeping = (page, settings) =>
+  page.addInitScript(
+    (kept) => localStorage.setItem("owm:settings", JSON.stringify(kept)),
+    settings,
+  );
+// the slig's screen with the objects shown, over what the device holds of the settings
+async function atSlig(page, settings) {
+  if (settings) await keeping(page, settings);
+  await seedView(page, { show: { objects: true }, cats: ALL_CATS });
+  await page.goto(`/#AE/MI/1/${SLIG.x1}/${SLIG.y1}/1.00`);
+  await settle(page, SLIG);
+  await settleArtwork(page);
+}
+
+test("Reduce motion, set where the system allows motion, stops the clock", async ({ page }) => {
+  const errors = trackErrors(page);
+  await atSlig(page);
+  await expect.poll(() => running(page), POLL).toBe(true);
+  await page.click("#settingsBtn");
+  await page.check("#sReduceMotion");
+  expect(await running(page)).toBe(false);
+  expect(errors).toEqual([]);
+});
+
+test("a stored choice to allow motion runs the clock on a system that asks to reduce it", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await atSlig(page, { reduceMotion: false });
+  await ticksOn(page, 3);
+  expect(errors).toEqual([]);
+});
+
+test("a visitor whose stored settings predate Reduce motion follows the system as it changes", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await atSlig(page, { fullNames: false });
+  expect(await running(page)).toBe(false);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect.poll(() => running(page), POLL).toBe(true);
+  expect(errors).toEqual([]);
+});
+
+// the slig's screen with nothing shown but the artwork, over what the device holds of the settings
+async function quietSlig(page, settings) {
+  if (settings) await keeping(page, settings);
+  await seedView(page);
+  await page.goto(`/#AE/MI/1/${SLIG.x1}/${SLIG.y1}/1.00`);
+  await settle(page, SLIG);
+}
+// how long the stylesheet gives the sidebar's slide
+const slide = (page) =>
+  page.evaluate(() => getComputedStyle(document.getElementById("sidebar")).transitionDuration);
+
+test("a stored choice to reduce motion stills the sidebar's slide from the boot, where the system allows motion", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await quietSlig(page, { reduceMotion: true });
+  expect(await slide(page)).toBe("0s");
+  expect(errors).toEqual([]);
+});
+
+test("a stored choice to allow motion leaves the sidebar its slide from the boot, where the system asks to reduce it", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await quietSlig(page, { reduceMotion: false });
+  expect(await slide(page)).toBe("0.18s");
+  expect(errors).toEqual([]);
+});
+
+test("Reduce motion set back to what the system asks takes the choice's key off the root", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await quietSlig(page, { reduceMotion: true });
+  const root = page.locator("html");
+  await expect(root).toHaveAttribute("data-motion", "reduce");
+  await page.click("#settingsBtn");
+  await page.uncheck("#sReduceMotion");
+  await expect(root).not.toHaveAttribute("data-motion");
+  expect(errors).toEqual([]);
+});
+
+test("the Reduce motion row is ticked as the system asks and follows its change, where nothing is stored", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await quietSlig(page);
+  await page.click("#settingsBtn");
+  const row = page.locator("#sReduceMotion");
+  await expect(row).not.toBeChecked();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(row).toBeChecked();
+  expect(errors).toEqual([]);
+});
+
+test("the Reduce motion row says what the system asks while the choice stands against it", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await quietSlig(page, { reduceMotion: false });
+  await page.click("#settingsBtn");
+  await expect(page.locator("label:has(#sReduceMotion) .st-def")).toHaveText("on in your system");
+  expect(errors).toEqual([]);
+});
+
+// a link to the slig opened with motion reduced by the visitor's choice
+async function linkedSlig(page) {
+  await keeping(page, { reduceMotion: true });
+  await seedView(page);
+  await page.goto(`/#AE/MI/1/${SLIG.x1}/${SLIG.y1}/1.00/Slig@${SLIG.x1},${SLIG.y1}`);
+  await settle(page, SLIG);
+}
+// the canvas about its middle, where a ring lands, after a paint of its own: its pixels as one
+// digest, and how many of them are the ring's colour
+const ringRead = (page) =>
+  page.evaluate(async () => {
+    const render = await import(new URL("js/painter/render.js", location.href).href);
+    render.draw();
+    const cv = document.getElementById("cv");
+    const accent = getComputedStyle(document.documentElement)
+      .getPropertyValue("--accent-rgb")
+      .split(",")
+      .map(Number);
+    const { data } = cv
+      .getContext("2d")
+      .getImageData(Math.round(cv.width / 2) - 110, Math.round(cv.height / 2) - 110, 220, 220);
+    let lit = 0;
+    for (let i = 0; i < data.length; i += 4)
+      if (accent.every((c, k) => Math.abs(data[i + k] - c) < 24)) lit++;
+    const hash = await crypto.subtle.digest("SHA-256", data);
+    const digest = [...new Uint8Array(hash)]
+      .slice(0, 8)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    return { digest, lit };
+  });
+
+test("with motion reduced, the ring on a linked object stands as it was first drawn", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await linkedSlig(page);
+  const drawn = await ringRead(page);
+  expect(drawn.lit).toBeGreaterThan(100);
+  // a pulse would have swung the ring's radius well within this
+  await page.waitForTimeout(300);
+  expect((await ringRead(page)).digest).toBe(drawn.digest);
+  expect(errors).toEqual([]);
+});
+
+test("with motion reduced, the ring on a linked object goes at once when the pointer lets it go", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await page.clock.install();
+  await linkedSlig(page);
+  expect((await ringRead(page)).lit).toBeGreaterThan(100);
+  await page.clock.fastForward(FLASH_MS + 100);
+  await page.mouse.move(40, 300);
+  await page.evaluate(
+    () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
+  );
+  expect((await ringRead(page)).lit).toBe(0);
+  expect(errors).toEqual([]);
+});
+
+// a Mines door whose partner stands below it on its own screen
+const DOOR = { game: "AE", level: "MI", path: 1, name: "Door", world: [3650, 860] };
+
+test("with motion reduced, the ring where a followed door lands stands at full strength for its time, then goes", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await page.clock.install();
+  await keeping(page, { reduceMotion: true });
+  await seedView(page, { cats: { door: true } });
+  await page.goto(`/#AE/MI/1/${DOOR.world[0] + 12}/${DOOR.world[1] + 12}/1.00`);
+  await settle(page, DOOR);
+  const door = await spotOf(page, DOOR);
+  // the page's clock stands from here, so the ring's time is the test's to run
+  await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
+  await page.mouse.click(door.x, door.y);
+  // off the map, so no hover's outline is in the reads
+  await page.mouse.move(40, 300);
+  const landed = (await ringRead(page)).lit;
+  expect(landed).toBeGreaterThan(100);
+  // the view settles by a hundredth of zoom as the follow's hash comes back, so the ring is held
+  // to its count within a tenth, which a ring half faded falls far short of
+  await page.clock.fastForward(FLASH_MS / 2);
+  expect((await ringRead(page)).lit).toBeGreaterThan(landed * 0.9);
+  await page.clock.fastForward(FLASH_MS);
+  expect((await ringRead(page)).lit).toBe(0);
   expect(errors).toEqual([]);
 });
 

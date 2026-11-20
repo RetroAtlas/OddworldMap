@@ -345,11 +345,12 @@ export function paintRoute({ ctx, cam, lvl, path }, route) {
 }
 
 export function paintFlash({ ctx, cam }, ring) {
+  const still = getSettings().reduceMotion;
   const el = performance.now() - ring.t0;
-  const a = ring.hold ? 1 : Math.max(0, 1 - el / FLASH_MS);
+  const a = ring.hold || still ? 1 : Math.max(0, 1 - el / FLASH_MS);
   ctx.strokeStyle = `rgba(${COLOR.accentRgb},${a})`;
   ctx.lineWidth = 3.5 / cam.z;
-  const r = (46 + 10 * Math.sin(el / 110)) / Math.sqrt(cam.z);
+  const r = (46 + (still ? 0 : 10 * Math.sin(el / 110))) / Math.sqrt(cam.z);
   ctx.beginPath();
   ctx.arc(ring.x, ring.y, r, 0, Math.PI * 2);
   ctx.stroke();

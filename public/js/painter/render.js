@@ -35,6 +35,7 @@ import {
   paintWires,
 } from "./overlays.js";
 import { pathRelease, releaseNotes } from "../data/release.js";
+import { getSettings } from "../data/settings.js";
 import { viewComplete, wanted } from "./artorder.js";
 import { arrived, asked, screenOf, tintedMasks } from "./screens.js";
 import {
@@ -53,7 +54,8 @@ import { CELL_H, CELL_W, GEO, LAYOUT, cellOrigin, state } from "../data/state.js
 
 // follow-destination highlight: a fading ring at (x, y) in draw space. A held
 // flash (object permalink) pulses at full strength until the normal timeout
-// has passed AND the user has interacted, or the hold cap runs out.
+// has passed AND the user has interacted, or the hold cap runs out. With motion
+// reduced the ring stands as it was first drawn for as long, and goes at once.
 let flash = null; // {x, y, t0, hold}
 let flashInteracted = false;
 let flashRaf = null;
@@ -62,24 +64,23 @@ export function flashAt(x, y, hold = false) {
   flash = { x, y, t0: performance.now(), hold };
   flashInteracted = false;
   cancelAnimationFrame(flashRaf);
-  animateFlash();
+  draw();
+  flashRaf = requestAnimationFrame(animateFlash);
 }
 
 function animateFlash() {
   if (!flash) return;
-  if (flash.hold) {
-    const el = performance.now() - flash.t0;
-    if ((el > FLASH_MS && flashInteracted) || el > FLASH_HOLD_MAX_MS) {
-      flash.hold = false;
-      flash.t0 = performance.now(); // released: fade out from here
-    }
-  } else if (performance.now() - flash.t0 > FLASH_MS) {
-    flash = null;
-    draw();
-    return;
+  const still = getSettings().reduceMotion;
+  const el = performance.now() - flash.t0;
+  let over = !flash.hold && el > FLASH_MS;
+  if (flash.hold && ((el > FLASH_MS && flashInteracted) || el > FLASH_HOLD_MAX_MS)) {
+    flash.hold = false;
+    flash.t0 = performance.now(); // released: fade out from here
+    over = still;
   }
-  draw();
-  flashRaf = requestAnimationFrame(animateFlash);
+  if (over) flash = null;
+  if (over || !still) draw();
+  if (!over) flashRaf = requestAnimationFrame(animateFlash);
 }
 
 // hovered followable object: its connection edges render emphasized while

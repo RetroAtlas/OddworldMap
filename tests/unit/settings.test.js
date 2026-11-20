@@ -5,6 +5,7 @@ import {
   SETTINGS_DEFAULTS,
   SHOW_KEYS,
   displayLabel,
+  offDefault,
   sanitizeChosen,
   sanitizeLocationHash,
   sanitizeSettings,
@@ -14,6 +15,32 @@ import { CATS } from "../../public/js/config.js";
 
 // sanitizeSettings adds fieldPrefs (a non-boolean) on top of the boolean defaults
 const DEFAULTS = { ...SETTINGS_DEFAULTS, fieldPrefs: { mode: "default", byType: {} } };
+
+// the store over a device and a system of the test's own: an instance apart, the
+// settings and the system's query being kept on the first ask, what the device
+// holds, and the system's answer with a way to change it
+async function storeOn(instance, { settings, reduce }) {
+  const stored = new Map(settings ? [["owm:settings", JSON.stringify(settings)]] : []);
+  const heard = [];
+  const query = { matches: reduce, addEventListener: (type, f) => heard.push(f) };
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: { getItem: (k) => stored.get(k) ?? null, setItem: (k, v) => stored.set(k, v) },
+  });
+  Object.defineProperty(globalThis, "matchMedia", { configurable: true, value: () => query });
+  return {
+    ...(await import(new URL(`../../public/js/data/settings.js?${instance}`, import.meta.url))),
+    kept: () => JSON.parse(stored.get("owm:settings")),
+    systemAsks(to) {
+      query.matches = to;
+      for (const f of heard) f();
+    },
+    done() {
+      delete globalThis.localStorage;
+      delete globalThis.matchMedia;
+    },
+  };
+}
 
 test("sanitizeSettings: absent or unreadable storage yields the defaults", () => {
   assert.deepEqual(sanitizeSettings(null), DEFAULTS);
@@ -133,6 +160,126 @@ test("chooseSetting: records what the visitor has set, which persistSettings wri
     assert.deepEqual(kept(), {});
   } finally {
     delete globalThis.localStorage;
+  }
+});
+
+test("sanitizeSettings: reduceMotion is the stored choice, and what the system asks where none of its kind is stored", async () => {
+  const on = await storeOn("asked", { reduce: true });
+  try {
+    assert.equal(on.sanitizeSettings(null).reduceMotion, true);
+    assert.equal(on.sanitizeSettings('{"fullNames":false}').reduceMotion, true);
+    assert.equal(on.sanitizeSettings('{"reduceMotion":false}').reduceMotion, false);
+    assert.equal(on.sanitizeSettings('{"reduceMotion":"allow"}').reduceMotion, true);
+    assert.equal(on.sanitizeSettings('{"reduceMotion":null}').reduceMotion, true);
+    assert.deepEqual(on.sanitizeChosen('{"reduceMotion":false}'), { reduceMotion: false });
+    assert.deepEqual(on.sanitizeChosen('{"reduceMotion":0}'), {});
+    on.systemAsks(false);
+    assert.equal(on.sanitizeSettings(null).reduceMotion, false);
+    assert.equal(on.sanitizeSettings('{"reduceMotion":true}').reduceMotion, true);
+    assert.equal(on.sanitizeSettings('{"reduceMotion":1}').reduceMotion, false);
+  } finally {
+    on.done();
+  }
+});
+
+test("reduceMotion: unset it follows the system as it changes, set it stands over it either way, and set back to what the system asks it follows again", async () => {
+  // stored settings that predate the key
+  const on = await storeOn("motion", { settings: { fullNames: false }, reduce: false });
+  try {
+    const s = on.getSettings();
+    assert.equal(s.reduceMotion, false);
+    assert.equal(on.motionChoice(), null);
+    on.systemAsks(true);
+    assert.equal(s.reduceMotion, true);
+    assert.equal(on.motionChoice(), null);
+    // allowed on a system that asks to reduce
+    on.chooseSetting("reduceMotion", false);
+    assert.equal(s.reduceMotion, false);
+    assert.equal(on.motionChoice(), "allow");
+    assert.deepEqual(on.kept(), { fullNames: false, reduceMotion: false });
+    on.systemAsks(false); // the choice stands though the system now asks the same
+    assert.equal(s.reduceMotion, false);
+    assert.equal(on.motionChoice(), "allow");
+    on.systemAsks(true);
+    assert.equal(s.reduceMotion, false);
+    // set back to what the system asks, it leaves the kept set
+    on.chooseSetting("reduceMotion", true);
+    assert.equal(s.reduceMotion, true);
+    assert.equal(on.motionChoice(), null);
+    assert.deepEqual(on.kept(), { fullNames: false });
+    on.systemAsks(false);
+    assert.equal(s.reduceMotion, false);
+    // reduced on a system that allows motion
+    on.chooseSetting("reduceMotion", true);
+    assert.equal(s.reduceMotion, true);
+    assert.equal(on.motionChoice(), "reduce");
+    assert.deepEqual(on.kept(), { fullNames: false, reduceMotion: true });
+    on.systemAsks(true);
+    on.systemAsks(false);
+    assert.equal(s.reduceMotion, true);
+    assert.equal(on.motionChoice(), "reduce");
+  } finally {
+    on.done();
+  }
+});
+
+test("reduceMotion: a stored choice stands from the first read, and a watcher hears the system change", async () => {
+  const on = await storeOn("returning", { settings: { reduceMotion: true }, reduce: false });
+  try {
+    assert.equal(on.getSettings().reduceMotion, true);
+    assert.equal(on.motionChoice(), "reduce");
+    let heard = 0;
+    on.watchSystemMotion(() => heard++);
+    on.systemAsks(true);
+    assert.equal(heard, 1);
+  } finally {
+    on.done();
+  }
+});
+
+test("reduceMotion: a stored choice the system agrees with at the first read is a choice still, and stands when the system changes", async () => {
+  for (const reduce of [false, true]) {
+    // set against a system that has since come round to it
+    const on = await storeOn(`agreed-${reduce}`, { settings: { reduceMotion: reduce }, reduce });
+    try {
+      const s = on.getSettings();
+      assert.equal(s.reduceMotion, reduce);
+      assert.equal(on.motionChoice(), reduce ? "reduce" : "allow");
+      on.systemAsks(!reduce);
+      assert.equal(s.reduceMotion, reduce);
+      assert.equal(on.motionChoice(), reduce ? "reduce" : "allow");
+      on.persistSettings();
+      assert.deepEqual(on.kept(), { reduceMotion: reduce });
+    } finally {
+      on.done();
+    }
+  }
+});
+
+test("offDefault: a setting away from its default names where the default stands, and one at it says nothing", async () => {
+  assert.equal(offDefault(true, true), "");
+  assert.equal(offDefault(false, false), "");
+  assert.equal(offDefault(false, true), "on by default");
+  assert.equal(offDefault(true, false), "off by default");
+  // the motion setting's default is what the system asks now
+  const on = await storeOn("mark", { reduce: true });
+  try {
+    const s = on.getSettings();
+    const mark = () =>
+      on.offDefault(s.reduceMotion, on.SETTINGS_DEFAULTS.reduceMotion, "in your system");
+    assert.equal(mark(), "");
+    on.chooseSetting("reduceMotion", false);
+    assert.equal(mark(), "on in your system");
+    on.systemAsks(false); // the choice overrides nothing while the system asks the same
+    assert.equal(mark(), "");
+    on.systemAsks(true);
+    assert.equal(mark(), "on in your system");
+    on.chooseSetting("reduceMotion", true);
+    on.systemAsks(false);
+    on.chooseSetting("reduceMotion", true);
+    assert.equal(mark(), "off in your system");
+  } finally {
+    on.done();
   }
 });
 

@@ -11,7 +11,7 @@ import { drawnAs, resetKept } from "./kept.js";
 import { resetScene, setMotionRunning, setPatrolsRunning } from "../engine/motion.js";
 import { releaseSprites } from "../data/release.js";
 import { compose, composed, dimCache, images, img, tintCache, viewSettled } from "./screens.js";
-import { getSettings } from "../data/settings.js";
+import { getSettings, watchSystemMotion } from "../data/settings.js";
 import { ownSheet, recordSheets, spriteDraws } from "../rules/sprites.js";
 import { LAYOUT, state } from "../data/state.js";
 
@@ -264,8 +264,6 @@ export function artworkReady(path) {
   return true;
 }
 
-// a visitor who asks for reduced motion still sees the sprites, on their first frame
-const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 // null until the first sync: the boot is neither a flip nor a switch
 let objectsShown = null,
   shownGame = null;
@@ -284,7 +282,7 @@ export function syncMotion() {
     getSettings().animate &&
     !state.graph &&
     !document.hidden &&
-    !reducedMotion.matches &&
+    !getSettings().reduceMotion &&
     placeShown();
   setMotionRunning(on, scheduleDraw);
   setPatrolsRunning(!!state.show.patrols);
@@ -317,7 +315,7 @@ export function initSpriteArt() {
 
   document.addEventListener("visibilitychange", syncMotion);
   window.addEventListener("settings-changed", (e) => {
-    if (e.detail?.key === "animate") {
+    if (e.detail?.key === "animate" || e.detail?.key === "reduceMotion") {
       syncMotion();
       scheduleDraw();
     }
@@ -325,7 +323,7 @@ export function initSpriteArt() {
   });
   window.addEventListener("graph-changed", syncMotion);
   window.addEventListener("edit-changed", scheduleDraw);
-  reducedMotion.addEventListener("change", syncMotion);
+  watchSystemMotion(syncMotion);
   window.addEventListener("selection-changed", syncMotion); // a game switch wants its own sheets
   window.addEventListener("online", () => {
     if (!state.data) return;
