@@ -254,6 +254,7 @@ export function brainAt(r, set, tick) {
     dx: st.dx,
     dy: st.dy,
     hidden: !!st.hidden,
+    seen: st.seen ?? null,
     rgb: st.rgb ?? null,
   };
 }
@@ -301,7 +302,8 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
     flip = r.flip,
     moved = false,
     bright = 1,
-    rgb = r.rgb;
+    rgb = r.rgb,
+    seen = null;
   const cy = r.cycle;
   let at = tick; // the tick the shown animation counts from
   if (cy) {
@@ -315,6 +317,7 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
       flip = w.flip;
       moved = !!cy.patrol;
       if (w.rgb) rgb = w.rgb;
+      seen = w.seen;
     } else if (cy.kind === "uxb") {
       const st = uxbState(cy.digits, tick);
       if (st.flash) anim = "Bomb_Flash";
@@ -357,6 +360,8 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
   const a = anims[anim];
   if (!a) return null;
   const frame = r.frozen ? r.frame : frameAt(a, at, r.frame);
+  // a brain's own test of the frame, where the engine's render makes one
+  if (seen && !seen(a.frames[frame])) return null;
   return { name: anim, anim: a, frame, x, y, flip, moved, bright, rgb };
 }
 

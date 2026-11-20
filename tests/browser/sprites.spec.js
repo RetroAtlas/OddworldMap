@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import {
   ALL_CATS,
   BOUND,
+  POLL,
   pixels,
   seedView,
   settle,
@@ -20,12 +21,14 @@ const LIGHT = { game: "AO", level: "R1", path: 15, x1: 4405, y1: 233, x2: 4429, 
 const PULLEY = { game: "AE", level: "MI", path: 1, x1: 4025, y1: 925, x2: 4049, y2: 949 };
 const WHEEL = { x1: 4032, y1: 900, x2: 4046, y2: 920 };
 
-// a Bonewerkz crate whose rect starts a unit above BWP04C06, the camera holding its
-// midpoint, a band of BWP04C03 its frame reaches into from that anchor, and a band of
-// the drill beside it, another hazard
-const CRATE = { game: "AE", level: "BW", path: 4, x1: 611, y1: 1039, x2: 635, y2: 1063 };
-const ABOVE_CRATE = { x1: 595, y1: 998, x2: 625, y2: 1018 };
-const DRILL = { x1: 495, y1: 957, x2: 525, y2: 973 };
+// a Bonewerkz crate that falls through the foot of BWP01C01, the camera that builds it: its
+// eighteenth move, on scene tick 31, takes its anchor into the cell below with its rect
+// still on its own screen; a band of its frame at that screen's foot, and the band at the
+// head of BWP01C02 its foot reaches from that anchor
+const CRATE = { game: "AE", level: "BW", path: 1, x1: 1007, y1: 261, x2: 1032, y2: 281 };
+const CRATE_TICK = 31;
+const CRATE_TOP = { x1: 990, y1: 487, x2: 1015, y2: 499 };
+const UNDER_SCREEN = { x1: 990, y1: 520, x2: 1015, y2: 531 };
 
 test("the patrol pens draw their posts with the markers off", async ({ page }) => {
   const errors = trackErrors(page);
@@ -73,27 +76,57 @@ test("a falling item is drawn on the screen of the camera that builds it, not th
   page,
 }) => {
   const errors = trackErrors(page);
-  // the clock stopped, so both paints draw tick 0 and the drill holds still
-  await page.addInitScript(() =>
-    localStorage.setItem("owm:settings", JSON.stringify({ animate: false })),
-  );
   await seedView(page, { show: { objects: true }, cats: ALL_CATS });
-  await page.goto(`/?embed=1#AE/BW/4/${CRATE.x1 + 12}/${CRATE.y1 - 20}/1.00`);
+  await page.goto(`/?embed=1#AE/BW/1/${CRATE.x1 + 12}/510/1.00`);
   await settle(page, CRATE);
   await settleArtwork(page);
-  const above = await pixels(page, ABOVE_CRATE);
-  const drill = await pixels(page, DRILL);
-  // the hazards hidden with the objects still shown, so the masks over the sprites stay
-  await page.evaluate(async () => {
-    const u = (m) => new URL("js/" + m, location.href).href;
-    const config = await import(u("config.js"));
-    const render = await import(u("painter/render.js"));
-    config.CATS.find((c) => c.key === "hazard").on = false;
-    render.draw();
-  });
-  const changed = (a, b) => a.filter((v, i) => v !== b[i]).length;
-  expect(changed(await pixels(page, DRILL), drill)).toBeGreaterThan(0);
-  expect(changed(await pixels(page, ABOVE_CRATE), above)).toBe(0);
+  // both bands at the crate's tick, as painted and with the hazards hidden, read in the one
+  // task that paints them; a frame that ran past the tick starts the scene over
+  const [top, under] = await page.evaluate(
+    async ([tick, bands, ms]) => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("data/state.js"));
+      const config = await import(u("config.js"));
+      const motion = await import(u("engine/motion.js"));
+      const render = await import(u("painter/render.js"));
+      const sidebar = await import(u("chrome/sidebar.js"));
+      const ctx = document.getElementById("cv").getContext("2d");
+      const read = (r) => {
+        const z = st.state.cam.z;
+        const at = (x, y) => [(st.dX(x) - st.state.cam.x) * z, (st.dY(y) - st.state.cam.y) * z];
+        const [x1, y1] = at(r.x1, r.y1),
+          [x2, y2] = at(r.x2, r.y2);
+        return [
+          ...ctx.getImageData(
+            Math.round(x1),
+            Math.round(y1),
+            Math.round(x2 - x1),
+            Math.round(y2 - y1),
+          ).data,
+        ];
+      };
+      const deadline = Date.now() + ms;
+      while (motion.sceneTick() !== tick) {
+        if (Date.now() > deadline) throw new Error(`no frame at scene tick ${tick}`);
+        if (motion.sceneTick() > tick) {
+          sidebar.toggleShow("objects");
+          sidebar.toggleShow("objects");
+        }
+        await new Promise(requestAnimationFrame);
+      }
+      const hazard = config.CATS.find((c) => c.key === "hazard");
+      render.draw();
+      const shown = bands.map(read);
+      hazard.on = false;
+      render.draw();
+      const bare = bands.map(read);
+      hazard.on = true;
+      return shown.map((px, i) => px.filter((v, k) => v !== bare[i][k]).length);
+    },
+    [CRATE_TICK, [CRATE_TOP, UNDER_SCREEN], POLL.timeout],
+  );
+  expect(top).toBeGreaterThan(0);
+  expect(under).toBe(0);
   expect(errors).toEqual([]);
 });
 

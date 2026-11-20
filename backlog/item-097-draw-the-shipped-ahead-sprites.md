@@ -54,6 +54,15 @@ Where the sketch was wrong:
 - A piece turned back short of the eye plays a sound the dice are rolled for, three rolls a piece (`Math_RandomRange(-64, 46)`, which the decomp comments out as unused, then the volume and the pan; an Oddysee meat chunk one, and only on its screen), so the debris spends the item's dice long after the smash.
 - `DamageHitItems` is more than damage: an Exoddus item whose rect meets a drill's or a mine car's of its scale stops and smashes there, and six BW P4 crates fall through a shaft of running drills, about half their falls ending on one. The item reads each drill through a copy of the drill's brain stepped beside its own, in the order its camera's list updates the two, and both rects from their current frames' own bounds, which the sidecars now carry per frame (154 of Exoddus's 202 animations and 91 of Oddysee's 261 have frames whose bounds differ). The creatures it would hurt are never in reach: the closest any comes to an always-on item's fall is 17 units, the BW P3 Mudokon.
 
+## Shipped (2026-11-20)
+
+**Where a falling item waits, and when it is drawn** (`furniturerules.js`, `fallingitem.js`). An item of either game waits at its rect's top and is drawn only in the frames whose own bounding rect reaches the screen of the camera that builds it. At a fresh start 30 of Exoddus's 93 hang into the top of their screens while they wait (PV P5's six rocks 15 to 21 units, FD P11's nine and FD P13's nine 10, three BW P3 crates 9 to 11, the BW P4 crate at (1976,276) 16 and its two at (563,789) and (614,789) 9) and 63 show nothing; of Oddysee's 21 only the F2 P2 rock at (2386,128) shows, eight units into its screen, and it is gone on the one frame of its standing art whose rect ends a unit short. `tests/unit/sprites.test.js` holds both over every placed item.
+
+Where the sketch was wrong:
+
+- The constructor that keeps the smaller of the rect's top and the camera's is the PC build's. The PS1 constructor, the same code in every overlay that links the item (15 of Exoddus's 191 and 11 of Oddysee's 29), stores the record's top-left corner as the item's place and reads nothing of the camera, so the 60 Exoddus items whose rects start below their camera's top wait 1 to 21 units lower than that top, and each fall starts there.
+- A waiting item is not drawn merely for reaching into its screen. The render both executables give every animated object first asks whether the current frame's bounding rect meets the camera's 368×240 window, and a frame's rect is smaller than its art: a crate's ends 7 to 10 units above the item's point, which its art reaches, so the twelve Bonewerkz crates that start no more than 5 units below their screen's top show nothing of themselves until they fall.
+
 ## Not shipped, and why
 
 - **Never drawn without Abe**, so the test would refuse them: `Mudokon_TurnWheelEnd` (only Abe's voice stops a wheel worker), Exoddus's `Scrab_WalkToFall` and Oddysee's `Scrab_Landing` (above).

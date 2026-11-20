@@ -26,8 +26,8 @@ const itemSet = (dice) => ({
   anims: ITEM_ANIMS,
   dice: Array.isArray(dice) ? dice : new Array(256).fill(dice ?? 128),
 });
-// an item 100 along the top of a screen, a floor at 200 under it and a
-// background floor at 230
+// an item 100 along a screen, its rect's foot on the screen's top row, a floor
+// at 200 under it and a background floor at 230
 const fallingItem = (p = {}, scale = 1, game = "AE") => {
   const q = {
     switchId: 1,
@@ -43,7 +43,7 @@ const fallingItem = (p = {}, scale = 1, game = "AE") => {
       [0, 230, 400, 230, 4],
     ],
     floor: scale === 1 ? [0] : [4],
-    win: [0, 0, 368, 240],
+    win: [0, -5, 368, 235],
     cam: { x: 112, y: 12 },
     stays: true,
     debris: [],
@@ -155,6 +155,44 @@ test("falling item: it retires after the fall that spends its count, or where it
   // any count but none is one, a negative one spent at the first fall
   assert.equal(resolveRecord(fallingItem({ max: -1 }), set, 27), null);
   assert.equal(resolveRecord(fallingItem({ max: -1 }, 1, "AO"), set, 27), null);
+});
+
+test("falling item: it is drawn in the frames whose bounding rect reaches its screen, the rect taken at its own height and scale", () => {
+  // the rect spans 10 either side of the item and from 30 to 5 above it, and
+  // an edge on the screen's edge reaches it
+  const waits = (p, scale, game) => fallingItem({ switchId: 7, ...p }, scale, game);
+  const drawn = (p, scale) => resolveRecord(waits(p, scale), itemSet(), 1) !== null;
+  assert.deepEqual([drawn({ y: 0 }), drawn({ y: -1 })], [true, false], "the top");
+  assert.deepEqual([drawn({ y: 265 }), drawn({ y: 266 })], [true, false], "the bottom");
+  assert.deepEqual([drawn({ x: -10 }), drawn({ x: -11 })], [true, false], "the left");
+  assert.deepEqual([drawn({ x: 378 }), drawn({ x: 379 })], [true, false], "the right");
+  // half the rect, cut toward zero: 15 to 2 above the item
+  assert.deepEqual([drawn({ y: -3 }, 0.5), drawn({ y: -4 }, 0.5)], [true, false]);
+  // a frame whose rect ends a unit higher than the rest
+  const short = {
+    ...ITEM_ANIMS.Item_Falling,
+    frames: ITEM_ANIMS.Item_Falling.frames.map((f, i) => (i === 2 ? [...f.slice(0, 10), -6] : f)),
+  };
+  const set = { ...itemSet(), anims: { ...ITEM_ANIMS, Item_Falling: short } };
+  assert.deepEqual(
+    Array.from({ length: 16 }, (_, i) => resolveRecord(waits(), set, i + 1)?.frame ?? null),
+    [0, 0, 0, 0, 1, 1, 1, 1, null, null, null, null, 3, 3, 3, 3],
+  );
+  // a record drawn five below its item, as Oddysee's render draws one
+  const lower = (y) => ({ ...waits({ y }, 1, "AO"), y: y + 5 });
+  assert.equal(resolveRecord(lower(0), itemSet(), 1).y, 5);
+  assert.equal(resolveRecord(lower(-1), itemSet(), 1), null);
+  // one waiting 40 above its screen shows from the move that brings its rect
+  // in to the last that leaves the rect's top on it
+  const above = fallingItem({ y: -40, interval: 0, lines: [[0, 400, 400, 400, 0]] });
+  const shown = [];
+  for (let t = 1; t <= 24; t++) if (resolveRecord(above, itemSet(), t)) shown.push(t);
+  assert.deepEqual(shown, [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]);
+  assert.deepEqual(
+    [resolveRecord(above, itemSet(), 9).y, resolveRecord(above, itemSet(), 21).y],
+    [fallen(7) - 40, fallen(19) - 40],
+    "its seventh move to its nineteenth",
+  );
 });
 
 const ROCKS = { anim: "Explosion_Rock", type: "rocks", count: 25 };

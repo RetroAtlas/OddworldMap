@@ -1,6 +1,13 @@
 {
  "entries": [
   {
+   "date": "2026-11-20",
+   "tag": "fixed",
+   "tiny": true,
+   "title": "Falling rocks and crates hang where the PlayStation hangs them",
+   "detail": "In Exoddus on the PlayStation a falling rock or crate waits exactly where its level placed it, and for 30 of the 93 that is a little way into the top of their screen. Among them are the six rocks of Mudomo Vault's Trial 6, nine over FeeCo Depot's Executive Office and six crates in Bonewerkz Annexes 7 and 8. The map had followed the PC version's code, which lifts each one to the top edge, out of sight. They hang into their screens again, and a crate that reaches in by only a few rows stays unseen, as in the game, where the map used to draw a row or two of it along the top edge."
+  },
+  {
    "date": "2026-11-19",
    "tag": "improved",
    "tiny": true,

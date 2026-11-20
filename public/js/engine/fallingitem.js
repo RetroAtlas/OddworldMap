@@ -5,7 +5,8 @@ import { BRAINS, STARTS, fpMul, switchGet } from "./patrolkit.js";
 // ---- FallingItem: once its switch reads on it rumbles its interval, falls to
 // the floor of its plane, smashes there and starts over from where it waited,
 // retiring once a count it was given is spent or where the foot of its rect
-// lies off the screen that built it; its height and speed in raw 16.16
+// lies off the screen that built it, and drawn in the frames whose bounding
+// rect reaches that screen; its height and speed in raw 16.16
 
 const FP = 65536;
 const GAIN = Math.trunc(1.8 * FP);
@@ -16,6 +17,8 @@ STARTS.fallingItem = (st) => {
   st.y = st.p.y * FP;
   st.vy = 0;
   st.left = st.p.max;
+  st.seen = (frame) =>
+    rectsMeet(boundingRect(frame, st.p.x, st.y / FP, st.r.scale, false), st.p.win);
 };
 
 function smash(st, rnd, now, s) {

@@ -434,12 +434,12 @@ rule("AE", "BoneBag", (c) => [
   }),
 ]);
 
-// a falling item stands in its first art until its switch reads on and in its
-// second from then; a camera change removes one that is not falling, so it
-// shows on the screen of the camera that builds it alone, the one whose list
-// holds it, and it retires after a fall where its rect's foot lies off that
-// screen
-function fallingItem(c, [art, waiting], y, debris, blast = false) {
+// a falling item waits at its rect's top, in its first art until its switch
+// reads on and in its second from then; a camera change removes one that is
+// not falling, so it shows on the screen of the camera that builds it alone,
+// the one whose list holds it, and it retires after a fall where its rect's
+// foot lies off that screen
+function fallingItem(c, [art, waiting], debris, blast = false) {
   const { t, f, geo } = c;
   const cam = filedAt(t, c.game);
   const left = Math.floor(cam.x / geo.worldW) * geo.worldW + geo.winX;
@@ -454,7 +454,7 @@ function fallingItem(c, [art, waiting], y, debris, blast = false) {
     art,
     waiting,
     x: t.x1,
-    y,
+    y: t.y1,
     lines: c.lines,
     floor: planeTypes(c.half, FLOOR),
     win,
@@ -492,14 +492,11 @@ rule("AE", "FallingItem", (c) => {
   const art = bw
     ? ["FallingCrate_Falling", "FallingCrate_Waiting"]
     : ["AE_FallingRock_Falling", "AE_FallingRock_Waiting"];
-  // the item waits no lower than the top of the camera that builds it
-  const camTop = Math.floor(filedAt(t, c.game).y / c.geo.worldH) * c.geo.worldH + c.geo.winY;
-  const y = Math.min(t.y1, camTop);
   const debris = bw
     ? { anim: "Explosion_Stick", type: "sticks", count: 20 }
     : { anim: "Explosion_Rock", type: "rocks", count: 25 };
-  const { cam, cycle } = fallingItem(c, art, y, [debris], bw);
-  return [draw(c, art[0], t.x1, y, { layer: c.half ? 12 : 31, camAt: cam, cycle })];
+  const { cam, cycle } = fallingItem(c, art, [debris], bw);
+  return [draw(c, art[0], t.x1, t.y1, { layer: c.half ? 12 : 31, camAt: cam, cycle })];
 });
 rule("AO", "FallingItem", (c) => {
   const { t } = c;
@@ -511,7 +508,7 @@ rule("AO", "FallingItem", (c) => {
     ? { anim: "Meat_Gib", type: "meat", count: 25 }
     : { anim: "Explosion_Rock", type: "rocks", count: 25 };
   const sticks = { anim: "Explosion_Stick", type: "sticks", count: 25 };
-  const { cam, cycle } = fallingItem(c, art, t.y1, [debris, sticks]);
+  const { cam, cycle } = fallingItem(c, art, [debris, sticks]);
   return [
     draw(c, art[0], t.x1, t.y1, {
       layer: 31,

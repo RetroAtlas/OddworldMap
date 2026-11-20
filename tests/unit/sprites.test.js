@@ -6,7 +6,7 @@ import { armFieldData } from "../../public/js/model/fields.js";
 import { setMessages } from "../../public/js/model/messages.js";
 import { brainAt, resolveEffects, resolveRecord } from "../../public/js/engine/motion.js";
 import { raycast } from "../../public/js/engine/collide.js";
-import { patrolZone, sligBounds } from "../../public/js/model/model.js";
+import { filedCell, patrolZone, sligBounds } from "../../public/js/model/model.js";
 import { drawX } from "../../public/js/model/geometry.js";
 
 const pub = (f) => JSON.parse(readFileSync(new URL(`../../public/${f}`, import.meta.url), "utf8"));
@@ -57,8 +57,9 @@ function brainAnims(r, set) {
     names.add(shown.name);
     if (shown.x !== r.x || shown.y !== r.y) moved = true;
   }
-  if (r.anim !== null) assert.ok(names.size > 0, `${r.anim} is never shown`);
-  else assert.ok(moved, `an effect-only record that gives off nothing`);
+  // a brain that tests the frame it is drawn in may never pass one
+  if (r.anim === null) assert.ok(moved, `an effect-only record that gives off nothing`);
+  else if (!brainAt(r, set, 1).seen) assert.ok(names.size > 0, `${r.anim} is never shown`);
   names.moved = moved;
   return names;
 }
@@ -87,6 +88,7 @@ const EDIT_REACHED = new Set([
   "AO_FallingRock_Waiting", // an Oddysee rock whose switch is set to the always-on id
   "CrawlingSlig_Idle", // a crawling slig whose state is set awake
   "Explosion_Rock", // the debris of an Oddysee rock set on the always-on id
+  "FallingMeat_Falling", // a slab of meat moved down to hang into its screen
   "Scrab_JumpAndRunToFall", // a scrab whose scale leaves it no floor
   "Slig_ReloadGun", // an Oddysee slig turned to face a wall, standing past its reload timer
   "Slig_ReloadGun@StockYardsSlig",
@@ -560,9 +562,10 @@ test("pinned placements: a half-scale Exoddus slig stands aside by the table's s
   assert.equal(r.x, 1299); // 1300 on the half grid, plus the table's -3 halved to -1.5 and truncated to -1
 });
 
-test("pinned placements: an Exoddus falling item waits no lower than the top of the camera that builds it, on that camera's screen alone", () => {
-  // a BWP04C03 crate whose rect starts nine below that camera's top
-  assert.equal(recordAt("AE", "BW", 4, "FallingItem", 563, 789).y, 780);
+test("pinned placements: an Exoddus falling item waits at its rect's top, on the screen of the camera that builds it alone", () => {
+  // a PVP05C03 rock and a BWP04C03 crate whose rects start sixteen and nine below their camera's top
+  assert.equal(recordAt("AE", "PV", 5, "FallingItem", 1237, 276).y, 276);
+  assert.equal(recordAt("AE", "BW", 4, "FallingItem", 563, 789).y, 789);
   // a BWP04C06 crate whose rect starts a unit above that camera, its midpoint inside it
   const r = recordAt("AE", "BW", 4, "FallingItem", 611, 1039);
   assert.equal(r.y, 1039);
@@ -574,6 +577,61 @@ test("pinned placements: an Exoddus falling item waits no lower than the top of 
 
 // a minute of the patrol clock, longer than any pause a creature on patrol rolls
 const PATROL_MINUTE = 1800;
+
+// where a falling item's brain has it at a tick, drawn there or not, or null
+// once it has retired
+function itemAt(r, set, tick) {
+  const b = brainAt(r, set, tick);
+  return b.hidden ? null : { name: b.anim, x: r.x, y: r.y + b.dy };
+}
+
+// two rounds of the longest standing art, eight frames at four ticks each
+const WAIT_WINDOW = 64;
+
+test("falling items: each waits at its rect's top, drawn in the frames whose bounding rect reaches the screen of the camera that builds it", () => {
+  const placed = { AO: 0, AE: 0 };
+  const drawnOn = { AO: {}, AE: {} };
+  const blinks = [];
+  for (const g of GAMES) {
+    const renderOffset = g === "AO" ? 5 : 0;
+    for (const { lvl, path, t, r } of allRecords(g)) {
+      if (t.name !== "FallingItem") continue;
+      placed[g]++;
+      const where = `${g} ${lvl.short} P${path.id} (${t.x1},${t.y1})`;
+      const cam = path.cams.find((c) => c.cell === filedCell(t, path, data[g].geometry, g)).name;
+      assert.equal(itemAt(r, sheets[g], 1).y, t.y1 + renderOffset, `${where} waits`);
+      let drawn = 0;
+      const unseen = [];
+      for (let tick = 1; tick <= WAIT_WINDOW; tick++) {
+        if (itemAt(r, sheets[g], tick).y !== r.y) continue;
+        const s = resolveRecord(r, sheets[g], tick);
+        if (!s) unseen.push(tick);
+        else {
+          assert.equal(s.y, t.y1 + renderOffset, `${where} is drawn at ${tick}`);
+          drawn++;
+        }
+      }
+      if (drawn) drawnOn[g][cam] = (drawnOn[g][cam] ?? 0) + 1;
+      if (drawn && unseen.length) blinks.push([where, unseen]);
+    }
+  }
+  assert.deepEqual(placed, { AO: 21, AE: 93 });
+  // the rest show nothing while they wait
+  assert.deepEqual(drawnOn.AE, {
+    PVP05C03: 2,
+    PVP05C04: 2,
+    PVP05C05: 2,
+    FDP11C04: 9,
+    FDP13C04: 9,
+    BWP03C11: 1,
+    BWP03C12: 2,
+    BWP04C03: 2,
+    BWP04C17: 1,
+  });
+  assert.deepEqual(drawnOn.AO, { F2P02C09: 1 });
+  // the third frame of that rock's standing art ends a unit short of its screen
+  assert.deepEqual(blinks, [["AO F2 P2 (2386,128)", [9, 10, 11, 12, 41, 42, 43, 44]]]);
+});
 
 // nothing switches the always-on id off and none of these carries a count, so
 // each falls for good: in a minute, every one smashes more than once, on a floor
@@ -592,7 +650,7 @@ test("falling items: every one on the always-on switch falls, smashes on a floor
         stops = 0,
         prev = null;
       for (let tick = 0; tick <= PATROL_MINUTE; tick++) {
-        const s = resolveRecord(r, sheets[g], tick);
+        const s = itemAt(r, sheets[g], tick);
         assert.ok(s, `${where} retires at ${tick}`);
         if (prev && s.y < prev.y) {
           const y = prev.y - yOff;
@@ -618,10 +676,9 @@ test("falling items: every one on the always-on switch falls, smashes on a floor
 test("pinned falls: an Oddysee rock set on the always-on switch rumbles in its own art and throws rocks and sticks", () => {
   const r = recordAt("AO", "F2", 5, "FallingItem", 1520, 1062);
   const dropped = { ...r, cycle: { ...r.cycle, p: { ...r.cycle.p, switchId: 1 } } };
-  assert.equal(resolveRecord(dropped, sheets.AO, 1).name, "AO_FallingRock_Waiting");
+  assert.equal(itemAt(dropped, sheets.AO, 1).name, "AO_FallingRock_Waiting");
   let tick = 1;
-  while (resolveRecord(dropped, sheets.AO, tick + 1).y >= resolveRecord(dropped, sheets.AO, tick).y)
-    tick++;
+  while (itemAt(dropped, sheets.AO, tick + 1).y >= itemAt(dropped, sheets.AO, tick).y) tick++;
   const thrown = brainAt(dropped, sheets.AO, tick).state.fx.filter((p) => p.kind === "burst");
   assert.deepEqual(
     thrown.map((p) => [p.anim, p.parts.length]),
@@ -650,12 +707,12 @@ test("pinned falls: a Bonewerkz shaft crate stops on the drills its camera build
     const r = recordAt("AE", "BW", 4, "FallingItem", x1, y1);
     let prev = null;
     for (let tick = 0; ; tick++) {
-      const s = resolveRecord(r, sheets.AE, tick);
+      const s = itemAt(r, sheets.AE, tick);
       if (prev && s.y < prev.y) return [tick - 1, prev.y];
       prev = s;
     }
   };
-  assert.deepEqual(smashAt(564, 523), [63, 520 + (66 * 117964) / 65536]);
+  assert.deepEqual(smashAt(564, 523), [63, 523 + (66 * 117964) / 65536]);
   assert.deepEqual(smashAt(562, 1040), [59, 1040 + (78 * 117964) / 65536]);
 });
 function xSpan(r, set) {
