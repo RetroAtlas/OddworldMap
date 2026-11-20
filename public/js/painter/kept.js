@@ -51,6 +51,8 @@ export function resetKept() {
   keptCache = { path: null, conn: null, wires: null, filters: null, set: null };
   connCache = { path: null, edges: null };
 }
+// a record that draws nothing itself, its brain giving off only what flies free of its object
+const bodiless = (r) => r.anim === null && !!r.cycle?.free;
 // what an object is drawn as: its sprite, its marker, unseen (there to point
 // at, nothing to paint) or nothing. A type the rules know stays present when
 // its own state draws nothing, an open door included
@@ -62,10 +64,11 @@ export function drawnAs(t, sprites, art) {
   const markers = state.show.markers || state.edit;
   if (hasRule(state.data.id, t.name)) {
     if (!sprites) return art.failed ? "marker" : null;
-    if (!sprites.has(t)) return markers ? "marker" : "unseen";
+    const recs = sprites.get(t);
+    if (!recs || recs.every(bodiless)) return markers ? "marker" : "unseen";
     // a sprite still on its way leaves its object there to point at, boxed for the editor
     if (!art.drawn) return state.edit ? "marker" : "unseen";
-    return sprites.get(t).some(art.lost) ? "marker" : "sprite";
+    return recs.some(art.lost) ? "marker" : "sprite";
   }
   if (markers) return "marker";
   return kept(t) ? "unseen" : null;

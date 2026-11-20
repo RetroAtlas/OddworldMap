@@ -96,8 +96,8 @@ export const PENS = { on: false };
 
 // types the game shows that the rules cannot draw yet, and the stones Abe
 // uses: kept on the map to point at while the markers are off
-export const KEPT_UNSEEN = ["LocalWell", "WellExpress", "GasCountdown",
-                            "ColourfulMeter", "HandStone", "MovieHandStone", "BellSongStone", "MovieStone"];
+export const KEPT_UNSEEN = ["GasCountdown", "ColourfulMeter", "HandStone", "MovieHandStone",
+                            "BellSongStone", "MovieStone"];
 
 // the one visibility rule for map markers: what is drawn is exactly what can
 // be pointed at

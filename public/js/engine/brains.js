@@ -23,3 +23,4 @@ import "./flyingslig.js";
 import "./fallingitem.js";
 import "./hintfly.js";
 import "./lcd.js";
+import "./well.js";

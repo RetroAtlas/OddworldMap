@@ -2,6 +2,12 @@
  "entries": [
   {
    "date": "2026-11-20",
+   "tag": "new",
+   "title": "Wells shed their leaves",
+   "detail": "With \"Objects as themselves\" on, the wells that shed leaves in the games shed them on the map: 49 in Oddysee and 170 in Exoddus, the ones a fresh game leaves switched on. About once a second a leaf pops out of a well's mouth, flutters up and drifts back down, settles on the floor for a moment, then sinks through it and off the foot of its screen. The leaves fly by the game's own numbers, as the PlayStation runs them. Wells that share a screen share the dice, as they do in the game: of two, one sheds seven leaves to its neighbour's three."
+  },
+  {
+   "date": "2026-11-20",
    "tag": "fixed",
    "tiny": true,
    "title": "Falling rocks and crates hang where the PlayStation hangs them",

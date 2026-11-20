@@ -542,18 +542,78 @@ rule("AO", "ChimeLock", (c) => {
   ];
 });
 
+// a well lets leaves go where its record says so and its switch is none or the always-on id
+const WELLS = new Set(["WellLocal", "LocalWell", "WellExpress"]);
+const letsGo = (o) =>
+  WELLS.has(o.name) &&
+  !!o.fields?.emit_leaves &&
+  (o.fields.switch_id === 0 || o.fields.switch_id === 1);
+
+// where a well's leaves start and the speed they leave at, in hundredths a tick
+function leafOf(c, o) {
+  const f = o.fields;
+  const ae = c.game === "AE";
+  const half = onBackgroundPlane(c.game, o);
+  const [ox, oy] = (ae && c.abeStart) || [0, 0];
+  const lx = f.leaf_x ?? f.leaf_xpos,
+    ly = f.leaf_y ?? f.leaf_ypos;
+  const down = !ae && f.exit_y > 0;
+  return {
+    x: lx ? lx + ox : mid(o),
+    y: ly ? ly + oy : o.y1 + (ae ? 5 : 0),
+    speed: ae ? [200, -2000] : [f.exit_x, f.exit_y],
+    scale: half ? 0.5 : 1,
+    layer: down ? (half ? 3 : 22) : half ? 8 : 27,
+  };
+}
+
+// a camera's wells that let leaves go run one brain, each record a copy from the first's seed
+function leaves(c) {
+  const { t, geo, path } = c;
+  if (!letsGo(t)) return null;
+  const here = filedCell(t, path, geo, c.game);
+  const wells = path.tlvs.filter((o) => letsGo(o) && filedCell(o, path, geo, c.game) === here);
+  const cam = filedAt(t, c.game);
+  const left = Math.floor(cam.x / geo.worldW) * geo.worldW + geo.winX;
+  const top = Math.floor(cam.y / geo.worldH) * geo.worldH + geo.winY;
+  const p = {
+    wells: wells.map((o) => leafOf(c, o)),
+    own: wells.indexOf(t),
+    floors: c.lines.filter((l) => l[4] === 0 || l[4] === 4),
+    win: [left, top, left + geo.visW, top + geo.visH],
+    cam,
+    hold: c.game === "AE" ? 1 : 0,
+    lift: c.yOff,
+  };
+  return {
+    ...brain(c, "well", false, p),
+    seed: path.tlvs.indexOf(wells[0]) & 255,
+    free: true, // a leaf is no part of its well
+  };
+}
+
 // an Oddysee well is drawn by the background animation its camera carries
 const aoWell = (c) => {
   const id = c.f.animation_id;
-  if (!id) return [];
+  const cycle = leaves(c);
+  if (!id) return cycle ? [draw(c, null, c.t.x1, c.t.y1, { cycle })] : [];
   return [
     draw(c, `bg:${id}`, c.t.x1, c.t.y1, {
       scale: 1,
       layer: c.half ? 4 : 23,
       rgb: [128, 128, 128],
       semi: false,
+      cycle,
     }),
   ];
 };
 rule("AO", "WellLocal", aoWell);
 rule("AO", "WellExpress", aoWell);
+
+// an Exoddus well is its screen's own art, and draws its leaves alone
+const aeWell = (c) => {
+  const cycle = leaves(c);
+  return cycle ? [draw(c, null, c.t.x1, c.t.y1, { cycle })] : [];
+};
+rule("AE", "LocalWell", aeWell);
+rule("AE", "WellExpress", aeWell);

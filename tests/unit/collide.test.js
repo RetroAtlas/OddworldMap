@@ -11,6 +11,7 @@ import {
   raycast,
   raycastDiag,
   raycastDown,
+  raycastFixed,
   rectsMeet,
   snapAt,
   snapX,
@@ -179,6 +180,49 @@ test("raycast: a crossing whose determinant is under a unit is skipped as parall
     { line: 0, x: 5, y: 5 },
     "a longer line crosses",
   );
+});
+
+// what both PlayStation executables' raycast answers for each ray, in raw 16.16
+test("raycastFixed: the engine's own arithmetic, the ray cut to 24.8 toward zero and its crossing placed by a quotient of the determinant's whole part", () => {
+  const lines = [
+    [0, 100, 200, 100, 0],
+    [0, 80, 200, 80, 4],
+    [200, 100, 260, 130, 0],
+    [-40, -20, 40, -20, 0],
+  ];
+  const both = [0, 4];
+  const cases = [
+    // down across the floor, the crossing a little short of it
+    [[3309568, 5914624, 3457024, 6914048], both, { line: 0, x: 3403264, y: 6550784 }],
+    // from above both floors, the background's the nearer
+    [[3309568, 4603904, 3457024, 6914048], both, { line: 1, x: 3349760, y: 5235456 }],
+    [[3309568, 4603904, 3457024, 6914048], [0], { line: 0, x: 3433984, y: 6553088 }],
+    // ending on the floor, 1/512 short of it, and 1/512 past it
+    [[1966080, 6225920, 2228224, 6553600], both, { line: 0, x: 2228224, y: 6553600 }],
+    [[1966080, 6225920, 2228224, 6553472], both, null],
+    [[1966080, 6225920, 2228224, 6553728], both, { line: 0, x: 2228224, y: 6553600 }],
+    // starting on it, and along it
+    [[1966080, 6553600, 2228224, 6324224], both, { line: 0, x: 1966080, y: 6553600 }],
+    [[1966080, 6553600, 3932160, 6553600], both, null],
+    // up a slope's face
+    [[15092941, 7910195, 14948762, 7090995], both, { line: 2, x: 15023104, y: 7513344 }],
+    // a crawl of 3/256 across the floor
+    [[655360, 6553088, 656640, 6553856], both, { line: 0, x: 656128, y: 6553600 }],
+    // a 256th down onto the floor, the determinant under one, and two, the crossing a 256th past it
+    [[655360, 6553344, 655360, 6553600], both, null],
+    [[655360, 6553088, 655360, 6553600], both, { line: 0, x: 655360, y: 6553856 }],
+    // past the floor's end
+    [[13434880, 6225920, 13565952, 6488064], both, null],
+    // below zero, cut toward it
+    [[-216269, -1684275, -72090, -996147], both, { line: 3, x: -138496, y: -1313280 }],
+  ];
+  for (const [ray, types, hit] of cases) assert.deepEqual(raycastFixed(lines, ...ray, types), hit);
+  // the same crossing in whole arithmetic lies on the floor itself
+  assert.deepEqual(raycast(lines, 50.5, 90.25, 52.75, 105.5, both), {
+    line: 0,
+    x: 50.5 + (2.25 * 9.75) / 15.25,
+    y: 100,
+  });
 });
 
 test("snapAt: Exoddus snaps the world x itself, Oddysee the x within the point's own camera", () => {

@@ -179,8 +179,8 @@ export function stepEffects(st, now, rnd) {
           keep.push(p);
         }
       }
-    } else if (p.kind === "fly") {
-      keep.push(p); // its hint's brain moves it
+    } else if (p.kind === "fly" || p.kind === "leaf") {
+      keep.push(p); // its brain moves it
     } else if (p.kind === "burst") {
       // Oddysee carries a piece over the void between screens; a piece turned
       // back from the eye plays its sound, rolling for it, a meat chunk only

@@ -34,11 +34,18 @@ function allRecords(g) {
 
 // the sprite-drawing types the rules cover, pinned so a rule going missing
 // shows up as a count rather than as blank screens
-const SPRITE_TYPES = { AO: 46, AE: 48 };
+const SPRITE_TYPES = { AO: 46, AE: 50 };
 
 // a brain's cycle has no period, since it rolls dice; two hundred seconds of
 // it is long past the longest timer and holds every break and turn
 const BRAIN_WINDOW = 6000;
+// brains none of whose placed records changes its animation or place, or gives anything off
+const UNCHANGING = new Set([
+  "AO fallingItem false AO_FallingRock_Falling", // Oddysee's rocks, none on the always-on switch
+  "AO well false null", // the one Oddysee well with leaves and no art, each lost above its screen
+]);
+const unchanging = (r) =>
+  UNCHANGING.has(`${r.cycle.game} ${r.cycle.brain} ${r.cycle.emo} ${r.anim}`);
 function brainAnims(r, set) {
   const names = new Set();
   let moved = false;
@@ -58,7 +65,12 @@ function brainAnims(r, set) {
     if (shown.x !== r.x || shown.y !== r.y) moved = true;
   }
   // a brain that tests the frame it is drawn in may never pass one
-  if (r.anim === null) assert.ok(moved, `an effect-only record that gives off nothing`);
+  if (r.anim === null)
+    assert.equal(
+      moved,
+      !unchanging(r),
+      `an effect-only record gives something off exactly where it is not listed as unchanging`,
+    );
   else if (!brainAt(r, set, 1).seen) assert.ok(names.size > 0, `${r.anim} is never shown`);
   names.moved = moved;
   return names;
@@ -110,7 +122,6 @@ const SHIPPED_AHEAD = {
     "Security_Claw_Upper_NoRotation", // a claw carrying motion detectors
     "Slig_Running", // the F1 P2 slig running off its screen
     "Slig_StandToRun",
-    "Well_Leaf", // a well letting a leaf go
   ]),
   AE: new Set([
     "ChantOrb_Particle", // the flare running down a web line
@@ -131,7 +142,6 @@ const SHIPPED_AHEAD = {
     "Scrab_Landing", // a scrab landing from a fall
     "SlapLock_Shaking", // a slap lock holding its ghost
     "Status_Light_Green", // a status light whose switch is on
-    "Well_Leaf", // a well letting a leaf go
     "Work_Wheel_Turning", // a wheel an angry worker turns
   ]),
 };
@@ -269,6 +279,8 @@ test("a record with no animation of its own names the sheet its brain draws from
       const own = ownSheet(set, r);
       if (r.cycle.brain === "hintfly")
         assert.equal(own, set.anims.HintFly.frames[0][0], `${g} ${t.name}`);
+      else if (r.cycle.brain === "well")
+        assert.equal(own, set.anims.Well_Leaf.frames[0][0], `${g} ${t.name}`);
       else assert.equal(own, want, `${g} ${t.name} runs ${r.cycle.brain}`);
     }
   }
@@ -359,11 +371,6 @@ test("nothing parks: every record whose animation does not loop is frozen on pur
     }
 });
 
-// brains every placed record of which waits on a switch a fresh game holds off
-const WAITING = new Set([
-  "AO fallingItem false AO_FallingRock_Falling", // Oddysee's rocks, none on the always-on switch
-]);
-
 test("brains: every brain runs on the sidecar's animations and keeps moving", () => {
   for (const g of GAMES) {
     const set = sheets[g];
@@ -380,9 +387,9 @@ test("brains: every brain runs on the sidecar's animations and keeps moving", ()
     assert.ok(moves.size > 0, `${g} has brains`);
     for (const [key, moved] of moves)
       assert.ok(
-        moved !== WAITING.has(`${g} ${key}`),
+        moved !== UNCHANGING.has(`${g} ${key}`),
         moved
-          ? `${g} ${key} moves, so it leaves WAITING`
+          ? `${g} ${key} moves, so it leaves UNCHANGING`
           : `${g} ${key} never changes animation or place`,
       );
   }

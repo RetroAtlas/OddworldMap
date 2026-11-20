@@ -318,6 +318,9 @@ export const BOUND = { game: "AE", level: "MI", path: 1, x1: 1175, y1: 700, x2: 
 // the board writes
 export const TALLY = { x1: 1283, y1: 539, x2: 1316, y2: 601 };
 
+// the Mines' first express well, which lets its first leaf go on scene tick 3
+export const WELL = { game: "AE", level: "MI", path: 1, x1: 875, y1: 940, x2: 899, y2: 964 };
+
 export const ALL_CATS = {
   board: true,
   mud: true,

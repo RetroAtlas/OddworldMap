@@ -43,6 +43,7 @@ const BRAIN_SHEETS = {
   lcd: (set) => set.font?.sheet,
   tally: (set) => set.font?.sheet,
   hintfly: (set) => set.anims.HintFly?.frames[0][0],
+  well: (set) => set.anims.Well_Leaf?.frames[0][0],
 };
 export function ownSheet(set, r) {
   if (r.anim) return set.anims[r.anim]?.frames[0][0] ?? null;

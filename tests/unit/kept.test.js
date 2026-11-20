@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CATS, KEPT_UNSEEN, PENS, catOf } from "../../public/js/config.js";
 import { connections, drawnAs, kept, resetKept } from "../../public/js/painter/kept.js";
-import { spriteTypes } from "../../public/js/rules/sprites.js";
+import { spriteDraws, spriteTypes } from "../../public/js/rules/sprites.js";
 import { state } from "../../public/js/data/state.js";
 import { at, dataset, level, path, tlv } from "./fixtures.js";
 
@@ -37,6 +37,24 @@ const door = (x, extra) => at(tlv("Door", extra), x, 20);
 const wired = (name, switch_id) => ({ ...tlv(name), fields: { switch_id } });
 const RULED = spriteTypes("AE").find((name) => catOf({ name }).on);
 const ART = { failed: false, drawn: true, lost: () => false };
+const well = (name, fields) => ({
+  ...tlv(name),
+  fields: { scale: 0, switch_id: 0, emit_leaves: 1, ...fields },
+});
+// how many records a game's rule gives an object standing alone, and what it is drawn as by
+// them with the markers off, with them on and in the mode
+function drawnBy(game, t) {
+  stand([t]);
+  state.data = { ...state.data, id: game };
+  const recs = spriteDraws(state.data, state.lvl, state.path, t, { anims: {} });
+  const sprites = new Map(recs.length ? [[t, recs]] : []);
+  const as = [drawnAs(t, sprites, ART)];
+  state.show.markers = true;
+  as.push(drawnAs(t, sprites, ART));
+  state.show.markers = false;
+  state.edit = true;
+  return [recs.length, ...as, drawnAs(t, sprites, ART)];
+}
 
 test("kept: a type in KEPT_UNSEEN is kept", () => {
   const stone = tlv("HandStone"),
@@ -197,6 +215,55 @@ test("drawnAs: a ruled type whose record lost its sheet is a marker, one whose d
   const art = { ...ART, lost: (r) => r === lost };
   assert.equal(drawnAs(whole, sprites, art), "sprite");
   assert.equal(drawnAs(torn, sprites, art), "marker");
+});
+
+test("drawnAs: a ruled type whose records draw nothing but what flies free of it is a marker with the markers or the mode on, unseen otherwise", () => {
+  const leafy = tlv(RULED),
+    fly = tlv(RULED),
+    drawn = tlv(RULED),
+    mixed = tlv(RULED);
+  stand([leafy, fly, drawn, mixed]);
+  const free = { anim: null, cycle: { free: true } };
+  const sprites = new Map([
+    [leafy, [free, free]],
+    [fly, [{ anim: null, cycle: {} }]],
+    [drawn, [{ anim: "bg:5003", cycle: { free: true } }]],
+    [mixed, [free, { anim: "bg:5003", cycle: null }]],
+  ]);
+  const all = (art) => [leafy, fly, drawn, mixed].map((t) => drawnAs(t, sprites, art));
+  const coming = { ...ART, drawn: false },
+    torn = { ...ART, lost: () => true };
+  assert.deepEqual(all(ART), ["unseen", "sprite", "sprite", "sprite"]);
+  assert.deepEqual(
+    [all(coming)[0], all(torn)[0]],
+    ["unseen", "unseen"],
+    "whatever has become of the art it gives off",
+  );
+  state.show.markers = true;
+  assert.deepEqual(all(ART), ["marker", "sprite", "sprite", "sprite"]);
+  assert.deepEqual([all(coming)[0], all(torn)[0]], ["marker", "marker"]);
+  state.show.markers = false;
+  state.edit = true;
+  assert.deepEqual(all(ART), ["marker", "sprite", "sprite", "sprite"]);
+});
+
+test("drawnAs: a well with no art of its own is drawn as an object whose state draws nothing, whether it lets leaves go or not, and an Oddysee well with art as its sprite", () => {
+  const nothing = ["unseen", "marker", "marker"];
+  assert.deepEqual(drawnBy("AE", well("LocalWell")), [1, ...nothing]);
+  assert.deepEqual(drawnBy("AE", well("WellExpress")), [1, ...nothing]);
+  assert.deepEqual(drawnBy("AE", well("LocalWell", { emit_leaves: 0 })), [0, ...nothing]);
+  const up = { exit_x: 0, exit_y: -1500 };
+  assert.deepEqual(drawnBy("AO", well("WellExpress", { ...up, animation_id: 0 })), [1, ...nothing]);
+  assert.deepEqual(drawnBy("AO", well("WellLocal", { ...up, animation_id: 0, emit_leaves: 0 })), [
+    0,
+    ...nothing,
+  ]);
+  assert.deepEqual(drawnBy("AO", well("WellLocal", { ...up, animation_id: 5003 })), [
+    1,
+    "sprite",
+    "sprite",
+    "sprite",
+  ]);
 });
 
 test("drawnAs: an unruled type is a marker with the markers or the mode on, else unseen when kept and null when not", () => {

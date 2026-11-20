@@ -3,10 +3,12 @@ import {
   ALL_CATS,
   BOUND,
   POLL,
+  WELL,
   pixels,
   seedView,
   settle,
   settleArtwork,
+  spotOf,
   trackErrors,
 } from "./helpers.js";
 
@@ -156,6 +158,65 @@ test("over a sprite's image, the hover names what the eye sees before an unseen 
   expect((await tip.textContent()).indexOf("LiftPoint (4000,1500)")).toBeLessThan(
     (await tip.textContent()).indexOf("LiftPoint (4000,980)"),
   );
+  expect(errors).toEqual([]);
+});
+
+// where on the page a leaf of the well stands, the clock held on a tick that has one well clear
+// of the well's rectangle
+const leafHeld = (page) =>
+  page.evaluate(
+    async ([w, ms]) => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("data/state.js"));
+      const render = await import(u("painter/render.js"));
+      const spriteart = await import(u("painter/spriteart.js"));
+      const motion = await import(u("engine/motion.js"));
+      const t = st.state.path.tlvs.find((o) => o.name === "WellExpress" && o.x1 === w.x1);
+      const set = spriteart.setOf(st.state.data);
+      const [r] = spriteart.paintedSprites.get(t);
+      const flying = () =>
+        motion.brainAt(r, set, motion.sceneTick()).state.fx.find((q) => q.y / 65536 < w.y1 - 20);
+      const deadline = Date.now() + ms;
+      while (!flying()) {
+        if (Date.now() > deadline) throw new Error(`no leaf by scene tick ${motion.sceneTick()}`);
+        await new Promise(requestAnimationFrame);
+      }
+      motion.setTickRate(1e-6);
+      render.draw();
+      const q = flying();
+      const box = document.getElementById("cv").getBoundingClientRect();
+      const { cam } = st.state;
+      return {
+        x: box.left + (st.dX(q.x / 65536 - 7) - cam.x) * cam.z,
+        y: box.top + (st.dY(q.y / 65536 - 14) - cam.y) * cam.z,
+      };
+    },
+    [WELL, POLL.timeout],
+  );
+
+test("a well is pointed at over its rectangle, and not over a leaf it has let go", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await seedView(page, { show: { objects: true, markers: false }, cats: { door: true } });
+  await page.goto(`/?embed=1#AE/MI/1/${WELL.x1 + 12}/${WELL.y1 - 30}/2.00`);
+  await settle(page, WELL);
+  const leaf = await leafHeld(page);
+  const tip = page.locator("#tip");
+  const rect = await spotOf(page, { name: "WellExpress", world: [WELL.x1, WELL.y1] });
+  await page.mouse.move(rect.x, rect.y);
+  await expect(tip).toContainText("WellExpress (875,940)");
+  await page.mouse.move(leaf.x, leaf.y);
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const el = document.getElementById("tip");
+          return el.style.display === "none" || !el.textContent.includes("WellExpress");
+        }),
+      POLL,
+    )
+    .toBe(true);
   expect(errors).toEqual([]);
 });
 

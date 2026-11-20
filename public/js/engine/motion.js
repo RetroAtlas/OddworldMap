@@ -5,6 +5,7 @@
 
 import { LOGIC_FPS } from "../config.js";
 import { BRAINS, MOTIONS, SPAWN_FRAME, STARTS, burstParts, stepEffects } from "./brains.js";
+import { boundingRect, rectsMeet } from "./collide.js";
 import { sine16 } from "./patrolkit.js";
 
 // an animation holds each frame `fps` ticks: at construction frame 0 stands
@@ -394,6 +395,27 @@ export function resolveEffects(r, set, tick, patrolAt = tick) {
         rgb: p.rgb,
         cam: p.cam ?? null,
         bare: fly,
+      });
+    } else if (p.kind === "leaf") {
+      // drawn in the frames whose bounding rect meets its screen
+      const a = set.anims[p.anim];
+      if (!a || p.born > at) continue;
+      const frame = frameAt(a, at - p.born + 1);
+      const x = p.x / 65536,
+        y = p.y / 65536;
+      if (!rectsMeet(boundingRect(a.frames[frame], x, y, p.scale, false), p.win)) continue;
+      out.push({
+        kind: "sprite",
+        anim: a,
+        name: p.anim,
+        frame,
+        x,
+        y: y + p.lift,
+        scale: p.scale,
+        layer: p.layer,
+        blend: 0,
+        rgb: p.rgb,
+        cam: p.cam,
       });
     } else if (p.kind === "burst") {
       // the pieces draw the burst's own frame, opaque and unmodulated

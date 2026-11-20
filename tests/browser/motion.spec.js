@@ -4,6 +4,8 @@ import {
   POLL,
   SLIG,
   TALLY,
+  WELL,
+  digest,
   pixels,
   seedView,
   settle,
@@ -16,6 +18,9 @@ const WALKER = { game: "AO", level: "R2", path: 14, x1: 503, y1: 194, x2: 527, y
 
 // the Mines board above the slig, a panel 203 wide the lcd brain writes across
 const LCD = { game: "AE", level: "MI", path: 1, x1: 1159, y1: 625, x2: 1362, y2: 645 };
+
+// the well's mouth and the air its leaves cross, down to the foot of its screen
+const LEAVES = { x1: 850, y1: 870, x2: 960, y2: 1015 };
 
 // the Free-Fire Zone hint fly, which spells SNEAK IN AND OUT OF SHADOWS
 const HINT = { game: "AO", level: "E1", path: 1, x1: 5464, y1: 174, x2: 5488, y2: 198 };
@@ -307,6 +312,20 @@ test("the Mines LCD scrolls its message into its panel once the scene has run pa
   const tallyRunning = await pixels(page, TALLY);
   expect(red(tallyRunning)).toBeGreaterThan(20);
   expect(tallyRunning).not.toEqual(tallyStill);
+  expect(errors).toEqual([]);
+});
+
+test("a well lets a leaf go once its screen's clock runs, drawn over the artwork about its mouth", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await seedView(page, { show: { objects: true, markers: false }, cats: { door: true } });
+  await page.goto(`/#AE/MI/1/${WELL.x1 + 12}/${WELL.y1 - 20}/2.00`);
+  await settle(page, WELL);
+  const bare = await digest(page, LEAVES);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect.poll(() => digest(page, LEAVES), POLL).not.toBe(bare);
   expect(errors).toEqual([]);
 });
 

@@ -65,12 +65,13 @@ export function paintSprites(f, sprites, set, tick, patrolAt, dim) {
   // the carried object stands in its first frame
   const still = (t) => t === f.held?.to;
   // what the brains give off joins the records, on layers of its own; where a
-  // record draws nothing itself, its effects are what its object is pointed at
+  // record draws nothing itself, its effects are what its object is pointed at,
+  // but for those that fly free of it
   const fx = [];
   for (const [r, order, k, t] of recs)
     if (r.cycle?.kind === "brain")
       resolveEffects(r, set, still(t) ? 0 : tick, still(t) ? 0 : patrolAt).forEach((e, i) =>
-        fx.push([e, order, k + 1 + i / 1000, t, true, r.anim === null]),
+        fx.push([e, order, k + 1 + i / 1000, t, true, r.anim === null && !r.cycle.free]),
       );
   recs.push(...fx);
   recs.sort((a, b) => a[0].layer - b[0].layer || b[1] - a[1] || a[2] - b[2]);

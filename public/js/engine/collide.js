@@ -69,6 +69,50 @@ export function raycast(lines, x1, y1, x2, y2, types) {
   return hit === null ? null : { line: hit, x: x1 + dx * best, y: y1 + dy * best };
 }
 
+// the raycast as the engine computes it, in 24.8 cut toward zero, over a ray in raw 16.16
+const cut8 = (v) => Math.trunc(v / 256);
+const mul8 = (a, b) => Math.trunc((a * b) / 256);
+export function raycastFixed(lines, x1, y1, x2, y2, types) {
+  const X1 = cut8(x1),
+    Y1 = cut8(y1),
+    X2 = cut8(x2),
+    Y2 = cut8(y2);
+  const minX = Math.min(cut8(X1), cut8(X2)),
+    maxX = Math.max(cut8(X1), cut8(X2)),
+    minY = Math.min(cut8(Y1), cut8(Y2)),
+    maxY = Math.max(cut8(Y1), cut8(Y2));
+  const dx = X2 - X1,
+    dy = Y2 - Y1;
+  const within = (u, det) => (det > 0 ? u >= 0 && u <= det : u <= 0 && u >= det);
+  let best = 512,
+    hit = null;
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i];
+    const ax = l[0],
+      ay = l[1],
+      bx = l[2],
+      by = l[3];
+    if ((ax > maxX && bx > maxX) || (ax < minX && bx < minX)) continue;
+    if ((ay > maxY && by > maxY) || (ay < minY && by < minY)) continue;
+    if (!types.includes(l[4])) continue;
+    const lx = (bx - ax) * 256,
+      ly = (by - ay) * 256;
+    const det = mul8(lx, dy) - mul8(dx, ly);
+    if (Math.abs(det) < 256) continue;
+    const ox = ax * 256 - X1,
+      oy = ay * 256 - Y1;
+    const u1 = mul8(lx, oy) - mul8(ly, ox);
+    if (!within(u1, det) || !within(mul8(dx, oy) - mul8(dy, ox), det)) continue;
+    const t = Math.trunc(u1 / cut8(det));
+    if (t < best) {
+      best = t;
+      hit = i;
+    }
+  }
+  if (hit === null) return null;
+  return { line: hit, x: (X1 + mul8(best, dx)) * 256, y: (Y1 + mul8(best, dy)) * 256 };
+}
+
 // WallHit: a wall within offX of the point, probed offY above the feet
 const WALLS = [1, 2];
 export const wallHit = (lines, x, y, offY, offX, half) =>
