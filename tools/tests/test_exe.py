@@ -17,6 +17,7 @@ def lui(rt, imm): return (15 << 26) | (rt << 16) | (imm & 0xFFFF)
 def addiu(rt, rs, imm): return (9 << 26) | (rs << 21) | (rt << 16) | (imm & 0xFFFF)
 def ori(rt, rs, imm): return (13 << 26) | (rs << 21) | (rt << 16) | (imm & 0xFFFF)
 def lw(rt, imm, rs): return (35 << 26) | (rs << 21) | (rt << 16) | (imm & 0xFFFF)
+def lb(rt, imm, rs): return (32 << 26) | (rs << 21) | (rt << 16) | (imm & 0xFFFF)
 def sw(rt, imm, rs): return (43 << 26) | (rs << 21) | (rt << 16) | (imm & 0xFFFF)
 def jal(target): return (3 << 26) | ((target >> 2) & 0x3FFFFFF)
 def addu(rd, rs, rt): return (rs << 21) | (rt << 16) | (rd << 11) | 33
@@ -102,6 +103,18 @@ class LoadedCode(unittest.TestCase):
         self.assertEqual(exe.references(img, target), [self.BASE + 12])
         self.assertEqual(exe.callers(img, self.BASE + 8), [self.BASE])
         self.assertEqual(img.words_equal(target), [self.BASE + 24])
+
+
+class NamedLoads(unittest.TestCase):
+    def test_a_word_and_a_byte_loaded_by_name_are_told_apart_and_from_one_loaded_otherwise(self):
+        p = Program()
+        p.words(JR_RA, NOP)
+        start = p.words(lui(V0, 0x8009), lw(V0, -0x1000, V0), lui(A0, 0x8002), lbu(V0, 0x44, A0),
+                        lui(AT, 0x8003), addu(AT, AT, A0), lbu(V0, 8, AT), lui(A0, 0x8004), lb(V0, 4, A0),
+                        JR_RA, NOP)
+        image = exe.Image(p.image())
+        self.assertEqual((exe.words_loaded(image, start), exe.bytes_loaded(image, start)),
+                         ({0x8008F000}, {0x80020044}))
 
 
 class FrameRate(unittest.TestCase):

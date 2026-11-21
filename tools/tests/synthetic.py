@@ -12,6 +12,9 @@ def addiu(rt, rs, value): return 9 << 26 | rs << 21 | rt << 16 | value & 0xFFFF
 def ori(rt, rs, value): return 13 << 26 | rs << 21 | rt << 16 | value & 0xFFFF
 def lw(rt, value, rs): return 35 << 26 | rs << 21 | rt << 16 | value & 0xFFFF
 def lh(rt, value, rs): return 33 << 26 | rs << 21 | rt << 16 | value & 0xFFFF
+def lb(rt, value, rs): return 32 << 26 | rs << 21 | rt << 16 | value & 0xFFFF
+def lbu(rt, value, rs): return 36 << 26 | rs << 21 | rt << 16 | value & 0xFFFF
+def addu(rd, rs, rt): return rs << 21 | rt << 16 | rd << 11 | 33
 def jal(target): return 3 << 26 | target >> 2 & 0x3FFFFFF
 def j(target): return 2 << 26 | target >> 2 & 0x3FFFFFF
 

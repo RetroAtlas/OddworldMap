@@ -119,6 +119,16 @@ class Frames(unittest.TestCase):
         self.assertEqual(render.frames(data, whole), [ROCK, LEANS])
         self.assertEqual(render.frames(data, last), [LEANS])
 
+    def test_a_sheets_frames_are_measured_by_the_cut_each_names_where_another_names_its_header(self):
+        data, infos = bytearray(24), []
+        for at, frame in enumerate((ROCK, LEANS)):
+            infos.append(len(data))
+            data += struct.pack("<4B2h6h", 40 * at, 0, frame.w, frame.h, 3, 0, frame.x, frame.y, *frame.rect)
+        table = len(data)
+        data += struct.pack("<HhhH2I", 4, 2, 0, 3, *infos)
+        struct.pack_into("<hhII", data, 0, 40, 47, table, 64)
+        self.assertEqual(render.frames(bytes(data), table), [ROCK, LEANS])
+
 
 def archive(rid, data):
     """a file of a level's archive holding one chunk of animations"""
@@ -147,6 +157,15 @@ class Art(unittest.TestCase):
         levels["PV"] = Level(**{"PVROCK.BAN": archive(2007, chunk(LEANS, ROCK)[0])})
         with self.assertRaisesRegex(RuntimeError, "2 candidates for the animation 2007"):
             render.art(levels, 2007, last)
+
+    def test_with_no_table_given_an_objects_art_is_the_one_chunk_of_its_id(self):
+        data = chunk(ROCK, LEANS)[0]
+        levels = {"MI": Level(**{"ROCK.BAN": archive(2007, data), "ABE.BND": archive(10, chunk(LEANS)[0])}),
+                  "NE": Level(**{"NEROCK.BAN": archive(2007, data)})}
+        self.assertEqual(render.art(levels, 2007), data)
+        levels["PV"] = Level(**{"PVROCK.BAN": archive(2007, chunk(LEANS, ROCK)[0])})
+        with self.assertRaisesRegex(RuntimeError, "2 candidates for the animation 2007, expected one"):
+            render.art(levels, 2007)
 
 
 class ByHand(unittest.TestCase):

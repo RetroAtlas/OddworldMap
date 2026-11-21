@@ -192,12 +192,15 @@ POLY = (8, 16, 24, 32)              # where a quad keeps its four corners
 
 
 def frames(data, table):
-    """the frames of the animation whose table lies at an offset of its chunk"""
-    out = []
+    """the frames of the animation whose table lies at an offset of its
+    chunk; a sheet's frames, cut ready from one picture, name their cut where
+    another names its header"""
+    sheet, out = sprites.file_header(data)["sheet"], []
     for info in struct.unpack_from(f"<{struct.unpack_from('<h', data, table + 2)[0]}I", data, table + 8):
         header, = struct.unpack_from("<I", data, info)
         x, y, *rect = struct.unpack_from("<6h", data, info + 8)
-        out.append(Frame(data[header + 4], data[header + 5], x, y, tuple(rect)))
+        size = (header >> 16 & 255, header >> 24) if sheet else (data[header + 4], data[header + 5])
+        out.append(Frame(*size, x, y, tuple(rect)))
     return out
 
 
@@ -209,17 +212,18 @@ def tables(data):
         return []
 
 
-def art(levels, rid, table):
-    """the chunk of animations an object's constructor asks for by its id and
-    sets up from a table, found in the level archives by that table"""
+def art(levels, rid, table=None):
+    """the chunk of animations an object's constructor asks for by its id,
+    found in the level archives: the one holding the table it is set up from,
+    or, with no table given, the one chunk of that id"""
     found = set()
     for lvl in levels.values():
         for name in lvl.files:
             if name.rsplit(".", 1)[-1] in ("BAN", "BND"):
                 data = parse_chunks(lvl.read(name)).get(("Anim", rid))
-                if data and table in tables(data):
+                if data and (table is None or table in tables(data)):
                     found.add(data)
-    return one(found, f"the animation {rid} with a table at {table:#x}")
+    return one(found, f"the animation {rid}" + ("" if table is None else f" with a table at {table:#x}"))
 
 
 class Console:
@@ -290,6 +294,17 @@ class Console:
             m.w16(self.rect + 2 * k, side)
         m.stubs = self.stubs
         return m.call(self.code.where, self.code.map, self.rect, 0)
+
+    def draws(self, obj):
+        """whether the disc's render goes on to the drawing of the object's
+        frame, the drawing itself answered: all there is to ask of a frame
+        cut ready from a sheet, which the drawing does not take as this
+        console lays an animation out"""
+        m, reached = self.m, []
+        m.stubs = dict(self.stubs)
+        m.stubs[self.code.draw] = reached.append
+        m.call(self.code.render, obj, self.order)
+        return bool(reached)
 
     def render(self, obj):
         """the corners of the quad the disc's render hands the ordering table

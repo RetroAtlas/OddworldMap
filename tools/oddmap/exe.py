@@ -162,15 +162,25 @@ def calls(img, start):
             for a in range(start, end(img, start), 4) if img.word(a) >> 26 == 3]
 
 
-def words_loaded(img, start):
-    """the addresses the function at start loads a word from by name: a `lw`
-    through the register a `lui` has just set"""
+def _loaded(img, start, load):
     out = set()
     for a in range(start, end(img, start), 4):
         hi, lo = img.word(a), img.word(a + 4)
-        if hi >> 26 == 15 and lo >> 26 == 35 and lo >> 21 & 31 == hi >> 16 & 31:
+        if hi >> 26 == 15 and lo >> 26 == load and lo >> 21 & 31 == hi >> 16 & 31:
             out.add(((hi & 0xFFFF) << 16) + (lo & 0xFFFF) - (lo & 0x8000) * 2)
     return out
+
+
+def words_loaded(img, start):
+    """the addresses the function at start loads a word from by name: a `lw`
+    through the register a `lui` has just set"""
+    return _loaded(img, start, 35)
+
+
+def bytes_loaded(img, start):
+    """the addresses the function at start loads a byte from by name: an
+    `lbu` through the register a `lui` has just set"""
+    return _loaded(img, start, 36)
 
 
 # --- the readers ---
