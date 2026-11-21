@@ -189,6 +189,8 @@ test("raycastFixed: the engine's own arithmetic, the ray cut to 24.8 toward zero
     [0, 80, 200, 80, 4],
     [200, 100, 260, 130, 0],
     [-40, -20, 40, -20, 0],
+    [300, 100, 364, 100, 0],
+    [50, 0, 50, 40, 0],
   ];
   const both = [0, 4];
   const cases = [
@@ -215,6 +217,22 @@ test("raycastFixed: the engine's own arithmetic, the ray cut to 24.8 toward zero
     [[13434880, 6225920, 13565952, 6488064], both, null],
     // below zero, cut toward it
     [[-216269, -1684275, -72090, -996147], both, { line: 3, x: -138496, y: -1313280 }],
+    // down from the joint of two lines, the first's, and from a floor's first point
+    [[13107200, 6553600, 13107200, 6555648], both, { line: 0, x: 13107200, y: 6553600 }],
+    [[0, 6553600, 0, 6554624], both, { line: 0, x: 0, y: 6553600 }],
+    // a 64th before a floor's start across its height: on it below zero, off it above
+    [[-1024, 6552576, -1024, 6553600], both, { line: 0, x: -1024, y: 6553600 }],
+    [[19659776, 6552576, 19659776, 6553600], both, null],
+    // the same beside a line upright from zero
+    [[3274752, -1024, 3276800, -1024], both, { line: 5, x: 3277312, y: -1024 }],
+    // a fall of a 64th onto a floor 64 long, the determinant a whole
+    [[19660800, 6552576, 19660800, 6553600], both, { line: 4, x: 19660800, y: 6553600 }],
+    // across a floor's line before its start, and from there off its height
+    [[-3072, 6550528, 0, 6556672], both, null],
+    [[-1024, 6553600, 0, 6520832], both, null],
+    // from under a floor on down, and up onto it
+    [[0, 6554624, 0, 6555648], both, null],
+    [[0, 6554624, 0, 6553600], both, { line: 0, x: 0, y: 6553600 }],
   ];
   for (const [ray, types, hit] of cases) assert.deepEqual(raycastFixed(lines, ...ray, types), hit);
   // the same crossing in whole arithmetic lies on the floor itself

@@ -540,9 +540,11 @@ function flights(g) {
     for (let tick = 1; tick <= TURNS; tick++)
       if (set.dice[(r.cycle.seed + p.wells.length * (tick - 1) + p.own) & 255] < 10) due.push(tick);
     const leaves = new Map();
+    const sum = [0, 0, 0];
     const [left, top, right, bottom] = p.win;
     for (let tick = 1; tick <= TURNS; tick++)
       for (const q of brainAt(r, set, tick).state.fx) {
+        [1, q.x, q.y].forEach((v, k) => (sum[k] += v));
         const was = leaves.get(q) ?? { born: q.born, seen: 0, top: q.y, foot: q.y, scale: q.scale };
         const x = Math.trunc(q.x / FP),
           y = Math.trunc(q.y / FP);
@@ -561,6 +563,7 @@ function flights(g) {
       r,
       p,
       due,
+      sum,
       leaves: [...leaves.values()],
       where: `${at} (${t.x1},${t.y1})`,
       at,
@@ -756,4 +759,13 @@ test("wells: the leaves of a camera of several, summed at three ticks of the Pla
     ],
     "three on a screen of the Scrabanian Temple's ninth",
   );
+});
+
+test("wells: every leaf at every tick of the PlayStation's run, counted and its place summed", () => {
+  const flew = { AO: [0, 0, 0], AE: [0, 0, 0] };
+  for (const g of GAMES) for (const { sum } of flights(g)) sum.forEach((v, k) => (flew[g][k] += v));
+  assert.deepEqual(flew, {
+    AO: [139005, 27361925135795, 8317431355601],
+    AE: [540965, 44781249267503, 28674884991801],
+  });
 });

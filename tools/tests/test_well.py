@@ -1,7 +1,11 @@
 """The wells' and the leaves' model over records and dice worked by hand, its
-routines found in a synthetic overlay, and what the tool adds to the model:
-stdlib only, no disc."""
+routines found in a synthetic overlay, what the two tools add to the model,
+and the numbers the viewer's test holds its leaves to: stdlib only, no disc."""
 
+import contextlib
+import io
+import json
+import re
 import struct
 import sys
 import unittest
@@ -10,13 +14,16 @@ from unittest import mock
 
 sys.path[:0] = [str(Path(__file__).resolve().parents[1]), str(Path(__file__).resolve().parent)]
 
+import well_trace  # noqa: E402
 import well_verify  # noqa: E402
 from synthetic import (JR_RA, NOP, Assembly, addiu, addu, jal, lb, lbu, lui, named, ori,  # noqa: E402
                        word_at)
 from oddmap import collide, fixed, render, well  # noqa: E402
 from oddmap.exe import Image  # noqa: E402
+from oddmap.fallingitem import DOWN  # noqa: E402
 from oddmap.fixed import FP  # noqa: E402
 from oddmap.games import game_setup  # noqa: E402
+from oddmap.paths import ROOT  # noqa: E402
 from oddmap.render import Stage  # noqa: E402
 
 LEFT, TOP = 1000, 500
@@ -638,6 +645,198 @@ class Verifier(unittest.TestCase):
     @staticmethod
     def code():
         return well.Code(*[None] * 23)._replace(update=0x800A2000, fly=0x800A3000)
+
+
+class Trace(unittest.TestCase):
+    ODDYSEE = RECORD._replace(x1=1300, y1=700, x2=1325, y2=724)
+
+    def tables(self, game, *wells, lines=(), abe=None, rolls=None):
+        """the shipped tables of a path five cells across whose cell 12, or
+        in Oddysee 6, lists some wells, each (its place among the path's
+        objects, its record)"""
+        cell = 12 if game == "AE" else 6
+        held = [(place, cell, record, dict(x1=record.x1, y1=record.y1)) for place, record in wells]
+        return well_trace.Tables(well.screens(game, [("MI", 7, 5, list(lines), held)]), rolls or dice(b0=0),
+                                 abe or {})
+
+    def test_a_well_knows_the_leaves_it_lets_go(self):
+        around = world(rolls=dice(b0=0, b2=0))
+        made = well_trace.Owning(around, RECORD, *well.handed("AE", RECORD))
+        other = well.Well(around, RECORD, *well.handed("AE", RECORD))
+        for _ in range(4):
+            made.update()
+            other.update()
+        self.assertEqual(made.let, [around.objects[2], around.objects[3]])
+
+    def test_a_camera_is_read_as_freshly_loaded_from_the_place_of_its_first_well_that_lets_leaves_go(self):
+        tables = self.tables("AE", (3, RECORD._replace(switch=7)), (260, RECORD), (9, RECORD),
+                             abe={"MI": {"7": [5, 6]}})
+        around, wells = well_trace.camera(tables, "AE", tables.screens[0])
+        self.assertEqual((around.wells, around.leaves, around.abe, around.stage.left, around.stage.top,
+                          around.stage.path), (4, 4, (5, 6), 750, 520, 7))
+        self.assertEqual([type(made) for made in wells], [well_trace.Owning] * 3)
+        self.assertEqual(around.objects, wells)
+        self.assertEqual(well_trace.camera(self.tables("AE", (3, RECORD)), "AE", tables.screens[0])[0].abe, (0, 0))
+
+    def test_a_sweep_counts_the_wells_that_let_leaves_go_their_cameras_and_every_leaf(self):
+        tables = self.tables("AE", (0, RECORD), (1, RECORD._replace(switch=7)), (2, RECORD._replace(x1=900, x2=925)),
+                             rolls=dice(b0=0, b3=0))
+        got = well_trace.sweep(tables, "AE", 4)
+        flown = well_trace.trace(tables, "AE", "MI", 7, [0, 2], [1, 2, 3, 4])["leaves"].values()
+        every = [point for tick in flown for leaves in tick.values() for point in leaves]
+        self.assertEqual(got, {
+            "game": "AE", "ticks": 4, "wells": 2, "cameras": 1, "screens": [0, 1, 0, 0], "made": 2,
+            "flown": [len(every), sum(x for x, _ in every), sum(y for _, y in every)], "never": [], "down": [],
+            "grounded": []})
+        self.assertEqual(got["flown"][0], 7)
+        more = self.tables("AE", (0, RECORD)).screens + self.tables("AE", (4, RECORD), (5, RECORD), (6, RECORD)).screens
+        got = well_trace.sweep(tables._replace(screens=tables.screens + more), "AE", 4)
+        self.assertEqual((got["wells"], got["cameras"], got["screens"]), (6, 3, [1, 1, 1, 0]))
+
+    def test_a_sweep_names_the_wells_whose_leaves_never_fly_lead_down_or_never_rise(self):
+        ceiling = self.ODDYSEE._replace(y1=590, y2=614)
+        got = well_trace.sweep(self.tables("AO", (0, ceiling)), "AO", 4)
+        self.assertEqual((got["made"], got["flown"], got["never"], got["down"], got["grounded"]),
+                         (1, [0, 0, 0], ["AO MI P7 (1300,590)"], [], []))
+        got = well_trace.sweep(self.tables("AO", (0, self.ODDYSEE._replace(exit_y=1500))), "AO", 4)
+        self.assertEqual((got["never"], got["down"], got["grounded"]), ([], ["AO MI P7 (1300,700)"], []))
+        self.assertEqual(well_trace.sweep(self.tables("AO", (0, self.ODDYSEE._replace(exit_y=0))), "AO", 4)["down"],
+                         ["AO MI P7 (1300,700)"])
+        self.assertEqual(well_trace.sweep(self.tables("AO", (0, self.ODDYSEE)), "AO", 4)["down"], [])
+        on_floor = [(1000, 605, 1400, 605, 0)]
+        got = well_trace.sweep(self.tables("AE", (0, RECORD), lines=on_floor), "AE", 8)
+        self.assertEqual((got["never"], got["down"], got["grounded"]), ([], [], ["AE MI P7 (1100,600)"]))
+        self.assertEqual(well_trace.sweep(self.tables("AE", (0, RECORD), lines=on_floor), "AE", 1)["grounded"], [])
+        self.assertEqual(well_trace.sweep(self.tables("AE", (0, RECORD)), "AE", 8)["grounded"], [])
+        barely = self.tables("AO", (0, self.ODDYSEE._replace(exit_y=-1)))
+        self.assertEqual(well_trace.sweep(barely, "AO", 1)["grounded"], ["AO MI P7 (1300,700)"])
+
+    def test_a_well_one_of_whose_leaves_is_lost_on_its_first_move_is_not_one_whose_leaves_never_fly(self):
+        edge = self.ODDYSEE._replace(x1=1635, x2=1659, exit_x=100)
+        got = well_trace.sweep(self.tables("AO", (0, edge), rolls=dice(b0=0, b1=0, b6=255)), "AO", 2)
+        self.assertEqual((got["made"], got["flown"][0], got["never"]), (2, 2, []))
+
+    def test_a_trace_is_some_wells_own_leaves_at_the_ticks_asked_for_and_their_sums(self):
+        tables = self.tables("AE", (0, RECORD), (1, RECORD._replace(x1=1200, x2=1225)), rolls=dice(b0=0, b3=0))
+        got = well_trace.trace(tables, "AE", "MI", 7, [0, 1], [1, 2, 3])
+        self.assertEqual((got["game"], got["camera"], got["seed"]), ("AE", "MI P7 cell 12", 0))
+        first, second = [1112 * FP, 605 * FP], [1212 * FP, 605 * FP]
+        self.assertEqual(got["leaves"][1], {0: [first], 1: []})
+        self.assertEqual(got["leaves"][2][1], [second])
+        self.assertEqual(got["sums"][1], [1, first[0], first[1]])
+        moved = got["leaves"][2][0][0]
+        self.assertEqual(got["sums"][2], [2, moved[0] + second[0], moved[1] + second[1]])
+        self.assertLess(moved[1], first[1])
+        self.assertEqual(well_trace.trace(tables, "AE", "MI", 7, [1], [2])["leaves"], {2: {1: [second]}})
+
+    def test_wells_that_stand_on_no_camera_together_or_let_no_leaves_go_are_refused(self):
+        tables = self.tables("AE", (0, RECORD), (1, RECORD._replace(switch=7)))
+        for places in ([1], [0, 1], [5]):
+            with self.assertRaisesRegex(ValueError, "MI P7 holds no camera whose wells at"):
+                well_trace.trace(tables, "AE", "MI", 7, places, [1])
+        with self.assertRaisesRegex(ValueError, "BW P7 holds no camera"):
+            well_trace.trace(tables, "AE", "BW", 7, [0], [1])
+
+    def test_the_shipped_tables_are_a_games_cameras_whose_wells_let_leaves_go_its_dice_and_abes_starts(self):
+        for game, cameras, wells, found, abe in (
+                ("AO", 38, 49, ("L1", 1, 3), {}), ("AE", 126, 170, ("MI", 1, 50), ("MI", "1"))):
+            shipped = well_trace.committed(game)
+            self.assertEqual((len(shipped.screens), len(shipped.dice)), (cameras, 256))
+            self.assertEqual(sum(well.lets(held) for screen in shipped.screens for _, _, held, _ in screen.wells),
+                             wells)
+            short, path, place = found
+            screen = next(s for s in shipped.screens if (s.short, s.path) == (short, path) and s.seed == place)
+            self.assertEqual(screen.wells[0][3]["name"] in well.NAMES[game], True)
+            self.assertEqual(bool(shipped.abe), bool(abe))
+            if abe:
+                self.assertEqual(len(shipped.abe[abe[0]][abe[1]]), 2)
+
+    def test_the_trace_prints_the_run_its_arguments_name(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            well_trace.main(["AO", "L1", "1", "3", "--ticks", "17,18"])
+        self.assertEqual(json.loads(out.getvalue()), json.loads(json.dumps(
+            well_trace.trace(well_trace.committed("AO"), "AO", "L1", 1, [3], [17, 18]))))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            well_trace.main(["AO", "--ticks", "8"])
+        self.assertEqual(json.loads(out.getvalue()), well_trace.sweep(well_trace.committed("AO"), "AO", 8))
+        for args in (["--ticks", "0"], ["--ticks", "8,9"], ["L1", "1", "--ticks", "4"],
+                     ["L1", "1", "3", "4", "--ticks", "4"], ["L1", "x", "3", "--ticks", "4"], ["L1", "1", "3"],
+                     ["L1", "1", "3", "--ticks", "a"], ["L1", "1", "3", "--ticks", "0"]):
+            with self.subTest(args=args):
+                with self.assertRaises(SystemExit) as refused, contextlib.redirect_stderr(io.StringIO()):
+                    well_trace.main(["AO"] + args)
+                self.assertEqual(refused.exception.code, 2)
+        with self.assertRaises(SystemExit) as refused:
+            well_trace.main(["AO", "L1", "1", "99", "--ticks", "4"])
+        self.assertEqual(refused.exception.code, "L1 P1 holds no camera whose wells at [99] all let leaves go")
+
+
+class PortLiterals(unittest.TestCase):
+    """the numbers the viewer's tests hold its wells' leaves to are the
+    model's, over the tables the viewer ships"""
+
+    @classmethod
+    def setUpClass(cls):
+        text = " ".join((ROOT / "tests" / "unit" / "well.test.js").read_text().split())
+        for old, new in (("[ ", "["), (", ]", "]"), ("{ ", "{"), (", }", "}"), (" }", "}"), ("( ", "("), (", )", ")")):
+            text = text.replace(old, new)
+        text = re.sub(r"(\d+) \* FP - (\d+)", lambda m: str(int(m[1]) * FP - int(m[2])), text)
+        cls.source = re.sub(r"(\d+) \* FP\b", lambda m: str(int(m[1]) * FP), text)
+        cls.tables = {game: well_trace.committed(game) for game in ("AO", "AE")}
+
+    def stands(self, literal):
+        self.assertEqual(self.source.count(literal), 1, f"{literal} in the test's source")
+
+    def test_the_counts_the_sweeps_hold_are_the_models_over_every_camera(self):
+        got = {game: well_trace.sweep(self.tables[game], game) for game in ("AO", "AE")}
+        ao, ae = got["AO"], got["AE"]
+        self.stands(f"const TURNS = {well_trace.TICKS};")
+        self.stands(f"assert.deepEqual(wells, {{AO: {ao['wells']}, AE: {ae['wells']}}});")
+        self.stands(f"assert.deepEqual([cameras.AO.size, cameras.AE.size], [{ao['cameras']}, {ae['cameras']}]);")
+        self.assertEqual((ao["made"], ae["made"]), (ao["wells"] * 40, ae["wells"] * 40))
+        self.stands(f"assert.deepEqual(made, {{AO: {ao['wells']} * 40, AE: {ae['wells']} * 40}},")
+        self.stands(f"{json.dumps([list(pair) for pair in zip(ao['screens'], ae['screens'])])}, "
+                    '"the screens of one well, two, three and four"')
+        self.stands(f"assert.deepEqual(never, {json.dumps(ao['never'] + ae['never'])},")
+        self.stands(f"assert.deepEqual(down, {json.dumps(ao['down'] + ae['down'])});")
+        self.stands(f"assert.deepEqual(grounded, {json.dumps(ao['grounded'] + ae['grounded'])},")
+        self.stands(f"assert.deepEqual(flew, {{AO: {json.dumps(ao['flown'])}, AE: {json.dumps(ae['flown'])}}});")
+
+    def well(self, name):
+        """the game, level, path and place of the well the test calls by a name or makes in place"""
+        made = re.search(rf'const {name} = wellAt\("(A[OE])", "(\w+)", (\d+), (\d+)\);', self.source) \
+            or re.fullmatch(r'wellAt\("(A[OE])", "(\w+)", (\d+), (\d+)\)', name)
+        game, short, path, place = made.groups()
+        return game, short, int(path), int(place)
+
+    def test_the_flights_held_move_by_move_are_the_models(self):
+        runs = re.findall(r'first\((\w+|wellAt\([^)]*\)), "A[OE]", (\[[\d, ]+\])\), (\[\[.*?\]\]),', self.source)
+        self.assertEqual((len(runs), self.source.count("first(")), (5, 5))
+        for name, ticks, held in runs:
+            game, short, path, place = self.well(name)
+            got = well_trace.trace(self.tables[game], game, short, path, [place], json.loads(ticks))
+            self.assertEqual([leaves[place][0] for leaves in got["leaves"].values()], json.loads(held),
+                             (name, ticks))
+        quiet = re.findall(r"flying\((\w+), sheets\.A[OE], (\d+)\), \[\]\);", self.source)
+        self.assertEqual(len(quiet), 2)
+        for name, tick in quiet:
+            game, short, path, place = self.well(name)
+            got = well_trace.trace(self.tables[game], game, short, path, [place], [int(tick), int(tick) + 1])
+            self.assertEqual([len(leaves[place]) for leaves in got["leaves"].values()], [0, 1], name)
+        game, short, path, place = self.well("ao")
+        (x, y), = well_trace.trace(self.tables[game], game, short, path, [place], [17])["leaves"][17][place]
+        self.stands(f"assert.deepEqual(drawn(ao, sheets.AO, 17), [[{x}, {y} + {DOWN['AO'] * FP}]]);")
+
+    def test_the_sums_held_of_a_camera_of_several_are_the_models(self):
+        ticks = [300, 600, 1024]
+        self.stands(f"{json.dumps(ticks)}.map((tick) =>")
+        runs = re.findall(r'sums\("(A[OE])", "(\w+)", (\d+), (\[[\d, ]+\])\), (\[\[.*?\]\]),', self.source)
+        self.assertEqual(len(runs), 2)
+        for game, short, path, places, held in runs:
+            got = well_trace.trace(self.tables[game], game, short, int(path), json.loads(places), ticks)
+            self.assertEqual(list(got["sums"].values()), json.loads(held), (game, short, path))
 
 
 if __name__ == "__main__":

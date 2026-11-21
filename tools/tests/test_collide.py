@@ -1,7 +1,9 @@
 """The engine's test of a ray against a path's lines over rays worked by
-hand, among them the ones a check asks both games' executables for: stdlib
-only, no disc."""
+hand, among them the ones a check asks both games' executables for and the
+viewer's test holds its raycast to: stdlib only, no disc."""
 
+import json
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -9,6 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from oddmap.collide import Hit, by_hand, raycast  # noqa: E402
+from oddmap.paths import ROOT  # noqa: E402
 
 FP = 65536
 # two floors, the plane behind's above the plane in front's, a slope off the lower one's end, a floor above zero, a
@@ -48,6 +51,27 @@ class Raycast(unittest.TestCase):
     def test_a_line_the_rays_box_does_not_reach_is_not_crossed(self):
         self.assertIsNone(raycast(LINES, 50 * FP, 70 * FP, 60 * FP, 79 * FP + 65535, BOTH))
         self.assertEqual(raycast(LINES, 50 * FP, 70 * FP, 60 * FP, 80 * FP, BOTH), Hit(1, 60 * FP, 80 * FP))
+
+
+class PortLiterals(unittest.TestCase):
+    """the rays the viewer's test holds its raycast to are the first group
+    set by hand, which a check asks both games' executables for, each
+    answered as the model answers it"""
+
+    def test_each_ray_its_kinds_and_its_crossing_stand_in_the_ports_test(self):
+        text = " ".join((ROOT / "tests" / "unit" / "collide.test.js").read_text().split())
+        for old, new in (("[ ", "["), (", ]", "]"), ("{ ", "{"), (", }", "}"), (" }", "}")):
+            text = text.replace(old, new)
+        floors, rays = by_hand()[0]
+        asked = {BOTH: "both", FRONT: "[0]"}
+        self.assertEqual(text.count(f"const lines = {json.dumps([list(line) for line in floors])};"), 1)
+        self.assertEqual(text.count("const both = [0, 4];"), 1)
+        for ray, kinds in rays:
+            hit = raycast(floors, *ray, kinds)
+            answer = "null" if hit is None else f"{{line: {hit.line}, x: {hit.x}, y: {hit.y}}}"
+            literal = f"[{json.dumps(list(ray))}, {asked[kinds]}, {answer}]"
+            self.assertEqual(text.count(literal), 1, f"{literal} in the test's source")
+        self.assertEqual(len(re.findall(r"\[\[-?\d+(?:, -?\d+){3}\], (?:both|\[0\]), ", text)), len(rays))
 
 
 if __name__ == "__main__":
