@@ -1,5 +1,6 @@
-"""What the tests of the PlayStation's routines build their synthetic overlays
-and executables from: the few instructions the finders read."""
+"""What the tests of the PlayStation's routines build their synthetic overlays,
+executables and animations from: the few instructions the finders read, and a
+chunk of frames."""
 
 import struct
 
@@ -34,3 +35,19 @@ class Assembly:
         here = self.at + len(self.data)
         self.data += struct.pack(f"<{len(words)}I", *words)
         return here
+
+
+def chunk(*frames):
+    """(a chunk of animations holding the frames, where the table naming them
+    all lies and where the table naming the last alone does)"""
+    data, infos = bytearray(12), []
+    for frame in frames:
+        header = len(data)
+        data += struct.pack("<I4B", 0, frame.w, frame.h, 8, 0)
+        infos.append(len(data))
+        data += struct.pack("<I2h6h", header, 3, 0, frame.x, frame.y, *frame.rect)
+    whole, last = len(data), len(data) + 8 + 4 * len(infos)
+    data += struct.pack(f"<HhhH{len(infos)}I", 4, len(infos), 0, 2, *infos)
+    data += struct.pack("<HhhHI", 1, 1, 0, 2, infos[-1])
+    struct.pack_into("<hhII", data, 0, max(f.w for f in frames), max(f.h for f in frames), last, 0)
+    return bytes(data), whole, last
