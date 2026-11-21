@@ -13,10 +13,11 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-sys.path[:0] = [str(Path(__file__).resolve().parents[1])]
+sys.path[:0] = [str(Path(__file__).resolve().parents[1]), str(Path(__file__).resolve().parent)]
 
 import hintfly_trace  # noqa: E402
 import hintfly_verify  # noqa: E402
+from synthetic import JR_RA, JR_V0, NOP, Assembly, addiu, j, jal, lh, lui, lw, named, ori, word_at  # noqa: E402
 from oddmap import hintfly, messages  # noqa: E402
 from oddmap.exe import Image  # noqa: E402
 from oddmap.hintfly import FP, HOLD, IDLE, LOOPING, ON_DOT, PAUSE, QUARTER, RESIZE, TO_DOT, UNWIND  # noqa: E402
@@ -272,29 +273,9 @@ class Waves(unittest.TestCase):
 
 BASE, LOAD = 0x800A0000, 0x80010000
 EVENT, WAVE, DRAW, FRAME, SCREEN, BANK = 0x80020000, 0x80020100, 0x80020300, 0x8008F000, 0x80080100, 0x80080200
-JR_RA, JR_V0, NOP = 0x03E00008, 0x00400008, 0
 A0, T0, V1 = 4, 8, 3
 STRINGS = MESSAGES[:1] + MESSAGES[2:3] + MESSAGES[4:] + [f"WORD {'ABC'[i % 3] * (i % 7 + 1)}" for i in range(31)]
 TABLES = {"AO": {"lcd": (9, True), "hintfly": (36, False)}}
-
-
-def lui(rt, value): return 15 << 26 | rt << 16 | value & 0xFFFF
-def addiu(rt, rs, value): return 9 << 26 | rs << 21 | rt << 16 | value & 0xFFFF
-def ori(rt, rs, value): return 13 << 26 | rs << 21 | rt << 16 | value & 0xFFFF
-def lw(rt, value, rs): return 35 << 26 | rs << 21 | rt << 16 | value & 0xFFFF
-def lh(rt, value, rs): return 33 << 26 | rs << 21 | rt << 16 | value & 0xFFFF
-def jal(target): return 3 << 26 | target >> 2 & 0x3FFFFFF
-def j(target): return 2 << 26 | target >> 2 & 0x3FFFFFF
-
-
-def named(rt, addr):
-    """the pair of instructions that builds an address in a register"""
-    return lui(rt, (addr + 0x8000) >> 16), addiu(rt, rt, addr)
-
-
-def word_at(rt, addr):
-    """the pair of instructions that loads the word at an address"""
-    return lui(rt, (addr + 0x8000) >> 16), lw(rt, addr, rt)
 
 
 def records(blob):
@@ -312,17 +293,6 @@ def text_table(strings):
         blob += s.encode("latin1") + b"\0"
         blob += bytes(-len(blob) % 4)
     return bytes(blob) + struct.pack(f"<{len(offsets) + 2}I", 0, *(BASE + off for off in offsets), 0)
-
-
-class Assembly:
-    """code assembled a function at a time from an address on"""
-    def __init__(self, at, data=b""):
-        self.at, self.data = at, bytearray(data)
-
-    def emit(self, *words):
-        here = self.at + len(self.data)
-        self.data += struct.pack(f"<{len(words)}I", *words)
-        return here
 
 
 def executable(players=2, rolls=1, banks=1):

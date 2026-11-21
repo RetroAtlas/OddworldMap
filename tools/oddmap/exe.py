@@ -133,6 +133,46 @@ def first_argument(img, site):
     return None
 
 
+def one(found, what):
+    """the one candidate found for a part of a routine's shape, refused by
+    that part where there is none or more"""
+    if len(found) != 1:
+        raise RuntimeError(f"{len(found)} candidates for {what}, expected one")
+    return next(iter(found))
+
+
+def end(img, start):
+    """the return of the function at start"""
+    while img.word(start) != JR_RA:
+        start += 4
+    return start
+
+
+def entry(img, addr):
+    """where the function holding addr begins: past the return of the one
+    before it"""
+    while img.holds(addr - 8) and img.word(addr - 8) != JR_RA:
+        addr -= 4
+    return addr
+
+
+def calls(img, start):
+    """(site, target) of every call the function at start makes"""
+    return [(a, a & 0xF0000000 | (img.word(a) & 0x3FFFFFF) << 2)
+            for a in range(start, end(img, start), 4) if img.word(a) >> 26 == 3]
+
+
+def words_loaded(img, start):
+    """the addresses the function at start loads a word from by name: a `lw`
+    through the register a `lui` has just set"""
+    out = set()
+    for a in range(start, end(img, start), 4):
+        hi, lo = img.word(a), img.word(a + 4)
+        if hi >> 26 == 15 and lo >> 26 == 35 and lo >> 21 & 31 == hi >> 16 & 31:
+            out.add(((hi & 0xFFFF) << 16) + (lo & 0xFFFF) - (lo & 0x8000) * 2)
+    return out
+
+
 # --- the readers ---
 
 def video_mode(data):

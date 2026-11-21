@@ -8,11 +8,12 @@ the decomp writes them, and is right only as far as a disc's own code agrees
 with it."""
 import collections
 
-from oddmap.exe import JR_RA, Image, callers, executable, first_argument, path_overlays, references
+from oddmap.exe import (JR_RA, Image, callers, calls, entry, executable, first_argument, one, path_overlays,
+                        references, words_loaded)
+from oddmap.fixed import FP, fpmul, s16, s32, whole
 from oddmap.games import GAMES
 from oddmap.messages import LETTER_FIRST, MESSAGE_TABLES, alphabets, lead_table, letter_tables, pointer_tables
 
-FP = 65536
 SWARM = 20                          # the flies of a hint at rest
 SPARE = 12                          # the flies left looping beside a word
 LETTER = 16                         # a letter's cell, and its grid's side
@@ -37,21 +38,6 @@ Code = collections.namedtuple("Code", "longest init update render event frame dr
 FLY = ("x", "y", "mode", "vx", "vy", "tx", "ty", "pitch", "pitch_step", "angle", "speed")
 
 
-def s32(v):
-    v &= 0xFFFFFFFF
-    return v - (1 << 32) if v >> 31 else v
-
-
-def s16(v):
-    v &= 0xFFFF
-    return v - (1 << 16) if v >> 15 else v
-
-
-def fpmul(a, b):
-    """the engine's product of two 16.16 numbers"""
-    return s32(a * b >> 16)
-
-
 def sine(a):
     """the engine's sine of an angle of 256 to the turn, 16.16"""
     a &= 255
@@ -60,11 +46,6 @@ def sine(a):
     if a < 128:
         return QUARTER[127 - a]
     return -QUARTER[a - 128] if a < 192 else -QUARTER[255 - a]
-
-
-def whole(v):
-    """a 16.16 number's whole part, cut toward zero"""
-    return s16((v + 0xFFFF if v < 0 else v) >> 16)
 
 
 class World:
@@ -269,19 +250,13 @@ class HintFly:
         return [(whole(fly.x), whole(fly.y)) for fly in self.flies[:self.count]]
 
 
-def _one(found, what):
-    if len(found) != 1:
-        raise RuntimeError(f"{len(found)} candidates for {what}, expected one")
-    return next(iter(found))
-
-
 def overlays(disc):
     """({overlay: its bytes} for each the game's paths load that holds an
     alphabet, the address they load at)"""
     loaded = set(path_overlays(executable(disc)[1], GAMES["AO"]["path_record"]).values())
     blobs = {name: disc.read(*disc.files[name]) for name in sorted(loaded) if name in disc.files}
     leads = (lead_table(blob, MESSAGE_TABLES["AO"]["lcd"][0]) for blob in blobs.values())
-    base = _one({lead[1] for lead in leads if lead}, "the address the overlays load at")
+    base = one({lead[1] for lead in leads if lead}, "the address the overlays load at")
     held = {}
     for name, blob in blobs.items():
         try:
@@ -296,41 +271,9 @@ def tables(dice, blob, base):
     """the model's tables as an overlay loaded at `base` holds them, beside
     the executable's dice"""
     count = MESSAGE_TABLES["AO"]["hintfly"][0]
-    messages = _one([table for table in pointer_tables(blob, count, base) if table], "the messages")
-    letters = _one(letter_tables(blob, base), "the alphabet")
+    messages = one([table for table in pointer_tables(blob, count, base) if table], "the messages")
+    letters = one(letter_tables(blob, base), "the alphabet")
     return Tables(dice, [bytes.fromhex(dots) for dots in letters], messages)
-
-
-def _end(img, start):
-    """the return of the function at start"""
-    while img.word(start) != JR_RA:
-        start += 4
-    return start
-
-
-def _entry(img, addr):
-    """where the function holding addr begins: past the return of the one
-    before it"""
-    while img.holds(addr - 8) and img.word(addr - 8) != JR_RA:
-        addr -= 4
-    return addr
-
-
-def _calls(img, start):
-    """(site, target) of every call the function at start makes"""
-    return [(a, a & 0xF0000000 | (img.word(a) & 0x3FFFFFF) << 2)
-            for a in range(start, _end(img, start), 4) if img.word(a) >> 26 == 3]
-
-
-def _words_loaded(img, start):
-    """the addresses the function at start loads a word from by name: a `lw`
-    through the register a `lui` has just set"""
-    out = set()
-    for a in range(start, _end(img, start), 4):
-        hi, lo = img.word(a), img.word(a + 4)
-        if hi >> 26 == 15 and lo >> 26 == 35 and lo >> 21 & 31 == hi >> 16 & 31:
-            out.add(((hi & 0xFFFF) << 16) + (lo & 0xFFFF) - (lo & 0x8000) * 2)
-    return out
 
 
 def code(blob, base, exe):
@@ -352,39 +295,39 @@ def code(blob, base, exe):
     the dice and the rest are the voices it plays on, and the one word it
     loads is where its sounds are kept."""
     img = Image(blob, base)
-    alphabet = base + _one(alphabets(blob, base), "the alphabet")[0]
-    spell = {_entry(img, site) for site in references(img, alphabet - 4 * LETTER_FIRST)}
+    alphabet = base + one(alphabets(blob, base), "the alphabet")[0]
+    spell = {entry(img, site) for site in references(img, alphabet - 4 * LETTER_FIRST)}
     if not spell:
         raise RuntimeError("no routine indexes the alphabet by a letter's code")
-    update = _one({f for f in spell if img.words_equal(f)}, "the update, a speller a table of functions names")
-    render = img.word(_one(img.words_equal(update), "the update's slot") + 8)
+    update = one({f for f in spell if img.words_equal(f)}, "the update, a speller a table of functions names")
+    render = img.word(one(img.words_equal(update), "the update's slot") + 8)
     if not img.holds(render) or img.word(render - 8) != JR_RA:
         raise RuntimeError("no function in the slot after the update's")
-    targets = {target for _, target in _calls(img, update)}
+    targets = {target for _, target in calls(img, update)}
     inside = {t for t in targets if img.holds(t)}
-    form = _one(inside & spell, "the routine forming a word, a speller the update calls")
-    init = _one({f for f in inside - spell if not _calls(img, f)}, "a fly's setup, a callee making no call")
-    move = _one(inside - spell - {init}, "the flies' tick")
+    form = one(inside & spell, "the routine forming a word, a speller the update calls")
+    init = one({f for f in inside - spell if not calls(img, f)}, "a fly's setup, a callee making no call")
+    move = one(inside - spell - {init}, "the flies' tick")
     builds = {f for f in spell - {update, form}
-              if any(init in {t for _, t in _calls(img, _entry(img, site))} for site in callers(img, f))}
-    longest = _one(builds, "the routine measuring the longest word, a speller called by what sets a fly up")
-    ticked = {t for _, t in _calls(img, move)}
-    sounds = {target for site, target in _calls(img, move)
+              if any(init in {t for _, t in calls(img, entry(img, site))} for site in callers(img, f))}
+    longest = one(builds, "the routine measuring the longest word, a speller called by what sets a fly up")
+    ticked = {t for _, t in calls(img, move)}
+    sounds = {target for site, target in calls(img, move)
               if not img.holds(target) and first_argument(img, site) == SOUND}
     if not sounds:
         raise RuntimeError("the flies' tick passes its sound to nothing")
-    player = _one({t for f in sounds for _, t in _calls(exe, f)}, "the engine's player, what a sound routine calls")
-    plays = {t for _, t in _calls(exe, player)}
-    drawing = {t for _, t in _calls(img, render) if not img.holds(t)}
+    player = one({t for f in sounds for _, t in calls(exe, f)}, "the engine's player, what a sound routine calls")
+    plays = {t for _, t in calls(exe, player)}
+    drawing = {t for _, t in calls(img, render) if not img.holds(t)}
     if not drawing:
         raise RuntimeError("the render hands the engine nothing to draw")
     return Code(longest=longest, init=init, update=update, render=render,
-                event=_one(targets - inside, "the event query, the update's call out of the overlay"),
-                frame=_one({a for a in _words_loaded(img, update) if not img.holds(a)},
+                event=one(targets - inside, "the event query, the update's call out of the overlay"),
+                frame=one({a for a in words_loaded(img, update) if not img.holds(a)},
                            "the frame counter, the word the update loads from outside the overlay"),
                 drawing=drawing,
-                screen=_one({a for a in _words_loaded(img, render) if not img.holds(a)},
+                screen=one({a for a in words_loaded(img, render) if not img.holds(a)},
                             "the pointer the render draws through"),
-                player=player, roll=_one(plays & ticked, "the roll of the dice, what the player and the flies call"),
+                player=player, roll=one(plays & ticked, "the roll of the dice, what the player and the flies call"),
                 voices=plays - ticked,
-                bank=_one(_words_loaded(exe, player), "where the player's sounds are kept, the word it loads"))
+                bank=one(words_loaded(exe, player), "where the player's sounds are kept, the word it loads"))
