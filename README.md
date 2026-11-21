@@ -47,7 +47,7 @@ python3 tools/build_map.py --game AE --disc "/path/to/Exoddus (Disc 1).bin" "/pa
 
 `--disc` can be omitted when `$ODDWORLD_DISC_AO` / `$ODDWORLD_DISC_AE` point at the images. Everything a build writes is generated **and committed**, so regenerate it rather than hand-editing; what a build needs, the oxipng release it pins and how to check one against the last are in [docs/builder.md](docs/builder.md).
 
-Beside the builder, [tools/visit.py](tools/visit.py) writes a PlayStation memory card whose saves start either game at the place a permalink names, so what the map shows can be checked against the game itself, [tools/relive_export.py](tools/relive_export.py) and its siblings write every path as the level editor's JSON and run each document through the editor's own reader, and [tools/hintfly_verify.py](tools/hintfly_verify.py) runs a disc's own hint fly code beside the model the viewer's hint flies are tested against.
+Beside the builder, [tools/visit.py](tools/visit.py) writes a PlayStation memory card whose saves start either game at the place a permalink names, so what the map shows can be checked against the game itself, [tools/relive_export.py](tools/relive_export.py) and its siblings write every path as the level editor's JSON and run each document through the editor's own reader, and [tools/hintfly_verify.py](tools/hintfly_verify.py) and [tools/fallingitem_verify.py](tools/fallingitem_verify.py) run a disc's own hint fly and falling item code beside the models the viewer's are tested against.
 
 ## Where the rest is
 
@@ -56,7 +56,7 @@ Beside the builder, [tools/visit.py](tools/visit.py) writes a PlayStation memory
 - [docs/builder.md](docs/builder.md): what a build needs and writes, the PNG recompression pin, the level pages and the sitemap, and the static files beside the data.
 - [docs/decomp.md](docs/decomp.md): the pinned decompilation checkout, the caches parsed from it, the field-type and enum-label sidecars, and the override and correction tables.
 - [docs/relive.md](docs/relive.md): the level editor's JSON export, the caches it draws on, and the oracle it answers to.
-- [docs/ps1-code.md](docs/ps1-code.md): the interpreter that runs a disc's own routines, the hint fly's model and the check of it against every overlay's code, the runs the viewer's test holds, and how the next port is held the same way.
+- [docs/ps1-code.md](docs/ps1-code.md): the interpreter that runs a disc's own routines, the models of the hint fly, of the falling item's constructor and of the render of any animated object, each checked against every overlay's code, the runs the viewer's tests hold, and how the next port is held the same way.
 - [docs/visit.md](docs/visit.md): what each game's save holds and how loading one starts a path, where a permalink puts Abe, and the emulator profile the visit tool launches.
 - [docs/curated-data.md](docs/curated-data.md): how the path names, the field glossary and the type encyclopedia are curated, which source each name follows, and the tests that hold each file to its shape.
 - [docs/testing.md](docs/testing.md): the four suites, what each spec pins, where a check lives and how a test is added, the size caps and the browser budget.

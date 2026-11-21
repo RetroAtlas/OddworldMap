@@ -1,7 +1,11 @@
 """The falling item's model over records worked by hand, its routines found in
-a synthetic overlay, and what the verifier adds to the model: stdlib only, no
-disc."""
+a synthetic overlay, what the two tools add to the model, and the numbers the
+viewer's tests hold its port to: stdlib only, no disc."""
 
+import contextlib
+import io
+import json
+import re
 import struct
 import sys
 import unittest
@@ -11,14 +15,16 @@ from unittest import mock
 
 sys.path[:0] = [str(Path(__file__).resolve().parents[1]), str(Path(__file__).resolve().parent)]
 
+import fallingitem_trace  # noqa: E402
 import fallingitem_verify  # noqa: E402
 from synthetic import JR_RA, NOP, Assembly, addiu, chunk, jal, lh, lui, named, ori, word_at  # noqa: E402
-from oddmap import fallingitem  # noqa: E402
+from oddmap import fallingitem, render  # noqa: E402
 from oddmap.exe import Image  # noqa: E402
-from oddmap.fallingitem import GAIN, PERIOD  # noqa: E402
+from oddmap.fallingitem import DOWN, GAIN, PERIOD  # noqa: E402
 from oddmap.fixed import FP  # noqa: E402
 from oddmap.games import GAMES  # noqa: E402
-from oddmap.render import ABOVE, BELOW, LEFT, ON, RIGHT, Frame, Sprite  # noqa: E402
+from oddmap.paths import ROOT  # noqa: E402
+from oddmap.render import ABOVE, BELOW, LEFT, ON, RIGHT, Frame, Sprite, Stage  # noqa: E402
 
 RECORD = fallingitem.Record(x1=1237, y1=276, x2=1262, y2=301, switch=5, scale=0, interval=30, most=3, reset=1)
 ROCK = Frame(37, 28, -18, -31, (-18, -31, 18, -5))
@@ -255,6 +261,147 @@ class Verifier(unittest.TestCase):
                          (True, True))
         self.assertEqual(fallingitem_verify.report("SLUS_007.10", "PV.OVL", "PV P5 (1237,276): the item's y"),
                          ("SLUS_007.10 PV.OVL: PV P5 (1237,276): the item's y", False))
+
+
+class Trace(unittest.TestCase):
+    SHORT = ROCK._replace(rect=(-18, -31, 18, -6))
+    ARTS = {"AE_FallingRock_Falling": fallingitem_trace.Art(4, 0, [ROCK, SHORT]),
+            "AE_FallingRock_Waiting": fallingitem_trace.Art(1, 0, [ROCK, ROCK]),
+            "FallingCrate_Falling": fallingitem_trace.Art(1, 0, [LEANS]),
+            "FallingCrate_Waiting": fallingitem_trace.Art(1, 0, [LEANS])}
+
+    def item(self, short, x, y, **record):
+        record = RECORD._replace(x1=x, y1=y, x2=x + 25, y2=y + 25, **record)
+        return fallingitem_trace.Item(short, 1, 1, record, f"{short}P01C01", 0, 0)
+
+    def test_a_frame_is_held_its_arts_count_of_ticks_and_the_art_comes_round_from_where_it_loops(self):
+        art = fallingitem_trace.Art(4, 0, [ROCK] * 3)
+        at = fallingitem_trace.frame_at
+        self.assertEqual([at(art, tick) for tick in (1, 4, 5, 12, 13, 24, 25)], [0, 0, 1, 2, 0, 2, 0])
+        self.assertEqual([at(art._replace(loop=1), tick) for tick in (12, 13, 17, 21)], [2, 1, 2, 1])
+        self.assertEqual([at(art._replace(loop=None), tick) for tick in (12, 13, 99)], [2, 2, 2])
+
+    def test_the_rows_filled_stop_short_of_the_quads_foot_and_at_the_screens_edges(self):
+        self.assertEqual([fallingitem_trace.rows(corners) for corners in (
+            ((83, -14), (119, 13)), ((0, 230), (10, 250)), ((368, 0), (400, 10)), ((-9, 0), (0, 10)),
+            ((-9, 0), (1, 10)), ((3, -9), (9, 0)))], [13, 10, 0, 0, 10, 0])
+
+    def test_a_trace_is_each_item_under_the_models_through_the_maps_wait(self):
+        tables = fallingitem_trace.Tables([
+            self.item("MI", 100, 5), self.item("MI", 200, 100, switch=1, interval=2), self.item("MI", 300, 4),
+            self.item("BW", 10, 50, scale=1)], self.ARTS)
+        self.assertEqual(fallingitem_trace.trace(tables, "AE", 16), {
+            "game": "AE", "placed": 4, "screens": {"MIP01C01": 2, "BWP01C01": 1},
+            "gone": {"AE MI P1 (100,5)": [5, 6, 7, 8, 13, 14, 15, 16]}})
+        self.assertEqual(fallingitem_trace.trace(tables, "AE", 16, True)["items"], [
+            {"at": "AE MI P1 (100,5)", "screen": "MIP01C01", "waits": "100,5", "scale": 1.0, "rows": ["2 -", "2 2"]},
+            {"at": "AE MI P1 (200,100)", "screen": "MIP01C01", "waits": "200,100", "scale": 1.0,
+             "rows": ["27 27", "27 27"]},
+            {"at": "AE MI P1 (300,4)", "screen": "MIP01C01", "waits": "300,4", "scale": 1.0, "rows": ["- -", "- -"]},
+            {"at": "AE BW P1 (10,50)", "screen": "BWP01C01", "waits": "10,50", "scale": 0.5, "rows": ["22", "22"]}])
+
+    def test_a_levels_items_stand_in_the_art_the_viewer_draws_them_in(self):
+        shown, hidden = fallingitem_trace.Art(1, 0, [ROCK]), fallingitem_trace.Art(1, 0, [self.SHORT])
+        for game, levels, rest in (("AE", ("BW",), ("MI", "PV")), ("AO", ("R1", "R2"), ("F2", "L1"))):
+            rocks, other, _ = fallingitem_trace.ARTS[game]
+            tables = fallingitem_trace.Tables([self.item(short, 100, 5) for short in levels + rest],
+                                              {**dict.fromkeys(rocks, hidden), **dict.fromkeys(other, shown)})
+            self.assertEqual(fallingitem_trace.trace(tables, game, 4)["screens"],
+                             {f"{short}P01C01": 1 for short in levels}, game)
+
+    def test_an_item_on_the_always_on_switch_is_watched_in_its_second_art_until_its_interval_is_out(self):
+        arts = dict(self.ARTS, AE_FallingRock_Waiting=fallingitem_trace.Art(1, 0, [ROCK, ROCK, ROCK, self.SHORT]))
+        tables = fallingitem_trace.Tables([self.item("MI", 100, 5, switch=1, interval=2)], arts)
+        self.assertEqual(fallingitem_trace.trace(tables, "AE", 16)["gone"], {})
+        tables = fallingitem_trace.Tables([self.item("MI", 100, 5, switch=1, interval=3)], arts)
+        self.assertEqual(fallingitem_trace.trace(tables, "AE", 16)["gone"], {"AE MI P1 (100,5)": [4]})
+        self.assertEqual(fallingitem_trace.trace(tables, "AE", 3)["gone"], {})
+
+    def test_the_shipped_tables_are_a_games_items_each_under_the_camera_that_files_it_and_their_art(self):
+        record = fallingitem.Record
+        for game, count, item, art, shape in (
+                ("AO", 21, ("F2", 4, 2, record(2386, 128, 2410, 152, 118, 0, 0, 0, 1), "F2P02C09", 2304, 120),
+                 "AO_FallingRock_Falling", (4, 0, 8, Frame(42, 38, -20, -37, (-9, -32, 11, -9)))),
+                ("AE", 93, ("PV", 3, 5, record(1237, 276, 1250, 300, 1, 1, 30, 0, 1), "PVP05C03", 1125, 260),
+                 "FallingCrate_Waiting", (1, 0, 4, Frame(40, 47, -24, -46, (-13, -35, 8, -9)))),
+                ("AE", 93, ("BW", 8, 4, record(611, 1039, 635, 1063, 1, 0, 60, 0, 0), "BWP04C06", 375, 1040),
+                 "AE_FallingRock_Falling", (4, 0, 4, Frame(31, 28, -16, -31, (-16, -31, 14, -5))))):
+            shipped = fallingitem_trace.committed(game)
+            self.assertEqual((len(shipped.items), sorted(shipped.arts)),
+                             (count, sorted(sum(fallingitem_trace.ARTS[game][:2], ()))))
+            self.assertIn(fallingitem_trace.Item(*item), shipped.items)
+            held = shipped.arts[art]
+            self.assertEqual((held.hold, held.loop, len(held.frames), held.frames[2]), shape, art)
+
+    def test_the_trace_prints_the_run_its_arguments_name(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            fallingitem_trace.main(["AO", "--ticks", "12", "--items"])
+        self.assertEqual(json.loads(out.getvalue()),
+                         fallingitem_trace.trace(fallingitem_trace.committed("AO"), "AO", 12, True))
+        with self.assertRaises(SystemExit), contextlib.redirect_stderr(io.StringIO()):
+            fallingitem_trace.main(["AO", "--ticks", "0"])
+
+
+class PortLiterals(unittest.TestCase):
+    """the numbers the viewer's tests hold its falling items to are the
+    models', over the tables the viewer ships and over the tests' own"""
+
+    @staticmethod
+    def source(name):
+        text = " ".join((ROOT / "tests" / "unit" / name).read_text().split())
+        return text.replace("[ ", "[").replace(", ]", "]").replace("{ ", "{").replace(", }", "}").replace(" }", "}")
+
+    def stands(self, source, literal):
+        self.assertEqual(source.count(literal), 1, f"{literal} in the test's source")
+
+    def test_the_screens_and_ticks_the_sweep_holds_are_the_models_over_the_shipped_tables(self):
+        source = self.source("sprites.test.js")
+        got = {game: fallingitem_trace.trace(fallingitem_trace.committed(game), game, detail=True)
+               for game in ("AO", "AE")}
+        self.stands(source, f"const WAIT_WINDOW = {fallingitem_trace.TICKS};")
+        self.stands(source, f"assert.deepEqual(placed, {{AO: {got['AO']['placed']}, AE: {got['AE']['placed']}}});")
+        for game, run in got.items():
+            held = re.findall(rf"assert\.deepEqual\(drawnOn\.{game}, \{{(.*?)\}}\);", source)
+            self.assertEqual([dict((name, int(n)) for name, n in re.findall(r"(\w+): (\d+)", text)) for text in held],
+                             [run["screens"]], game)
+        gone = [[where, ticks] for run in got.values() for where, ticks in run["gone"].items()]
+        self.stands(source, f"assert.deepEqual(blinks, {json.dumps(gone)});")
+        self.stands(source, f'const renderOffset = g === "AO" ? {DOWN["AO"]} : {DOWN["AE"]};')
+        pinned = re.findall(r'recordAt\("(A[OE])", "(\w+)", (\d+), "FallingItem", (-?\d+), (-?\d+)\)\.y, (-?\d+)\)',
+                            source)
+        waits = {item["at"]: item["waits"] for run in got.values() for item in run["items"]}
+        self.assertEqual(len(pinned), 2)
+        for game, short, path, x, y, held in pinned:
+            self.assertEqual(waits[f"{game} {short} P{path} ({x},{y})"], f"{x},{held}")
+
+    def test_the_edges_and_frames_the_gates_test_holds_are_the_models_over_the_tests_own_item(self):
+        source = self.source("fallingitem.test.js")
+        rect, window, at = (-10, -30, 10, -5), (0, -5, 368, 235), dict(x=100, y=0)
+        frame, stage = Frame(1, 1, 0, 0, rect), Stage(*window[:2])
+        self.stands(source, f"Item_Falling: bounded(4, 4, true, {list(rect)}),")
+        self.stands(source, f"x: {at['x']}, y: {at['y']}, lines:")
+        self.stands(source, f"win: {list(window)}, cam:")
+
+        def edge(axis, step, scale):
+            """the last place along an axis at which the model draws the item, and the next"""
+            place = dict(at)
+            while render.render(frame, Sprite(place["x"] * FP, place["y"] * FP, int(scale * FP)), stage):
+                place[axis] += step
+            return place[axis] - step, place[axis]
+
+        for axis, step, scale in (("y", -1, 1), ("y", 1, 1), ("x", -1, 1), ("x", 1, 1), ("y", -1, 0.5)):
+            on, off = edge(axis, step, scale)
+            tail = "" if scale == 1 else f", {scale}"
+            self.stands(source, f"[drawn({{{axis}: {on}}}{tail}), drawn({{{axis}: {off}}}{tail})], [true, false]")
+        short = frame._replace(rect=rect[:3] + (rect[3] - 1,))
+        art = fallingitem_trace.Art(4, 0, [frame, frame, short, frame])
+        self.stands(source, f"(i === 2 ? [...f.slice(0, 10), {short.rect[3]}] : f)")
+        run = [fallingitem_trace.frame_at(art, tick) for tick in range(1, 17)]
+        self.stands(source, json.dumps([n if render.render(art.frames[n], Sprite(at["x"] * FP, at["y"] * FP), stage)
+                                        else None for n in run]))
+        self.stands(source, f'"AO"), y: y + {DOWN["AO"]}}});')
+        self.stands(source, f"assert.equal(resolveRecord(lower(0), itemSet(), 1).y, {DOWN['AO']});")
 
 
 if __name__ == "__main__":
