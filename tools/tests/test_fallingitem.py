@@ -10,19 +10,17 @@ import struct
 import sys
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
 from unittest import mock
 
 sys.path[:0] = [str(Path(__file__).resolve().parents[1]), str(Path(__file__).resolve().parent)]
 
 import fallingitem_trace  # noqa: E402
 import fallingitem_verify  # noqa: E402
-from synthetic import JR_RA, NOP, Assembly, addiu, chunk, jal, lh, lui, named, ori, word_at  # noqa: E402
-from oddmap import fallingitem, render  # noqa: E402
+from synthetic import JR_RA, NOP, Assembly, addiu, jal, lh, lui, named, ori, word_at  # noqa: E402
+from oddmap import fallingitem, records, render  # noqa: E402
 from oddmap.exe import Image  # noqa: E402
 from oddmap.fallingitem import DOWN, GAIN, PERIOD  # noqa: E402
 from oddmap.fixed import FP  # noqa: E402
-from oddmap.games import GAMES  # noqa: E402
 from oddmap.paths import ROOT  # noqa: E402
 from oddmap.render import ABOVE, BELOW, LEFT, ON, RIGHT, Frame, Sprite, Stage  # noqa: E402
 
@@ -169,65 +167,13 @@ class Routines(unittest.TestCase):
         falls, hums, lcd, other = overlay()[0], overlay(updates=0)[0], b"LCD.", b"LCD!"
         files = {"B.OVL": falls, "A.OVL": hums, "L.OVL": lcd, "C.OVL": falls, "D.BND": falls}
         leads = {lcd: ([], BASE), other: ([], LOAD)}
-        with mock.patch.object(fallingitem, "lead_table", lambda blob, count: leads.get(blob)):
+        with mock.patch.object(records, "lead_table", lambda blob, count: leads.get(blob)):
             blobs, base = fallingitem.overlays(Disc(files), "AE")
             self.assertEqual((list(blobs), base), (["B.OVL", "C.OVL"], BASE))
             with self.assertRaisesRegex(RuntimeError, "0 candidates for the address the overlays load at"):
                 fallingitem.overlays(Disc({"B.OVL": falls}), "AE")
             with self.assertRaisesRegex(RuntimeError, "2 candidates for the address the overlays load at"):
                 fallingitem.overlays(Disc({**files, "M.OVL": other}), "AE")
-
-
-def archive(rid, data):
-    """a file of a level's archive holding one chunk of animations"""
-    return struct.pack("<IHHII", 16 + len(data), 0, 0, int.from_bytes(b"Anim", "little"), rid) + data
-
-
-class Level:
-    def __init__(self, **files):
-        self.files = files
-
-    def read(self, name):
-        return self.files[name]
-
-
-class Discs(unittest.TestCase):
-    def test_a_levels_archive_is_the_fullest_copy_the_discs_hold(self):
-        game = {"levels": [(1, "MI", ""), (2, "NE", ""), (3, "PV", ""), (4, "XX", "")],
-                "tables": {"MI": {}, "NE": {}, "PV": {}}}
-        one = SimpleNamespace(files={"MI.LVL": (0, 10), "NE.LVL": (5, 20), "XX.LVL": (9, 5)})
-        two = SimpleNamespace(files={"MI.LVL": (0, 30), "PV.LVL": (7, 1)})
-
-        def lvl(disc, name):
-            if name == "PV.LVL":
-                raise ValueError("not a LVL archive")
-            return disc, name
-
-        with mock.patch.object(fallingitem, "Lvl", lvl):
-            self.assertEqual(fallingitem.archives([one, two], game), {"MI": (two, "MI.LVL"), "NE": (one, "NE.LVL")})
-
-    def test_a_cameras_list_is_read_to_the_record_that_ends_it(self):
-        fmt = GAMES["AE"]["tlv"]
-        records = b"".join(struct.pack("<BBhI", flags, 0, length, kind).ljust(length, b"\0")
-                           for flags, length, kind in ((0, 16, 5), (4, 20, 7), (4, 16, 9), (0, 16, 5)))
-        blob = bytes(8) + records + struct.pack("<3i", 0, -1, 36)
-        self.assertEqual(fallingitem._listed(blob, 8, 3, fmt), {0: 0, 16: 0, 36: 2})
-        with self.assertRaisesRegex(RuntimeError, "the list of cell 2 runs off its records"):
-            fallingitem._listed(blob[:-4] + struct.pack("<i", 4), 8, 3, fmt)
-
-    def test_an_items_art_is_the_chunk_of_its_id_that_holds_its_table(self):
-        data, whole, last = chunk(ROCK, LEANS)
-        self.assertEqual((fallingitem.tables(data), fallingitem.tables(data[:last])), ([whole, last], []))
-        levels = {"MI": Level(**{"ROCK.BAN": archive(2007, data), "ABE.BND": archive(10, data)}),
-                  "NE": Level(**{"NEROCK.BAN": archive(2007, data), "CUT.BAN": archive(2007, data[:last])})}
-        self.assertEqual(fallingitem.art(levels, 2007, last), data)
-        for rid, table, refusal in ((2007, last + 4, "0 candidates for the animation 2007 with a table at 0x58"),
-                                    (2008, last, "0 candidates for the animation 2008")):
-            with self.assertRaisesRegex(RuntimeError, refusal):
-                fallingitem.art(levels, rid, table)
-        levels["PV"] = Level(**{"PVROCK.BAN": archive(2007, chunk(LEANS, ROCK)[0])})
-        with self.assertRaisesRegex(RuntimeError, "2 candidates for the animation 2007"):
-            fallingitem.art(levels, 2007, last)
 
 
 class Verifier(unittest.TestCase):

@@ -40,7 +40,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from oddmap import fallingitem, render  # noqa: E402
+from oddmap import fallingitem, records, render  # noqa: E402
 from oddmap.disc import Disc  # noqa: E402
 from oddmap.exe import Image, calls, executable  # noqa: E402
 from oddmap.fixed import FP  # noqa: E402
@@ -194,7 +194,7 @@ def run(game_key, exe, blob, base, found, items, chunk):
         if not n:
             data = chunk(*next(iter(arts)))
             console.render.show(data)
-            stood = [(at, index, frame) for at in fallingitem.tables(data)
+            stood = [(at, index, frame) for at in render.tables(data)
                      for index, frame in enumerate(render.frames(data, at))]
         sprite, stage = model.sprite(), Stage(placed.left, placed.top, model.level, model.path, upends=upends)
         for at, index, frame in stood:
@@ -235,11 +235,11 @@ def main(argv=None):
     items = fallingitem.placed(discs, args.game)
     if not items:
         sys.exit(f"the discs place no {fallingitem.NAME}")
-    levels, found = fallingitem.archives(discs, game_setup(args.game)), {}
+    levels, found = records.archives(discs, game_setup(args.game)), {}
 
     def chunk(rid, table):
         if (rid, table) not in found:
-            found[rid, table] = fallingitem.art(levels, rid, table)
+            found[rid, table] = render.art(levels, rid, table)
         return found[rid, table]
 
     lines, held = [], set()

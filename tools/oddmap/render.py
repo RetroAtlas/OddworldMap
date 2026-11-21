@@ -10,6 +10,8 @@ is right only as far as a disc's own code agrees with it."""
 import collections
 import struct
 
+from oddmap import sprites
+from oddmap.disc import parse_chunks
 from oddmap.exe import calls, one, words_loaded
 from oddmap.fixed import FP, whole
 
@@ -197,6 +199,27 @@ def frames(data, table):
         x, y, *rect = struct.unpack_from("<6h", data, info + 8)
         out.append(Frame(data[header + 4], data[header + 5], x, y, tuple(rect)))
     return out
+
+
+def tables(data):
+    """where a chunk of animations keeps the table of each that holds frames"""
+    try:
+        return [anim["off"] for anim in sprites.walk(data)[1] if anim["frames"]]
+    except ValueError:
+        return []
+
+
+def art(levels, rid, table):
+    """the chunk of animations an object's constructor asks for by its id and
+    sets up from a table, found in the level archives by that table"""
+    found = set()
+    for lvl in levels.values():
+        for name in lvl.files:
+            if name.rsplit(".", 1)[-1] in ("BAN", "BND"):
+                data = parse_chunks(lvl.read(name)).get(("Anim", rid))
+                if data and table in tables(data):
+                    found.add(data)
+    return one(found, f"the animation {rid} with a table at {table:#x}")
 
 
 class Console:

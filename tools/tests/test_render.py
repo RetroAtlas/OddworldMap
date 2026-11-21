@@ -120,6 +120,35 @@ class Frames(unittest.TestCase):
         self.assertEqual(render.frames(data, last), [LEANS])
 
 
+def archive(rid, data):
+    """a file of a level's archive holding one chunk of animations"""
+    return struct.pack("<IHHII", 16 + len(data), 0, 0, int.from_bytes(b"Anim", "little"), rid) + data
+
+
+class Level:
+    def __init__(self, **files):
+        self.files = files
+
+    def read(self, name):
+        return self.files[name]
+
+
+class Art(unittest.TestCase):
+    def test_an_objects_art_is_the_chunk_of_its_id_that_holds_its_table(self):
+        data, whole, last = chunk(ROCK, LEANS)
+        self.assertEqual((render.tables(data), render.tables(data[:last])), ([whole, last], []))
+        levels = {"MI": Level(**{"ROCK.BAN": archive(2007, data), "ABE.BND": archive(10, data)}),
+                  "NE": Level(**{"NEROCK.BAN": archive(2007, data), "CUT.BAN": archive(2007, data[:last])})}
+        self.assertEqual(render.art(levels, 2007, last), data)
+        for rid, table, refusal in ((2007, last + 4, "0 candidates for the animation 2007 with a table at 0x58"),
+                                    (2008, last, "0 candidates for the animation 2008")):
+            with self.assertRaisesRegex(RuntimeError, refusal):
+                render.art(levels, rid, table)
+        levels["PV"] = Level(**{"PVROCK.BAN": archive(2007, chunk(LEANS, ROCK)[0])})
+        with self.assertRaisesRegex(RuntimeError, "2 candidates for the animation 2007"):
+            render.art(levels, 2007, last)
+
+
 class ByHand(unittest.TestCase):
     OWN = Sprite(0, 0, HALF, 3, 5, 0, 5)
 

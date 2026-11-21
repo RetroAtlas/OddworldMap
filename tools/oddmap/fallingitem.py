@@ -8,18 +8,12 @@ object's, and oddmap/render.py holds it. The model is the constructor as the
 discs have it, which is not how the decomp writes Exoddus's, and is right only
 as far as a disc's own code agrees with it."""
 import collections
-import contextlib
-import io
 import struct
 
-from oddmap import render, sprites
-from oddmap.disc import Lvl, parse_chunks
+from oddmap import records, render
 from oddmap.exe import JR_RA, Image, end, entry, one, references, words_loaded
 from oddmap.fixed import FP
-from oddmap.games import game_setup
-from oddmap.messages import MESSAGE_TABLES, lead_table
-from oddmap.release import filed_cell
-from oddmap.tlv import resolve_path_meta, tlv_header_ok, walk_obj_region
+from oddmap.games import GAMES
 
 NAME = "FallingItem"
 GAIN = 0x1CCCC                      # what a tick of a fall adds to its speed, 1.8 in 16.16
@@ -31,7 +25,6 @@ GREY = {"AO": 105, "AE": 127}       # the shade a game makes an object in
 LINES, LINES_TINT = 2, (77, 120, 190)                   # Oddysee's level that tints its items
 FARMS = (1, 13)                     # Oddysee's levels that give the items one to hum for them all
 HALF_LAYER, LAYER = 12, 31
-END = 4                             # the flag that ends a camera's list of records
 A1, VOLATILE = 5, set(range(1, 16)) | {24, 25, 31}
 
 Record = collections.namedtuple("Record", "x1 y1 x2 y2 switch scale interval most reset")
@@ -148,97 +141,21 @@ def code(blob, base, exe):
 def overlays(disc, game_key):
     """({overlay: its bytes} for each of a disc's that holds the item's
     update, the address they load at)"""
-    blobs = {name: disc.read(*disc.files[name]) for name in sorted(disc.files) if name.endswith(".OVL")}
-    leads = (lead_table(blob, MESSAGE_TABLES[game_key]["lcd"][0]) for blob in blobs.values())
-    base = one({lead[1] for lead in leads if lead}, "the address the overlays load at")
+    blobs, base = records.overlays(disc, game_key)
     return {name: blob for name, blob in blobs.items() if _updates(Image(blob, base))}, base
-
-
-def archives(discs, game):
-    """{level: its archive} over the discs given, the fullest copy of each"""
-    out = {}
-    for _id, short, _name in game["levels"]:
-        name = f"{short}.LVL"
-        having = [disc for disc in discs if name in disc.files]
-        if short in game["tables"] and having:
-            try:
-                out[short] = Lvl(max(having, key=lambda disc: disc.files[name][1]), name)
-            except (ValueError, EOFError):
-                pass
-    return out
-
-
-def _listed(blob, start, cells, fmt):
-    """{a record's offset among the path's objects: the cell whose camera
-    lists it}, each camera's list read to the record that ends it"""
-    out = {}
-    for cell, first in enumerate(struct.unpack_from(f"<{cells}i", blob, len(blob) - 4 * cells)):
-        at = start + first
-        while first >= 0:
-            flags, _, length, kind = struct.unpack_from("<BBhI", blob, at)
-            if not tlv_header_ok(fmt, flags, length, kind):
-                raise RuntimeError(f"the list of cell {cell} runs off its records")
-            out[at - start] = cell
-            if flags & END:
-                break
-            at += length
-    return out
 
 
 def placed(discs, game_key):
     """every falling item a game places, as its discs hold it: the record,
     its own bytes, and the screen and the corner of the window of the camera
     whose list holds it, which is the one the builder files it under"""
-    game = game_setup(game_key)
-    fmt, geo, out = game["tlv"], game["geometry"], []
-    for short, lvl in archives(discs, game).items():
-        if f"{short}PATH.BND" not in lvl.files:
-            continue
-        chunks = parse_chunks(lvl.read(f"{short}PATH.BND"))
-        for path in sorted(rid for tag, rid in chunks if tag == "Path"):
-            blob = chunks["Path", path]
-            with contextlib.redirect_stdout(io.StringIO()):
-                meta = resolve_path_meta(blob, path, game["tables"][short].get(path), fmt, geo["worldW"],
-                                         geo["worldH"])
-            across, down = max(1, meta["w_units"] // geo["worldW"]), max(1, meta["h_units"] // geo["worldH"])
-            ends = meta["idx_off"] if meta["idx_off"] > meta["obj_off"] else len(blob)
-            offsets = []
-            objects = walk_obj_region(blob, meta["obj_off"], ends, game, {}, offsets)
-            if not any(obj["name"] == NAME for obj in objects):
-                continue
-            listed = _listed(blob, meta["obj_off"], across * down, fmt)
-            for obj, offset in zip(objects, offsets):
-                if obj["name"] != NAME:
-                    continue
-                at, f, cell = meta["obj_off"] + offset, obj["fields"], listed[offset]
-                if cell != filed_cell(obj, across, game):
-                    raise RuntimeError(f"{short} P{path}: the camera of cell {cell} lists the item at "
-                                       f"{obj['x1']},{obj['y1']}, not the one its game files it under")
-                record = Record(obj["x1"], obj["y1"], obj["x2"], obj["y2"], f["switch_id"], f["scale"],
-                                f["fall_interval"], f["max_falling_items"], f["reset_switch_id_after_use"])
-                out.append(Placed(short, path, record, blob[at:at + struct.unpack_from("<h", blob, at + 2)[0]],
-                                  blob[cell * 8:cell * 8 + 8].decode("latin1").strip("\0 "),
-                                  cell % across * geo["worldW"] + geo["winX"],
-                                  cell // across * geo["worldH"] + geo["winY"]))
+    geo, out = GAMES[game_key]["geometry"], []
+    for found in records.placed(discs, game_key, (NAME,)):
+        obj, f, cell = found.object, found.object["fields"], found.cell
+        record = Record(obj["x1"], obj["y1"], obj["x2"], obj["y2"], f["switch_id"], f["scale"],
+                        f["fall_interval"], f["max_falling_items"], f["reset_switch_id_after_use"])
+        out.append(Placed(found.short, found.path, record, found.words,
+                          found.blob[cell * 8:cell * 8 + 8].decode("latin1").strip("\0 "),
+                          cell % found.across * geo["worldW"] + geo["winX"],
+                          cell // found.across * geo["worldH"] + geo["winY"]))
     return out
-
-
-def tables(data):
-    """where a chunk of animations keeps the table of each that holds frames"""
-    try:
-        return [anim["off"] for anim in sprites.walk(data)[1] if anim["frames"]]
-    except ValueError:
-        return []
-
-
-def art(levels, rid, table):
-    """the chunk of animations an item's constructor asks for by its id and
-    sets up from a table, found in the level archives by that table"""
-    found = set()
-    for lvl in levels.values():
-        for name in lvl.files:
-            if name.rsplit(".", 1)[-1] in ("BAN", "BND"):
-                data = parse_chunks(lvl.read(name)).get(("Anim", rid))
-                if data and table in tables(data):
-                    found.add(data)
-    return one(found, f"the animation {rid} with a table at {table:#x}")
