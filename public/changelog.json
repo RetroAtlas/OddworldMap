@@ -1,6 +1,13 @@
 {
  "entries": [
   {
+   "date": "2026-11-21",
+   "tag": "fixed",
+   "tiny": true,
+   "title": "A Greeter sweeps its beam to either side, not ahead",
+   "detail": "The Greeter's card, and the line of it the hover tooltip shows, said the machine sweeps its motion-detector beam ahead of itself. The beam runs along the floor from 75 units behind a Greeter to 75 in front of it, half that on the background plane, and back again, whichever way the Greeter is rolling. So it is behind the machine about as often as ahead. The card now says to either side."
+  },
+  {
    "date": "2026-11-20",
    "tag": "new",
    "title": "\"Reduce motion\" is a setting of the map's own",
