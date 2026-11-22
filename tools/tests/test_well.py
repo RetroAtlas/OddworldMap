@@ -486,11 +486,9 @@ class Routines(unittest.TestCase):
     def test_the_overlays_holding_a_leafs_update_are_the_ones_run(self):
         image, exe = executable()
         flies, none = overlay(exe)[0], overlay(exe, flies=0)[0]
-        files = {"B.OVL": flies, "A.OVL": none, "C.OVL": flies}
-        disc = type("Disc", (), dict(files={name: (k, 0) for k, name in enumerate(files)},
-                                     read=lambda self, at, size: list(files.values())[at]))()
-        with mock.patch.object(well.records, "lead_table", lambda blob, count: ([], BASE)):
-            self.assertEqual(well.overlays(disc, "AE"), ({"B.OVL": flies, "C.OVL": flies}, BASE))
+        loaded = {"disc": ({"A.OVL": none, "B.OVL": flies, "C.OVL": flies}, BASE)}
+        with mock.patch.object(well.records, "overlays", lambda disc, game: loaded[disc]):
+            self.assertEqual(well.overlays("disc", "AE"), ({"B.OVL": flies, "C.OVL": flies}, BASE))
 
 
 def bytes_of(game, kind, rect, *fields):

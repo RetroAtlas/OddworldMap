@@ -481,7 +481,7 @@ class Routines(unittest.TestCase):
 
     def overlays(self, files, loads):
         with mock.patch.dict(messages.MESSAGE_TABLES, TABLES), \
-                mock.patch.object(hintfly, "loaded_overlays", lambda data, layout: loads):
+                mock.patch.object(hintfly.records, "loaded_overlays", lambda data, layout: loads):
             return hintfly.overlays(self.Disc({**files, "SLUS_000.00": b""}))
 
     def test_the_overlays_the_paths_load_that_hold_an_alphabet_are_the_ones_run_in_name_order(self):
@@ -506,7 +506,7 @@ class Routines(unittest.TestCase):
             disc = self.Disc({"E1.OVL": overlay(exe)[0], "E2.OVL": overlay(exe, **shape)[0], "R1.OVL": lcd,
                               "SLUS_000.00": image.data})
             with mock.patch.dict(messages.MESSAGE_TABLES, TABLES), \
-                    mock.patch.object(hintfly, "loaded_overlays", lambda data, layout: loads):
+                    mock.patch.object(hintfly.records, "loaded_overlays", lambda data, layout: loads):
                 return hintfly.spellings(disc)
         self.assertEqual(read(handed=(FP, FP), cells=(19,), held=(75,)),
                          {"E1.OVL": hintfly.BASE_SPELLING, "E2.OVL": OWN})

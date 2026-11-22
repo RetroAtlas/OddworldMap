@@ -11,12 +11,12 @@ over every frame of the animations the constructor asks for.
 
 --disc defaults to $ODDWORLD_DISC_AO or $ODDWORLD_DISC_AE, the latter holding
 both of Exoddus's images, of which each is run with its own executable and the
-overlays it carries. An overlay's constructor builds every placed record under
-the map at its own camera and at another, in four levels, with and without an
-item already humming, and what it leaves is compared field by field, with what
-it stores outside its object. The object so left is then rendered standing in
-each frame at its own camera, and what the render hands the ordering table, a
-quad or nothing, compared corner by corner.
+overlays it carries that its paths load. An overlay's constructor builds every
+placed record under the map at its own camera and at another, in four levels,
+with and without an item already humming, and what it leaves is compared field
+by field, with what it stores outside its object. The object so left is then
+rendered standing in each frame at its own camera, and what the render hands
+the ordering table, a quad or nothing, compared corner by corner.
 
 What the placed records reach too seldom is put there: a record of the other
 scale, one of a scale that is neither and one whose rect lies left of the

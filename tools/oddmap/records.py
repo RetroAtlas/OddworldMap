@@ -1,16 +1,16 @@
 """What a check of the PlayStation's code reads off a game's discs before it
-runs any: a disc's overlays and the address they load at, the fullest copy of
-each level's archive, the camera whose list holds each record of a path, and
-every object of the types asked for as the path chunks hold it, with that
-camera."""
+runs any: the overlays a disc's paths load and the address a path's own loads
+at, the fullest copy of each level's archive, the camera whose list holds each
+record of a path, and every object of the types asked for as the path chunks
+hold it, with that camera."""
 import collections
 import contextlib
 import io
 import struct
 
 from oddmap.disc import Lvl, parse_chunks
-from oddmap.exe import one
-from oddmap.games import game_setup
+from oddmap.exe import executable, loaded_overlays, one
+from oddmap.games import GAMES, game_setup
 from oddmap.messages import MESSAGE_TABLES, lead_table
 from oddmap.tlv import filed_cell, resolve_path_meta, tlv_header_ok, walk_obj_region
 
@@ -20,8 +20,10 @@ Placed = collections.namedtuple("Placed", "short path place object words cell ac
 
 
 def overlays(disc, game_key):
-    """({overlay: its bytes} for each of a disc's, the address they load at)"""
-    blobs = {name: disc.read(*disc.files[name]) for name in sorted(disc.files) if name.endswith(".OVL")}
+    """({overlay: its bytes} for each of a disc's that the game's paths load,
+    the address a path's own one loads at)"""
+    loaded = loaded_overlays(executable(disc)[1], GAMES[game_key]["path_record"])
+    blobs = {name: disc.read(*disc.files[name]) for name in sorted(loaded) if name in disc.files}
     leads = (lead_table(blob, MESSAGE_TABLES[game_key]["lcd"][0]) for blob in blobs.values())
     return blobs, one({lead[1] for lead in leads if lead}, "the address the overlays load at")
 

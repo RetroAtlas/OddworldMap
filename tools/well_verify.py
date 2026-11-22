@@ -12,12 +12,12 @@ render goes on to draw each leaf against tools/oddmap/render.py.
 
 --disc defaults to $ODDWORLD_DISC_AO or $ODDWORLD_DISC_AE, the latter holding
 both of Exoddus's images, of which each is run with its own executable and the
-overlays it carries. A camera is every well its list holds, each built by the
-overlay's constructor from its record's own bytes, at the point the game's
-factory hands it, then ticked --ticks times from the two cursors the map reads
-that camera's dice from. Every camera whose wells let leaves go in a fresh game
-is run once, dealt in turn over the overlays, so that each overlay runs some
-and --overlay runs them all in the ones it names.
+overlays it carries that its paths load. A camera is every well its list holds,
+each built by the overlay's constructor from its record's own bytes, at the
+point the game's factory hands it, then ticked --ticks times from the two
+cursors the map reads that camera's dice from. Every camera whose wells let
+leaves go in a fresh game is run once, dealt in turn over the overlays, so that
+each overlay runs some and --overlay runs them all in the ones it names.
 
 What placed records do not reach is put there by hand: a well of each type
 alone in its camera, with a leaf field set, each and both, told to let leaves

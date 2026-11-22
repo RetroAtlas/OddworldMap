@@ -121,15 +121,6 @@ def overlay(updates=1, slots=1, shown=0, makers=1, record="moved", frames=1, fir
         construct=made[0], update=falls[0] if falls else saw, render=shows, table=TABLE, frame=FRAME, first=FIRST)
 
 
-class Disc:
-    def __init__(self, blobs):
-        self.blobs = blobs
-        self.files = {name: (i, len(blob)) for i, (name, blob) in enumerate(blobs.items())}
-
-    def read(self, lba, size):
-        return list(self.blobs.values())[lba]
-
-
 class Routines(unittest.TestCase):
     def found(self, **shape):
         """(what fallingitem.code finds in an overlay of a shape, what the overlay was built to hold)"""
@@ -163,17 +154,11 @@ class Routines(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, refusal):
                     self.found(**shape)
 
-    def test_the_overlays_holding_an_update_are_the_ones_run_at_the_address_the_messages_load_at(self):
-        falls, hums, lcd, other = overlay()[0], overlay(updates=0)[0], b"LCD.", b"LCD!"
-        files = {"B.OVL": falls, "A.OVL": hums, "L.OVL": lcd, "C.OVL": falls, "D.BND": falls}
-        leads = {lcd: ([], BASE), other: ([], LOAD)}
-        with mock.patch.object(records, "lead_table", lambda blob, count: leads.get(blob)):
-            blobs, base = fallingitem.overlays(Disc(files), "AE")
-            self.assertEqual((list(blobs), base), (["B.OVL", "C.OVL"], BASE))
-            with self.assertRaisesRegex(RuntimeError, "0 candidates for the address the overlays load at"):
-                fallingitem.overlays(Disc({"B.OVL": falls}), "AE")
-            with self.assertRaisesRegex(RuntimeError, "2 candidates for the address the overlays load at"):
-                fallingitem.overlays(Disc({**files, "M.OVL": other}), "AE")
+    def test_the_overlays_holding_an_update_are_the_ones_run(self):
+        falls, hums = overlay()[0], overlay(updates=0)[0]
+        loaded = {"disc": ({"A.OVL": hums, "B.OVL": falls, "C.OVL": falls}, BASE)}
+        with mock.patch.object(records, "overlays", lambda disc, game: loaded[disc]):
+            self.assertEqual(fallingitem.overlays("disc", "AE"), ({"B.OVL": falls, "C.OVL": falls}, BASE))
 
 
 class Verifier(unittest.TestCase):

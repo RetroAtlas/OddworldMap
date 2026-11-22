@@ -15,6 +15,27 @@ from oddmap.games import GAMES  # noqa: E402
 
 
 class Discs(unittest.TestCase):
+    def test_the_overlays_are_the_ones_the_paths_load_at_the_address_the_messages_load_at(self):
+        blobs = {"B.OVL": b"lcd", "A.OVL": b"a", "D.OVL": b"older", "SLUS_000.00": b"exe"}
+        disc = SimpleNamespace(files={name: (name, 0) for name in blobs}, read=lambda name, size: blobs[name])
+        leads = {(b"lcd", 101): ([], 0x800A0000), (b"older", 101): ([], 0x8009FF00)}
+
+        def overlays(*loaded):
+            def named(data, layout):
+                self.assertEqual((data, layout), (b"exe", GAMES["AE"]["path_record"]))
+                return set(loaded)
+
+            with mock.patch.object(records, "lead_table", lambda blob, count: leads.get((blob, count))), \
+                    mock.patch.object(records, "loaded_overlays", named):
+                return records.overlays(disc, "AE")
+
+        found, base = overlays("C.OVL", "B.OVL", "A.OVL")
+        self.assertEqual((list(found.items()), base), ([("A.OVL", b"a"), ("B.OVL", b"lcd")], 0x800A0000))
+        with self.assertRaisesRegex(RuntimeError, "0 candidates for the address the overlays load at"):
+            overlays("A.OVL")
+        with self.assertRaisesRegex(RuntimeError, "2 candidates for the address the overlays load at"):
+            overlays("B.OVL", "D.OVL")
+
     def test_a_levels_archive_is_the_fullest_copy_the_discs_hold(self):
         game = {"levels": [(1, "MI", ""), (2, "NE", ""), (3, "PV", ""), (4, "XX", "")],
                 "tables": {"MI": {}, "NE": {}, "PV": {}}}
