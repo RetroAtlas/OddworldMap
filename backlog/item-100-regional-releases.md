@@ -271,3 +271,7 @@ Where the slice drifted from the design:
 - **Cataloguing a release's code before shipping its data.** Its lines, objects and art stand on their own, and its creatures run the base's brains meanwhile.
 - **The video standard as a release's name** (`pal`): what the map shows of a release is its content, and the standard is only its clock.
 - **The decomp for a release's data.** It is the PC build, and its path table already disagrees with the base discs; each release answers to its own discs.
+
+## Grown since filing
+
+Since 2026-11-22 one brain takes a release's own numbers. Each Oddysee disc's hint fly code has run beside a model of it ([docs/ps1-code.md](../docs/ps1-code.md)): seven of the eight releases have the base's, and Abe a GoGo's lays a word out and holds it by three numbers of its own, a step of a letter's grid, a letter's cell and the hold. The build reads them off that code into the overlay, beside the alphabet, and the hint flies spell by them; every other brain runs as the base has it in every release.

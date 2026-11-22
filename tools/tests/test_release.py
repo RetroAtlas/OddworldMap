@@ -3,10 +3,11 @@
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path[:0] = [str(Path(__file__).resolve().parents[1])]
 
-from oddmap import release  # noqa: E402
+from oddmap import hintfly, release  # noqa: E402
 
 GEO = {"worldW": 1024, "worldH": 480}
 CORNER = {"geometry": GEO, "filed_by_midpoint": False, "camera_gate": None}
@@ -293,13 +294,48 @@ class Messages(unittest.TestCase):
         self.assertEqual(counts, {"alphabet": "3 letters", "message tables": 1})
         self.assertEqual(texts["hintfly"], ["AC"], "the release's own table is what its font is read against")
 
-    def test_the_census_reports_an_alphabet_as_letters(self):
+    def test_an_overlay_carries_the_numbers_its_hint_flies_spell_by_beside_its_tables_and_counts_them_apart(self):
+        spelling, same = {"letter": 19, "hold": 75}, dict(self.BASE_TABLES)
+        changed, counts, texts = release.overlay_messages(same, self.BASE_TABLES, spelling)
+        self.assertEqual((changed, counts), ({"spelling": spelling}, {"spelling": "letter 19, hold 75"}))
+        self.assertEqual(sorted(texts), ["hintfly", "lcd"], "the numbers are no table of messages")
+        self.assertEqual(release.overlay_messages(same, self.BASE_TABLES, {})[:2], ({}, {}))
+
+    def spelled(self, spellings, game_key="AO"):
+        """the numbers of its own a release carries whose overlays spell by those given"""
+        failed = isinstance(spellings, Exception)
+        read = mock.Mock(side_effect=spellings if failed else None, return_value=spellings)
+        with mock.patch.object(hintfly, "spellings", read):
+            out = release.release_spelling(mock.Mock(game_key=game_key, code="jp", discs=["disc"]))
+        self.assertEqual(read.call_args_list, [mock.call("disc")] if game_key == "AO" else [])
+        return out
+
+    def test_a_release_carries_the_numbers_its_hint_flies_spell_by_that_are_not_the_base_s(self):
+        base, own = hintfly.BASE_SPELLING, hintfly.Spelling(dot=0x10000, letter=19, hold=75)
+        held = base._replace(hold=75)
+        self.assertEqual(self.spelled({"E1.OVL": base, "E3.OVL": base}), {})
+        self.assertEqual(self.spelled({"E1.OVL": held, "E3.OVL": held}), {"hold": 75})
+        self.assertEqual(self.spelled({"E1.OVL": own}), {"dot": 0x10000, "letter": 19, "hold": 75})
+        self.assertEqual(self.spelled({"MI.OVL": own}, "AE"), {}, "a game with no hint flies has none read")
+
+    def test_overlays_spelling_by_different_numbers_and_ones_the_reader_refuses_are_refused_under_their_release(self):
+        base, sets = hintfly.BASE_SPELLING, "AO jp: its overlays' hint flies spell by %d sets of numbers"
+        for spellings, refusal in [
+            ({"E1.OVL": base, "E3.OVL": base._replace(hold=75)}, sets % 2), ({}, sets % 0),
+            (RuntimeError("E1.OVL: 0 candidates for the hold"), "AO jp: E1.OVL: 0 candidates for the hold"),
+        ]:
+            with self.assertRaisesRegex(SystemExit, refusal):
+                self.spelled(spellings)
+
+    def test_the_census_reports_an_alphabet_as_letters_and_the_numbers_it_is_spelled_by_as_numbers(self):
         overlay = {"game": "AO", "code": "fr", "name": "France", "executable": "SLES_008.38", "hz": 25,
-                   "code_page": "cp437", "paths": {}, "messages": {"alphabet": ["0f", "11", "22"], "hintfly": ["AC", ""]}}
-        lines = release.census_lines(overlay, {"alphabet": "3 letters", "message tables": 1})
+                   "code_page": "cp437", "paths": {},
+                   "messages": {"alphabet": ["0f", "11", "22"], "hintfly": ["AC", ""], "spelling": {"hold": 75}}}
+        lines = release.census_lines(overlay, {"alphabet": "3 letters", "message tables": 1, "spelling": "hold 75"})
         self.assertIn("  alphabet: 3 letters", lines)
+        self.assertIn("  spelling: hold 75", lines)
         self.assertIn("  hintfly messages: 1 of 2 filled", lines)
-        self.assertEqual([line for line in lines if "alphabet messages" in line], [])
+        self.assertEqual([line for line in lines if "alphabet messages" in line or "spelling messages" in line], [])
 
 
 class OwnCodePage(unittest.TestCase):
@@ -612,6 +648,16 @@ class CommittedOverlays(unittest.TestCase):
             own, sheets = set(o.get("sprites", {}).get("anims", {})), set(o.get("sheets", {}))
             missing = [n for n, a in base["anims"].items() if a["frames"][0][0] in sheets and n not in own]
             self.assertEqual(missing, [], f"{f.name} needs building again")
+
+    def test_each_carries_the_numbers_its_hint_flies_spell_by_only_where_they_are_not_the_base_s(self):
+        import json
+        _site, files = self.overlays()
+        for f in files:
+            spelling = json.loads(f.read_text()).get("messages", {}).get("spelling")
+            if spelling is not None:
+                base = hintfly.BASE_SPELLING._asdict()
+                self.assertTrue(spelling and set(spelling) <= set(base), f.name)
+                self.assertEqual([n for n, value in spelling.items() if value == base[n]], [], f.name)
 
     def test_each_carries_the_characters_its_table_names_for_what_its_messages_reach(self):
         import json

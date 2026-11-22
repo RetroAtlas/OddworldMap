@@ -14,6 +14,7 @@ import struct
 import tempfile
 from concurrent.futures import ProcessPoolExecutor
 
+from oddmap import hintfly
 from oddmap.disc import Disc, Lvl, parse_chunks
 from oddmap.exe import (Image, code_differences, executable, frame_rate, lcd_glyph_table, path_overlays,
                         path_records, text, text_codes)
@@ -26,6 +27,7 @@ from oddmap.sprites import (FONT_FAMILY, SHEETS_DIR, build_sprites, family_sheet
 from oddmap.tlv import walk_obj_region
 
 CAMERA_NAME = re.compile(r"[A-Z0-9]{4,8}")
+SPELLING = "spelling"  # beside the message tables, the numbers hint flies spell by
 
 
 class Base:
@@ -440,6 +442,22 @@ def release_messages(release, base, controls):
     return tables, per_path, lead
 
 
+def release_spelling(release):
+    """the numbers the release's hint flies spell by that are not the base's,
+    read off the code of every overlay that holds the flies, which must all
+    agree"""
+    if release.game_key not in LETTERED:
+        return {}
+    where = f"{release.game_key} {release.code}"
+    try:
+        found = set(hintfly.spellings(release.discs[0]).values())
+    except RuntimeError as e:
+        raise SystemExit(f"{where}: {e}") from None
+    if len(found) != 1:
+        raise SystemExit(f"{where}: its overlays' hint flies spell by {len(found)} sets of numbers")
+    return {name: n for name, n in found.pop()._asdict().items() if n != getattr(hintfly.BASE_SPELLING, name)}
+
+
 def compare_sprites(release, base):
     """the families whose frames differ from the base's: their sheets and every
     animation drawn from them, as the base's sidecar shapes them"""
@@ -481,17 +499,21 @@ def compare_sprites(release, base):
     return sorted(differ), sheets, anims
 
 
-def overlay_messages(messages, base_messages):
+def overlay_messages(messages, base_messages, spelling=None):
     """(the tables a release's overlay carries, what the census counts of
     them, the message tables its font and its code page are read against): a
     table goes in whole where it differs from the base's at all, the alphabet
-    like any, and the alphabet is letters and no message table"""
+    like any, and the alphabet is letters and no message table. The numbers
+    the release spells by go in beside them"""
     changed = {name: table for name, table in messages.items() if base_messages.get(name) != table}
     counts = {}
     if set(changed) - {ALPHABET}:
         counts["message tables"] = len(set(changed) - {ALPHABET})
     if ALPHABET in changed:
         counts["alphabet"] = f"{len(changed[ALPHABET])} letters"
+    if spelling:
+        changed[SPELLING] = spelling
+        counts["spelling"] = ", ".join(f"{name} {n}" for name, n in spelling.items())
     texts = {name: table for name, table in {**base_messages, **messages}.items() if name != ALPHABET}
     return changed, counts, texts
 
@@ -700,7 +722,7 @@ def compare(game_key, game, code, entry, images, base=None, workers=None):
     overlay["paths"] = {k: paths[k] for k in sorted(paths)}
     controls = MESSAGE_BUTTONS if entry["code_page"] == "cp437" else range(1, 0x20)
     messages, per_path, lead = release_messages(release, base, controls)
-    changed, tallies, texts = overlay_messages(messages, base.messages)
+    changed, tallies, texts = overlay_messages(messages, base.messages, release_spelling(release))
     if changed:
         overlay["messages"] = changed
     counts.update(tallies)
@@ -838,7 +860,7 @@ def census_lines(overlay, counts, code=None):
     if dropped:
         out.append(f"  cameras dropped: {', '.join(dropped)}")
     for name, table in sorted(overlay.get("messages", {}).items()):
-        if name != ALPHABET:
+        if name not in (ALPHABET, SPELLING):
             out.append(f"  {name} messages: {sum(1 for m in table if m)} of {len(table)} filled")
     if code:
         out.append(f"  code: {code['executable blocks']} executable blocks, "

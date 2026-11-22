@@ -1,6 +1,6 @@
 import { raycastDiag, raycastDown } from "../engine/collide.js";
 import { filedCell, sligBounds, tlvCell } from "../model/model.js";
-import { hintWords, lcdMessages } from "../model/messages.js";
+import { hintSpelling, hintWords, lcdMessages } from "../model/messages.js";
 import { AE_MUDOKONS_IN_LEVEL, AO_MUDOKONS, TALLY_EDGE, lcdIds } from "../engine/lcd.js";
 import {
   FLOOR,
@@ -297,6 +297,7 @@ rule("AO", "HintFly", (c) => {
       Math.floor(t.y1 / geo.worldH) * geo.worldH + geo.winY,
     ],
     words: hintWords(c.data, t, c.path),
+    spelling: hintSpelling(c.data),
   };
   return [draw(c, null, t.x1, t.y1, { cycle: brain(c, "hintfly", false, p), yOff: 0 })];
 });

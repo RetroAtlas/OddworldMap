@@ -267,6 +267,7 @@ for (const [game, { releases }] of Object.entries(index))
       const font = overlay.font ?? sprites.font;
       const tables = { ...load(`messages_${g}.json`), ...overlay.messages };
       delete tables.alphabet;
+      delete tables.spelling;
       // each glyph the run draws beside the byte it was read from, an escape
       // byte and its second byte reading as one; only a space may draw none
       for (const [name, table] of Object.entries(tables))
@@ -309,6 +310,19 @@ for (const { code } of index.AO.releases)
         }
     assert.deepEqual(unlettered, UNLETTERED[code] ?? []);
   });
+
+test("Abe a GoGo's hint flies spell by numbers of their own, and no other release's do", () => {
+  const spellings = Object.entries(index).flatMap(([game, { releases }]) =>
+    releases.map(({ code }) => {
+      const { messages } = load(`release_${game.toLowerCase()}_${code}.json`);
+      return [`${game} ${code}`, messages?.spelling];
+    }),
+  );
+  assert.deepEqual(
+    spellings.filter(([, spelling]) => spelling),
+    [["AO jp", { dot: 0x10000, letter: 19, hold: 75 }]],
+  );
+});
 
 test("a release's sprite sidecar is the base's with the release's own parts over it", () => {
   const base = load("map_data_ao.json");

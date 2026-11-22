@@ -9,6 +9,7 @@ import math
 import re
 import struct
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -496,6 +497,23 @@ class Routines(unittest.TestCase):
             self.overlays({"E2.OVL": unnamed, "R1.OVL": lcd, "E1.OVL": flies}, loads)
 
 
+    def test_each_overlay_of_a_disc_is_read_for_its_numbers_and_one_refused_is_named(self):
+        image, exe = executable()
+        lcd = text_table([""] + [" " * 31 + f"Screen {'x' * i}" for i in range(8)])
+        loads = {("E1", 1): "E1.OVL", ("E2", 1): "E2.OVL", ("R1", 1): "R1.OVL"}
+
+        def read(**shape):
+            disc = self.Disc({"E1.OVL": overlay(exe)[0], "E2.OVL": overlay(exe, **shape)[0], "R1.OVL": lcd,
+                              "SLUS_000.00": image.data})
+            with mock.patch.dict(messages.MESSAGE_TABLES, TABLES), \
+                    mock.patch.object(hintfly, "path_overlays", lambda data, layout: loads):
+                return hintfly.spellings(disc)
+        self.assertEqual(read(handed=(FP, FP), cells=(19,), held=(75,)),
+                         {"E1.OVL": hintfly.BASE_SPELLING, "E2.OVL": OWN})
+        with self.assertRaisesRegex(RuntimeError, "^E2.OVL: 0 candidates for the hold"):
+            read(held=())
+
+
 class Tools(unittest.TestCase):
     def test_a_trace_is_the_model_under_the_maps_chant(self):
         got = hintfly_trace.trace(tables(), 0, 125, flips=[3])
@@ -570,6 +588,8 @@ class Tools(unittest.TestCase):
             (("10", "50", "--at", "6,4,2"), "--at takes a point as x,y"),
             (("10", "50", "--at", "40000,4"), "--at takes a point as x,y"),
             (("10", "50", "--overlay", "E3.OVL"), "--overlay names an overlay of the disc"),
+            (("10", "50", "--release", "jp", "--disc", "a.bin"), "--release and --disc each name the tables"),
+            (("10", "50", "--release", "zz"), "the viewer ships no Oddysee release zz"),
             (("36", "50"), "there is no message 36"),
             (("-1", "50"), "there is no message -1"),
         ]:
@@ -590,6 +610,8 @@ class Tools(unittest.TestCase):
         self.assertEqual(got, json.loads(json.dumps(want)))
         self.assertEqual((got["message"], sorted(got["shots"]), got["words"]), ("ABE WAS HERE", ["40", "5"], [[27, "ABE"]]))
         self.assertEqual(self.printed("1", "40"), json.loads(json.dumps(hintfly_trace.trace(shipped, 1, 40))))
+        own = hintfly_trace.trace(hintfly_trace.committed("jp"), 23, 60, [10])
+        self.assertEqual(self.printed("23", "60", "--chant", "10", "--release", "jp"), json.loads(json.dumps(own)))
         self.assertEqual(list(got), ["message", "line", "words", "sum", "rolls", "own", "dice", "shots"])
 
     def test_the_verifiers_chant_is_drawn_from_its_seed_and_opens_unheard(self):
@@ -627,7 +649,8 @@ class Tools(unittest.TestCase):
 class PortLiterals(unittest.TestCase):
     """the numbers tests/unit/hintfly.test.js holds the viewer's hint flies to
     are the model's, over the tables the viewer ships"""
-    # a run the test makes: its message, ticks, flips, shots, seed and point, and what of it the test holds
+    # a run the test makes: its message, ticks, flips, shots, seed and point, and what of it the test holds; then the
+    # release whose tables it spells by, or numbers it spells the base's by
     RUNS = [
         (5, 300, [], [1, 64, 300], 37, (180, 120), "shots"),
         (5, 300, [], [1, 64, 300], 37, (6, 4), "shots"),
@@ -640,18 +663,23 @@ class PortLiterals(unittest.TestCase):
         (1, 200, [2], [], 136, (180, 120), "words ends"),
         (10, 220, [10, 122, 130], [], 37, (180, 120), "words ends"),
         (None, 100, [10], [], 37, (180, 120), "line"),
+        (23, 260, [10], [60, 155], 37, (180, 120), "line words shots ends", "jp"),
+        (10, 200, [10], [], 37, (180, 120), "words ends", {"hold": 75}),
     ]
+
+    def tables(self, message, by=None):
+        shipped = hintfly_trace.committed(None if isinstance(by, dict) else by)
+        if isinstance(by, dict):
+            return shipped._replace(spelling=shipped.spelling._replace(**by)), message
+        return (shipped._replace(messages=[""]), 0) if message is None else (shipped, message)
 
     def test_every_run_the_ports_test_makes_is_the_models(self):
         source = " ".join((ROOT / "tests" / "unit" / "hintfly.test.js").read_text().split())
         source = source.replace("[ ", "[").replace(", ]", "]")
-        shipped = hintfly_trace.committed()
-        silent = hintfly.Tables(shipped.dice, shipped.alphabet, [""])
         self.assertEqual(len(re.findall(r"\brun\(hint\(", source)), sum(1 for run in self.RUNS if run[2]))
         seen = []
-        for message, ticks, flips, shots, seed, at, held in self.RUNS:
-            got = hintfly_trace.trace(*((silent, 0) if message is None else (shipped, message)), ticks, flips, shots,
-                                      seed, at)
+        for message, ticks, flips, shots, seed, at, held, *by in self.RUNS:
+            got = hintfly_trace.trace(*self.tables(message, *by), ticks, flips, shots, seed, at)
             literals = {"line": [f'"{got["line"]}"'], "words": [str([tick for tick, _ in got["words"]])],
                         "shots": [f'"{corners}"' for corners in got["shots"].values()],
                         "ends": [f'{got["sum"]}, {got["rolls"]}, {got["own"]}, {got["dice"]}']}
@@ -659,7 +687,7 @@ class PortLiterals(unittest.TestCase):
             for part in held.split():
                 for literal in literals[part]:
                     found = len(re.findall(r"(?<!\d)" + re.escape(literal) + r"(?!\d)", source))
-                    with self.subTest(message=message, ticks=ticks, flips=flips, seed=seed, at=at, part=part):
+                    with self.subTest(message=message, ticks=ticks, flips=flips, seed=seed, at=at, part=part, by=by):
                         self.assertEqual((found, literal in seen), (1, False), f"{literal[:70]} in the test's source")
                     seen.append(literal)
 
@@ -667,6 +695,22 @@ class PortLiterals(unittest.TestCase):
         shipped = hintfly_trace.committed()
         self.assertEqual((sorted(shipped.dice), len(shipped.alphabet), len(shipped.messages), shipped.messages[10]),
                          (list(range(256)), 26, 36, "DROP IN"))
+        self.assertEqual(shipped.spelling, hintfly.BASE_SPELLING)
+
+    def test_a_releases_tables_are_the_games_under_what_its_overlay_carries(self):
+        jp = hintfly_trace.committed("jp")
+        self.assertEqual((len(jp.alphabet), len(jp.messages), jp.spelling), (84, 36, OWN))
+        self.assertEqual(hintfly_trace.committed("eu"), hintfly_trace.committed())
+        with tempfile.TemporaryDirectory() as tmp:
+            for name, value in [("sprites_ao", {"dice": [1, 2]}),
+                                ("messages_ao", {"alphabet": ["0f"], "hintfly": ["A"], "lcd": []}),
+                                ("release_ao_fr", {"messages": {"hintfly": ["AA"]}}),
+                                ("release_ao_jp", {"dice": [2, 1], "messages": {"spelling": {"letter": 19}}})]:
+                (Path(tmp) / f"{name}.json").write_text(json.dumps(value))
+            with mock.patch.object(hintfly_trace, "SITE", Path(tmp)):
+                self.assertEqual(hintfly_trace.committed("fr"), hintfly.Tables([1, 2], [b"\x0f"], ["AA"]))
+                self.assertEqual(hintfly_trace.committed("jp"), hintfly.Tables(
+                    [2, 1], [b"\x0f"], ["A"], hintfly.BASE_SPELLING._replace(letter=19)))
 
 
 if __name__ == "__main__":

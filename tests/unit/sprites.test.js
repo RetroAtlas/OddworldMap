@@ -325,6 +325,29 @@ test("every hint fly is handed the words of its message, each letter its dots", 
   }
 });
 
+test("every hint fly is handed the numbers of its own its release spells by, the base's none", () => {
+  setMessages({ AO: pub("messages_ao.json") });
+  try {
+    const own = { letter: 19, hold: 75 };
+    for (const [release, want] of [
+      [undefined, null],
+      [{ messages: { spelling: own } }, own],
+    ]) {
+      const G = { ...data.AO, release };
+      let flies = 0;
+      for (const lvl of G.levels)
+        for (const path of lvl.paths)
+          for (const t of path.tlvs.filter((o) => o.name === "HintFly")) {
+            assert.equal(spriteDraws(G, lvl, path, t, sheets.AO)[0].cycle.p.spelling, want);
+            flies++;
+          }
+      assert.equal(flies, 28);
+    }
+  } finally {
+    setMessages(null);
+  }
+});
+
 test("the LCD font names a listed sheet and its glyphs sit inside it, the gap and the space first", () => {
   for (const g of GAMES) {
     const f = sheets[g].font;

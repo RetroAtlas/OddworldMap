@@ -2449,7 +2449,12 @@
    "",
    "",
    ""
-  ]
+  ],
+  "spelling": {
+   "dot": 65536,
+   "letter": 19,
+   "hold": 75
+  }
  },
  "sprites": {
   "anims": {

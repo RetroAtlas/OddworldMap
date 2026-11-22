@@ -10,23 +10,30 @@ import {
 } from "../../public/js/engine/motion.js";
 import { creature } from "./creatures.js";
 
+const load = (name) =>
+  JSON.parse(readFileSync(new URL(`../../public/${name}`, import.meta.url), "utf8"));
+
 // the game's own dice and the flies' own animation, with the flies' cursor
 // where the overlays start it, so a run is the PlayStation's own
-const sprites = JSON.parse(
-  readFileSync(new URL("../../public/sprites_ao.json", import.meta.url), "utf8"),
-);
+const sprites = load("sprites_ao.json");
 const set = { anims: { HintFly: sprites.anims.HintFly }, dice: sprites.dice };
 const AT = [180, 120];
-const AO = JSON.parse(
-  readFileSync(new URL("../../public/messages_ao.json", import.meta.url), "utf8"),
-);
-const dots = (ch) =>
-  AO.alphabet[ch.charCodeAt(0) - 0x41].match(/../g).map((dot) => parseInt(dot, 16));
-const wordsOf = (id) => AO.hintfly[id].split(" ").map((word) => [...word].map(dots));
+const AO = load("messages_ao.json");
+// a release whose words are laid out and held by numbers of its own
+const JP = load("release_ao_jp.json").messages;
+const dotsOf = (tables, ch) =>
+  tables.alphabet[ch.charCodeAt(0) - 0x41].match(/../g).map((dot) => parseInt(dot, 16));
+const wordsOf = (tables, id) =>
+  tables.hintfly[id].split(" ").map((word) => [...word].map((ch) => dotsOf(tables, ch)));
 // a hint with a message's words, or none, at a point of the screen whose corner is given,
-// its cursors from a seed
-const hint = (id = null, at = AT, screen = [0, 0], seed = 37) => ({
-  ...creature(null, "hintfly", { screen, words: id === null ? [] : wordsOf(id) }, seed),
+// its cursors from a seed, spelling by the tables it is given
+const hint = (id = null, at = AT, screen = [0, 0], seed = 37, tables = AO) => ({
+  ...creature(
+    null,
+    "hintfly",
+    { screen, words: id === null ? [] : wordsOf(tables, id), spelling: tables.spelling },
+    seed,
+  ),
   x: at[0],
   y: at[1],
 });
@@ -218,4 +225,34 @@ test("hintfly: a chant that breaks on the tick its message is spelled is a broke
 test("hintfly: a hint with no message hears no chant", () => {
   const got = run(hint(), 100, [10]);
   assert.equal(got.line, "1:20x100");
+});
+
+test("hintfly: a release's own numbers lay its words out and hold them, as its disc steps them", () => {
+  // また あおう: dots a pixel apart, letters nineteen and half the odd word's
+  // cells cut toward zero, each word held seventy-six ticks
+  const got = run(hint(23, AT, [0, 0], 37, JP), 260, [10], [60, 155]);
+  assert.equal(
+    got.line,
+    "1:20x9 3:20x16 2:20x1 2:28x1 2:36x1 2:44x1 2:52x1 2:60x1 4:64x76 3:64x16 2:64x1 2:72x1 2:80x1 4:82x76 5:82x21 5:74x1 5:66x1 5:58x1 5:50x1 5:42x1 5:34x1 5:26x1 1:20x1 3:20x16 2:20x1 2:28x1 2:36x1 2:44x1 2:52x1 2:60x1 4:64x7",
+  );
+  assert.deepEqual(got.words, [32, 127, 254]);
+  assert.equal(
+    got.shots[60],
+    "-18,3 -17,-6 -16,-2 -16,1 -15,5 -14,-6 -15,-3 -15,1 -14,5 -13,-5 -13,-3 -12,0 -11,-8 -11,4 -10,-5 -11,-4 -10,-2 -11,1 -10,0 -8,-6 -9,-3 -8,1 -6,-6 -7,-2 -7,3 -6,6 -5,-6 -4,-3 2,-6 1,5 3,3 4,-8 4,-4 4,-3 4,-1 4,1 5,-5 6,3 7,-5 7,-2 8,4 9,-6 9,-4 10,5 10,-6 10,-4 12,-1 11,5 13,-6 12,-2 13,4 14,-6 1,-6 9,-27 26,-9 -30,-1 39,10 26,13 -13,12 -16,-4 26,-26 6,3 40,-16 -24,4",
+    "また stands on its dots",
+  );
+  assert.equal(
+    got.shots[155],
+    "-27,-5 -26,1 -26,-1 -25,3 -25,-5 -23,-2 -23,4 -22,-6 -21,-7 -21,-4 -22,-2 -21,0 -22,1 -21,4 -20,-5 -19,-2 -19,2 -18,-5 -17,-1 -17,1 -18,4 -16,-5 -16,-1 -15,3 -14,-5 -14,2 -8,-6 -8,2 -7,4 -6,1 -5,-5 -5,5 -5,-1 -3,-5 -3,4 -3,-7 -3,-3 -2,-1 -2,0 -2,2 -2,-5 -1,-1 1,-5 0,-1 1,5 2,-7 3,0 4,5 5,-5 5,0 4,3 5,-4 11,-3 13,-8 13,-4 15,-7 16,-4 17,6 18,-7 18,-6 18,4 20,-7 19,-6 20,3 21,-7 22,-5 23,2 23,-4 24,0 25,-2 -8,-4 -27,-14 -19,8 30,-18 16,-25 7,-22 26,-1 33,2 39,-10 8,-5 -18,8 7,19",
+    "and あおう",
+  );
+  assert.deepEqual([got.sum, got.rolls, got.own, got.dice], [3931033471, 2076000195, 172, 83]);
+});
+
+test("hintfly: a number a release leaves alone is the base's", () => {
+  const got = run(hint(10, AT, [0, 0], 37, { ...AO, spelling: { hold: 75 } }), 200, [10]);
+  assert.deepEqual(
+    [got.words, got.sum, got.rolls, got.own, got.dice],
+    [[37, 136], 2989585711, 915519745, 207, 216],
+  );
 });

@@ -9,9 +9,15 @@ import { BRAINS, STARTS, cosine16, randomRange, sine16 } from "./patrolkit.js";
 const FP = 65536;
 const SWARM = 20; // the flies of a hint at rest
 const SPARE = 12; // the flies left circling beside a word
-const LETTER = 16; // a letter's cell, and its grid's side
-const DOT = 0xcccc; // one step of that grid, in 16.16
+const TOP = 8; // how far over the hint's point a letter's grid opens
 const RAW_RGB = [128, 128, 128];
+
+// what a word is laid out and held by, unless the hint has numbers of its own
+const SPELLING = {
+  dot: 0xcccc, // one step of a letter's grid, in 16.16
+  letter: 16, // a letter's cell
+  hold: 30, // the timer on a word, outlasted by a tick
+};
 
 // what a fly is doing
 const TO_DOT = 1,
@@ -55,21 +61,22 @@ const fliesOf = (word) => word.reduce((n, dots) => n + dots.length, 0);
 // the next word's letters laid a cell apart and centred on the point, a fly
 // sent to each dot in a sixteenth of the way a tick; the rest keep circling
 function formWord(st, rnd) {
+  const { dot, letter } = st.spelling;
   const word = st.p.words[st.word++];
-  let x = (st.ax - (LETTER / 2) * word.length) * FP;
-  const y = (st.ay - LETTER / 2) * FP;
+  let x = (st.ax - Math.trunc((letter * word.length) / 2)) * FP;
+  const y = (st.ay - TOP) * FP;
   let n = 0;
   for (const dots of word) {
-    for (const dot of dots) {
+    for (const at of dots) {
       const p = st.flies[n++];
-      p.tx = x + DOT * (dot >> 4);
-      p.ty = y + DOT * (dot & 15);
+      p.tx = x + dot * (at >> 4);
+      p.ty = y + dot * (at & 15);
       p.vx = (p.tx - p.rx) >> 4;
       p.vy = (p.ty - p.ry) >> 4;
       p.mode = TO_DOT;
       randomRange(st, rnd, -127, 127); // the pitch of its sound
     }
-    x += LETTER * FP;
+    x += letter * FP;
   }
 }
 
@@ -115,6 +122,7 @@ function stepFlies(st, rnd) {
 }
 
 STARTS.hintfly = (st) => {
+  st.spelling = { ...SPELLING, ...st.p.spelling };
   st.flies = [];
   st.count = SWARM;
   for (let i = 0; i < SWARM; i++) initFly(st, flyAt(st, i));
@@ -156,7 +164,7 @@ BRAINS.hintfly = (st, now, rnd) => {
     else if (st.count === st.want) {
       formWord(st, rnd);
       st.sub = HOLD;
-      st.timer = now + 30;
+      st.timer = now + st.spelling.hold;
     }
   } else if (st.sub === HOLD) {
     stepFlies(st, rnd);

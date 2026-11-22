@@ -106,6 +106,10 @@ export function hintWords(G, t, P = null) {
   return raw.split(" ").map((word) => [...word].map((ch) => dots(ch).map((d) => parseInt(d, 16))));
 }
 
+// the numbers a hint fly's words are laid out and held by, those of them that
+// are its release's own
+export const hintSpelling = (G) => tablesOf(G)?.spelling ?? null;
+
 // a stored message as words, read through its code page: button codes become
 // the command they name
 export function messageText(raw, page = "cp437") {

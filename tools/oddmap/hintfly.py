@@ -358,3 +358,15 @@ def spelling(blob, base, routines):
         letter=one([n for n in steps(img, routines.form) if n > 1],
                    "a letter's cell, what the routine forming a word steps a register on by"),
         hold=one(added(img, formed + 8, routines.frame), "the hold, what the update adds to the frame counter there"))
+
+
+def spellings(disc):
+    """{overlay: the numbers it spells by} for each `overlays` gives of a disc"""
+    blobs, base = overlays(disc)
+    exe, out = Image(executable(disc)[1]), {}
+    for name, blob in blobs.items():
+        try:
+            out[name] = spelling(blob, base, code(blob, base, exe))
+        except RuntimeError as e:
+            raise RuntimeError(f"{name}: {e}") from None
+    return out

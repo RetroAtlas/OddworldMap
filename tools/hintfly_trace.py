@@ -7,6 +7,7 @@ viewer's hint flies to.
     python3 tools/hintfly_trace.py 5 200 --chant 10,70,95
     python3 tools/hintfly_trace.py 1 200 --chant 2 --seed 136
     python3 tools/hintfly_trace.py 5 300 --at 6,4 --shots 1,64,300
+    python3 tools/hintfly_trace.py 23 260 --chant 10 --release jp
 
 A message id and a count of ticks, then: --chant, the ticks the chant flips
 on, rising from 2, the first the map can hear one on; --shots, the ticks to
@@ -14,9 +15,9 @@ print every sprite's corner at, about the hint's point and in fly order;
 --seed, the byte both dice cursors start from (default 37, where the overlays
 start the flies'); --at, the hint's point on its screen (default 180,120,
 and --at=-6,4 for one left of its screen's corner). The tables are the ones
-the viewer ships for the base game, or a disc's own with --disc, read off the
-first overlay holding them or the one --overlay names, the numbers it spells
-by off its code.
+the viewer ships for the base game, or with --release for the release of that
+code, or a disc's own with --disc, read off the first overlay holding them or
+the one --overlay names, the numbers it spells by off its code.
 
 The chant is the map's, not the console's: a hint with no message hears none,
 and one that has spelled every word of its message lets go by itself as the
@@ -43,11 +44,15 @@ from oddmap.paths import SITE  # noqa: E402
 from oddmap.sprites import read_dice  # noqa: E402
 
 
-def committed():
-    """the tables the viewer ships for the base game"""
+def committed(release=None):
+    """the tables the viewer ships for the base game, or for a release over it"""
     dice = json.loads((SITE / "sprites_ao.json").read_text())["dice"]
     messages = json.loads((SITE / "messages_ao.json").read_text())
-    return hintfly.Tables(dice, [bytes.fromhex(dots) for dots in messages["alphabet"]], messages["hintfly"])
+    if release:
+        overlay = json.loads((SITE / f"release_ao_{release}.json").read_text())
+        dice, messages = overlay.get("dice", dice), {**messages, **overlay.get("messages", {})}
+    return hintfly.Tables(dice, [bytes.fromhex(dots) for dots in messages["alphabet"]], messages["hintfly"],
+                          hintfly.BASE_SPELLING._replace(**messages.get("spelling", {})))
 
 
 def trace(tables, message, ticks, flips=(), shots=(), seed=37, at=(180, 120)):
@@ -90,6 +95,7 @@ def main(argv=None):
     ap.add_argument("--shots", default="")
     ap.add_argument("--seed", type=int, default=37)
     ap.add_argument("--at", default="180,120")
+    ap.add_argument("--release", help="the code of an Oddysee release to take the viewer's tables for")
     ap.add_argument("--disc", help="an Oddysee disc image to read the tables off, in place of the viewer's")
     ap.add_argument("--overlay", help="with --disc, the overlay to read them off")
     args = ap.parse_args(argv)
@@ -113,6 +119,10 @@ def main(argv=None):
         ap.error("--at takes a point as x,y, of a screen or near one")
     if args.overlay and not args.disc:
         ap.error("--overlay names an overlay of the disc --disc gives")
+    if args.release and args.disc:
+        ap.error("--release and --disc each name the tables")
+    if args.release and not (SITE / f"release_ao_{args.release}.json").is_file():
+        ap.error(f"the viewer ships no Oddysee release {args.release}")
     try:
         if args.disc:
             disc = Disc(args.disc)
@@ -124,7 +134,7 @@ def main(argv=None):
             numbers = hintfly.spelling(blobs[ovl], base, code)
             tables = hintfly.tables(read_dice(disc), blobs[ovl], base, numbers)
         else:
-            tables = committed()
+            tables = committed(args.release)
         if not 0 <= args.message < len(tables.messages):
             sys.exit(f"there is no message {args.message}")
         out = trace(tables, args.message, args.ticks, flips, shots, args.seed, at)

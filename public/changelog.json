@@ -1,6 +1,13 @@
 {
  "entries": [
   {
+   "date": "2026-11-22",
+   "tag": "fixed",
+   "tiny": true,
+   "title": "Abe a GoGo's hint flies spell larger and slower",
+   "detail": "In Abe a GoGo, the Japanese Oddysee, the hint-fly swarms spell larger than in the other releases and hold each word in the air for longer. The map had them spelling at the other releases' size and pace, so the kana came out too small and each word was gone after a second. They are now a quarter larger and spaced wider, and each word stays up for two and a half seconds, as in the game."
+  },
+  {
    "date": "2026-11-21",
    "tag": "fixed",
    "tiny": true,

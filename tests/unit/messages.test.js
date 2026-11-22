@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import {
   DARK_NOTE,
+  hintSpelling,
   hintWords,
   messageText,
   objectMessages,
@@ -487,5 +488,16 @@ test("hintWords: a release spells in its own alphabet, and a path in its overlay
   assert.deepEqual(hintWords(jp, hintFly(0)), []);
   jp.release.messages.alphabet = ["44", "55"];
   assert.deepEqual(hintWords(jp, hintFly(0)), [[[0x55], [0x44]]]);
+  setMessages(SHIPPED);
+});
+
+test("hintSpelling: the numbers a release's words are laid out and held by, none for the base's", () => {
+  setMessages({ AO: { hintfly: ["A"], alphabet: ["0f"] } });
+  const own = { letter: 19, hold: 75 };
+  assert.equal(hintSpelling({ id: "AO" }), null);
+  assert.equal(hintSpelling({ id: "AO", release: { messages: { hintfly: ["B"] } } }), null);
+  assert.equal(hintSpelling({ id: "AO", release: {} }), null, "nor for one with no tables");
+  assert.equal(hintSpelling({ id: "AO", release: { messages: { spelling: own } } }), own);
+  assert.equal(hintSpelling({ id: "AE" }), null, "nor for a game with no hint flies");
   setMessages(SHIPPED);
 });
