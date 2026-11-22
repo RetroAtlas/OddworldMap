@@ -204,7 +204,7 @@ class Messages(unittest.TestCase):
         game_key, code = "AO", "fr"
 
         def __init__(self, loads):
-            self.loads, self.discs, self.overlays = loads, [], set(loads.values())
+            self.loads, self.discs, self.overlays = loads, [], set().union(*loads.values())
 
     class Base:
         paths = {("R1", 1): {}, ("R1", 2): {}, ("E1", 3): {}}
@@ -213,7 +213,7 @@ class Messages(unittest.TestCase):
         lead = " " * 31
         tables = {"lcd": {"R1.OVL": ["", lead + "Work!", lead + "Press \x0b"],
                           "E3.OVL": ["", lead + "Work!", lead + "Press /013"]}}
-        loads = {("R1", 1): "R1.OVL", ("R1", 2): "R1.OVL", ("E1", 3): "E3.OVL"}
+        loads = {("R1", 1): ("R1.OVL", "E3.OVL"), ("R1", 2): ("R1.OVL", "E3.OVL"), ("E1", 3): ("E3.OVL", "R1.OVL")}
         original = release.overlay_tables
         release.overlay_tables = lambda *a: tables
         try:
@@ -224,7 +224,7 @@ class Messages(unittest.TestCase):
         self.assertEqual(per_path, {"E1/3": {"lcd": {"2": "Press /013"}}})
         self.assertEqual(lead, 0x20)
 
-    LOADS = {("R1", 1): "R1.OVL", ("R1", 2): "R1.OVL", ("E1", 3): "E3.OVL"}
+    LOADS = {("R1", 1): ("R1.OVL",), ("R1", 2): ("R1.OVL",), ("E1", 3): ("E3.OVL",)}
 
     def lettered(self, tables):
         original = release.overlay_tables

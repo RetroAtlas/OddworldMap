@@ -1,5 +1,5 @@
 """What a disc's PlayStation executable says about the game beyond its code: the
-path records, the overlay each path loads and the rate its frames run at, each
+path records, the overlays each path loads and the rate its frames run at, each
 found by its shape rather than an address, since every release links its
 executable differently.
 
@@ -288,9 +288,11 @@ def frame_rate(data):
 def path_records(data, layout):
     """{(level short, path id): the path's table row} read through the records
     that name each path's BLY file, which point at its path data and its
-    collision record. `layout` places the fields a game's records hold, Abe's
-    start among them where the path data carries one."""
+    collision record. `layout` places the fields a game's records hold, the ids
+    of a path's overlays among them, and Abe's start where the path data carries
+    one."""
     img = Image(data)
+    at, ids = layout["overlays"]
     rows = {}
     for m in re.finditer(rb"([A-Z0-9]{2})P(\d{1,2})\.BLY\0", data):
         recs = img.words_equal(img.addr(m.start()))
@@ -301,19 +303,18 @@ def path_records(data, layout):
         obj, idx = struct.unpack_from("<II", data, img.offset(pd) + layout["objects"])
         coll, count = struct.unpack_from("<II", data, img.offset(ci) + layout["collision"])
         row = {"w_units": x2 - x1, "h_units": y2 - y1, "obj_off": obj, "idx_off": idx,
-               "coll_off": coll, "coll_count": count}
-        if layout.get("overlay") is not None:
-            row["overlay"] = struct.unpack_from("<H", data, img.offset(recs[0]) + layout["overlay"])[0]
+               "coll_off": coll, "coll_count": count,
+               "overlays": struct.unpack_from("<" + ids, data, img.offset(recs[0]) + at)}
         if layout.get("abe") is not None:
             row["abe_x"], row["abe_y"] = struct.unpack_from("<2h", data, img.offset(pd) + layout["abe"])
         rows[(m.group(1).decode(), int(m.group(2)))] = row
     return rows
 
 
-def cd_files(data, first):
+def cd_files(data, first, width):
     """the executable's table of the disc's files, by the id a record names one
-    by: pairs of a name pointer and a sector, the longest run of them that opens
-    on an entry naming `first`"""
+    by: rows of `width` bytes that open on a name pointer, the longest run of
+    them that opens on an entry naming `first`"""
     img = Image(data)
     best = []
     for m in re.finditer(re.escape(first.encode()) + b"\0", data):
@@ -321,22 +322,25 @@ def cd_files(data, first):
             names, a = [], ref
             while img.holds(a) and img.holds(img.word(a)) and img.cstring(img.word(a)).startswith(b"\\"):
                 names.append(img.cstring(img.word(a)).decode("latin1").split("\\")[-1].split(";")[0])
-                a += 8
+                a += width
             if len(names) > len(best):
                 best = names
     return best
 
 
 def path_overlays(data, layout):
-    """{(level short, path id): the overlay file the path loads}, where the game's
-    records name it by an id into the executable's file table; None where they
-    name it otherwise"""
-    if layout.get("overlay") is None:
-        return None
-    files = cd_files(data, layout["files_from"])
+    """{(level short, path id): the overlay files the path loads, its own and
+    then any that take turns beside it}, which its record names by their ids
+    into the executable's file table"""
+    files = cd_files(data, *layout["files"])
     if not files:
         raise SystemExit("executable: no file table")
-    return {key: files[row["overlay"]] for key, row in path_records(data, layout).items()}
+    return {key: tuple(files[i] for i in row["overlays"]) for key, row in path_records(data, layout).items()}
+
+
+def loaded_overlays(data, layout):
+    """the overlay files the game's paths load between them"""
+    return set().union(*path_overlays(data, layout).values())
 
 
 # --- code compared across builds ---

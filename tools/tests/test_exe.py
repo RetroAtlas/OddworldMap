@@ -207,33 +207,42 @@ class FrameRate(unittest.TestCase):
 
 
 class PathRecords(unittest.TestCase):
-    LAYOUT = {"rect": 4, "objects": 20, "collision": 12, "overlay": 12, "files_from": "\\S1.OVL;1"}
+    LAYOUT = {"rect": 4, "objects": 20, "collision": 12, "overlays": (12, "H"), "files": ("\\S1.OVL;1", 8)}
 
-    def program(self):
+    def program(self, files=("\\S1.OVL;1", "\\S1.LVL;1", "\\P2\\R1.OVL;1"), width=8, ids=(("R1P20", (2, 0, 0, 0)),)):
+        """an executable with a table of files, its rows so many bytes wide, and
+        a record of each path with the bytes that name its overlays"""
         p = Program()
-        names = [p.blob(n.encode() + b"\0") for n in ("\\S1.OVL;1", "\\S1.LVL;1", "\\P2\\R1.OVL;1")]
-        p.words(*[w for n in names for w in (n, 0)])
+        names = [p.blob(n.encode() + b"\0") for n in files]
+        p.words(*[w for n in names for w in [n] + [0] * (width // 4 - 1)])
         pd = p.blob(struct.pack("<I8hii", 0, 0, 0, 3072, 1440, 1024, 480, 1024, 480, 672, 3592))
         ci = p.blob(struct.pack("<I4hIIII", 0, 0, 0, 3072, 1440, 72, 31, 1024, 480))
-        bly = p.blob(b"R1P20.BLY\0")
-        p.blob(struct.pack("<IIIHH", bly, pd, ci, 2, 0))
+        for path, named in ids:
+            bly = p.blob(path.encode() + b".BLY\0")
+            p.blob(struct.pack("<III4B", bly, pd, ci, *named))
         return p.image()
 
     def test_a_record_reaches_its_path_data_and_collision(self):
         row = exe.path_records(self.program(), self.LAYOUT)[("R1", 20)]
         self.assertEqual(row, {"w_units": 3072, "h_units": 1440, "obj_off": 672, "idx_off": 3592,
-                               "coll_off": 72, "coll_count": 31, "overlay": 2})
+                               "coll_off": 72, "coll_count": 31, "overlays": (2,)})
 
     def test_the_overlay_is_named_through_the_file_table(self):
-        self.assertEqual(exe.path_overlays(self.program(), self.LAYOUT), {("R1", 20): "R1.OVL"})
+        self.assertEqual(exe.path_overlays(self.program(), self.LAYOUT), {("R1", 20): ("R1.OVL",)})
+        with self.assertRaisesRegex(SystemExit, "executable: no file table"):
+            exe.path_overlays(self.program(), {**self.LAYOUT, "files": ("\\R1.OVL;1", 8)})
+
+    def test_a_record_names_its_own_overlay_and_the_ones_that_take_turns_beside_it_by_a_byte_each(self):
+        files = ["\\ST\\ST.OVL;1", "\\ST\\ST.LVL;1"] + [f"\\MI\\{n}.OVL;1" for n in ("MI", "L1", "L2", "L3", "M2")]
+        data = self.program(files, 16, (("MIP1", (2, 3, 4, 5)), ("MIP2", (6, 3, 4, 5))))
+        layout = {**self.LAYOUT, "overlays": (12, "4B"), "files": ("\\ST\\ST.OVL;1", 16)}
+        self.assertEqual(exe.path_overlays(data, layout), {("MI", 1): ("MI.OVL", "L1.OVL", "L2.OVL", "L3.OVL"),
+                                                           ("MI", 2): ("M2.OVL", "L1.OVL", "L2.OVL", "L3.OVL")})
+        self.assertEqual(exe.loaded_overlays(data, layout), {"MI.OVL", "L1.OVL", "L2.OVL", "L3.OVL", "M2.OVL"})
 
     def test_abe_start_is_read_where_the_layout_places_one(self):
         row = exe.path_records(self.program(), {**self.LAYOUT, "abe": 8})[("R1", 20)]
         self.assertEqual((row["abe_x"], row["abe_y"]), (3072, 1440))
-
-    def test_records_naming_no_overlay_name_none(self):
-        layout = {k: v for k, v in self.LAYOUT.items() if k not in ("overlay", "files_from")}
-        self.assertIsNone(exe.path_overlays(self.program(), layout))
 
 
 def bne(rs, rt, off): return (5 << 26) | (rs << 21) | (rt << 16) | (off & 0xFFFF)

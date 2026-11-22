@@ -9,8 +9,8 @@ the decomp writes them, and is right only as far as a disc's own code agrees
 with it."""
 import collections
 
-from oddmap.exe import (A1, JR_RA, Image, added, argument, callers, calls, entry, executable, first_argument, one,
-                        path_overlays, references, steps, words_loaded)
+from oddmap.exe import (A1, JR_RA, Image, added, argument, callers, calls, entry, executable, first_argument,
+                        loaded_overlays, one, references, steps, words_loaded)
 from oddmap.fixed import FP, fpmul, s16, s32, whole
 from oddmap.games import GAMES
 from oddmap.messages import LETTER_FIRST, MESSAGE_TABLES, alphabets, lead_table, letter_tables, pointer_tables
@@ -258,7 +258,7 @@ class HintFly:
 def overlays(disc):
     """({overlay: its bytes} for each the game's paths load that holds an
     alphabet, the address they load at)"""
-    loaded = set(path_overlays(executable(disc)[1], GAMES["AO"]["path_record"]).values())
+    loaded = loaded_overlays(executable(disc)[1], GAMES["AO"]["path_record"])
     blobs = {name: disc.read(*disc.files[name]) for name in sorted(loaded) if name in disc.files}
     leads = (lead_table(blob, MESSAGE_TABLES["AO"]["lcd"][0]) for blob in blobs.values())
     base = one({lead[1] for lead in leads if lead}, "the address the overlays load at")

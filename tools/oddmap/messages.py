@@ -193,10 +193,10 @@ def overlay_tables(game_key, discs, overlays=None):
     """{table: {overlay: its strings}} over every overlay carrying a table,
     with the alphabet of every overlay carrying the table spelled in one.
 
-    `overlays` limits the sweep to the overlays the game's paths load, where the
-    executable names them: a disc can carry an overlay no path loads, built
-    from older sources. Every overlay of a build loads at one address, which
-    the tables opening on the lead give and the others are found at."""
+    `overlays` limits the sweep to the overlays the game's paths load: a disc can
+    carry an overlay no path loads, built from older sources. Every overlay of
+    a build loads at one address, which the tables opening on the lead give and
+    the others are found at."""
     specs = sorted(MESSAGE_TABLES[game_key].items())
     blobs = []
     for disc in discs:

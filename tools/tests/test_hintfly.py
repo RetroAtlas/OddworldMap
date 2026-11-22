@@ -481,17 +481,17 @@ class Routines(unittest.TestCase):
 
     def overlays(self, files, loads):
         with mock.patch.dict(messages.MESSAGE_TABLES, TABLES), \
-                mock.patch.object(hintfly, "path_overlays", lambda data, layout: loads):
+                mock.patch.object(hintfly, "loaded_overlays", lambda data, layout: loads):
             return hintfly.overlays(self.Disc({**files, "SLUS_000.00": b""}))
 
     def test_the_overlays_the_paths_load_that_hold_an_alphabet_are_the_ones_run_in_name_order(self):
         lcd = text_table([""] + [" " * 31 + f"Screen {'x' * i}" for i in range(8)])
         flies = overlay(executable()[1])[0]
-        loads = {("E2", 1): "E2.OVL", ("E1", 1): "E1.OVL", ("E1", 2): "E1.OVL", ("R1", 1): "R1.OVL", ("F9", 1): "F9.OVL"}
+        loads = {"E2.OVL", "E1.OVL", "R1.OVL", "F9.OVL"}
         blobs, base = self.overlays({"D9.OVL": flies, "E2.OVL": flies, "R1.OVL": lcd, "E1.OVL": flies}, loads)
         self.assertEqual((list(blobs), base), (["E1.OVL", "E2.OVL"], BASE))
         with self.assertRaisesRegex(RuntimeError, "0 candidates for the address the overlays load at"):
-            self.overlays({"E1.OVL": flies}, {("E1", 1): "E1.OVL"})
+            self.overlays({"E1.OVL": flies}, {"E1.OVL"})
         unnamed = flies.replace(struct.pack("<3I", *records(flies)), struct.pack("<3I", *records(flies)[:2], 0))
         with self.assertRaisesRegex(RuntimeError, "^E2.OVL: the alphabet at .* leaves 1 of its records unnamed"):
             self.overlays({"E2.OVL": unnamed, "R1.OVL": lcd, "E1.OVL": flies}, loads)
@@ -500,13 +500,13 @@ class Routines(unittest.TestCase):
     def test_each_overlay_of_a_disc_is_read_for_its_numbers_and_one_refused_is_named(self):
         image, exe = executable()
         lcd = text_table([""] + [" " * 31 + f"Screen {'x' * i}" for i in range(8)])
-        loads = {("E1", 1): "E1.OVL", ("E2", 1): "E2.OVL", ("R1", 1): "R1.OVL"}
+        loads = {"E1.OVL", "E2.OVL", "R1.OVL"}
 
         def read(**shape):
             disc = self.Disc({"E1.OVL": overlay(exe)[0], "E2.OVL": overlay(exe, **shape)[0], "R1.OVL": lcd,
                               "SLUS_000.00": image.data})
             with mock.patch.dict(messages.MESSAGE_TABLES, TABLES), \
-                    mock.patch.object(hintfly, "path_overlays", lambda data, layout: loads):
+                    mock.patch.object(hintfly, "loaded_overlays", lambda data, layout: loads):
                 return hintfly.spellings(disc)
         self.assertEqual(read(handed=(FP, FP), cells=(19,), held=(75,)),
                          {"E1.OVL": hintfly.BASE_SPELLING, "E2.OVL": OWN})

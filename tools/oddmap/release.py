@@ -16,8 +16,8 @@ from concurrent.futures import ProcessPoolExecutor
 
 from oddmap import hintfly
 from oddmap.disc import Disc, Lvl, parse_chunks
-from oddmap.exe import (Image, code_differences, executable, frame_rate, lcd_glyph_table, path_overlays,
-                        path_records, text, text_codes)
+from oddmap.exe import (Image, code_differences, executable, frame_rate, lcd_glyph_table, loaded_overlays,
+                        path_overlays, path_records, text, text_codes)
 from oddmap.image import cam_masks, cam_pixels, read_png, write_png
 from oddmap.messages import (ALPHABET, LETTER_FIRST, LETTERED, MESSAGE_BUTTONS, MESSAGE_TABLES, check_letters,
                              clean_table, message_json, overlay_tables)
@@ -58,7 +58,7 @@ class Release:
             raise SystemExit(f"{game_key} {code}: the executable is {name}, the table says {entry['executable']}")
         self.records = path_records(self.exe, game["path_record"])
         self.loads = path_overlays(self.exe, game["path_record"])
-        self.overlays = set(self.loads.values()) if self.loads else None
+        self.overlays = set().union(*self.loads.values())
         self.hz = frame_rate(self.exe)
         self.archives = {}
         for _lid, short, _display in game["levels"]:
@@ -390,10 +390,9 @@ def camera_verdict(game, entry, cam):
 def release_messages(release, base, controls):
     """the release's message tables, per path the entries where the table its
     own overlay carries says otherwise, and the code the scroll-in lead runs in. Each path reads the table compiled
-    into the overlay it loads, and a release may carry different copies (the
+    into its own overlay, and a release may carry different copies (the
     French Oddysee's menu and Stockyards overlays spell a button out in one
-    message); where the executable names no overlay per path, every copy must
-    agree. The release's table is the one most paths read. Its alphabet goes
+    message). The release's table is the one most paths read. Its alphabet goes
     with the tables, and every copy of that must agree."""
     tables, per_path, lead = {}, {}, None
     where = f"{release.game_key} {release.code}"
@@ -414,13 +413,8 @@ def release_messages(release, base, controls):
         cleaned = {ovl: clean_table(release.game_key, name, t, controls) for ovl, t in copies.items()}
         if not cleaned:
             raise SystemExit(f"{release.game_key} {release.code}: no overlay carries the {name} message table")
-        if release.loads is None:
-            if len({tuple(t) for t in cleaned.values()}) != 1:
-                raise SystemExit(f"{release.game_key} {release.code}: overlays disagree on the {name} table")
-            tables[name] = next(iter(cleaned.values()))
-            continue
-        reads = {f"{short}/{pid}": cleaned[ovl] for (short, pid), ovl in release.loads.items()
-                 if ovl in cleaned and (short, pid) in base.paths}
+        reads = {f"{short}/{pid}": cleaned[own] for (short, pid), (own, *_) in release.loads.items()
+                 if own in cleaned and (short, pid) in base.paths}
         tally = {}
         for t in reads.values():
             tally[tuple(t)] = tally.get(tuple(t), 0) + 1
@@ -830,19 +824,18 @@ def write_release(game_key, game, overlay, art, out):
 def compare_code(base_images, release):
     """how far the release's code is from the base's, with addresses masked: the
     executable's differing blocks, and the differing functions of each overlay
-    both load (every overlay, where the executable does not name them)"""
+    both load"""
     base_discs = [Disc(p) for p in base_images]
     base_exe = executable(base_discs[0])[1]
     blocks, _ = code_differences(text(base_exe), text(release.exe))
-    loads = path_overlays(base_exe, release.game["path_record"])
     def overlays(discs, loaded):
         out = {}
         for d in discs:
             for f, (lba, size) in sorted(d.files.items()):
-                if f.endswith(".OVL") and f not in out and (loaded is None or f in loaded):
+                if f in loaded and f not in out:
                     out[f] = d.read(lba, size)
         return out
-    base_ovls = overlays(base_discs, set(loads.values()) if loads else None)
+    base_ovls = overlays(base_discs, loaded_overlays(base_exe, release.game["path_record"]))
     rel_ovls = overlays(release.discs, release.overlays)
     per = {n: code_differences(base_ovls[n], rel_ovls[n])[1] for n in sorted(set(base_ovls) & set(rel_ovls))}
     return {"executable blocks": blocks, "overlay functions": [min(per.values()), max(per.values())],

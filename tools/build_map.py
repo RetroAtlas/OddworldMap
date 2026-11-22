@@ -24,7 +24,7 @@ import tempfile
 from pathlib import Path
 
 from oddmap.disc import Disc, Lvl, parse_chunks
-from oddmap.exe import executable, path_overlays
+from oddmap.exe import executable, loaded_overlays
 from oddmap.emit import (print_build_summary, require_stampable, stamp_cache_name,
                          write_enum_labels, write_field_types, write_line_links,
                          write_relive_export, write_release_index)
@@ -302,9 +302,9 @@ def main():
     write_field_types(args.game, out)  # decomp-derived sidecars, kept in sync each build
     write_enum_labels(args.game, out)
     # game-wide, so a subset build writes it whole, from the overlays the
-    # game's paths load where the executable names them
-    loads = path_overlays(executable(discs[0])[1], game["path_record"])
-    write_messages(args.game, discs, out / game["messages_file"], set(loads.values()) if loads else None)
+    # game's paths load
+    write_messages(args.game, discs, out / game["messages_file"],
+                   loaded_overlays(executable(discs[0])[1], game["path_record"]))
     # Exoddus places a few devices by the path's Abe start, a path-table value
     abe = {short: {str(pid): [row["abe_x"], row["abe_y"]] for pid, row in paths.items() if "abe_x" in row}
            for short, paths in tables.items()} if args.game == "AE" else None
