@@ -104,6 +104,21 @@ class LoadedCode(unittest.TestCase):
         self.assertEqual(exe.callers(img, self.BASE + 8), [self.BASE])
         self.assertEqual(img.words_equal(target), [self.BASE + 24])
 
+    def test_a_half_is_lost_where_its_register_is_written_over_before_the_other(self):
+        target = 0x800A0178
+        hi, lo = split(target)
+
+        def built(between):
+            words = [lui(V0, hi), between, addiu(V0, V0, lo), JR_RA, NOP]
+            img = exe.Image(struct.pack(f"<{len(words)}I", *words), self.BASE)
+            return exe.references(img, target) == [self.BASE + 8]
+
+        computes_or_loads = {*range(8, 16), *range(32, 39)}
+        for op in range(1, 64):
+            self.assertEqual(built(op << 26 | A0 << 21 | V0 << 16 | 4), op not in computes_or_loads, op)
+        self.assertEqual([built(w) for w in (addu(V0, A0, A0), addu(A0, V0, V0), lui(A0, 0x8001), NOP)],
+                         [False, True, True, True])
+
 
 class NamedLoads(unittest.TestCase):
     def test_a_word_and_a_byte_loaded_by_name_are_told_apart_and_from_one_loaded_otherwise(self):

@@ -11,7 +11,7 @@ import collections
 import struct
 
 from oddmap import records, render
-from oddmap.exe import JR_RA, Image, end, entry, one, references, words_loaded
+from oddmap.exe import JR_RA, Image, end, entry, one, references, words_loaded, written
 from oddmap.fixed import FP
 from oddmap.games import GAMES
 
@@ -91,13 +91,12 @@ def _reads_through(img, start, register):
     held, called = {register}, False
     for a in range(start, end(img, start) + 8, 4):
         w = img.word(a)
-        op, rs, rt, rd = w >> 26, w >> 21 & 31, w >> 16 & 31, w >> 11 & 31
+        op, rs, rt, to = w >> 26, w >> 21 & 31, w >> 16 & 31, written(w)
         if 32 <= op <= 38 and rs in held:
             return True
         moved = op == 0 and w & 63 in (33, 37) and rt == 0 and rs in held
-        written = rd if op == 0 else rt if 8 <= op <= 15 or 32 <= op <= 38 else None
-        if written is not None:
-            (held.add if moved else held.discard)(written)
+        if to is not None:
+            (held.add if moved else held.discard)(to)
         if called:
             held -= VOLATILE
         called = op == 3 or op == 0 and w & 63 == 9

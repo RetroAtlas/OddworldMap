@@ -75,9 +75,18 @@ JR_RA = 0x03E00008
 ZERO, A0, A1, SP = 0, 4, 5, 29
 
 
+def written(w):
+    """the register an instruction's result goes to, of those that compute or
+    load one"""
+    if _op(w) == 0:
+        return w >> 11 & 31
+    return _rt(w) if 8 <= _op(w) <= 15 or 32 <= _op(w) <= 38 else None
+
+
 def references(img, value):
     """the addresses of the instructions completing a `lui`/`addiu` or `lui`/`ori`
-    pair that builds value in a register"""
+    pair that builds value in a register, the half loaded first lost where its
+    register is written over"""
     hi, lo = (value + 0x8000) >> 16 & 0xFFFF, value & 0xFFFF
     out = []
     for at in range(img.head, len(img.data) - 3, 4):
@@ -90,6 +99,8 @@ def references(img, value):
             w2 = struct.unpack_from("<I", img.data, at + 4 * k)[0]
             if _op(w2) in (9, 13) and _rs(w2) == _rt(w) and _imm(w2) == lo:
                 out.append(img.addr(at + 4 * k))
+                break
+            if written(w2) == _rt(w):
                 break
     return out
 
