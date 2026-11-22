@@ -4,15 +4,13 @@ at, the fullest copy of each level's archive, the camera whose list holds each
 record of a path, and every object of the types asked for as the path chunks
 hold it, with that camera."""
 import collections
-import contextlib
-import io
 import struct
 
 from oddmap.disc import Lvl, parse_chunks
-from oddmap.exe import executable, loaded_overlays, one
+from oddmap.exe import executable, loaded_overlays, one, path_records
 from oddmap.games import GAMES, game_setup
 from oddmap.messages import MESSAGE_TABLES, lead_table
-from oddmap.tlv import filed_cell, resolve_path_meta, tlv_header_ok, walk_obj_region
+from oddmap.tlv import filed_cell, tlv_header_ok, walk_obj_region
 
 END = 4                             # the flag that ends a camera's list of records
 
@@ -64,18 +62,17 @@ def placed(discs, game_key, names):
     its place among its path's objects, the object as the builder reads it,
     its record's own bytes, the cell of the camera whose list holds it, which
     is the one the builder files it under, how many cells the path is across,
-    and the path's chunk with where it keeps what"""
+    and the path's chunk with where it keeps what, by the executable's own
+    record of the path. A chunk it has no record of is no path of the game's"""
     game = game_setup(game_key)
     fmt, geo, out = game["tlv"], game["geometry"], []
+    rows = path_records(executable(discs[0])[1], game["path_record"])
     for short, lvl in archives(discs, game).items():
         if f"{short}PATH.BND" not in lvl.files:
             continue
         chunks = parse_chunks(lvl.read(f"{short}PATH.BND"))
-        for path in sorted(rid for tag, rid in chunks if tag == "Path"):
-            blob = chunks["Path", path]
-            with contextlib.redirect_stdout(io.StringIO()):
-                meta = resolve_path_meta(blob, path, game["tables"][short].get(path), fmt, geo["worldW"],
-                                         geo["worldH"])
+        for path in sorted(rid for tag, rid in chunks if tag == "Path" and (short, rid) in rows):
+            blob, meta = chunks["Path", path], rows[short, path]
             across, down = max(1, meta["w_units"] // geo["worldW"]), max(1, meta["h_units"] // geo["worldH"])
             ends = meta["idx_off"] if meta["idx_off"] > meta["obj_off"] else len(blob)
             offsets = []
