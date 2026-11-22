@@ -39,7 +39,7 @@ from oddmap import fallingitem, render  # noqa: E402
 from oddmap.fixed import FP  # noqa: E402
 from oddmap.games import GAMES  # noqa: E402
 from oddmap.paths import SITE  # noqa: E402
-from oddmap.release import filed_cell  # noqa: E402
+from oddmap.tlv import filed_cell  # noqa: E402
 
 ALWAYS = 1                          # the switch that reads on from the start
 TICKS = 64

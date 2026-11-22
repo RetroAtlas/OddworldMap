@@ -44,7 +44,7 @@ sys.path.insert(0, str(HERE))
 from oddmap import render, well  # noqa: E402
 from oddmap.games import GAMES  # noqa: E402
 from oddmap.paths import SITE  # noqa: E402
-from oddmap.release import filed_cell  # noqa: E402
+from oddmap.tlv import filed_cell  # noqa: E402
 
 TICKS = 1024
 

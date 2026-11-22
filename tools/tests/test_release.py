@@ -29,11 +29,6 @@ class Keys(unittest.TestCase):
         keys = release.object_keys([tlv("Mine", 1, 2), tlv("Door", 5, 6), tlv("Mine", 1, 2)])
         self.assertEqual(keys, ["Mine@1,2#1", "Door@5,6", "Mine@1,2#2"])
 
-    def test_each_game_files_an_object_by_its_own_point(self):
-        t = tlv("Zone", 1000, 10, w=100)
-        self.assertEqual(release.filed_cell(t, 4, CORNER), 0)
-        self.assertEqual(release.filed_cell(t, 4, GATED), 1)
-
 
 class Objects(unittest.TestCase):
     def compare(self, base, new):

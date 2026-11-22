@@ -1,6 +1,6 @@
 """What a path chunk holds: TLV records decoded per type for the viewer's
-navigation, the schema-driven field archive beside them, and the grid a path
-carries when the decomp tabulates none for it."""
+navigation, the schema-driven field archive beside them, the cell whose camera
+lists each, and the grid a path carries when the decomp tabulates none for it."""
 import re
 import struct
 
@@ -318,3 +318,12 @@ def walk_obj_region(blob, obj_off, region_end, game, level_short, positions=None
         else:
             pos += 2  # resync
     return tlvs
+
+def filed_cell(t, w, game):
+    """the grid cell whose camera lists an object"""
+    geo = game["geometry"]
+    if game["filed_by_midpoint"]:
+        x, y = (t["x1"] + t["x2"]) // 2, (t["y1"] + t["y2"]) // 2
+    else:
+        x, y = t["x1"], t["y1"]
+    return (y // geo["worldH"]) * w + x // geo["worldW"]

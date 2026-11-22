@@ -12,8 +12,7 @@ from oddmap.disc import Lvl, parse_chunks
 from oddmap.exe import one
 from oddmap.games import game_setup
 from oddmap.messages import MESSAGE_TABLES, lead_table
-from oddmap.release import filed_cell
-from oddmap.tlv import resolve_path_meta, tlv_header_ok, walk_obj_region
+from oddmap.tlv import filed_cell, resolve_path_meta, tlv_header_ok, walk_obj_region
 
 END = 4                             # the flag that ends a camera's list of records
 

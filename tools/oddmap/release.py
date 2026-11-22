@@ -24,7 +24,7 @@ from oddmap.messages import (ALPHABET, LETTER_FIRST, LETTERED, MESSAGE_BUTTONS, 
 from oddmap.paths import HERE, SITE
 from oddmap.sprites import (FONT_FAMILY, SHEETS_DIR, build_sprites, family_sheet, font_chunks, font_texture,
                             glyph_index, index_map_rgba, read_dice, sheet_name)
-from oddmap.tlv import walk_obj_region
+from oddmap.tlv import filed_cell, walk_obj_region
 
 CAMERA_NAME = re.compile(r"[A-Z0-9]{4,8}")
 SPELLING = "spelling"  # beside the message tables, the numbers hint flies spell by
@@ -87,16 +87,6 @@ def object_keys(tlvs):
             seen[k] = seen.get(k, 0) + 1
             keys.append(f"{k}#{seen[k]}")
     return keys
-
-
-def filed_cell(t, w, game):
-    """the grid cell whose camera lists an object"""
-    geo = game["geometry"]
-    if game["filed_by_midpoint"]:
-        x, y = (t["x1"] + t["x2"]) // 2, (t["y1"] + t["y2"]) // 2
-    else:
-        x, y = t["x1"], t["y1"]
-    return (y // geo["worldH"]) * w + x // geo["worldW"]
 
 
 def index_cells(blob, record, cells, positions):

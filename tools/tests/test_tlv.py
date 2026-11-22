@@ -1,7 +1,7 @@
 """Tests for the TLV reader and the chunk walk: the chunks keyed by tag and id,
 object_fields' payload clamp, the path-meta audit against the tabulated rows,
-the grid a path carries when the decomp tabulates none for it, and the audit's
-census over the shipped tree."""
+the grid a path carries when the decomp tabulates none for it, the cell an
+object is filed under, and the audit's census over the shipped tree."""
 
 import contextlib
 import io
@@ -195,6 +195,14 @@ class PathDiscovery(unittest.TestCase):
             untabulated |= {(game_key, L["short"], P["id"]) for L in data["levels"]
                             for P in L["paths"] if P["id"] not in tables[L["short"]]}
         self.assertEqual(untabulated, {("AO", "S1", 1)}, "a table for S1 P1 would retire the discovery")
+
+
+class Filing(unittest.TestCase):
+    def test_each_game_files_an_object_by_its_own_point(self):
+        game = {"geometry": {"worldW": 1024, "worldH": 480}}
+        t = {"x1": 1000, "y1": 470, "x2": 1100, "y2": 494}
+        self.assertEqual(tlv.filed_cell(t, 4, {**game, "filed_by_midpoint": False}), 0)
+        self.assertEqual(tlv.filed_cell(t, 4, {**game, "filed_by_midpoint": True}), 5)
 
 
 class PathMetaCensus(unittest.TestCase):
