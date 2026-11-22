@@ -1,24 +1,24 @@
 """The PlayStation's hint fly: a model of the routines an Oddysee overlay runs
-it with, a step of the model to a tick of the game, and where an overlay holds
+it with, a step of the model to a tick of the game; where an overlay holds
 those routines and what they reach for in the executable, each found by its
-shape so that no overlay and no release needs an address given.
+shape so that no overlay and no release needs an address given; and the
+numbers a release lays its words out and holds them by, read off them.
 
 The model is the routines as the disc has them, which is not everywhere how
 the decomp writes them, and is right only as far as a disc's own code agrees
 with it."""
 import collections
 
-from oddmap.exe import (JR_RA, Image, callers, calls, entry, executable, first_argument, one, path_overlays,
-                        references, words_loaded)
+from oddmap.exe import (A1, JR_RA, Image, added, argument, callers, calls, entry, executable, first_argument, one,
+                        path_overlays, references, steps, words_loaded)
 from oddmap.fixed import FP, fpmul, s16, s32, whole
 from oddmap.games import GAMES
 from oddmap.messages import LETTER_FIRST, MESSAGE_TABLES, alphabets, lead_table, letter_tables, pointer_tables
 
 SWARM = 20                          # the flies of a hint at rest
 SPARE = 12                          # the flies left looping beside a word
-LETTER = 16                         # a letter's cell, and its grid's side
-DOT = 0xCCCC                        # one step of that grid, in 16.16
-PAUSE_FOR, HOLD_FOR = 15, 30        # the timers before a word and on it, each outlasted by a tick
+TOP = 8                             # how far over the hint's point a letter's grid opens
+PAUSE_FOR = 15                      # the timer before a word, outlasted by a tick
 RESIZE_BY = 8                       # the flies a tick adds to the swarm or takes from it
 SOUND = 60                          # the flies' sound, as the engine numbers it
 IDLE, RESIZE, PAUSE, HOLD, UNWIND = 1, 2, 3, 4, 5       # the hint's states
@@ -33,8 +33,12 @@ QUARTER = (
     65453, 65514, 65535,
 )
 
-Tables = collections.namedtuple("Tables", "dice alphabet messages")
-Code = collections.namedtuple("Code", "longest init update render event frame drawing screen player roll voices bank")
+# a step of a letter's grid in 16.16, a letter's cell, and the timer on a word, outlasted by a tick
+Spelling = collections.namedtuple("Spelling", "dot letter hold")
+BASE_SPELLING = Spelling(dot=0xCCCC, letter=16, hold=30)
+Tables = collections.namedtuple("Tables", "dice alphabet messages spelling", defaults=(BASE_SPELLING,))
+Code = collections.namedtuple(
+    "Code", "longest init update form render event frame drawing screen player roll voices bank")
 FLY = ("x", "y", "mode", "vx", "vy", "tx", "ty", "pitch", "pitch_step", "angle", "speed")
 
 
@@ -143,19 +147,20 @@ class HintFly:
         """send a fly to each dot of the next word, centred on the hint's point,
         at a sixteenth of the way a tick, and leave the rest looping"""
         word, letters, self.pos = self.word(self.pos)
-        x, y = self.x - LETTER // 2 * len(letters), self.y - LETTER // 2
+        by = self.world.tables.spelling
+        x, y = self.x - by.letter * len(letters) // 2, self.y - TOP
         flies = iter(self.flies[:self.count])
         for dots in letters:
             for dot in dots:
                 fly = next(flies)
-                fly.tx = s32(x * FP + fpmul(DOT, (dot >> 4) * FP))
-                fly.ty = s32(y * FP + fpmul(DOT, (dot & 15) * FP))
+                fly.tx = s32(x * FP + fpmul(by.dot, (dot >> 4) * FP))
+                fly.ty = s32(y * FP + fpmul(by.dot, (dot & 15) * FP))
                 fly.vx = (fly.tx - fly.x) >> 4
                 fly.vy = (fly.ty - fly.y) >> 4
                 fly.mode = TO_DOT
                 fly.pitch = self.world.roll(-127, 127)
                 fly.pitch_step = fly.pitch >> 4
-            x += LETTER
+            x += by.letter
         for fly in flies:
             fly.mode = LOOPING
         self.words.append((self.world.frame, word))
@@ -224,7 +229,7 @@ class HintFly:
                 self.let_go()
             elif self.count == self.target:
                 self.form()
-                self.state, self.timer = HOLD, world.frame + HOLD_FOR
+                self.state, self.timer = HOLD, world.frame + world.tables.spelling.hold
         elif self.state == HOLD:
             self.move()
             if not world.chant:
@@ -267,13 +272,13 @@ def overlays(disc):
     return held, base
 
 
-def tables(dice, blob, base):
+def tables(dice, blob, base, spelling=BASE_SPELLING):
     """the model's tables as an overlay loaded at `base` holds them, beside
-    the executable's dice"""
+    the executable's dice and the numbers the overlay's code spells by"""
     count = MESSAGE_TABLES["AO"]["hintfly"][0]
     messages = one([table for table in pointer_tables(blob, count, base) if table], "the messages")
     letters = one(letter_tables(blob, base), "the alphabet")
-    return Tables(dice, [bytes.fromhex(dots) for dots in letters], messages)
+    return Tables(dice, [bytes.fromhex(dots) for dots in letters], messages, spelling)
 
 
 def code(blob, base, exe):
@@ -321,7 +326,7 @@ def code(blob, base, exe):
     drawing = {t for _, t in calls(img, render) if not img.holds(t)}
     if not drawing:
         raise RuntimeError("the render hands the engine nothing to draw")
-    return Code(longest=longest, init=init, update=update, render=render,
+    return Code(longest=longest, init=init, update=update, form=form, render=render,
                 event=one(targets - inside, "the event query, the update's call out of the overlay"),
                 frame=one({a for a in words_loaded(img, update) if not img.holds(a)},
                            "the frame counter, the word the update loads from outside the overlay"),
@@ -331,3 +336,25 @@ def code(blob, base, exe):
                 player=player, roll=one(plays & ticked, "the roll of the dice, what the player and the flies call"),
                 voices=plays - ticked,
                 bank=one(words_loaded(exe, player), "where the player's sounds are kept, the word it loads"))
+
+
+def spelling(blob, base, routines):
+    """the numbers an overlay loaded at `base` spells by, off the routines
+    `code` finds in it.
+
+    The one forming a word hands the engine's product a step of a letter's
+    grid, for a dot's column and again for its row, and steps a register on by
+    a letter's cell. The update adds the hold to the frame counter once it has
+    formed one."""
+    img = Image(blob, base)
+    made = calls(img, routines.form)
+    product = one({target for _, target in made} - {routines.roll},
+                  "the engine's product, what the routine forming a word calls beside the roll")
+    dots = {argument(img, site, A1, reach=24) for site, target in made if target == product}
+    formed = one([site for site, target in calls(img, routines.update) if target == routines.form],
+                 "the update's call that forms a word")
+    return Spelling(
+        dot=one(dots if None not in dots else (), "a step of a letter's grid, the constant the product is handed"),
+        letter=one([n for n in steps(img, routines.form) if n > 1],
+                   "a letter's cell, what the routine forming a word steps a register on by"),
+        hold=one(added(img, formed + 8, routines.frame), "the hold, what the update adds to the frame counter there"))

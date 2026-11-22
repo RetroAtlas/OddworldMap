@@ -117,6 +117,59 @@ class NamedLoads(unittest.TestCase):
                          ({0x8008F000}, {0x80020044}))
 
 
+class Constants(unittest.TestCase):
+    """what a function's code hands, steps and adds, off its instructions"""
+    A1, T0, SP, FRAME = 5, 8, 29, 0x8008F000
+
+    def image(self, *words):
+        """(an image holding a function of the words, the address of the first)"""
+        p = Program()
+        p.words(JR_RA, NOP)
+        start = p.words(*words, JR_RA, NOP)
+        return exe.Image(p.image()), start
+
+    def test_an_argument_is_read_from_the_delay_slot_or_before_the_call_in_the_register_asked_for(self):
+        image, start = self.image(lui(self.A1, 1), ori(A0, 0, 9), jal(LOAD), ori(A0, 0, 7))
+        self.assertEqual([exe.argument(image, start + 8, r) for r in (A0, self.A1, self.T0)], [7, 0x10000, None])
+        self.assertEqual(exe.first_argument(image, start + 8), 7)
+
+    def test_an_argument_is_read_as_far_back_as_asked_and_not_past_a_jump(self):
+        image, start = self.image(ori(self.A1, 0, 0xCCCC), *[NOP] * 8, jal(LOAD), NOP)
+        self.assertEqual([exe.argument(image, start + 36, self.A1, n) for n in (8, 9, 12)], [None, 0xCCCC, 0xCCCC])
+        self.assertIsNone(exe.argument(image, start + 36, self.A1))
+        for jump in (jal(LOAD), beq(A0, 0, 1), JR_RA):
+            image, start = self.image(ori(self.A1, 0, 0xCCCC), jump, NOP, jal(LOAD), NOP)
+            self.assertIsNone(exe.argument(image, start + 12, self.A1))
+
+    def test_an_argument_set_otherwise_is_no_constant(self):
+        for word in (addu(self.A1, A0, A0), lw(self.A1, 4, A0), ori(self.A1, self.A1, 0xCCCC), addiu(self.A1, A0, 3)):
+            image, start = self.image(lui(self.A1, 1), word, jal(LOAD), NOP)
+            self.assertIsNone(exe.argument(image, start + 8, self.A1))
+        image, start = self.image(addu(self.A1, 0, 0), jal(LOAD), NOP)
+        self.assertEqual(exe.argument(image, start + 4, self.A1), 0)
+
+    def test_the_steps_of_a_function_are_the_ones_it_takes_in_place_but_for_its_stack_and_the_addresses_it_builds(self):
+        hi, lo = split(0x800C0268)
+        image, start = self.image(addiu(self.SP, self.SP, -160), lui(V0, hi), addiu(V0, V0, lo),
+                                  addiu(self.T0, self.T0, 19), addiu(A0, self.T0, 5), addiu(A0, 0, 3), lui(V0, hi),
+                                  addiu(A0, A0, -8), addiu(self.SP, self.SP, 160))
+        self.assertEqual(exe.steps(image, start), [19, -8])
+
+    def test_what_is_added_to_a_word_loaded_by_name_is_read_up_to_the_next_jump(self):
+        hi, lo = split(self.FRAME)
+        word = (lui(V0, hi), lw(V0, lo, V0))
+        image, start = self.image(*word, addiu(A0, A0, 4), ori(A0, 0, 4), addiu(V0, V0, 75), jal(LOAD), NOP,
+                                  *word, addiu(V0, V0, 15))
+        self.assertEqual([exe.added(image, at, self.FRAME) for at in (start, start + 28)], [[75], [15]])
+        self.assertEqual(exe.added(image, start, self.FRAME + 4), [])
+        for other in (ori(V0, 0, hi), lui(A0, hi)):
+            image, start = self.image(other, lw(V0, lo, V0), addiu(V0, V0, 75))
+            self.assertEqual(exe.added(image, start, self.FRAME), [])
+        for jump in (JR_RA, beq(A0, 0, 1), jal(LOAD)):
+            image, start = self.image(*word, jump, NOP, addiu(V0, V0, 75))
+            self.assertEqual(exe.added(image, start, self.FRAME), [])
+
+
 class FrameRate(unittest.TestCase):
     def test_every_vsync_call_reads_its_argument(self):
         p = Program()

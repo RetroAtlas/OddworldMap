@@ -22,6 +22,8 @@ nearer, which arrive.
 
 The disc's code is what answers here: the model is right as far as the two
 agree, and the first thing they differ on is named with its message and tick.
+The numbers a word is laid out and held by are the overlay's own, read off its
+code and named in its line; every other number is the model's.
 """
 import argparse
 import functools
@@ -231,7 +233,8 @@ def opened(path, ovl, base):
     """an overlay's hint fly, kept between a worker's messages"""
     disc = Disc(path)
     exe, blob = Image(executable(disc)[1]), disc.read(*disc.files[ovl])
-    return exe, blob, hintfly.code(blob, base, exe), hintfly.tables(read_dice(disc), blob, base)
+    code = hintfly.code(blob, base, exe)
+    return exe, blob, code, hintfly.tables(read_dice(disc), blob, base, hintfly.spelling(blob, base, code))
 
 
 def check(job):
@@ -243,7 +246,7 @@ def check(job):
     except RuntimeError as e:
         return str(e)
     try:
-        return run(exe, blob, base, code, tables, message, ticks, seed) + (code,)
+        return run(exe, blob, base, code, tables, message, ticks, seed) + (code, tables.spelling)
     except Differs as e:
         return str(e)
     except (Fault, RuntimeError, ValueError) as e:
@@ -270,12 +273,13 @@ def report(ovl, got, unspelled):
     if errors or not got:
         return f"{ovl}: {errors[0] if errors else 'its alphabet spells none of its messages'}", False
     unseen = ", ".join(f"{STATES[a]} to {STATES[b]}" for a, b in sorted(CHANGES - set().union(*(r[0] for r in got))))
-    code = got[0][4]
+    code, spelling = got[0][4:]
     return (f"{ovl}: the disc's code and the model agree over {len(got)} message{'s' * (len(got) != 1)}, "
             f"{sum(r[1] for r in got)} words "
             f"formed and {sum(r[2] for r in got)} of them let go of, "
             f"{'every change of state' if not unseen else 'the changes of state but ' + unseen}, in "
-            f"{sum(r[3] for r in got):,} instructions; update {code.update:#x}, render {code.render:#x}"
+            f"{sum(r[3] for r in got):,} instructions; dots {spelling.dot:#x} apart, letters {spelling.letter}, words "
+            f"held {spelling.hold}; update {code.update:#x}, render {code.render:#x}"
             + (f"; {unspelled} messages spell outside the alphabet and are left unrun" if unspelled else "")), True
 
 

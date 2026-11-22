@@ -15,7 +15,8 @@ print every sprite's corner at, about the hint's point and in fly order;
 start the flies'); --at, the hint's point on its screen (default 180,120,
 and --at=-6,4 for one left of its screen's corner). The tables are the ones
 the viewer ships for the base game, or a disc's own with --disc, read off the
-first overlay holding them or the one --overlay names.
+first overlay holding them or the one --overlay names, the numbers it spells
+by off its code.
 
 The chant is the map's, not the console's: a hint with no message hears none,
 and one that has spelled every word of its message lets go by itself as the
@@ -37,6 +38,7 @@ sys.path.insert(0, str(HERE))
 
 from oddmap import hintfly  # noqa: E402
 from oddmap.disc import Disc  # noqa: E402
+from oddmap.exe import Image, executable  # noqa: E402
 from oddmap.paths import SITE  # noqa: E402
 from oddmap.sprites import read_dice  # noqa: E402
 
@@ -118,7 +120,9 @@ def main(argv=None):
             ovl = args.overlay or next(iter(blobs), None)
             if ovl not in blobs:
                 sys.exit(f"no hint fly in {ovl or 'any overlay the paths load'}")
-            tables = hintfly.tables(read_dice(disc), blobs[ovl], base)
+            code = hintfly.code(blobs[ovl], base, Image(executable(disc)[1]))
+            numbers = hintfly.spelling(blobs[ovl], base, code)
+            tables = hintfly.tables(read_dice(disc), blobs[ovl], base, numbers)
         else:
             tables = committed()
         if not 0 <= args.message < len(tables.messages):

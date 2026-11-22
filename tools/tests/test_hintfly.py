@@ -17,7 +17,7 @@ sys.path[:0] = [str(Path(__file__).resolve().parents[1]), str(Path(__file__).res
 
 import hintfly_trace  # noqa: E402
 import hintfly_verify  # noqa: E402
-from synthetic import JR_RA, JR_V0, NOP, Assembly, addiu, j, jal, lh, lui, lw, named, ori, word_at  # noqa: E402
+from synthetic import JR_RA, JR_V0, NOP, Assembly, addiu, addu, j, jal, lh, lui, lw, named, ori, word_at  # noqa: E402
 from oddmap import hintfly, messages  # noqa: E402
 from oddmap.exe import Image  # noqa: E402
 from oddmap.hintfly import FP, HOLD, IDLE, LOOPING, ON_DOT, PAUSE, QUARTER, RESIZE, TO_DOT, UNWIND  # noqa: E402
@@ -27,14 +27,15 @@ from oddmap.paths import ROOT  # noqa: E402
 A, B, C = bytes([0x00, 0x44]), bytes([0x12]), bytes(range(12))
 MESSAGES = ["AB A", "", "B  AB", "A,B", "CC", "CCB CC CA", "CCB B"]
 DOT = 0xCCCC
+OWN = hintfly.Spelling(dot=FP, letter=19, hold=75)      # a release's own numbers
 
 
-def tables(dice=0x55):
-    return hintfly.Tables([dice] * 256 if isinstance(dice, int) else dice, [A, B, C], MESSAGES)
+def tables(dice=0x55, spelling=hintfly.BASE_SPELLING):
+    return hintfly.Tables([dice] * 256 if isinstance(dice, int) else dice, [A, B, C], MESSAGES, spelling)
 
 
-def hint(message, dice=0x55, own=0, start=0):
-    return hintfly.HintFly(hintfly.World(tables(dice), own, start), 100, 100, message)
+def hint(message, dice=0x55, own=0, start=0, spelling=hintfly.BASE_SPELLING):
+    return hintfly.HintFly(hintfly.World(tables(dice, spelling), own, start), 100, 100, message)
 
 
 def line(model, ticks, heard):
@@ -139,6 +140,24 @@ class Chant(unittest.TestCase):
         self.assertEqual([(fly.tx, fly.ty) for fly in model.flies[:3]],
                          [(84 * FP, 92 * FP), (84 * FP + 4 * DOT, 92 * FP + 4 * DOT), (100 * FP + DOT, 92 * FP + 2 * DOT)])
         self.assertEqual([fly.mode for fly in model.flies[:15]], [TO_DOT] * 3 + [LOOPING] * 12)
+
+    def test_a_word_stands_on_a_releases_own_dots_half_its_cells_before_the_point_cut_toward_zero(self):
+        model = hint(0, spelling=OWN)
+        line(model, 20, range(3, 21))
+        self.assertEqual([(fly.tx, fly.ty) for fly in model.flies[:3]],
+                         [(81 * FP, 92 * FP), (85 * FP, 96 * FP), (101 * FP, 94 * FP)])
+        model = hint(5, spelling=OWN)
+        line(model, 20, range(1, 21))
+        self.assertEqual([(model.flies[i].tx, model.flies[i].ty) for i in (0, 11, 12, 24)],
+                         [(72 * FP, 92 * FP), (72 * FP, 103 * FP), (91 * FP, 92 * FP), (111 * FP, 94 * FP)])
+        model.pos = 8
+        model.form()
+        self.assertEqual((model.words[-1][1], model.flies[0].tx), ("A", 91 * FP))
+
+    def test_a_word_is_held_a_releases_own_while_and_the_pause_before_it_is_the_games(self):
+        self.assertEqual(line(hint(0, spelling=OWN), 155, range(3, 156)),
+                         "1:20x2 3:20x16 2:20x1 4:15x76 3:15x16 2:15x1 4:14x43")
+        self.assertEqual(hint(0).world.tables.spelling, hintfly.Spelling(dot=DOT, letter=16, hold=30))
 
     def test_a_fly_is_sent_a_sixteenth_of_the_way_a_tick_cut_downward(self):
         model = hint(0)
@@ -272,8 +291,9 @@ class Waves(unittest.TestCase):
 
 
 BASE, LOAD = 0x800A0000, 0x80010000
-EVENT, WAVE, DRAW, FRAME, SCREEN, BANK = 0x80020000, 0x80020100, 0x80020300, 0x8008F000, 0x80080100, 0x80080200
-A0, T0, V1 = 4, 8, 3
+EVENT, WAVE, PRODUCT, DRAW = 0x80020000, 0x80020100, 0x80020200, 0x80020300
+FRAME, SCREEN, BANK = 0x8008F000, 0x80080100, 0x80080200
+V1, A0, A1, T0, S6 = 3, 4, 5, 8, 22
 STRINGS = MESSAGES[:1] + MESSAGES[2:3] + MESSAGES[4:] + [f"WORD {'ABC'[i % 3] * (i % 7 + 1)}" for i in range(31)]
 TABLES = {"AO": {"lcd": (9, True), "hintfly": (36, False)}}
 
@@ -311,12 +331,22 @@ def executable(players=2, rolls=1, banks=1):
     return Image(bytes(head + code.data)), dict(roll=roll, sounds=sounds, player=player, voices={first, second})
 
 
+def constant(register, value):
+    """the instruction that puts a constant in a register, or with None what is in two others"""
+    if value is None:
+        return addu(register, T0, T0)
+    return ori(register, 0, value) if value < 0x10000 else lui(register, value >> 16)
+
+
 def overlay(exe, virtual=1, leaf=True, sound=60, events=1, frames=1, pointers=1, slot=0, draws=True, called=False,
-            builds=True):
+            builds=True, handed=(DOT, DOT), products=1, cells=(16,), forms=1, held=(30,)):
     """(a synthetic overlay, the routines in it as hintfly.code is to find
     them): the messages, the alphabet, then the hint fly's routines in the
     shapes the overlays compile them to, and the table naming its virtual
-    ones, the render `slot` bytes into itself or, with None, not at all"""
+    ones, the render `slot` bytes into itself or, with None, not at all. The
+    numbers it spells by are the step handed to each product, the cells the
+    routine forming a word steps on by and what is added to the frame counter
+    once it has"""
     code = Assembly(BASE, text_table(STRINGS))
     records = []
     for dots in (A, B, C):
@@ -329,21 +359,26 @@ def overlay(exe, virtual=1, leaf=True, sound=60, events=1, frames=1, pointers=1,
     init = emit(JR_RA, NOP) if leaf else emit(jal(WAVE), NOP, JR_RA, NOP)
     longest = emit(*named(T0, spell), JR_RA, NOP)
     emit(*named(T0, spell), JR_RA, NOP)
-    form = emit(*named(T0, spell), jal(exe["roll"]), NOP, JR_RA, NOP)
+    form = emit(addiu(29, 29, -160), *named(T0, spell),
+                *(w for k in range(products) for step in handed
+                  for w in (constant(A1, step), *[NOP] * 20, jal(PRODUCT + 0x40 * k), NOP)),
+                *(addiu(S6, S6, cell) for cell in cells), addiu(S6, S6, -8), addiu(T0, T0, 1), addiu(A1, S6, 5),
+                jal(exe["roll"]), NOP, addiu(29, 29, 160), JR_RA, NOP)
     move = emit(jal(WAVE), NOP, jal(exe["roll"]), NOP, jal(first), addiu(A0, 0, sound), ori(A0, 0, sound),
                 jal(second), NOP, jal(init), addiu(A0, 0, sound), JR_RA, NOP)
     here = code.at + len(code.data)
     update = emit(JR_V0, NOP, *named(T0, spell), j(here + 24), NOP,
                   *(w for k in range(events) for w in (jal(EVENT + 0x40 * k), NOP)),
-                  jal(move), NOP, jal(init), NOP, jal(form), NOP, *word_at(T0, records[0]), lui(T0, 0x8001),
-                  lw(V1, 16, A0), *(w for k in range(frames) for w in word_at(V1, FRAME + 16 * k)), JR_RA, NOP)
+                  jal(move), NOP, jal(init), NOP, *(jal(form), NOP) * forms, *word_at(T0, records[0]), lui(T0, 0x8001),
+                  lw(V1, 16, A0), *(w for k in range(frames) for w in word_at(V1, FRAME + 16 * k)), ori(T0, 0, 4),
+                  *(addiu(V1, V1, ticks) for ticks in held), j(here + 24), NOP, JR_RA, NOP)
     render = emit(*((jal(DRAW), NOP, jal(DRAW + 0x40), NOP) if draws else ()), lui(A0, 0x8008), lh(A0, 0x22CA, A0),
                   jal(init), NOP, *word_at(T0, records[1]),
                   *(w for k in range(pointers) for w in word_at(A0, SCREEN + 16 * k)), JR_RA, NOP)
     emit(jal(longest), NOP, *((jal(init), NOP) if builds else ()), *((jal(update), NOP) if called else ()), JR_RA, NOP)
     emit(*[0, update] * virtual, 0, 0 if slot is None else render + slot, 0)
     return bytes(code.data), hintfly.Code(
-        longest=longest, init=init, update=update, render=render, event=EVENT, frame=FRAME,
+        longest=longest, init=init, update=update, form=form, render=render, event=EVENT, frame=FRAME,
         drawing={DRAW, DRAW + 0x40}, screen=SCREEN, player=exe["player"], roll=exe["roll"], voices=exe["voices"],
         bank=BANK)
 
@@ -393,10 +428,39 @@ class Routines(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "no routine indexes the alphabet by a letter's code"):
                 hintfly.code(overlay(exe)[0], BASE, image)
 
+    def numbers(self, **shape):
+        """the numbers hintfly.spelling reads off an overlay of a shape"""
+        blob, found = overlay(executable()[1], **shape)
+        return hintfly.spelling(blob, BASE, found)
+
+    def test_the_numbers_an_overlay_spells_by_are_read_off_its_routines(self):
+        self.assertEqual(self.numbers(), hintfly.BASE_SPELLING)
+        self.assertEqual(self.numbers(handed=(FP, FP), cells=(19,), held=(75,)), OWN)
+
+    def test_numbers_of_another_shape_are_refused_by_the_part_that_is_off(self):
+        for shape, refusal in [
+            (dict(handed=()), "0 candidates for the engine's product"),
+            (dict(products=2), "2 candidates for the engine's product"),
+            (dict(handed=(DOT, FP)), "2 candidates for a step of a letter's grid"),
+            (dict(handed=(DOT, None)), "0 candidates for a step of a letter's grid"),
+            (dict(handed=(None, None)), "0 candidates for a step of a letter's grid"),
+            (dict(cells=()), "0 candidates for a letter's cell"),
+            (dict(cells=(16, 19)), "2 candidates for a letter's cell"),
+            (dict(forms=0), "0 candidates for the update's call that forms a word"),
+            (dict(forms=2), "2 candidates for the update's call that forms a word"),
+            (dict(held=()), "0 candidates for the hold"),
+            (dict(held=(30, 75)), "2 candidates for the hold"),
+        ]:
+            with self.subTest(shape=shape):
+                with self.assertRaisesRegex(RuntimeError, refusal):
+                    self.numbers(**shape)
+
     def test_the_models_tables_are_the_overlays_own(self):
         blob = overlay(executable()[1])[0]
         with mock.patch.dict(messages.MESSAGE_TABLES, TABLES):
             self.assertEqual(hintfly.tables([7] * 256, blob, BASE), hintfly.Tables([7] * 256, [A, B, C], STRINGS))
+            self.assertEqual(hintfly.tables([7] * 256, blob, BASE, OWN),
+                             hintfly.Tables([7] * 256, [A, B, C], STRINGS, OWN))
             with self.assertRaisesRegex(RuntimeError, "0 candidates for the alphabet"):
                 hintfly.tables([7] * 256, text_table(STRINGS), BASE)
             with self.assertRaisesRegex(RuntimeError, "0 candidates for the messages"):
@@ -544,14 +608,15 @@ class Tools(unittest.TestCase):
         code = overlay(executable()[1])[1]
         some = {(IDLE, PAUSE), (PAUSE, RESIZE), (RESIZE, HOLD), (HOLD, UNWIND), (UNWIND, IDLE)}
         rest = {(PAUSE, UNWIND), (HOLD, PAUSE)}
-        runs = [(some, 3, 1, 1000, code), (rest, 4, 2, 234, code)]
+        runs = [(some, 3, 1, 1000, code, hintfly.BASE_SPELLING), (rest, 4, 2, 234, code, hintfly.BASE_SPELLING)]
         self.assertEqual(hintfly_verify.report("E1.OVL", runs, 0), (
             "E1.OVL: the disc's code and the model agree over 2 messages, 7 words formed and 3 of them let go of, "
-            f"the changes of state but resize to unwind, in 1,234 instructions; update {code.update:#x}, "
-            f"render {code.render:#x}", True))
-        whole = hintfly_verify.report("E1.OVL", [(some | rest | {(RESIZE, UNWIND)}, 3, 1, 1000, code)], 2)
+            "the changes of state but resize to unwind, in 1,234 instructions; dots 0xcccc apart, letters 16, words "
+            f"held 30; update {code.update:#x}, render {code.render:#x}", True))
+        whole = hintfly_verify.report("E1.OVL", [(some | rest | {(RESIZE, UNWIND)}, 3, 1, 1000, code, OWN)], 2)
         self.assertIn("agree over 1 message, 3 words formed and 1 of them let go of, every change of state, in 1,000",
                       whole[0])
+        self.assertIn("; dots 0x10000 apart, letters 19, words held 75; update", whole[0])
         self.assertIn("; 2 messages spell outside the alphabet and are left unrun", whole[0])
         self.assertEqual(hintfly_verify.report("E1.OVL", [runs[0], "message 3, tick 9: fly 2's x", "later"], 0),
                          ("E1.OVL: message 3, tick 9: fly 2's x", False))

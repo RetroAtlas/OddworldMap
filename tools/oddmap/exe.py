@@ -72,7 +72,7 @@ def _simm(w):
 
 
 JR_RA = 0x03E00008
-A0, ZERO = 4, 0
+ZERO, A0, A1, SP = 0, 4, 5, 29
 
 
 def references(img, value):
@@ -113,24 +113,32 @@ def callers(img, target):
     return img.words_equal((3 << 26) | ((target >> 2) & 0x3FFFFFF))
 
 
-def first_argument(img, site):
-    """the constant a call passes in a0, read from its delay slot or the few
-    instructions before it; None where a0 is set otherwise or not there"""
-    for a in [site + 4] + [site - 4 * k for k in range(1, 9)]:
+def argument(img, site, register, reach=8):
+    """the constant a call passes in an argument's register, read from its delay
+    slot or the `reach` instructions before it; None where it is set otherwise
+    or not there"""
+    for a in [site + 4] + [site - 4 * k for k in range(1, reach + 1)]:
         w = img.word(a)
         if _op(w) == 0:
             if (w & 63) in (8, 9) and a < site:                       # jr, jalr
                 return None
-            if (w >> 11) & 31 == A0:
+            if (w >> 11) & 31 == register:
                 return 0 if (w & 63) == 33 and _rs(w) == ZERO and _rt(w) == ZERO else None
         elif _op(w) in (1, 2, 3, 4, 5, 6, 7):                         # a jump or branch
             if a < site:
                 return None
-        elif _rt(w) == A0 and (8 <= _op(w) <= 15 or 32 <= _op(w) <= 38):
+        elif _rt(w) == register and (8 <= _op(w) <= 15 or 32 <= _op(w) <= 38):
+            if _op(w) == 15:
+                return _imm(w) << 16
             if _op(w) in (9, 13) and _rs(w) == ZERO:
                 return _simm(w) if _op(w) == 9 else _imm(w)
             return None
     return None
+
+
+def first_argument(img, site):
+    """the constant a call passes in a0"""
+    return argument(img, site, A0)
 
 
 def one(found, what):
@@ -181,6 +189,31 @@ def bytes_loaded(img, start):
     """the addresses the function at start loads a byte from by name: an
     `lbu` through the register a `lui` has just set"""
     return _loaded(img, start, 36)
+
+
+def steps(img, start):
+    """what the function at start steps its registers on by in place, its stack
+    and the addresses it builds apart"""
+    out = []
+    for a in range(start, end(img, start), 4):
+        before, w = img.word(a - 4), img.word(a)
+        if _op(w) == 9 and _rs(w) == _rt(w) != SP and (_op(before), _rt(before)) != (15, _rt(w)):
+            out.append(_simm(w))
+    return out
+
+
+def added(img, start, addr):
+    """what the code from start to the next jump or branch adds to the word it
+    loads by name from addr"""
+    out, held, before, w = [], None, img.word(start - 4), img.word(start)
+    while _op(w) not in (1, 2, 3, 4, 5, 6, 7) and (_op(w), w & 62) != (0, 8):
+        if _op(w) == 35 and (_op(before), _rt(before)) == (15, _rs(w)) and (_imm(before) << 16) + _simm(w) == addr:
+            held = _rt(w)
+        elif _op(w) == 9 and _rs(w) == held:
+            out.append(_simm(w))
+        start, before = start + 4, w
+        w = img.word(start)
+    return out
 
 
 # --- the readers ---
