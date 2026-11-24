@@ -123,28 +123,77 @@ test("the pure folders and files import in bare Node", async () => {
 // Import defines, init acts: every other module but the boot wires the page in
 // the init it exports, so the order the page is wired in is the boot's call list
 // and never the order an import graph happens to be evaluated in.
-const ACTS =
+const STATEMENT =
   "Program > :not(ImportDeclaration, ExportNamedDeclaration, ExportDefaultDeclaration, " +
   "ExportAllDeclaration, FunctionDeclaration, VariableDeclaration, ClassDeclaration)";
+// the calls that only look something up, and the constructions that touch nothing
+// but what they build
+const LOOKUP = [
+  String.raw`[callee.name=/^(\$|cssVar)$/]`,
+  "[callee.computed=false]" +
+    "[callee.property.name=/^(get|getContext|matchMedia|querySelector|resolve|trim)$/]",
+  // over an arrow written in place, whose body is read with the rest
+  "[callee.property.name='map'][arguments.0.type='ArrowFunctionExpression']",
+];
+const BUILD = "[callee.name=/^(Map|Set|URLSearchParams|WeakMap)$/]";
+// a function waits, unless it is called, or handed to a call, where it is written
+const WAITING = ":not(CallExpression, NewExpression) > :function *";
+const ACT =
+  `:matches(CallExpression:not(${LOOKUP.join(", ")}), NewExpression:not(${BUILD}), ` +
+  "TaggedTemplateExpression, ImportExpression, AwaitExpression, AssignmentExpression, " +
+  `UpdateExpression, [operator='delete']):not(${WAITING})`;
 const source = (f) => readFileSync(new URL(f, dir), "utf8");
 const MODULE = { ecmaVersion: "latest", sourceType: "module" };
+// the lines of a source that act as it is imported
+const acting = (src) => {
+  const rules = { "no-restricted-syntax": ["error", STATEMENT, ACT] };
+  const found = new Linter().verify(src, { languageOptions: MODULE, rules });
+  return [...new Set(found.map((e) => e.line))];
+};
+
+test("the sweep tells an initializer that acts from one that looks up or builds", () => {
+  const acts = (init) => acting(`const x = ${init};`).length > 0;
+  const yes = [
+    'document.body.classList.add("x")',
+    'addEventListener("click", f)',
+    "el.appendChild(child)",
+    "dispatchEvent(e)",
+    'fetch("x.json")',
+    "(() => {})()",
+    'new Worker("x.js")',
+    "els.map((el) => el.remove())",
+    "els.map(hide)",
+    "el[get]()",
+    "tag`x`",
+    'import("./x.js")',
+    "await settled",
+    "await Promise.resolve(1)",
+    "{ shown: (el.hidden = false) }",
+    "n++",
+    "delete el.id",
+    "class { static { el.remove(); } }",
+  ];
+  const no = [
+    '$("x").textContent.trim()',
+    "new Map(rows.map((r) => [r.key, r.on]))",
+    "() => els.map((el) => el.remove())",
+    "async () => await settled",
+    "{ hide() { el.hidden = true; } }",
+    "new Map([[key, () => fetch(url)]])",
+  ];
+  assert.deepEqual([yes.filter((init) => !acts(init)), no.filter(acts)], [[], []]);
+  assert.deepEqual(acting('$("x");'), [1], "a statement acts, whatever it holds");
+});
 
 test("a module that touches the page declares as it is imported and wires in its init", () => {
-  const linter = new Linter();
-  const acting = (f) =>
-    linter
-      .verify(source(f), {
-        languageOptions: MODULE,
-        rules: { "no-restricted-syntax": ["error", ACTS] },
-      })
-      .map((e) => `${f}:${e.line}`);
-  assert.ok(acting("main.js").length, "the sweep sees the boot's own statements");
+  const at = (f) => acting(source(f)).map((line) => `${f}:${line}`);
+  assert.ok(at("main.js").length, "the sweep sees the boot's own statements");
   assert.deepEqual(
     modules()
       .filter((f) => f !== "main.js" && !isPure(f))
-      .flatMap(acting),
+      .flatMap(at),
     [],
-    "a statement at a module's top level runs as the module is imported; it goes in the init",
+    "what a module runs as it is imported looks up and builds, no more; the rest goes in the init",
   );
 });
 
