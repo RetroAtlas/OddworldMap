@@ -171,26 +171,32 @@ async function readings(page, counting) {
   return { reads, seen };
 }
 
-/** Open a state on a page, settle it and stop its clock; whether what it opened still stands. */
+/** Open a state on a page, settle it and stop its clock; what it opened that stands no more. */
 async function stopped(page, side, state, doing) {
   doing("opening the page");
   await page.clock.install();
   await open(page, side, state);
   doing("taking its steps");
-  await state.steps?.(page);
+  for (const step of [state.steps ?? []].flat()) await step(page);
   if (!state.held) {
     await page.mouse.move(REST.x, REST.y);
     await page.waitForFunction(() => !document.querySelector(":active"));
   }
-  doing(`waiting for ${state.stands} to stand`);
-  await page.waitForSelector(state.stands, { state: "visible" });
+  const opened = [state.stands].flat();
+  for (const selector of opened) {
+    doing(`waiting for ${selector} to stand`);
+    await page.waitForSelector(selector, { state: "visible" });
+  }
   doing("settling its layout");
   await settled(page, state);
   doing("being read");
   // the clock cannot stop at a time it has passed; once stopped, no timer and no frame runs
   await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
   await page.evaluate(() => document.getAnimations().forEach((animation) => animation.finish()));
-  return page.locator(state.stands).first().isVisible();
+  const gone = [];
+  for (const selector of opened)
+    if (!(await page.locator(selector).first().isVisible())) gone.push(selector);
+  return gone;
 }
 
 /** One state at one tree on a page of its own, read with what it opened still standing. */
@@ -208,7 +214,8 @@ async function capture(browser, side, state, counting) {
       const page = await context.newPage();
       page.on("pageerror", (e) => errors.push(`page error: ${e.message}`));
       page.on("console", (m) => m.type() === "error" && errors.push(`console: ${m.text()}`));
-      if (await stopped(page, side, state, (what) => (doing = what))) {
+      const gone = await stopped(page, side, state, (what) => (doing = what));
+      if (!gone.length) {
         const { reads, seen } = await readings(page, counting);
         return {
           reads,
@@ -220,7 +227,7 @@ async function capture(browser, side, state, counting) {
       }
       // what leaves by a timer of its own leaves ahead of the stop where the machine stalls
       await context.close();
-      const left = `${state.stands} had left when the clock stopped`;
+      const left = `${gone.join(" and ")} had left when the clock stopped`;
       if (tries === 1) throw new Error(left);
       console.error(`opening "${state.name}" again: ${left}`);
     }

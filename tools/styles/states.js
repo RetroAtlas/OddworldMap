@@ -75,7 +75,7 @@ const toasts = (p) =>
     for (const msg of ["One", "Two", "Three", "Four"]) toast(msg);
   }, p.modules["toast.js"]);
 
-// a view with the objects shown, the steps that open what the state shows, and what then stands
+// a view with the objects shown, the steps that open what the state shows, and all that then stands
 export const states = [
   { name: "the map", screen: WIDE, hash: MI, stands: "#cv" },
   {
@@ -198,10 +198,7 @@ export const states = [
     screen: WIDE,
     hash: MI,
     edit: true,
-    steps: async (p) => {
-      await select(p);
-      await p.keyboard.press("n");
-    },
+    steps: [select, key("n")],
     stands: "#editBody .ep-types",
   },
   { name: "the route planner", screen: WIDE, hash: MI, steps: key("r"), stands: "#routeBar" },
