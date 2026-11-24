@@ -5,34 +5,58 @@ export const REST = { x: 1, y: 1 };
 
 const WIDE = { viewport: { width: 1280, height: 720 } };
 const BIG = { viewport: { width: 1600, height: 900 } };
-const PHONE = { viewport: { width: 600, height: 900 } };
+const PHONE = { viewport: { width: 600, height: 900 }, hasTouch: true };
 const MI = "#AE/MI/1/1412/712/1.00";
 const DOORS = "#AE/MI/1/3662/872/1.00";
+const BARE = "#AE/MI/1/2434/1940/1.00"; // a screen that holds no object
+const NOTED = "#AE/BR/5"; // a path with a nickname and a note
 const MOVED = "#AO/R2/4/4638/725/1.00/eu"; // a door the release moves
-// an edit on every door of the path DOORS opens on, so the marks show wherever a door does
+// edits over the path DOORS opens on: every door, so the marks show wherever a door does, the one
+// DOORS is aimed at moved between the screens and led back to itself, a board added around that one,
+// and a portal removed
 const EDITS = {
   AE: {
     "MI/1": {
-      objects: Object.fromEntries(
-        [
-          [3650, 860],
-          [3650, 960],
-          [3925, 960],
-          [3925, 860],
-          [5025, 960],
-          [5025, 860],
-          [850, 1740],
-        ].map(([x, y]) => [`Door@${x},${y}`, { fields: { door_number: 9 } }]),
-      ),
+      objects: {
+        ...Object.fromEntries(
+          [
+            [3650, 860],
+            [3650, 960],
+            [3925, 960],
+            [3925, 860],
+            [5025, 960],
+            [5025, 860],
+            [850, 1740],
+          ].map(([x, y]) => [`Door@${x},${y}`, { fields: { door_number: 9 } }]),
+        ),
+        "Door@3650,860": {
+          fields: { door_number: 8, target_door_id: 8 },
+          rect: [3650, 1022, 3674, 1036],
+        },
+        "BirdPortal@3550,860": { fields: { enter_side: 1 }, removed: true },
+        "+1": { name: "LCD", rect: [3640, 1021, 3684, 1038], fields: { message_1_id: 10 } },
+      },
     },
   },
 };
 
 const click = (id) => (p) => p.click(id);
 const key = (k) => (p) => p.keyboard.press(k);
+const hold = (k) => (p) => p.keyboard.down(k);
+// a file asked for that never arrives
+const stall = (file) => (p) => p.route(`**/${file}`, () => {});
+// a press dragged further than a click slips and held there, at a spot of the surface that holds
+// nothing, since the cursor an object sets under the pointer stands over the drag's
+const drag = (id) => async (p) => {
+  const { x, y } = await (await p.waitForSelector(id)).boundingBox();
+  await p.mouse.move(x + 400, y + 460);
+  await p.mouse.down();
+  await p.mouse.move(x + 430, y + 490);
+};
+// a type with a timer, whose fields the card heads with the frame rate
 const typeCard = (p) =>
   p.evaluate(() =>
-    window.dispatchEvent(new CustomEvent("typecard-open", { detail: { type: "Door" } })),
+    window.dispatchEvent(new CustomEvent("typecard-open", { detail: { type: "Mudokon" } })),
   );
 // the feed's first entries are no flagship, so the flagship tag's foil and the entry's sheen show
 // only with the other kinds switched off
@@ -42,9 +66,15 @@ const flagships = async (p) => {
   for (const tag of ["new", "improved", "fixed"])
     await p.click(`#whatsnewFilter .wn-chip[data-tag="${tag}"]`);
 };
+const everyKindOff = async (p) => {
+  await p.waitForSelector("#whatsnewOverlay.open");
+  for (const chip of await p.locator("#whatsnewFilter .wn-chip").all()) await chip.click();
+};
+// types the demo paths hold more of, which the panel says under its counts
 const pickTypes = async (p) => {
   await p.click("#numbersBtn");
-  for (const i of [0, 1]) await p.locator("#numbersTypes input").nth(i).check();
+  for (const name of ["Door", "Slig"])
+    await p.locator("#numbersTypes").getByRole("checkbox", { name, exact: true }).check();
 };
 const at = (p) => {
   if (!p.at) throw new Error("no door, well or hoist in view to aim at");
@@ -83,31 +113,47 @@ export const states = [
     name: "the world graph",
     screen: WIDE,
     hash: MI,
-    steps: click("#graphBtn"),
-    stands: "body.graph",
+    edits: EDITS,
+    steps: [key("r"), click("#graphBtn"), drag("#graphScroll")],
+    stands: ["#graphScroll.panning", ".gv-ed", "#routeBar"],
+    held: true,
   },
   { name: "the screen list", screen: WIDE, hash: MI, steps: key("l"), stands: "#camPanel" },
-  { name: "the numbers panel", screen: WIDE, hash: MI, steps: pickTypes, stands: ".np-name" },
+  {
+    name: "the numbers panel",
+    screen: WIDE,
+    hash: MI,
+    steps: pickTypes,
+    stands: [".np-name", ".np-demo"],
+  },
   {
     name: "the place panel",
     screen: WIDE,
-    hash: MI,
+    hash: NOTED,
     steps: click("#placeBtn"),
-    stands: "#placePanel",
+    stands: [".pl-note", "#placeDot", "#pathBtns .nickname"],
   },
   {
     name: "search hits",
     screen: WIDE,
     hash: MI,
-    steps: (p) => p.fill("#searchInput", "door"),
-    stands: "#searchResults .hit",
+    steps: [(p) => p.fill("#searchInput", "door"), click("#scopeBar button:nth-child(2)")],
+    stands: ["#searchResults .hit", "#searchResults .widen"],
+  },
+  {
+    name: "empty panels",
+    screen: WIDE,
+    hash: BARE,
+    steps: [key("l"), click("#numbersBtn"), click("#whatsnewBtn"), everyKindOff],
+    stands: [".cp-none", ".np-none", ".wn-empty"],
   },
   {
     name: "the settings dialog",
     screen: WIDE,
     hash: MI,
+    edits: EDITS,
     steps: click("#settingsBtn"),
-    stands: "#settingsOverlay.open",
+    stands: ["#settingsOverlay.open", "#editsHeld"],
   },
   {
     name: "What's New",
@@ -150,7 +196,7 @@ export const states = [
     screen: WIDE,
     hash: MI,
     steps: typeCard,
-    stands: "#typeCardOverlay.open",
+    stands: "#typeCardOverlay.open .tc-fnote",
   },
   { name: "a tooltip", screen: WIDE, hash: MI, steps: hover, stands: "#tip", held: true },
   {
@@ -167,7 +213,14 @@ export const states = [
     hash: DOORS,
     edits: EDITS,
     steps: marks,
-    stands: [...marked("edited"), ".pl-edited"],
+    stands: [
+      ...marked("edited"),
+      ".pl-edited",
+      "#tip hr",
+      "#tip .offscreen",
+      "#tip .said",
+      "#tip .loop",
+    ],
     held: true,
   },
   {
@@ -197,10 +250,20 @@ export const states = [
   {
     name: "the edit panel",
     screen: WIDE,
-    hash: MI,
+    hash: DOORS,
     edit: true,
+    edits: EDITS,
     steps: select,
-    stands: "#editPanel",
+    stands: "#editPanel .ep-back",
+  },
+  {
+    name: "a removed object",
+    screen: WIDE,
+    hash: DOORS,
+    edit: true,
+    edits: EDITS,
+    steps: [key("l"), click(".cp-ghost")],
+    stands: [".cp-ghost", ".ep-ghost .ep-dead", ".ep-ghost .ep-shipped"],
   },
   {
     name: "the type picker",
@@ -210,31 +273,64 @@ export const states = [
     steps: [select, key("n")],
     stands: "#editBody .ep-types",
   },
-  { name: "the route planner", screen: WIDE, hash: MI, steps: key("r"), stands: "#routeBar" },
+  {
+    name: "the route planner",
+    screen: WIDE,
+    hash: MI,
+    steps: [hold("r"), click("#placeBtn")],
+    stands: ["#routeBar", "#toggles kbd.held", "#placePanel"],
+  },
   {
     name: "a wide screen's route planner",
     screen: BIG,
     hash: MI,
-    steps: key("r"),
-    stands: "#routeBar",
+    steps: [hold("r"), click("#placeBtn")],
+    stands: ["#routeBar", "#toggles kbd.held", "#placePanel"],
   },
   {
     name: "a release",
     screen: WIDE,
     hash: MOVED,
     show: { release: true },
-    steps: marks,
-    stands: [...marked("released"), ".pl-release", "#placeRelease"],
+    steps: [click("#releaseMenu > summary"), marks],
+    stands: [...marked("released"), ".pl-release", "#placeRelease", "#releaseBtns button.on"],
     held: true,
   },
-  { name: "an embed", screen: WIDE, hash: MI, embed: true, stands: "body.embed" },
-  { name: "a phone", screen: PHONE, hash: MI, stands: "#cv" },
+  {
+    name: "an embed",
+    screen: WIDE,
+    hash: MI,
+    embed: true,
+    steps: drag("#cv"),
+    stands: ["body.embed", "#cv.panning"],
+    held: true,
+  },
+  {
+    name: "a map that did not load",
+    screen: WIDE,
+    hash: MI,
+    without: ["map_data_*.json", "changelog.json"],
+    stands: ["#gameName:text('failed to load')", "#main:has(#whatsnewBtn[hidden]) #copyLinkBtn"],
+  },
+  { name: "a phone", screen: PHONE, hash: MI, stands: "#help .by-touch" },
   {
     name: "a phone's drawer",
     screen: PHONE,
     hash: MI,
-    steps: click("#menuBtn"),
-    stands: "body.menu-open",
+    steps: [
+      stall("relive_export_*.json"),
+      click("#menuBtn"),
+      click("#exportMenu > summary"),
+      click("#exportJsonBtn"),
+    ],
+    stands: ["body.menu-open", "#exportJsonBtn:disabled"],
+  },
+  {
+    name: "a phone's world graph",
+    screen: PHONE,
+    hash: MI,
+    steps: [key("v"), key("-")],
+    stands: "body.graph-fit #graphBar",
   },
   { name: "a phone's screen list", screen: PHONE, hash: MI, steps: key("l"), stands: "#camPanel" },
   {
@@ -267,7 +363,11 @@ export async function open(page, { base, modules }, state) {
       edits: state.edits,
     },
   );
+  // an empty object is no data the page can use, and unlike a file not found it logs no error
+  for (const file of state.without ?? [])
+    await page.route(`**/${file}`, (route) => route.fulfill({ json: {} }));
   await page.goto(`${base}/${state.embed ? "?embed=1" : ""}${state.hash}`);
+  if (state.without) return; // no path to settle or aim at
   page.at = await page.evaluate(async (modules) => {
     const u = (m) => {
       if (!modules[m]) throw new Error(`${m} is not under js/ in this tree`);
