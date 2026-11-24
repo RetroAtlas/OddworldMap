@@ -123,6 +123,14 @@ export const states = [
     stands: ".wn-entry.wn-flagship",
   },
   {
+    name: "motion reduced by choice",
+    screen: WIDE,
+    hash: MI,
+    settings: { reduceMotion: true },
+    steps: [flagships, toasts],
+    stands: [':root[data-motion="reduce"] .wn-entry.wn-flagship', "#toastStack .toast-more"],
+  },
+  {
     name: "the shortcuts",
     screen: WIDE,
     hash: MI,

@@ -133,6 +133,18 @@ function shown() {
   return out;
 }
 
+/** Set what a page's media asks of motion, and wait until the page has heard it. */
+async function setMotion(page, reducedMotion) {
+  // queries hear a change in the order they were made, so the page's own have by this one's turn
+  await page.evaluate(() => {
+    window.__heard = false;
+    const query = matchMedia("(prefers-reduced-motion: reduce)");
+    query.addEventListener("change", () => (window.__heard = true), { once: true });
+  });
+  await page.emulateMedia({ reducedMotion });
+  await page.waitForFunction(() => window.__heard);
+}
+
 /** The ids of the elements under a node of the document, as the browser's protocol lists it. */
 const elementsOf = (node) => [
   ...(node.nodeType === 1 ? [node.nodeId] : []),
@@ -150,12 +162,12 @@ async function readings(page, counting) {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("Animation.enable");
   await cdp.send("Animation.setPlaybackRate", { playbackRate: 0 });
-  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await setMotion(page, "no-preference");
   reads[MOTION] = await page.evaluate(read, MOTION);
   await look();
   // a forced hover starts transitions
   await page.addStyleTag({ content: STILL });
-  await page.emulateMedia({ reducedMotion: "reduce" });
+  await setMotion(page, "reduce");
   await cdp.send("DOM.enable");
   await cdp.send("CSS.enable");
   const { root } = await cdp.send("DOM.getDocument", { depth: -1 });
