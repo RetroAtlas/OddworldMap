@@ -7,8 +7,8 @@ const WIDE = { viewport: { width: 1280, height: 720 } };
 const BIG = { viewport: { width: 1600, height: 900 } };
 const PHONE = { viewport: { width: 600, height: 900 } };
 const MI = "#AE/MI/1/1412/712/1.00";
-const R1 = "#AO/R1/15/9781/786/1.00";
 const DOORS = "#AE/MI/1/3662/872/1.00";
+const MOVED = "#AO/R2/4/4638/725/1.00/eu"; // a door the release moves
 // an edit on every door of the path DOORS opens on, so the marks show wherever a door does
 const EDITS = {
   AE: {
@@ -60,6 +60,7 @@ const marks = async (p) => {
   await p.waitForSelector("#searchResults .hit");
   await hover(p);
 };
+const marked = (mark) => ["#camPanel", "#searchResults", "#tip"].map((on) => `${on} .${mark}`);
 // a hover that has to scroll its anchor into view hides the tip it shows, since the scroll's own event
 // lands after the pointer's: the anchor is brought into view and settled first
 const anchoredTip = async (p) => {
@@ -166,7 +167,7 @@ export const states = [
     hash: DOORS,
     edits: EDITS,
     steps: marks,
-    stands: "#tip .edited",
+    stands: [...marked("edited"), ".pl-edited"],
     held: true,
   },
   {
@@ -220,10 +221,10 @@ export const states = [
   {
     name: "a release",
     screen: WIDE,
-    hash: `${R1}/jp`,
+    hash: MOVED,
     show: { release: true },
     steps: marks,
-    stands: "#placeRelease",
+    stands: [...marked("released"), ".pl-release", "#placeRelease"],
     held: true,
   },
   { name: "an embed", screen: WIDE, hash: MI, embed: true, stands: "body.embed" },
