@@ -15,9 +15,10 @@ import {
 import { COLOR } from "../ui/dom.js";
 import { drawX } from "../model/geometry.js";
 import { connections } from "./kept.js";
-import { cellCentre, computeWiring, drawBox, markerCentre } from "../model/model.js";
+import { cellCentre, computeWiring, drawBox } from "../model/model.js";
 import { isRegional } from "../data/release.js";
 import { getSettings } from "../data/settings.js";
+import { endBox } from "./placement.js";
 import { objectShown } from "./spriteart.js";
 import { standingBox } from "./spritepaint.js";
 import { worldLen } from "../data/state.js";
@@ -121,15 +122,18 @@ export function paintReleaseTags({ ctx, cam, path, layout, data }) {
   }
 }
 
+const middle = (b) => [b.x + b.w / 2, b.y + b.h / 2];
+
 // switch wiring: dotted hairlines from each producer to its id's consumers,
 // straight and thin so the circulation arrows' solid curves stay a separate
 // voice. Hovering a wired object spotlights its own wires and gives them
 // arrowheads at the consumer end; an edge hides with either endpoint. A wire
 // to a barrier post lands on the post's line, as the ruler's snap does.
-export function paintWires({ ctx, cam, data, path, layout, at }, focus) {
-  const centre = (t) => {
+export function paintWires(f, focus) {
+  const { ctx, cam, data, path, layout, at } = f;
+  const end = (t) => {
     const post = PENS.on && barrierDir(t) !== null;
-    const [cx, cy] = markerCentre(t, layout);
+    const [cx, cy] = middle(endBox(f, t));
     return [post ? drawX(t.x1, layout) : cx, cy];
   };
   // the spotlight judges what is drawn: a hovered object whose wires are
@@ -145,8 +149,8 @@ export function paintWires({ ctx, cam, data, path, layout, at }, focus) {
     const focused = focusActive && (e.src === focus || e.dst === focus);
     ctx.globalAlpha = focusActive ? (focused ? 0.95 : 0.12) : 0.5;
     ctx.lineWidth = (focused ? 2.5 : 1.25) / cam.z;
-    const [sx, sy] = centre(at(e.src));
-    const [tx, ty] = centre(at(e.dst));
+    const [sx, sy] = end(at(e.src));
+    const [tx, ty] = end(at(e.dst));
     const len = Math.hypot(tx - sx, ty - sy);
     if (len < 1) continue;
     ctx.beginPath();
@@ -166,7 +170,8 @@ export function paintWires({ ctx, cam, data, path, layout, at }, focus) {
 // connection arrows: the path's circulation — curves between resolved
 // pairs (double-headed when mutual), dashed to a bare camera, and labelled
 // stubs for destinations on other paths
-export function paintConnections({ ctx, cam, data, lvl, path, layout, showLabels, at }, focus) {
+export function paintConnections(f, focus) {
+  const { ctx, cam, data, lvl, path, layout, showLabels, at } = f;
   const edges = connections(data, lvl, path);
   // focus only dims the rest when the hovered object actually has edges
   const focusActive = focus && edges.some((e) => e.src === focus || e.dst === focus);
@@ -181,17 +186,17 @@ export function paintConnections({ ctx, cam, data, lvl, path, layout, showLabels
     ctx.globalAlpha = focusActive ? (focused ? 0.95 : 0.15) : 0.65;
     ctx.lineWidth = (focused ? 3 : 2) / cam.z;
     ctx.strokeStyle = ctx.fillStyle = CONN_COLORS[e.src.name] || "#ffffff";
-    const [sx, sy] = markerCentre(at(e.src), layout);
+    const from = endBox(f, at(e.src));
+    const [sx, sy] = middle(from);
     if (e.label !== undefined) {
       // off-path stub, along the direction the graph gives it or a constant
       // diagonal, which reads as "leaves this path" without pretending to know
-      // which way an off-path door leads; it runs at least to the marker's edge,
+      // which way an off-path door leads; it runs at least to its box's edge,
       // since a transition's marker spans its whole edge zone
       const [dx, dy] = e.dir ?? diagonal;
-      const b = drawBox(at(e.src), layout);
       const edge = Math.min(
-        dx ? b.w / 2 / Math.abs(dx) : Infinity,
-        dy ? b.h / 2 / Math.abs(dy) : Infinity,
+        dx ? from.w / 2 / Math.abs(dx) : Infinity,
+        dy ? from.h / 2 / Math.abs(dy) : Infinity,
       );
       const len = Math.max(stubLen, edge);
       const tx = sx + len * dx,
@@ -212,7 +217,7 @@ export function paintConnections({ ctx, cam, data, lvl, path, layout, showLabels
       }
       continue;
     }
-    const [tx, ty] = e.dst ? markerCentre(at(e.dst), layout) : cellCentre(e.cell, path, layout);
+    const [tx, ty] = e.dst ? middle(endBox(f, at(e.dst))) : cellCentre(e.cell, path, layout);
     const dx = tx - sx,
       dy = ty - sy;
     const len = Math.hypot(dx, dy);

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { brainAt, resolveEffects, resolveRecord } from "../../public/js/engine/motion.js";
+import { brainAt, poseAt, resolveEffects, resolveRecord } from "../../public/js/engine/motion.js";
 import { burstParts } from "../../public/js/engine/effects.js";
 import { fpDiv, fpMul } from "../../public/js/engine/patrolkit.js";
 import { anim } from "./creatures.js";
@@ -178,6 +178,10 @@ test("falling item: it is drawn in the frames whose bounding rect reaches its sc
     Array.from({ length: 16 }, (_, i) => resolveRecord(waits(), set, i + 1)?.frame ?? null),
     [0, 0, 0, 0, 1, 1, 1, 1, null, null, null, null, 3, 3, 3, 3],
   );
+  // it stands there whichever frame it has come to, and says which of them it lets show
+  const pose = poseAt(waits(), set, 9);
+  assert.deepEqual([pose.name, pose.y], ["Item_Falling", 0]);
+  assert.deepEqual(pose.anim.frames.map(pose.seen), [true, true, false, true]);
   // a record drawn five below its item, as Oddysee's render draws one
   const lower = (y) => ({ ...waits({ y }, 1, "AO"), y: y + 5 });
   assert.equal(resolveRecord(lower(0), itemSet(), 1).y, 5);

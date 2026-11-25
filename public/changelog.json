@@ -1,6 +1,12 @@
 {
  "entries": [
   {
+   "date": "2026-11-25",
+   "tag": "fixed",
+   "title": "Arrows and wires point at the sprites",
+   "detail": "With \"Objects as themselves\" on, the connection arrows and the switch wiring ran to the middle of each object's rectangle, where its marker would stand. That is seldom where its sprite is: a work wheel's wires ended under it, a pull ring's at the top of its rope, and a drill's or an electric wall's well away from it. They now end in the middle of the sprite and move with it. With \"Patrols\" on, a Glukkon, a Slurg, a Fleech or a flying Slig takes its wires along on its beat, as does a drill on its stroke and a motion detector's laser on its sweep. An object still drawn as its marker keeps its ends where they were."
+  },
+  {
    "date": "2026-11-22",
    "tag": "fixed",
    "tiny": true,

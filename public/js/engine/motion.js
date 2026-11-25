@@ -293,9 +293,9 @@ export function lightLevel(set, tick) {
 }
 const roll = (p, dice, min, max) => min + (dice[p.seed++ & 255] % (max - min + 1));
 
-// what a record shows at a tick, after the cycles the game runs
-// without a player
-export function resolveRecord(r, set, tick, patrolAt = tick) {
+// what a record stands in at a tick, after the cycles the game runs without a
+// player, whichever of its frames shows then
+export function poseAt(r, set, tick, patrolAt = tick) {
   const anims = set.anims;
   let anim = r.anim,
     x = r.x,
@@ -340,8 +340,6 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
       x = start + dir * d;
     } else if (cy.kind === "pulse") {
       bright = lightLevel(set, tick) / 255;
-    } else if (cy.kind === "flip8") {
-      if (Math.floor(tick / 8) % 2) flip = !flip;
     } else if (cy.kind === "chime") {
       x = cy.x + 5 * cos256(4 * tick);
       y = cy.y + 3 * cos256(3 * tick);
@@ -359,11 +357,19 @@ export function resolveRecord(r, set, tick, patrolAt = tick) {
     }
   }
   const a = anims[anim];
-  if (!a) return null;
-  const frame = r.frozen ? r.frame : frameAt(a, at, r.frame);
+  return a ? { name: anim, anim: a, at, x, y, flip, moved, bright, rgb, seen } : null;
+}
+
+// what a record shows at a tick: its pose in the frame it has come to
+export function resolveRecord(r, set, tick, patrolAt = tick) {
+  const pose = poseAt(r, set, tick, patrolAt);
+  if (!pose) return null;
+  const { at, seen, ...shown } = pose;
+  shown.frame = r.frozen ? r.frame : frameAt(shown.anim, at, r.frame);
   // a brain's own test of the frame, where the engine's render makes one
-  if (seen && !seen(a.frames[frame])) return null;
-  return { name: anim, anim: a, frame, x, y, flip, moved, bright, rgb };
+  if (seen && !seen(shown.anim.frames[shown.frame])) return null;
+  if (r.cycle?.kind === "flip8" && Math.floor(tick / 8) % 2) shown.flip = !shown.flip;
+  return shown;
 }
 
 const RAW_RGB = [128, 128, 128];

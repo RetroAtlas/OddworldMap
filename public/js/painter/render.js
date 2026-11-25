@@ -267,12 +267,19 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   const set = show.objects && spriteSet(data.id) ? setOf(data) : null;
   const standing = set ? spriteRecords(data, lvl, path, set) : null;
   setPainted(standing, !!standing && spritesReady(set, transients));
+  f.art = artOf();
   held = transients && sel && carriedRect ? holding(data, lvl, path, set, sel, carriedRect) : null;
   f.held = held;
   const sprites = held && standing ? heldRecords(path, standing) : standing;
   if (sprites && spritesDrawn) {
     const live = transients && motionRunning();
-    paintSprites(f, sprites, set, live ? sceneTick() : 0, live ? patrolTick() : 0, show.dim);
+    f.scene = {
+      sprites,
+      set,
+      tick: live ? sceneTick() : 0,
+      patrolAt: live ? patrolTick() : 0,
+    };
+    paintSprites(f, show.dim);
   } else {
     movedBy.clear();
     spriteBoxes.clear();
@@ -282,8 +289,7 @@ export function paint(ctx, cam, w, h, dpr, transients = true) {
   if (show.coll) paintLines(f);
   if (f.released) paintReleaseGhosts(f, pathRelease(path)?.removed ?? []);
   if (transients && patrol) paintPatrol(f, patrol);
-  const art = artOf();
-  paintMarkers(f, sprites, art);
+  paintMarkers(f, sprites);
   if (show.wires) paintWires(f, transients ? wireFocus : null);
   if (show.conn) paintConnections(f, transients ? connFocus : null);
   if (transients && state.edit) paintGhosts(f, removedObjects(path));
@@ -400,8 +406,8 @@ function paintPatrol({ ctx }, zone) {
   ctx.fillRect(zone.x1, zone.y1 - 8, zone.x2 - zone.x1, zone.y2 - zone.y1 + 16);
 }
 
-function paintMarkers(f, sprites, art) {
-  const { ctx, cam, data, path, layout } = f;
+function paintMarkers(f, sprites) {
+  const { ctx, cam, data, path, layout, art } = f;
   ctx.font = `${11 / cam.z}px sans-serif`;
   for (const o of path.tlvs) {
     const t = at(o);

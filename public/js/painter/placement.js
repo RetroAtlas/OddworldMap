@@ -1,8 +1,12 @@
 // Where what is drawn of an object lies on the map: the camera it is drawn in, the rect a
-// frame fills about its point, and the part of a box its camera shows.
+// frame fills about its point, the part of a box its camera shows, the box about the whole
+// sprite, and the one a wire or an arrow ends in.
 // Importable in bare Node: no DOM.
 
+import { poseAt } from "../engine/motion.js";
 import { drawX, drawY } from "../model/geometry.js";
+import { drawBox } from "../model/model.js";
+import { drawnAs } from "./kept.js";
 
 // a camera's window and coordinates for a world point
 export function cameraAt(layout, x, y) {
@@ -14,6 +18,10 @@ export function cameraAt(layout, x, y) {
   cam.dy = drawY(cam.wy, layout);
   return cam;
 }
+
+// the camera a record standing at a point is drawn in: the one it names, else the point's own
+export const cameraOf = (r, { x, y }, layout) =>
+  r.camAt ? cameraAt(layout, r.camAt.x, r.camAt.y) : cameraAt(layout, Math.trunc(x), Math.trunc(y));
 
 // the pixel of a camera's window a world point falls on, in draw space
 export const pixelAt = (cam, x, y) => [
@@ -80,4 +88,61 @@ export function joinBoxes(a, b) {
     w: Math.max(a.x + a.w, b.x + b.w) - x,
     h: Math.max(a.y + a.h, b.y + b.h) - y,
   };
+}
+
+// the rect frames fill about their point on average, by area: it stands still while an
+// animation plays through them, and a blank frame, a texel wide, has next to no say in it
+function meanRect(frames, r, flip, ae) {
+  const mean = { x: 0, y: 0, w: 0, h: 0 };
+  let area = 0;
+  for (const frame of frames) {
+    const rect = frameRect(frame, r, flip, ae);
+    const part = rect.w * rect.h;
+    area += part;
+    for (const k in mean) mean[k] += part * rect[k];
+  }
+  if (!area) return null;
+  for (const k in mean) mean[k] /= area;
+  return mean;
+}
+
+// the frames of its animation a record may show
+function framesOf(r, { anim, seen }) {
+  if (r.frozen) return [anim.frames[r.frame]];
+  return seen ? anim.frames.filter(seen) : anim.frames;
+}
+
+// the box about an object's sprite, its records in the poses handed in, or null where none of
+// it shows. It stands still while an animation plays and goes where the records go; a tiled
+// record and one standing apart are no part of it, and a creature on patrol between two
+// screens keeps the box it would be drawn in
+export function bodyBox(recs, poseOf, layout, ae) {
+  let body = null;
+  for (const r of recs) {
+    const pose = r.tile || r.apart ? null : poseOf(r);
+    const rect = pose && meanRect(framesOf(r, pose), r, pose.flip, ae);
+    if (!rect) continue;
+    const cam = cameraOf(r, pose, layout);
+    const [px, py] = pixelAt(cam, pose.x, pose.y);
+    const box = { x: px + rect.x, y: py + rect.y, w: rect.w, h: rect.h };
+    const shown = clipBox(box, cam, layout) ?? (pose.moved ? box : null);
+    if (shown) body = body ? joinBoxes(body, shown) : shown;
+  }
+  return body;
+}
+
+// the ticks an object is drawn at: the carried one stands in its first frame
+export const ticksOf = ({ scene, held }, t) =>
+  t === held?.to ? [0, 0] : [scene.tick, scene.patrolAt];
+
+// the box a wire or an arrow ends in the middle of: the one about the object's sprite where
+// that is what is drawn of it, else its marker's
+export function endBox(f, t) {
+  const { data, layout, scene, art } = f;
+  if (scene && drawnAs(t, scene.sprites, art) === "sprite") {
+    const poseOf = (r) => poseAt(r, scene.set, ...ticksOf(f, t));
+    const body = bodyBox(scene.sprites.get(t), poseOf, layout, data.id === "AE");
+    if (body) return body;
+  }
+  return drawBox(t, layout);
 }

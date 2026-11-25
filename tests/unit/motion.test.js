@@ -6,6 +6,7 @@ import {
   frameAt,
   motionTick,
   patrolTick,
+  poseAt,
   resetScene,
   resolveRecord,
   sceneTick,
@@ -191,18 +192,41 @@ test("cycle: a motion detector's laser sweeps to the far edge, waits fifteen tic
   assert.equal(resolveRecord(left, cycleSet, 3).x, 120);
 });
 
-test("cycle: an electric wall flips every eight ticks", () => {
+test("cycle: an electric wall flips every eight ticks, the pose it stands in facing one way", () => {
   const r = cycled("ElectricWall_Idle", { kind: "flip8" });
+  const ticks = [0, 7, 8, 15, 16, 23, 24];
   const flip = (t) => resolveRecord(r, cycleSet, t).flip;
-  assert.deepEqual([0, 7, 8, 15, 16, 23, 24].map(flip), [
-    false,
-    false,
-    true,
-    true,
-    false,
-    false,
-    true,
-  ]);
+  assert.deepEqual(ticks.map(flip), [false, false, true, true, false, false, true]);
+  assert.deepEqual(
+    ticks.map((t) => poseAt(r, cycleSet, t).flip),
+    ticks.map(() => false),
+  );
+});
+
+test("poseAt: what a record stands in and where, the frame it has come to left to resolveRecord", () => {
+  const chime = cycled("ChimeLock_Ball", { kind: "chime", x: 100, y: 200 });
+  const pose = poseAt(chime, cycleSet, 0),
+    { frame, ...shown } = resolveRecord(chime, cycleSet, 0);
+  assert.deepEqual([pose.name, pose.x, pose.y], ["ChimeLock_Ball", 105, 203]);
+  assert.equal(frame, 0);
+  for (const k in shown) assert.deepEqual(pose[k], shown[k], k);
+  assert.equal(poseAt({ ...chime, anim: null }, cycleSet, 0), null);
+});
+
+test("poseAt: a creature on patrol stands where the patrols' own clock has it and is said to move, or on its spawn with none", () => {
+  const p = { pauseTime: 10, zone: { x: 200, w: 500 } };
+  const w = world("AE", [[0, 100, 1000, 100, 0]], [], { x: 300, y: 90 });
+  const r = walker("Slig_Idle", "slig", p, w, 300, 100);
+  const set = { anims: PATROL_ANIMS, dice: new Array(256).fill(0) };
+  const at = (patrolAt) => {
+    const { name, x, moved } = poseAt(r, set, 500, patrolAt);
+    assert.equal(resolveRecord(r, set, 500, patrolAt).x, x, "and is shown there");
+    return [name, x > 300, moved];
+  };
+  assert.deepEqual(at(null), ["Slig_Idle", false, false]);
+  assert.deepEqual(at(9), ["Slig_Idle", false, true]);
+  assert.deepEqual(at(20), ["Slig_Walking", true, true]);
+  assert.equal(poseAt(creature("Slog_Idle", "slog"), set, 20).moved, false, "one at its post");
 });
 
 test("cycle: the chime lock's ball bobs on two cosines, five wide at four steps a tick and three high at three", () => {

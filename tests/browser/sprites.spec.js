@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { CONN_COLORS, WIRE_COLOR } from "../../public/js/config.js";
 import {
   ALL_CATS,
   BOUND,
@@ -31,6 +32,50 @@ const CRATE = { game: "AE", level: "BW", path: 1, x1: 1007, y1: 261, x2: 1032, y
 const CRATE_TICK = 31;
 const CRATE_TOP = { x1: 990, y1: 487, x2: 1015, y2: 499 };
 const UNDER_SCREEN = { x1: 990, y1: 520, x2: 1015, y2: 531 };
+
+// two Mines doors shut at a fresh start that lead to each other, the switch controller one of
+// them answers, which has no sprite, and a FeeCo Glukkon on switches, pacing from its first second
+const DOOR = { game: "AE", level: "MI", path: 1, name: "Door", x1: 3925, y1: 960 };
+const PARTNER = { name: "Door", x1: 3925, y1: 860 };
+const CONTROLLER = { name: "MultiSwitchController", x1: 4025, y1: 860 };
+const GLUKKON = { game: "AE", level: "FD", path: 11, name: "Glukkon", x1: 2475, y1: 1480 };
+
+// the two ends of every line one paint strokes in a colour, in draw space, and the boxes the
+// sprites and the markers of some objects stand in
+const strokes = (page, colour, objs) =>
+  page.evaluate(
+    async ([colour, objs]) => {
+      const u = (m) => new URL("js/" + m, location.href).href;
+      const st = await import(u("data/state.js"));
+      const model = await import(u("model/model.js"));
+      const render = await import(u("painter/render.js"));
+      const spritepaint = await import(u("painter/spritepaint.js"));
+      const proto = CanvasRenderingContext2D.prototype;
+      const calls = ["beginPath", "moveTo", "lineTo", "quadraticCurveTo", "stroke"];
+      const own = Object.fromEntries(calls.map((k) => [k, proto[k]]));
+      const lines = [];
+      let points = [];
+      for (const k of calls)
+        proto[k] = function (...args) {
+          if (k === "beginPath") points = [];
+          else if (k !== "stroke") points.push(args.slice(-2));
+          else if (this.strokeStyle === colour) lines.push([points[0], points.at(-1)]);
+          own[k].apply(this, args);
+        };
+      render.draw();
+      Object.assign(proto, own);
+      const boxes = objs.map((o) => {
+        const t = st.state.path.tlvs.find(
+          (t) => t.name === o.name && t.x1 === o.x1 && t.y1 === o.y1,
+        );
+        return { sprite: spritepaint.spriteBoxes.get(t), marker: model.drawBox(t, st.LAYOUT) };
+      });
+      return { lines, boxes };
+    },
+    [colour, objs],
+  );
+const middle = (b) => [b.x + b.w / 2, b.y + b.h / 2];
+const within = (b, [x, y]) => x > b.x && x < b.x + b.w && y > b.y && y < b.y + b.h;
 
 test("the patrol pens draw their posts with the markers off", async ({ page }) => {
   const errors = trackErrors(page);
@@ -383,5 +428,49 @@ test("Dim backgrounds dims the foreground masks drawn over the sprites too", asy
   );
   await toggle("dim");
   expect(close(await read(), dimmedScreen)).toBe(false);
+  expect(errors).toEqual([]);
+});
+
+test("an arrow runs between the middles of its objects' sprites", async ({ page }) => {
+  const errors = trackErrors(page);
+  await seedView(page, { show: { objects: true, conn: true }, cats: ALL_CATS });
+  await page.goto(`/?embed=1#AE/MI/1/${DOOR.x1}/${DOOR.y1}/1.00`);
+  await settle(page, DOOR);
+  await settleArtwork(page);
+  const { lines, boxes } = await strokes(page, CONN_COLORS.Door, [DOOR, PARTNER]);
+  const [from, to] = boxes;
+  expect(lines).toContainEqual([middle(from.sprite), middle(to.sprite)]);
+  expect(errors).toEqual([]);
+});
+
+test("a wire runs from the middle of a marker to the middle of a sprite", async ({ page }) => {
+  const errors = trackErrors(page);
+  await seedView(page, { show: { objects: true, wires: true }, cats: ALL_CATS });
+  await page.goto(`/?embed=1#AE/MI/1/${DOOR.x1}/${DOOR.y1}/1.00`);
+  await settle(page, DOOR);
+  await settleArtwork(page);
+  const { lines, boxes } = await strokes(page, WIRE_COLOR, [CONTROLLER, DOOR]);
+  const [from, to] = boxes;
+  expect(lines).toContainEqual([middle(from.marker), middle(to.sprite)]);
+  expect(errors).toEqual([]);
+});
+
+test("a wire goes where a creature on patrol walks", async ({ page }) => {
+  const errors = trackErrors(page);
+  await seedView(page, { show: { objects: true, patrols: true, wires: true }, cats: ALL_CATS });
+  await page.goto(`/?embed=1#AE/FD/11/${GLUKKON.x1}/${GLUKKON.y1}/1.00`);
+  await settle(page, GLUKKON);
+  await settleArtwork(page);
+  await page.evaluate(async () => {
+    window.__motion = await import(new URL("js/engine/motion.js", location.href).href);
+  });
+  // far enough for it to stand clear of its marker
+  await page.waitForFunction(() => window.__motion.patrolTick() > 30, null, POLL);
+  const { lines, boxes } = await strokes(page, WIRE_COLOR, [GLUKKON]);
+  const [{ sprite, marker }] = boxes;
+  expect(sprite.x).toBeGreaterThan(marker.x + marker.w);
+  const points = lines.flat();
+  expect(points.filter((p) => within(sprite, p)).length).toBeGreaterThan(0);
+  expect(points.filter((p) => within(marker, p))).toEqual([]);
   expect(errors).toEqual([]);
 });

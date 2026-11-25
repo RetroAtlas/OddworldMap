@@ -75,6 +75,7 @@ export function draw(c, anim, x, y, o = {}) {
     cycle: o.cycle ?? null,
     tile: o.tile ?? null,
     camAt: o.camAt ?? null,
+    apart: !!o.apart,
   };
 }
 

@@ -168,7 +168,12 @@ rule("AO", "MeatSaw", (c) => {
       cycle: brain(c, "meatsaw", false, p),
       yOff: 0,
     }),
-    draw(c, "MeatSawMotor", x, t.y1, { layer, semi: true, yOff: 0 }),
+    draw(c, "MeatSawMotor", x, t.y1, {
+      layer,
+      semi: true,
+      yOff: 0,
+      apart: true, // the motor stays where it is while its blade strokes
+    }),
   ];
 });
 
@@ -227,6 +232,7 @@ both("MotionDetector", (c) => {
         rgb: [64, 0, 0],
         blend: 1,
         swap: !ae,
+        apart: true, // the device stays where it is while its laser sweeps
       }),
     );
   }

@@ -7,7 +7,15 @@ import { drawX, drawY } from "../model/geometry.js";
 import { drawnAs } from "./kept.js";
 import { drawBox } from "../model/model.js";
 import { resolveEffects, resolveRecord } from "../engine/motion.js";
-import { cameraAt, clipBox, frameRect, joinBoxes, pixelAt } from "./placement.js";
+import {
+  cameraAt,
+  cameraOf,
+  clipBox,
+  frameRect,
+  joinBoxes,
+  pixelAt,
+  ticksOf,
+} from "./placement.js";
 import { dimmedImg, img } from "./screens.js";
 import { artOf, paintedSprites, processedFrame } from "./spriteart.js";
 
@@ -40,8 +48,9 @@ export function keptBoxes() {
 // layer, the later-constructed under the earlier; each clipped to its own
 // camera's window, where the game clips too, so a frame reaching past it
 // never paints over a neighbouring screen
-export function paintSprites(f, sprites, set, tick, patrolAt, dim) {
+export function paintSprites(f, dim) {
   const { ctx, data, layout, path } = f;
+  const { sprites, set } = f.scene;
   movedBy.clear();
   spriteBoxes.clear();
   const recs = [];
@@ -51,15 +60,13 @@ export function paintSprites(f, sprites, set, tick, patrolAt, dim) {
     order++;
     list.forEach((r, k) => recs.push([r, order, k, t]));
   }
-  // the carried object stands in its first frame
-  const still = (t) => t === f.held?.to;
   // what the brains give off joins the records, on layers of its own; where a
   // record draws nothing itself, its effects are what its object is pointed at,
   // but for those that fly free of it
   const fx = [];
   for (const [r, order, k, t] of recs)
     if (r.cycle?.kind === "brain")
-      resolveEffects(r, set, still(t) ? 0 : tick, still(t) ? 0 : patrolAt).forEach((e, i) =>
+      resolveEffects(r, set, ...ticksOf(f, t)).forEach((e, i) =>
         fx.push([e, order, k + 1 + i / 1000, t, true, r.anim === null && !r.cycle.free]),
       );
   recs.push(...fx);
@@ -78,7 +85,7 @@ export function paintSprites(f, sprites, set, tick, patrolAt, dim) {
       if (drawn && isBody) noteBox(t, drawn.box, drawn.cam, layout);
       continue;
     }
-    const shown = resolveRecord(r, set, still(t) ? 0 : tick, still(t) ? 0 : patrolAt);
+    const shown = resolveRecord(r, set, ...ticksOf(f, t));
     if (!shown) continue;
     const frame = shown.anim.frames[shown.frame];
     const tile = processedFrame(set.sheets[frame[0]], frame, r.semi, shown.rgb);
@@ -88,15 +95,14 @@ export function paintSprites(f, sprites, set, tick, patrolAt, dim) {
         t,
         inScreens(path, layout, shown.x, shown.y) ? [shown.x - r.x, shown.y - r.y] : null,
       );
-    const ax = Math.trunc(shown.x);
     const cams = [];
     if (r.tile) {
+      const ax = Math.trunc(shown.x);
       const first = Math.floor(r.tile.top / layout.worldH),
         last = Math.floor((r.tile.bottom - 1) / layout.worldH);
       for (let row = first; row <= last; row++)
         cams.push(cameraAt(layout, ax, row * layout.worldH + layout.winY));
-    } else if (r.camAt) cams.push(cameraAt(layout, r.camAt.x, r.camAt.y));
-    else cams.push(cameraAt(layout, ax, Math.trunc(shown.y)));
+    } else cams.push(cameraOf(r, shown, layout));
     for (const cam of cams) {
       ctx.save();
       ctx.beginPath();
