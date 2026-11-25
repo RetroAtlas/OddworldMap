@@ -7,6 +7,7 @@ import { drawX, drawY } from "../model/geometry.js";
 import { drawnAs } from "./kept.js";
 import { drawBox } from "../model/model.js";
 import { resolveEffects, resolveRecord } from "../engine/motion.js";
+import { cameraAt, clipBox, frameRect, joinBoxes, pixelAt } from "./placement.js";
 import { dimmedImg, img } from "./screens.js";
 import { artOf, paintedSprites, processedFrame } from "./spriteart.js";
 
@@ -16,22 +17,10 @@ export const movedBy = new Map();
 // the rectangle each object's sprite was last drawn in, clipped to its camera
 export const spriteBoxes = new Map();
 function noteBox(t, b, cam, layout) {
-  const x1 = Math.max(b.x, cam.dx),
-    y1 = Math.max(b.y, cam.dy),
-    x2 = Math.min(b.x + b.w, cam.dx + layout.visW),
-    y2 = Math.min(b.y + b.h, cam.dy + layout.visH);
-  if (x2 <= x1 || y2 <= y1) return;
-  const u = spriteBoxes.get(t);
-  if (!u) {
-    spriteBoxes.set(t, { x: x1, y: y1, w: x2 - x1, h: y2 - y1 });
-    return;
-  }
-  const ux2 = Math.max(u.x + u.w, x2),
-    uy2 = Math.max(u.y + u.h, y2);
-  u.x = Math.min(u.x, x1);
-  u.y = Math.min(u.y, y1);
-  u.w = ux2 - u.x;
-  u.h = uy2 - u.y;
+  const shown = clipBox(b, cam, layout);
+  if (!shown) return;
+  const about = spriteBoxes.get(t);
+  spriteBoxes.set(t, about ? joinBoxes(about, shown) : shown);
 }
 
 // the walks and boxes as the last frame left them, to put back after a paint
@@ -136,17 +125,6 @@ export function paintSprites(f, sprites, set, tick, patrolAt, dim) {
     }
   }
   for (; m < masks.length; m++) paintMask(f, masks[m], dim);
-}
-
-// a camera's window and coordinates for a world point
-function cameraAt(layout, x, y) {
-  const cam = {
-    wx: Math.floor(x / layout.worldW) * layout.worldW + layout.winX,
-    wy: Math.floor(y / layout.worldH) * layout.worldH + layout.winY,
-  };
-  cam.dx = drawX(cam.wx, layout);
-  cam.dy = drawY(cam.wy, layout);
-  return cam;
 }
 
 // the LCD font as the painter draws it: per palette, a sheet per colour channel
@@ -329,68 +307,27 @@ const Z_BURST = [
   [3, 4, 6, 7],
 ];
 
-// one frame at a world anchor, placed as Animation::vRender places it: the
-// frame's own offset scaled, a half-scale frame's y offset a unit less and
-// Exoddus's a pixel larger, every rounding a truncation of v + 0.499; a copy
-// of another's frame is placed as AnimationUnknown places it, its offset and
-// size scaled and truncated toward zero; a bare sprite has its corner at the
-// point and reads no offset
+// one frame at a world anchor, and the rectangle it was drawn in
 function drawFrame(ctx, cam, tile, frame, r, shown, ae, wx, wy) {
-  const [, , , w, h, xoff, yoff] = frame;
-  const s = r.scale;
-  const xpos = cam.dx + (Math.trunc(wx) - cam.wx),
-    ypos = cam.dy + (Math.trunc(wy) - cam.wy);
-  let x0, y0, dw, dh;
-  if (r.bare) {
-    dw = w;
-    dh = h;
-    x0 = xpos;
-    y0 = ypos;
-  } else if (r.copy) {
-    dw = Math.trunc(w * s);
-    dh = Math.trunc(h * s);
-    const ox = Math.trunc(xoff * s),
-      oy = Math.trunc(yoff * s);
-    x0 = shown.flip ? xpos - ox - dw : xpos + ox;
-    y0 = r.flipY ? ypos - oy - dh : ypos + oy;
-  } else {
-    const t = (v) => Math.trunc(v + 0.499);
-    let fw = w,
-      fh = h,
-      ox = xoff,
-      oy = yoff;
-    if (s !== 1) {
-      fw *= s;
-      fh *= s;
-      ox *= s;
-      oy = oy * s - 1;
-      if (ae && s === 0.5) {
-        fw += 1;
-        fh += 1;
-      }
-    }
-    dw = Math.floor(fw - 0.501) + 1;
-    dh = Math.floor(fh - 0.501) + 1;
-    x0 = shown.flip ? xpos - t(ox) - t(fw) : xpos + t(ox);
-    y0 = r.flipY ? ypos - t(oy) - t(fh) : ypos + t(oy);
-  }
+  const { x, y, w, h } = frameRect(frame, r, shown.flip, ae);
+  const [px, py] = pixelAt(cam, wx, wy);
   ctx.save();
-  ctx.translate(x0, y0);
+  ctx.translate(px + x, py + y);
   if (shown.flip) {
-    ctx.translate(dw, 0);
+    ctx.translate(w, 0);
     ctx.scale(-1, 1);
   }
   if (r.flipY) {
-    ctx.translate(0, dh);
+    ctx.translate(0, h);
     ctx.scale(1, -1);
   }
   if (r.swap) {
     // the texture's axes swapped: the frame stands on its side
     ctx.transform(0, 1, 1, 0, 0, 0);
-    ctx.drawImage(tile, 0, 0, dh, dw);
-  } else ctx.drawImage(tile, 0, 0, dw, dh);
+    ctx.drawImage(tile, 0, 0, h, w);
+  } else ctx.drawImage(tile, 0, 0, w, h);
   ctx.restore();
-  return { x: x0, y: y0, w: dw, h: dh };
+  return { x: px + x, y: py + y, w, h };
 }
 
 // one layer of a camera's foreground as the game draws it, untinted

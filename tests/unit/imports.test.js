@@ -105,6 +105,7 @@ const PURE_FILES = [
   "ui/searchquery.js",
   "painter/artorder.js",
   "painter/kept.js",
+  "painter/placement.js",
 ];
 
 const isPure = (f) => PURE_FOLDERS.includes(posix.dirname(f)) || PURE_FILES.includes(f);
