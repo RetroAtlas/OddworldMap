@@ -336,7 +336,7 @@ test("bodyBox: the middle of a shipped wire's or arrow's end lies in the frame o
     }
   }
   // the rest are clipped away whole, or let none of their frames show
-  assert.deepEqual(counts, { AO: { boxed: 395, not: 19 }, AE: { boxed: 1621, not: 99 } });
+  assert.deepEqual(counts, { AO: { boxed: 395, not: 19 }, AE: { boxed: 1669, not: 51 } });
 });
 
 // the one record of an object whose parts lie apart that its body is

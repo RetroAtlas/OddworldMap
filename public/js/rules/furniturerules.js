@@ -139,8 +139,11 @@ rule("AO", "Door", (c) => {
 });
 
 // a trapdoor or lift platform stands so that its closed frame's top edge meets
-// the rect's top (PlatformBase)
+// the rect's top (PlatformBase), and is drawn on the screen of the camera that
+// builds it, where the render finds that frame, though its point lie in the cell
+// below
 const platformY = (c, anim, s) => c.t.y1 + trunc(-bound(c, anim)[1] * s);
+const platformCam = (c) => filedAt(c.t, c.game);
 
 const AE_TRAP_THEME = { PV: "Tribal", SV: "Tribal" };
 rule("AE", "TrapDoor", (c) => {
@@ -154,6 +157,7 @@ rule("AE", "TrapDoor", (c) => {
     draw(c, anim, mid(t) + (f.x_offset || 0), platformY(c, name("Closed"), s), {
       layer: c.half ? 7 : 26,
       flip: f.direction === 1,
+      camAt: platformCam(c),
     }),
   ];
 });
@@ -178,6 +182,7 @@ rule("AO", "TrapDoor", (c) => {
       yOff: 0,
       layer: c.half ? 6 : 25,
       flip: f.direction === 1,
+      camAt: platformCam(c),
     }),
   ];
 });
@@ -338,8 +343,9 @@ function liftPoint(c) {
     rgb: wheelRgb,
     semi: false,
     frozen: true,
+    camAt: platformCam(c),
   });
-  const plat = draw(c, platform, x, y, { layer, rgb, yOff: 0 });
+  const plat = draw(c, platform, x, y, { layer, rgb, yOff: 0, camAt: platformCam(c) });
   if (ae && c.lvl.short !== "NE") out.push(wheel, plat);
   else out.push(plat, wheel);
   // the pulley: Exoddus walks up the column camera by camera, Oddysee looks in

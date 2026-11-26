@@ -8,6 +8,7 @@ import { brainAt, resolveEffects, resolveRecord } from "../../public/js/engine/m
 import { raycast } from "../../public/js/engine/collide.js";
 import { filedCell, patrolZone, sligBounds } from "../../public/js/model/model.js";
 import { drawX } from "../../public/js/model/geometry.js";
+import { cameraOf, frameRect } from "../../public/js/painter/placement.js";
 
 const pub = (f) => JSON.parse(readFileSync(new URL(`../../public/${f}`, import.meta.url), "utf8"));
 const GAMES = ["AO", "AE"];
@@ -569,12 +570,13 @@ test("pinned placements: each game's first Abe stands on the floor inside his ow
   assert.equal(ae.y, 1500);
 });
 
-function recordAt(g, lv, pid, name, x1, y1) {
+function recordsAt(g, lv, pid, name, x1, y1) {
   const lvl = data[g].levels.find((l) => l.short === lv);
   const path = lvl.paths.find((p) => p.id === pid);
   const t = path.tlvs.find((o) => o.name === name && o.x1 === x1 && o.y1 === y1);
-  return spriteDraws(data[g], lvl, path, t, sheets[g])[0];
+  return spriteDraws(data[g], lvl, path, t, sheets[g]);
 }
+const recordAt = (...at) => recordsAt(...at)[0];
 
 test("pinned placements: an Exoddus Mudokon stands aside from the ones its camera built first, a full step even on the half plane", () => {
   // the second of MIP01C06's three, chiselling on the half plane
@@ -603,6 +605,60 @@ test("pinned placements: an Exoddus falling item waits at its rect's top, on the
   const cell = (x, y) => [Math.floor(x / G.worldW), Math.floor(y / G.worldH)];
   assert.deepEqual(cell(r.x, r.y), [1, 3]); // its anchor in BWP04C03's cell
   assert.deepEqual(cell(r.camAt?.x, r.camAt?.y), [1, 4]); // its screen BWP04C06's
+});
+
+test("pinned placements: an Exoddus lift or trapdoor at the foot of its screen is drawn there, its point in the cell below", () => {
+  const G = data.AE.geometry;
+  const cell = (at) => at && [Math.floor(at.x / G.worldW), Math.floor(at.y / G.worldH)];
+  // the Mines' first lift, its platform and bottom wheel on MIP01C16 and its top wheel on
+  // MIP01C18, at its pulley's own point
+  const lift = recordsAt("AE", "MI", 1, "LiftPoint", 4000, 1500)
+    .filter((r) => !r.tile)
+    .map((r) => [r.anim, cell(r), cell(r.camAt)]);
+  assert.deepEqual(lift, [
+    ["LiftBottomWheel_Mines", [10, 6], [10, 5]],
+    ["LiftPlatform_Mines", [10, 6], [10, 5]],
+    ["LiftTopWheel_Mines", [10, 3], null],
+  ]);
+  // a trapdoor of BRP01C01, closing the floor at its foot
+  const trap = recordAt("AE", "BR", 1, "TrapDoor", 525, 460);
+  assert.deepEqual(
+    [cell(trap), cell(trap.camAt)],
+    [
+      [1, 2],
+      [1, 1],
+    ],
+  );
+});
+
+// a lift's top wheel is drawn by its pulley's point alone, which can lie a screen below the wheel
+test("a record's frame shows on the screen it is drawn on wherever it shows on a screen of its path", () => {
+  const astray = [];
+  for (const g of GAMES) {
+    const G = data[g].geometry;
+    for (const { lvl, path, t, r } of allRecords(g)) {
+      if (!r.anim || r.tile || /^LiftTopWheel_/.test(r.anim)) continue;
+      const s = resolveRecord(r, sheets[g], 0);
+      if (!s) continue;
+      const f = frameRect(s.anim.frames[s.frame], r, s.flip, g === "AE");
+      const x = Math.trunc(s.x) + f.x,
+        y = Math.trunc(s.y) + f.y;
+      const meets = (wx, wy) => x + f.w > wx && x < wx + G.visW && y + f.h > wy && y < wy + G.visH;
+      const own = cameraOf(r, s, G);
+      if (meets(own.wx, own.wy)) continue;
+      const elsewhere = path.cams.some(
+        (c) =>
+          c.png &&
+          meets(
+            (c.cell % path.w) * G.worldW + G.winX,
+            Math.floor(c.cell / path.w) * G.worldH + G.winY,
+          ),
+      );
+      if (elsewhere)
+        astray.push(`${g} ${lvl.short} P${path.id} ${t.name} (${t.x1},${t.y1}) ${r.anim}`);
+    }
+  }
+  assert.deepEqual(astray, []);
 });
 
 // a minute of the patrol clock, longer than any pause a creature on patrol rolls

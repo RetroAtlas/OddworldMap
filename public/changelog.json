@@ -1,6 +1,12 @@
 {
  "entries": [
   {
+   "date": "2026-11-26",
+   "tag": "fixed",
+   "title": "Lifts and trapdoors at the foot of a screen show up",
+   "detail": "With \"Objects as themselves\" on, 48 of Exoddus' 90 lifts and 48 of its 150 trapdoors were missing from the map. Each sits at the foot of a screen, with its art standing above the point the game places it by, so that point falls on the screen below. The map drew it on that lower screen and trimmed it to that screen's edges, which left nothing of it. A lift's rope hung with nothing at its end, and a trapdoor left a hole in the floor. Each is now drawn on the screen whose camera builds it, as the game does, and the wires that run to these trapdoors end on them."
+  },
+  {
    "date": "2026-11-25",
    "tag": "fixed",
    "title": "Arrows and wires point at the sprites",
